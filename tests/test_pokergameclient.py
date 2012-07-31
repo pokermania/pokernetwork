@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 #
@@ -18,10 +18,12 @@
 # along with this program in a file in the toplevel directory called
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
-import sys
-import os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+import sys, os
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from twisted.trial import unittest, runner, reporter
 
@@ -73,15 +75,19 @@ class PokerNetworkGameClientTestCase(unittest.TestCase):
         self.assertRaises(KeyError, self.game.buildPlayerList, True)
 
 # ----------------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test14"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerNetworkGameClientTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-    ).run(suite)
+    ).run(GetTestSuite())
 
 # ----------------------------------------------------------------
 if __name__ == '__main__':
@@ -89,9 +95,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokergameclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokergameclient.py' VERBOSE_T=-1 TESTS='coverage-reset test-pokergameclient.py coverage-report' check )"
-# End:
-

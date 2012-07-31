@@ -1,14 +1,28 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from setuptools import setup
+import sys, os
+sys.path.append('../common')
+from distutils.core import setup
+from setup_extensions import TestCommand, ConfigureCommand
+
+from distutils.command.build import build as DistutilsBuild
+
+class ExtendedBuild(DistutilsBuild):
+    
+    def run(self):
+        DistutilsBuild.run(self)
+#        os.system("make -C po all")
+#        os.system("make -C conf buildconf")
 
 setup(
     name = 'poker-network',
-    version = '2.1.5',
-    packages = [
-        'pokernetwork',
-        'pokeradditions',
-    ],
-    test_suite='tests.all_tests',
+    version = '2.2.0',
+    packages = ['pokernetwork'],
+    cmdclass = {
+    	'test': TestCommand,
+    	'configure': ConfigureCommand,
+    	'build': ExtendedBuild
+    }
 )
+

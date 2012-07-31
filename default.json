@@ -1,0 +1,50 @@
+{
+    "pokerconfigupgrade": "/usr/sbin/pokerconfigupgrade",
+    "pokernetwork": {
+        "host": "localhost",
+        "port": 19380,
+        "paths": {
+            "src": "/usr/share/pyshared/pokernetwork",
+            "conf": "/etc/poker-network",
+            "data": "/usr/share/poker-network"
+        }
+    },
+    "pokerengine": {
+        "paths": {
+            "src": "/usr/share/pyshared/pokerengine",
+            "conf": "/etc/poker-engine",
+            "data": "/usr/share/poker-engine"
+        }
+    },
+    "mysql": {
+        "host": "localhost",
+        "port": 3306,
+        "command": "/usr/bin/env mysql",
+        "database": "pokernetwork",
+        "user": {
+            "name": "pokernetwork",
+            "password": "pokernetwork"
+        },
+        "root_user": {
+            "name": "root",
+            "password": "123"
+        }
+    },
+    "test": {
+        "engine_path": "/home/hannes/workspace/poker-network-re/poker-engine",
+        "mysql":{
+            "host": "localhost",
+            "port": 3306,
+            "command": "/usr/bin/env mysql",
+            "database": "pokernetworktest",
+            "user": {
+                "name": "pokernetwork",
+                "password": "pokernetwork"
+            },
+            "root_user": {
+                "name": "root",
+                "password": "123"
+            }
+        }
+    }
+}

@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2008, 2009 Loic Dachary    <loic@dachary.org>
 # Copyright (C) 2009 Bradley M. Kuhn <bkuhn@ebb.org>
@@ -20,22 +20,22 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+from os import path
 
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
+import sqlmanager
 
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import defer, reactor
-from twisted.application import internet
-from twisted.python import failure
 from twisted.python.runtime import seconds
 import twisted.internet.base
 twisted.internet.base.DelayedCall.debug = True
 
 from twisted.web import client, http
-
-from tests import testmessages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
 
 from tests import testclock
 
@@ -58,12 +58,26 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
   <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 settings_xml_proxy = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -71,21 +85,36 @@ settings_xml_proxy = """<?xml version="1.0" encoding="UTF-8"?>
 
   <listen tcp="19480" />
 
-  <rest_filter>../@srcdir@/../pokernetwork/proxyfilter.py</rest_filter>
+  <rest_filter>%(tests_path)s/../pokernetwork/proxyfilter.py</rest_filter>
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 class ProxyTestCase(unittest.TestCase):
-    def destroyDb(self, arg = None):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
     # --------------------------------------------------------------
     def initServer(self):
         settings = pokernetworkconfig.Config([])
@@ -421,24 +450,23 @@ class ProxyFilterTestCase(unittest.TestCase):
 
         self.assertEquals(pcf.deferred.errbackCount, 1)
 ################################################################################
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test06"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ProxyTestCase))
     suite.addTest(loader.loadClass(ProxyFilterTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-    ).run(suite)
+    ).run(GetTestSuite())
 
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
     else:
         sys.exit(1)
-################################################################################
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-proxyfilter.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/proxyfilter.py' VERBOSE_T=-1 TESTS='coverage-reset test-proxyfilter.py coverage-report' check )"
-# End:

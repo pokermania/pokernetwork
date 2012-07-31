@@ -1,5 +1,6 @@
-#!@PYTHON@
-# -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
 # more information about the above line at http://www.python.org/dev/peps/pep-0263/
 #
 # Copyright (C) 2009 Bradley M. Kuhn <bkuhn@ebb.org>
@@ -22,16 +23,19 @@
 #
 import sys, os, tempfile, shutil, exceptions, libxml2
 from cStringIO import StringIO
+from os import path
 
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
+import log_history
+import sqlmanager
 
 from twisted.trial import unittest, runner, reporter
-from twisted.application import service
-from twisted.internet import reactor, defer
 from pokernetwork.pokerserver import makeService, makeApplication
 from pokernetwork.pokerserver import run as pokerServerRun
-from twisted.manhole import telnet
 from twisted.application.internet import SSLServer
 from twisted.application.internet import TCPServer
 from twisted.web.server import Site as TwistedSite
@@ -40,35 +44,38 @@ from pokernetwork.pokerservice import PokerService, PokerRestTree, PokerFactoryF
 from pokernetwork.pokersite import PokerSite
 from pokernetwork.pokertable import PokerTable
 
-from tests.testmessages import search_output, clear_all_messages, get_messages
-
-from twisted.python import log as twisted_log
-import logging
-from tests.testmessages import TestLoggingHandler
-logger = logging.getLogger()
-logger.addHandler(TestLoggingHandler())
-logger.setLevel(10)
-os.environ['LOG_LEVEL'] = '10'
-
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-
-settings_xml_server_manhole = """<?xml version="1.0" encoding="UTF-8"?>
+settings_xml_server_manhole = """\
+<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
-  <listen tcp="19481" manhole="%(manhole_port)i" />
+  <listen tcp="19481" manhole="%%(manhole_port)i" />
   <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 # Dummy CERT borrowed from Debian's snake-oil certificate.  Including it
 # here since I can't assume what distribution I am on.
@@ -115,25 +122,42 @@ settings_xml_server_open_options = """<?xml version="1.0" encoding="UTF-8"?>
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
-  <listen tcp="19481" %(listen_options)s />
+  <listen tcp="19481" %%(listen_options)s />
   <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf %(additional_path)s</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
+
 # ----------------------------------------------------------------
 class PokerServerMakeServiceManholeTestCase(unittest.TestCase):
-    def destroyDb(self, arg = None):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
     # -------------------------------------------------------------------------
     def setUp(self):
+        self.log_history = log_history.Log()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         self.filename = os.path.join(self.tmpdir, "poker.server.xml")
@@ -161,13 +185,15 @@ class PokerServerMakeServiceManholeTestCase(unittest.TestCase):
         self.failUnless(manhole.running)
 # ----------------------------------------------------------------
 class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
-    def destroyDb(self, arg = None):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
     # -------------------------------------------------------------------------
     def setUp(self):
+        self.log_history = log_history.Log()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         self.filename = os.path.join(self.tmpdir, "poker.server.xml")
@@ -582,13 +608,15 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         self.assertEquals(len(self.service.services), count)
 # ----------------------------------------------------------------
 class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
-    def destroyDb(self, arg = None):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
     # -------------------------------------------------------------------------
     def setUp(self):
+        self.log_history = log_history.Log()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
     # -------------------------------------------------------------------------
@@ -631,14 +659,15 @@ class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
 # ----------------------------------------------------------------
 
 class PokerServerRunCoverageTestCase(unittest.TestCase):
-    def destroyDb(self, arg = None):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
     # -------------------------------------------------------------------------
     def setUp(self):
-        clear_all_messages()
+        self.log_history = log_history.Log()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         self.saveArgv = None
@@ -667,7 +696,7 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
             self.assertEquals(e.__str__(), "1")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
-        self.assertTrue(search_output("reactor already installed"))
+        self.assertTrue(self.log_history.search("reactor already installed"))
         
     def test01_missingConfigFileGivenOnCLI_forceReactorInstall(self):
         import platform
@@ -698,7 +727,7 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
         
-        self.assertTrue(search_output("installing epoll reactor"))
+        self.assertTrue(self.log_history.search("installing epoll reactor"))
 
         self.failIf(reactorCalled, "epoll reactor should have been installed")
 
@@ -707,7 +736,8 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
         pollreactor.install = saveReactor
         sys.modules['twisted.internet.reactor'] = reactorModulesSave
 # ----------------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test_trynow"
     suite = loader.suiteFactory()
@@ -715,18 +745,16 @@ def Run():
     suite.addTest(loader.loadClass(PokerServerMakeServiceCoverageTestCase))
     suite.addTest(loader.loadClass(PokerServerMakeApplicationCoverageTestCase))
     suite.addTest(loader.loadClass(PokerServerRunCoverageTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
        reporter.TextReporter,
         tracebackFormat='default',
-    ).run(suite)
+    ).run(GetTestSuite())
 
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerserver.py tests/test-pokerserver-run-load.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/pokerserver.py' TESTS='coverage-reset test-pokerserver.py test-pokerserver-run-load.py coverage-report' check )"
-# End:

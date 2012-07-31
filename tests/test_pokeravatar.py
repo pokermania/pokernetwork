@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007 - 2010 Loic Dachary    <loic@dachary.org>
 # Copyright (C) 2008, 2009 Bradley M. Kuhn  <bkuhn@ebb.org>
@@ -22,8 +22,14 @@
 #
 
 import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
+import log_history
 
 import locale
 import libxml2
@@ -43,14 +49,6 @@ from pokerengine import pokertournament
 from tests import testclock
 import pprint
 
-from tests.testmessages import search_output, clear_all_messages, get_messages
-import logging
-from tests.testmessages import TestLoggingHandler
-logger = logging.getLogger()
-handler = TestLoggingHandler()
-logger.addHandler(handler)
-logger.setLevel(10)
-
 twisted.internet.base.DelayedCall.debug = True
 
 from pokernetwork import pokerservice
@@ -64,7 +62,11 @@ from pokernetwork.pokerrestclient import PokerRestClient
 
 class ConstantDeckShuffler:
     def shuffle(self, what):
-        what[:] = [40, 13, 32, 9, 19, 31, 15, 14, 50, 34, 20, 6, 43, 44, 28, 29, 48, 3, 21, 45, 23, 37, 35, 11, 5, 22, 24, 30, 27, 39, 46, 33, 0, 8, 1, 42, 36, 16, 49, 2, 10, 26, 4, 18, 7, 41, 47, 17]
+        what[:] = [
+            40, 13, 32, 9, 19, 31, 15, 14, 50, 34, 20, 6, 43, 44, 28, 29, 48, 3, 21, 45,
+            23, 37, 35, 11, 5, 22, 24, 30, 27, 39, 46, 33, 0, 8, 1, 42, 36, 16, 49, 2,
+            10, 26, 4, 18, 7, 41, 47, 17
+        ]
 
 from pokerengine import pokergame
 pokergame.shuffler = ConstantDeckShuffler()
@@ -86,30 +88,47 @@ class PokerAvatarLocaleTestCase(unittest.TestCase):
         avatar.sendPacket(Packet())
         self.assertEquals(None, avatar._avatarSavedUnder)
 
-settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
+settings_xml_server = """\
+<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+    <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
-  <language value="en_US.UTF-8"/>
-  <language value="de_DE.UTF-8"/>
+    <language value="en_US.UTF-8"/>
+    <language value="de_DE.UTF-8"/>
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10" player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
-  <table name="Table4" variant="holdem" betting_structure="ante-1-2-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <listen tcp="19480" />
+    <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table2" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10"
+        player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
+    <table name="Table4" variant="holdem" betting_structure="ante-1-2-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <listen tcp="19480" />
 
-  <refill serial="1" amount="1000" />
-  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <tourney_select_info>../@srcdir@/testtourney_select_info.py</tourney_select_info>
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT.*"/>
+    <refill serial="1" amount="1000" />
+    <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
+    <database
+        host="%(dbhost)s" name="%(dbname)s"
+        user="%(dbuser)s" password="%(dbuser_password)s"
+        root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+        schema="%(tests_path)s/../database/schema.sql"
+        command="%(mysql_command)s" />
+    <tourney_select_info>%(tests_path)s/testtourney_select_info.py</tourney_select_info>
+    <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+    <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
-settings_xml_client = """<?xml version="1.0" encoding="UTF-8"?>
+settings_xml_client = """\
+<?xml version="1.0" encoding="UTF-8"?>
 <settings display2d="yes" display3d="no" ping="15000" verbose="6" delays="true" tcptimeout="2000" upgrades="no">
    <delays blind_ante_position="0" position="0" begin_round="0" end_round="0" end_round_last="0" showdown="0" lag="60"/> 
   <screen fullscreen="no" width="1024" height="768"/>
@@ -125,37 +144,71 @@ settings_xml_client = """<?xml version="1.0" encoding="UTF-8"?>
   <shadow>yes</shadow>
   <vprogram>yes</vprogram>
   
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf </path> 
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
 </settings>
-"""
+""" % {
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
+
 ##############################################################################
 class PokerAvatarTestCaseBaseClass(unittest.TestCase):
     timeout = 500
 
-    def destroyDb(self, arg = None):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, arg=None):
+        if len(config.test.mysql.root_user.password) > 0:
+            os.system("%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
         else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-            
+            os.system("%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
+
     def createTourneysSchedules(self):
         stmts = []
         stmts.append(
-            'INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `start_time`, `register_time`, `respawn`, `respawn_interval`) ' \
-            'VALUES ("sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", "2", "holdem", "level-15-30-no-limit", "2", 1, "300000", "0", "y", "0", "0", "y", "0");'
+            'INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, ' \
+                '`betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `start_time`, ' \
+                '`register_time`, `respawn`, `respawn_interval`) ' \
+                'VALUES ("sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", "2", "holdem", "level-15-30-no-limit", ' \
+                '"2", 1, "300000", "0", "y", "0", "0", "y", "0");'
         )
         stmts.append(
-            'INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`, `players_min`) ' \
-            'VALUES ("regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", "1000", "holdem", "level-001", "10", 1, "0", "0", "n", "60", "30", "1", "60", unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - INTERVAL 1 HOUR), "n", "0", 3);'
+            'INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, ' \
+                '`betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, ' \
+                '`rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`, `players_min`) ' \
+                'VALUES ("regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", "1000", "holdem", "level-001", "10", ' \
+                '1, "0", "0", "n", "60", "30", "1", "60", unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - ' \
+                'INTERVAL 1 HOUR), "n", "0", 3);'
         )
         
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            prefix = "@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -D pokernetworktest -e '%s'"
+        if len(config.test.mysql.root_user.password) > 0:
+            prefix = "%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -D %(dbname)s -e '%%s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            }
         else:
-            prefix = "@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -D pokernetworktest -e '%s'"
+            prefix = "%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -D %(dbname) -e '%%s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            }
         for stmt in stmts:
             os.system(prefix % stmt)
 
@@ -189,6 +242,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         return d
     # ------------------------------------------------------
     def setUp(self):
+        self.log_history = log_history.Log()
         testclock._seconds_reset()        
 
         self.avatarLocales = {}
@@ -1527,9 +1581,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         def assertBadAttempt(key,info):
             avatar.resetPacketsQueue()
             avatar.queuePackets()
-            clear_all_messages()
+            self.log_history.reset()
             avatar.handlePacketLogic(info['packet'])
-            self.assertEqual(search_output(info['output']), True, info['output'])
+            self.assertEqual(self.log_history.search(info['output']), True, info['output'])
 
             found = False
             for packet in avatar.resetPacketsQueue():
@@ -2519,17 +2573,17 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
 
         avatar.queuePackets()
-        clear_all_messages()
+        self.log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
-        self.assertEqual(search_output("tried to start a new game but is not the owner of the table"), True)
+        self.assertEqual(self.log_history.search("tried to start a new game but is not the owner of the table"), True)
         # Coverage for when the server is shutting down
 
         avatar.service.shutting_down = True
 
         avatar.queuePackets()
-        clear_all_messages()
+        self.log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
-        self.assertEqual(search_output("Not autodealing because server is shutting down"), True)
+        self.assertEqual(self.log_history.search("Not autodealing because server is shutting down"), True)
 
         # Coverage for the table owner is not the player, but it would
         # otherwise be a valid start
@@ -2540,9 +2594,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar.resetPacketsQueue()
         avatar.queuePackets()
-        clear_all_messages()
+        self.log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
-        self.assertEquals(search_output('tried to start a new game but is not the owner of the table'), True)
+        self.assertEquals(self.log_history.search('tried to start a new game but is not the owner of the table'), True)
                           
         # Coverage for the table owner is the player
         avatar.service.shutting_down = False
@@ -2552,7 +2606,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar.resetPacketsQueue()
         avatar.queuePackets()
-        clear_all_messages()
+        self.log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
         found = 0
         for packet in avatar.resetPacketsQueue():
@@ -2589,8 +2643,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.assertEquals(found, 14)
         # This game start should "succeed" (but later fail due to game running) because 
         #  the owner of the table is our player.
-        self.assertEqual(search_output("tried to start a new game while in game"), False)
-        self.assertEqual(search_output("No autodeal"), True)
+        self.assertEqual(self.log_history.search("tried to start a new game while in game"), False)
+        self.assertEqual(self.log_history.search("No autodeal"), True)
 
         # Following is coverage for when someone else owns the table
 
@@ -2599,10 +2653,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         table = self.service.getTable(gameId)
         table.owner = client.getSerial() - 3
         avatar.queuePackets()
-        clear_all_messages()
+        self.log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
-        self.assertEqual(search_output("tried to start a new game while in game"), True)
-        self.assertEqual(search_output("No autodeal"), True)
+        self.assertEqual(self.log_history.search("tried to start a new game while in game"), True)
+        self.assertEqual(self.log_history.search("No autodeal"), True)
     # ------------------------------------------------------------------------
     def test47_startPackets(self):
         def client(gameId):
@@ -2843,7 +2897,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             avatar.queuePackets()
             avatar.handlePacketLogic(info['packet'])
             if 'output' in info:
-                self.assertEqual(search_output(info['output']), True, info['output'])
+                self.assertEqual(self.log_history.search(info['output']), True, info['output'])
             found = False
             for packet in avatar.resetPacketsQueue():
                 found = True
@@ -2969,7 +3023,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerHandReplay(serial= client.getSerial()))
-        self.assertEqual(search_output("loadHand(%d) expected one row got 0" % client.getSerial()), True)
+        self.assertEqual(self.log_history.search("loadHand(%d) expected one row got 0" % client.getSerial()), True)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test56_handReplyNoTable(self):
@@ -3385,7 +3439,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar = self.service.avatars[avid]
         avatar.queuePackets()
-        clear_all_messages()
+        self.log_history.reset()
         avatar.handlePacketLogic(PacketPokerSetLocale(serial = client.getSerial(), 
                                                       locale = myLocale))
         foundCount = 0
@@ -3405,7 +3459,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     self.assertEquals(packet.serial, client.getSerial())
                     self.assertEquals(packet.other_type, PACKET_POKER_SET_LOCALE)
                     foundCount += 1
-                    self.failUnless(search_output("Locale, 'Klingon_Kronos.UTF-8' not available. Klingon_Kronos.UTF-8 must not have been provide via <language/> tag in settings, or errors occured during loading."))
+                    self.failUnless(self.log_history.search("Locale, 'Klingon_Kronos.UTF-8' not available. Klingon_Kronos.UTF-8 "
+                        "must not have been provide via <language/> tag in settings, or errors occured during loading."))
         self.assertEquals(foundCount, 1)
         return (client, packet)
     # -------------------------------------------------------------------------
@@ -3733,7 +3788,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             for ii in [ 0, 1]:
                 self.assertEquals(expectedCount, len(avatars[ii]._packets_queue))
                 if expectedCount >= 15:
-                    self.assertTrue(search_output("user %d has more than 15 packets queued; will force-disconnect when 21 are queued" % clients[ii].getSerial()))
+                    self.assertTrue(self.log_history.search("user %d has more than 15 packets queued; will force-disconnect when 21 are queued" % clients[ii].getSerial()))
                 packets.extend(avatars[ii].resetPacketsQueue())
             while bbPacket == None:
                 for packet in packets:
@@ -3751,15 +3806,15 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         table.autodeal = True
         expectedCount = 14
 
-        clear_all_messages()
+        self.log_history.reset()
         self.dealTable((client, packet), gameId)
         self.assertNotEquals(findBigBlind(0, expectedCount), None)
         avatars[1].handlePacketLogic(PacketPokerFold(serial = clients[1].getSerial(), game_id = gameId))
         
         # we should get the warning on the observer
-        self.assertTrue(search_output("user %d has more than 15 packets queued; will force-disconnect when 21 are queued"  % clients[2].getSerial()))
+        self.assertTrue(self.log_history.search("user %d has more than 15 packets queued; will force-disconnect when 21 are queued"  % clients[2].getSerial()))
         expectedCount = 20
-        clear_all_messages()
+        self.log_history.reset()
         self.dealTable((client, packet), gameId)
         self.assertNotEquals(findBigBlind(1, expectedCount), None)
         avatars[0].handlePacketLogic(PacketPokerFold(serial = clients[0].getSerial(), game_id = gameId))
@@ -3773,7 +3828,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         #  called.
         realLogout = avatars[2].user.logout
         self.service.verbose = 6
-        clear_all_messages()
+        self.log_history.reset()
         checkLogoutDeferred = defer.Deferred()
         # The array can't have a closure around it, it appears.... I did
         # this to save time rather than resarching closures around arrays
@@ -3782,9 +3837,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         av1 = avatars[1]
         av2 = avatars[2]
         def checkLogout():
-            self.assertEquals(search_output('connection lost for %s/%d' % (av2.getName(), av2.getSerial())), True)
+            self.assertEquals(self.log_history.search('connection lost for %s/%d' % (av2.getName(), av2.getSerial())), True)
             self.assertEquals(
-                search_output('removing player %d from game' % (av2.getSerial(),)), 
+                self.log_history.search('removing player %d from game' % (av2.getSerial(),)), 
                 True
             )
             self.assertTrue(len(av2._packets_queue) > 21)
@@ -4217,6 +4272,7 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
             meSelf.handleSerialPackets.append(pack)
     # ------------------------------------------------------
     def setUp(self):
+        self.log_history = log_history.Log()
         testclock._seconds_reset()        
 
         self.avatarLocales = {}
@@ -4371,40 +4427,54 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         class Explain:
             def explain(self, what):
                 raise Exception("FAILURE")
-        clear_all_messages()
+        self.log_history.reset()
         avatar.explain = Explain()
         avatar.queuePackets()
         avatar.sendPacket(Packet())
         packets = avatar.resetPacketsQueue()
         self.assertEquals(PACKET_ERROR, packets[0].type)
         self.assertSubstring('FAILURE', packets[0].message)
-        self.assertEquals(True, search_output('FAILURE'))
+        self.assertEquals(True, self.log_history.search('FAILURE'))
         self.assertEquals(None, avatar.explain)
         self.assertEquals(True, forceAvatarDestroyMockup.called)
 ##############################################################################
 settings_xml_table_picker_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="2000" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+    <delays autodeal="2000" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
-  <language value="en_US.UTF-8"/>
-  <language value="de_DE.UTF-8"/>
+    <language value="en_US.UTF-8"/>
+    <language value="de_DE.UTF-8"/>
 
-  <table name="NL HE 10-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="NL HE 6-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="6" player_timeout="60" currency_serial="1" />
-  <table name="Limit HE 10-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="2" />
-  <table name="Limit HE 6-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="6" player_timeout="60" currency_serial="2" />
-  <table name="Stud 8-max 2/4" variant="7stud" betting_structure="2-4-limit" seats="8" player_timeout="60" currency_serial="2" />
-  <table name="Play Money NL HE 10-max 1/2" variant="holdem" betting_structure="1-2-no-limit" seats="10" player_timeout="60" currency_serial="0" />
-  <listen tcp="19480" />
+    <table name="NL HE 10-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="NL HE 6-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="6" player_timeout="60" currency_serial="1" />
+    <table name="Limit HE 10-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="2" />
+    <table name="Limit HE 6-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="6" player_timeout="60" currency_serial="2" />
+    <table name="Stud 8-max 2/4" variant="7stud" betting_structure="2-4-limit" seats="8" player_timeout="60" currency_serial="2" />
+    <table name="Play Money NL HE 10-max 1/2" variant="holdem" betting_structure="1-2-no-limit" seats="10" player_timeout="60" currency_serial="0" />
+    <listen tcp="19480" />
 
-  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <tourney_select_info>../@srcdir@/testtourney_select_info.py</tourney_select_info>
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT.*"/>
+    <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
+    <database
+        host="%(dbhost)s" name="%(dbname)s"
+        user="%(dbuser)s" password="%(dbuser_password)s"
+        root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+        schema="%(tests_path)s/../database/schema.sql"
+        command="%(mysql_command)s" />
+    <tourney_select_info>%(tests_path)s/testtourney_select_info.py</tourney_select_info>
+    <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+    <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 # -----------------------------------------------------------------------------
 class PokerAvatarTablePickerBaseClass(PokerAvatarTestCaseBaseClass):
     # Timeout needs to be higher for this test case because some of the
@@ -4808,7 +4878,8 @@ def fixIt(client_info):
         pass
     return client
 ##############################################################################
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test02"
     suite = loader.suiteFactory()
@@ -4816,10 +4887,13 @@ def Run():
     suite.addTest(loader.loadClass(PokerAvatarTestCase))
     suite.addTest(loader.loadClass(PokerAvatarNoClientServerTestCase))
     suite.addTest(loader.loadClass(PokerAvatarTablePickerTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
-        tracebackFormat='default',
-    ).run(suite)
+        tracebackFormat='default'
+    ).run(GetTestSuite())
 
 # ------------------------------------------------------
 if __name__ == '__main__':
@@ -4827,8 +4901,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokeravatar.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/pokeravatar.py' TESTS='coverage-reset test-pokeravatar.py coverage-report' check )"
-# End:

@@ -1,4 +1,7 @@
-debian/tmp/usr/lib/python???/*-packages/pokerstats
-debian/tmp/usr/bin/pokerstats
-debian/tmp/usr/share/poker-network/conf/poker.stats.xml
-debian/tmp/usr/share/man/man1
+#debian/tmp/usr/lib/python???/*-packages/pokerstats
+#debian/tmp/usr/bin/pokerstats
+#debian/tmp/usr/share/poker-network/conf/poker.stats.xml
+pokerstats/*.xml usr/share/poker-network/conf
+pokerstats/pokerstats usr/bin
+pokerstats/*.py usr/share/pyshared/pokerstats
+README AUTHORS LICENSE AGPLv3 GPLv3 usr/share/doc/python-poker-stats

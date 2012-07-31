@@ -1,4 +1,4 @@
-#!@BASH@
+#!/bin/bash
 # -*- sh -*-
 #
 # Copyright (C) 2009 Loic Dachary <loic@dachary.org>
@@ -45,12 +45,12 @@ COVERAGE_100_PERCENT="
 
 case "$1" in 
 
-*coverage-reset) @PYTHON@ ${top_srcdir}/tests/coverage.py -e ;;
+*coverage-reset) /usr/bin/env python ${top_srcdir}/tests/coverage.py -e ;;
 
 *coverage-report) 
-        output=$( @PYTHON@ ${top_srcdir}/tests/coverage.py -m -r ${COVERAGE_FILES} )
+        output=$( /usr/bin/env python ${top_srcdir}/tests/coverage.py -m -r ${COVERAGE_FILES} )
         rm -fr annotated ; mkdir annotated
-        @PYTHON@ ${top_srcdir}/tests/coverage.py -a -d annotated ${COVERAGE_FILES}
+        /usr/bin/env python ${top_srcdir}/tests/coverage.py -a -d annotated ${COVERAGE_FILES}
         echo "$output"
         for file in ${COVERAGE_100_PERCENT} ; do
             if echo "$output" | grep "$file" > /dev/null ; then
@@ -62,7 +62,7 @@ case "$1" in
         done
         ;;
 
-*.py)   @PYTHON@ -u ${top_srcdir}/tests/coverage.py -x "$1" ;;
+*.py)   /usr/bin/env python -u ${top_srcdir}/tests/coverage.py -x "$1" ;;
 # shows all functions called
 #*.py) pydb --fntrace --basename "$1" ;;
 

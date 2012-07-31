@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 #
@@ -19,18 +19,12 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
 from twisted.trial import unittest, runner, reporter
-
-from tests.testmessages import search_output, clear_all_messages, get_messages
-import logging
-from tests.testmessages import TestLoggingHandler
-logger = logging.getLogger()
-handler = TestLoggingHandler()
-logger.addHandler(handler)
-logger.setLevel(10)
 
 from pokernetwork.pokerbothandeval import *
 
@@ -318,7 +312,8 @@ class EvalDrawsTestCase(unittest.TestCase):
         assert draw.lookForDraws() == "FlushDraw", "invalid draw result"
 
 # ----------------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test40"
     suite = loader.suiteFactory()
@@ -326,10 +321,13 @@ def Run():
     suite.addTest(loader.loadClass(PreFlopHandEvalTestCase))
     suite.addTest(loader.loadClass(PostFlopHandEvalTestCase))
     suite.addTest(loader.loadClass(EvalDrawsTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-        ).run(suite)
+        ).run(GetTestSuite())
 
 # ----------------------------------------------------------------
 if __name__ == '__main__':
@@ -337,8 +335,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerbothandeval.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerbothandeval.py' TESTS='coverage-reset test-pokerbothandeval.py coverage-report' check )"
-# End:

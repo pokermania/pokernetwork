@@ -3,11 +3,11 @@
   <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="5" lag="15"/>
   <name>test</name>
   <passwd>test</passwd>
-  <servers>@POKER_SERVER_HOST@:19380</servers>
+  <servers>@config.pokernetwork.host@:@config.pokernetwork.port@</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
-  <currency id="1">@WGET@ wget --quiet -O - 'http://@POKER_WWW_HOST@/poker-web/currency_one.php?id=1&amp;command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency>
-  <path>@POKER_ENGINE_PKGSYSCONFDIR@</path> 
+  <currency id="1">/usr/bin/env wget --quiet -O - 'http://localhost/poker-web/currency_one.php?id=1&amp;command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency>
+  <path>@config.pokerengine.paths.conf@</path> 
 
   <table name="One">
     <bot name="foo" password="oof" />

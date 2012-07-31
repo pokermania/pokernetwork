@@ -22,13 +22,14 @@
 # Authors:
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 #
-import sys, os, tempfile, shutil
+import tempfile, shutil
+import unittest, sys, os
+from os import path
 
-import unittest
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+
 from cStringIO import StringIO
-
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
 
 tmpdir = tempfile.mkdtemp()
 open(os.path.join(tmpdir, "__init__.py"), "w").close()
@@ -162,9 +163,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerservice.py tests/test-pokerservice-load.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/pokerservice.py' TESTS='coverage-reset test-pokerservice-load.py test-pokerservice.py coverage-report' check )"
-# End:
-

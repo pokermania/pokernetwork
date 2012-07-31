@@ -23,7 +23,7 @@
 //  Johan Euphrosine <proppy@aminche.com>
 //
 
-ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/pages");
+ini_set('include_path', ini_get('include_path') . ":" . "@srcdir@/pokerweb/pages");
 
 require_once 'PHPUnit/Framework/TestCase.php';
 
@@ -51,9 +51,4 @@ class testwebservice extends PHPUnit_Framework_TestCase
 	}
 }
 
-//
-// Interpreted by emacs
-// Local Variables:
-// compile-command: "( cd .. ; ./config.status tests/testwebservice.php ) ; ( cd ../tests || cd ../../tests ; make TESTS='testwebservice.php' check )"
-// End:
 ?>

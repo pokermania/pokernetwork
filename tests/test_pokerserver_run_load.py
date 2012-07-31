@@ -1,5 +1,6 @@
-#!@PYTHON@
-# -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
 # more information about the above line at http://www.python.org/dev/peps/pep-0263/
 #
 # Copyright (C) 2009 Bradley M. Kuhn <bkuhn@ebb.org>
@@ -20,10 +21,17 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys, os, tempfile, shutil
-sys.path.insert(0, "@top_srcdir@")
+import tempfile, shutil
+import unittest, sys, os
+from os import path
 
-import unittest
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
+import sqlmanager
+
 from twisted.internet import reactor, defer
 
 from cStringIO import StringIO
@@ -47,11 +55,12 @@ settings_xml_server_open_options = """<?xml version="1.0" encoding="UTF-8"?>
 """
 # ------------------------------------------------------------    
 class PokerServerRunTestCase(unittest.TestCase):
-    def destroyDb(self, arg = None):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
     # -------------------------------------------------------------------------
     def setUp(self):
         self.destroyDb()
@@ -156,8 +165,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerserver-run-load.py tests/test-pokerserver.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/pokerserver.py' TESTS='coverage-reset test-pokerserver-run-load.py test-pokerserver.py coverage-report' check )"
-# End:

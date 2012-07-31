@@ -1,4 +1,5 @@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Note: this file is copyrighted by multiple entities; some license their
 # copyrights under GPLv3-or-later and some under AGPLv3-or-later.  Read
@@ -31,12 +32,16 @@
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 #
 
-import sys, os
-sys.path.insert(0, "@top_srcdir@")
+import unittest, sys
+from os import path
 
-import unittest
-import os.path
-import types
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
+import log_history
+import sqlmanager
 
 from twisted.python.runtime import seconds
 
@@ -44,22 +49,19 @@ from pokernetwork import pokerauth
 from pokernetwork.user import User
 from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerdatabase import PokerDatabase
-from pokernetwork.packets import PACKET_LOGIN, PACKET_AUTH
+from pokernetwork.packets import PACKET_LOGIN
 
 import libxml2
 
-import logging
-from tests.testmessages import clear_all_messages, get_messages, search_output
-from tests.testmessages import TestLoggingHandler
-logger = logging.getLogger()
-handler = TestLoggingHandler()
-logger.addHandler(handler)
-logger.setLevel(10)
-
-settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
+settings_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
 <server auto_create_account="no" verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../database/schema.sql" command="@MYSQL@" />
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
@@ -68,26 +70,40 @@ settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <listen tcp="19480" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
-settings_alternate_xml = """<?xml version="1.0" encoding="UTF-8"?>
+settings_alternate_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+    <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
-  <listen tcp="19480" />
+    <listen tcp="19480" />
 
-  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT.*"/>
-  <auth script="@srcdir@/test-pokerauth/pokerauth.py" />
+    <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+    <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+    <users temporary="BOT.*"/>
+    <auth script="%(tests_path)s/test_pokerauth/pokerauth.py" />
 </server>
-"""
+""" % {
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path
+}
 
 class MockCursorBase:
     def __init__(cursorSelf, testObject, acceptList):
@@ -159,15 +175,15 @@ class MockDatabase:
 class PokerAuthTestCase(unittest.TestCase):
         
     # -----------------------------------------------------------------------------------------------------
-    def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
     # --------------------------------------------------------
     def setUp(self):
-        clear_all_messages()
+        self.log_history = log_history.Log()
         self.destroyDb()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -182,8 +198,7 @@ class PokerAuthTestCase(unittest.TestCase):
         Test Poker auth : get_auth_instance"""
         db = None
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_xml)
         auth = pokerauth.get_auth_instance(db, None, settings)
         
     # -----------------------------------------------------------------------------------------------------    
@@ -192,8 +207,7 @@ class PokerAuthTestCase(unittest.TestCase):
         Test Poker auth : get_auth_instance alternate PokerAuth"""
         db = None
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_alternate_xml, len(settings_alternate_xml))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_alternate_xml)
         auth = pokerauth.get_auth_instance(db, None, settings)
         self.failUnless(hasattr(auth, 'gotcha'))
     # -----------------------------------------------------------------------------------------------------    
@@ -224,7 +238,7 @@ class PokerAuthTestCase(unittest.TestCase):
         auth = pokerauth.get_auth_instance(db, None, settings)
 
         self.assertEquals(auth.auth(PACKET_LOGIN,('joe_schmoe', 'foo')), ((4, 'joe_schmoe', 1), None))
-        self.assertEquals(get_messages()[-3:], [
+        self.assertEquals(self.log_history.get_all()[-3:], [
             'user joe_schmoe does not exist, create it',
             'creating user joe_schmoe', 
             'create user with serial 4'
@@ -239,7 +253,7 @@ class PokerAuthTestCase(unittest.TestCase):
 
         self.assertEquals(auth.auth(PACKET_LOGIN,('john_smith', 'blah')), (False, 'Invalid login or password'))
         if expectedMessage:
-            self.assertTrue(search_output(expectedMessage))
+            self.assertTrue(self.log_history.search(expectedMessage))
         self.failUnless(len(self.checkIfUserExistsInDB('john_smith')) == 0)
     # -----------------------------------------------------------------------------------------------------    
     def test05_authWhenDoubleEntry(self):
@@ -258,9 +272,9 @@ class PokerAuthTestCase(unittest.TestCase):
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
         
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('doyle_brunson', 'foo')), (False, "Invalid login or password"))
-        self.assertEquals(get_messages(), ['more than one row for doyle_brunson'])
+        self.assertEquals(self.log_history.get_all(), ['more than one row for doyle_brunson'])
     # -----------------------------------------------------------------------------------------------------    
     def test06_validAuthWhenEntryExists(self):
         """test06_validAuthWhenEntryExists
@@ -275,13 +289,13 @@ class PokerAuthTestCase(unittest.TestCase):
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'bar')), ((4L, 'dan_harrington', 1L), None))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'wrongpass')), (False, 'Invalid login or password'))
-        self.assertEquals(get_messages(), ['password mismatch for dan_harrington'])
+        self.assertEquals(self.log_history.get_all(), ['password mismatch for dan_harrington'])
     # -----------------------------------------------------------------------------------------------------    
     def test07_mysql11userCreate(self):
         """test07_mysql11userCreate
@@ -298,8 +312,8 @@ class PokerAuthTestCase(unittest.TestCase):
             
         auth = pokerauth.get_auth_instance(MockDatabase(), None, self.settings)
         self.assertEquals(auth.userCreate("nobody", "nothing"), 4815)
-        self.assertTrue(search_output('creating user nobody'))
-        self.assertTrue(search_output('create user with serial 4815'))
+        self.assertTrue(self.log_history.search('creating user nobody'))
+        self.assertTrue(self.log_history.search('create user with serial 4815'))
     # -----------------------------------------------------------------------------------------------------    
     def test08_mysqlbeyond11userCreate(self):
         """test08_mysqlbeyond11userCreate
@@ -316,8 +330,8 @@ class PokerAuthTestCase(unittest.TestCase):
 
         auth = pokerauth.get_auth_instance(MockDatabase(), None, self.settings)
         self.assertEquals(auth.userCreate("somebody", "something"), 162342)
-        self.assertTrue(search_output('creating user somebody'))
-        self.assertTrue(search_output('create user with serial 162342'))
+        self.assertTrue(self.log_history.search('creating user somebody'))
+        self.assertTrue(self.log_history.search('create user with serial 162342'))
     # -----------------------------------------------------------------------------------------------------    
     def test09_setAndGetLevel(self):
         """test09_setAndGetLevel
@@ -330,34 +344,55 @@ class PokerAuthTestCase(unittest.TestCase):
         self.assertEquals(auth.GetLevel('first'), 7)
         self.assertEquals(auth.GetLevel('second'), False)
 # -----------------------------------------------------------------------------------------------------    
-settings_mysql_xml = """<?xml version="1.0" encoding="UTF-8"?>
+settings_mysql_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
-  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+    <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
-  <listen tcp="19480" />
+    <listen tcp="19480" />
 
-  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT.*"/>
-  <auth script="@srcdir@/../pokernetwork/pokerauthmysql.py" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@" db="testpokerauthmysql" table="users"/>
+    <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+    <database
+        host="%(dbhost)s" name="%(dbname)s"
+        user="%(dbuser)s" password="%(dbuser_password)s"
+        root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+        schema="%(tests_path)s/../database/schema.sql"
+        command="%(mysql_command)s" />
+    <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+    <users temporary="BOT.*"/>
+    <auth script="%(tests_path)s/../pokernetwork/pokerauthmysql.py" host="%(dbhost)s" user="%(dbroot)s" password="%(dbroot_password)s" db="testpokerauthmysql" table="users"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 import MySQLdb
 
 class PokerAuthMysqlTestCase(PokerAuthTestCase):
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
-        clear_all_messages()
+        self.log_history = log_history.Log()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_mysql_xml, len(settings_mysql_xml))
         self.settings.header = self.settings.doc.xpathNewContext()
 
         self.parameters = self.settings.headerGetProperties("/server/auth")[0]
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % self.parameters["db"],
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host,
+            port=config.test.mysql.port
+        )
         self.db = MySQLdb.connect(
             host = self.parameters["host"],
             port = int(self.parameters.get("port", '3306')),
@@ -370,7 +405,7 @@ class PokerAuthMysqlTestCase(PokerAuthTestCase):
         self.db.query("INSERT INTO users (username, password, privilege) VALUES ('testuser', 'testpassword', %i)" % User.REGULAR)
     # -----------------------------------------------------------------------------------------------------    
     def tearDown(self):
-        self.db.query("DROP DATABASE %s" % self.parameters["db"])
+        self.db.close()
         pokerauth._get_auth_instance = None
     # -----------------------------------------------------------------------------------------------------    
     def checkIfUserExistsInDB(self, name, selectString = ""):
@@ -409,9 +444,9 @@ class PokerAuthMysqlTestCase(PokerAuthTestCase):
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
         
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('doyle_brunson', 'foo')), (False, "Invalid login or password"))
-        self.assertEquals(get_messages(), ['more than one row for doyle_brunson'])
+        self.assertEquals(self.log_history.get_all(), ['more than one row for doyle_brunson'])
     # -----------------------------------------------------------------------------------------------------    
     def test06_validAuthWhenEntryExists(self):
         """test06_validAuthWhenEntryExists
@@ -426,13 +461,13 @@ class PokerAuthMysqlTestCase(PokerAuthTestCase):
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'bar')), (('dan_harrington', 'dan_harrington', 1L), None))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'wrongpass')), (False, 'Invalid login or password'))
-        self.assertEquals(get_messages(), ['password mismatch for dan_harrington'])
+        self.assertEquals(self.log_history.get_all(), ['password mismatch for dan_harrington'])
     # -----------------------------------------------------------------------------------------------------    
     def test07_mysql11userCreate(self):
         """test08_mysqlbeyond11userCreate is not needed for MySQLAUTH"""
@@ -453,8 +488,7 @@ def GetTestSuite():
     
 # -----------------------------------------------------------------------------------------------------
 def Run(verbose = 1):
-    suite = GetTestSuite()
-    return unittest.TextTestRunner(verbosity=verbose).run(suite)
+    return unittest.TextTestRunner(verbosity=2).run(GetTestSuite())
     
 # -----------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
@@ -462,8 +496,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerauth.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerauth.py ../pokernetwork/pokerauthmysql.py' TESTS='coverage-reset test-pokerauth.py coverage-report' check )"
-# End:

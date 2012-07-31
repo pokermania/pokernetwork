@@ -1,5 +1,5 @@
-#!@PYTHON@ 
-# -*- python -*-
+#/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2009 Loic Dachary <loic@dachary.org>
 #
@@ -20,10 +20,9 @@
 #
 #
 import sys
-sys.path.insert(0, "@top_srcdir@")
 
 if(sys.argv[-1][-4:] != ".xml"):
-    sys.argv.append("@POKER_NETWORK_PKGSYSCONFDIR@/poker.server.xml")
+    sys.argv.append("@config.pokernetwork.paths.conf@/poker.server.xml")
 
 from pokernetwork.pokersql import run
 print run(sys.argv)

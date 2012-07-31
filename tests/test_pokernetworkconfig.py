@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2008 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2006 Mekensleep <licensing@mekensleep.com>
@@ -24,13 +24,11 @@
 #  Loic Dachary <loic@dachary.org>
 #
 
-import sys, os, shutil
-sys.path.insert(0, "@top_srcdir@")
-sys.path.insert(0, "..")
+import unittest, sys, os, shutil
+from os import path
 
-import unittest
-
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
 from pokernetwork import pokernetworkconfig
 
@@ -39,7 +37,7 @@ class PokerNetworkConfigTestCase(unittest.TestCase):
     #--------------------------------------------------------------
     def setUp(self):
         self.Config = pokernetworkconfig.Config(['.'])
-        shutil.copyfile('@srcdir@/conf/poker.server.xml.in', 'poker.server.xml.in')
+        shutil.copyfile(path.join(TESTS_PATH, 'conf/poker.server.xml.in'), 'poker.server.xml.in')
     
     #--------------------------------------------------------------    
     def tearDown(self):
@@ -94,8 +92,3 @@ def Run(verbose = 1):
 #--------------------------------------------------------------
 if __name__ == '__main__':
     Run()
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokernetworkconfig.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokernetworkconfig.py' TESTS='coverage-reset test-pokernetworkconfig.py coverage-report' check )"
-# End:

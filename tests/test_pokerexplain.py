@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 #
@@ -18,10 +18,12 @@
 # along with this program in a file in the toplevel directory called
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
-import sys
-import os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+import sys, os
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from twisted.trial import unittest, runner, reporter
 
@@ -31,7 +33,6 @@ verbose = int(os.environ.get('VERBOSE_T', '-1'))
 
 from pokerengine import pokergame
 from pokernetwork.pokerexplain import PokerGames
-from pokernetwork import pokerexplain
 
 class MockupPokerGameClient:
 
@@ -71,7 +72,7 @@ class PokerExplainTestCase(unittest.TestCase):
 
     def setUp(self):
         self.explain = PokerExplain()
-        self.explain.games.dirs = [ '../@srcdir@/poker-engine' ]
+        self.explain.games.dirs = [path.join(TESTS_PATH, 'poker-engine')]
 
     def test01_utilities(self):
         game_id = 1
@@ -1322,16 +1323,20 @@ class PokerExplainTestCase(unittest.TestCase):
             self.assertNotEqual(PACKET_POKER_PLAYER_HAND_STRENGTH, packet.type)
         
 # ----------------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test42"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerGamesTestCase))
     suite.addTest(loader.loadClass(PokerExplainTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-    ).run(suite)
+    ).run(GetTestSuite())
 
 # ----------------------------------------------------------------
 if __name__ == '__main__':
@@ -1339,9 +1344,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerexplain.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerexplain.py' VERBOSE_T=6 TESTS='coverage-reset test-pokerexplain.py coverage-report' check )"
-# End:
-

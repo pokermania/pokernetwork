@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2008, 2009 Loic Dachary <loic@dachary.org>
@@ -21,15 +21,16 @@
 #
 
 import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
 from twisted.internet import selectreactor, main
 class MyReactor(selectreactor.SelectReactor):
       def runUntilCurrent(self):
             self._cancellations = 20000000
             selectreactor.SelectReactor.runUntilCurrent(self)
-main.installReactor(MyReactor())
 from twisted.internet import defer, reactor
 from twisted.application import internet
 from twisted.python import failure
@@ -47,9 +48,8 @@ from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
 from pokernetwork.pokerpackets import *
 
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
 settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
-<server verbose="%i" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+<server ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
@@ -64,106 +64,106 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
   <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
   <users temporary="BOT.*"/>
 </server>
-""" % verbose
+"""
 
 class LeakTestCase:
 
-      def destroyDb(self, arg = None):
-            if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-                  os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-            else:
-                  os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, arg = None):
+        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        else:
+            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
 
-      def initServer(self):
-            settings = pokernetworkconfig.Config([])
-            settings.loadFromString(settings_xml_server)
-            self.server_service = pokerservice.PokerService(settings)
-            self.server_service.disconnectAll = lambda: True
-            self.server_service.startService()
-            self.server_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.server_service))
-            self.server_port = reactor.listenTCP(19481, self.server_site, interface="127.0.0.1")
-            
-      def setUp(self):
-            testclock._seconds_reset()
-            pokermemcache.memcache = pokermemcache.MemcacheMockup
-            pokermemcache.memcache_singleton.clear()
-            pokermemcache.memcache_expiration_singleton.clear()
-            self.destroyDb()
-            self.initServer()
+    def initServer(self):
+        settings = pokernetworkconfig.Config([])
+        settings.loadFromString(settings_xml_server)
+        self.server_service = pokerservice.PokerService(settings)
+        self.server_service.disconnectAll = lambda: True
+        self.server_service.startService()
+        self.server_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.server_service))
+        self.server_port = reactor.listenTCP(19481, self.server_site, interface="127.0.0.1")
 
-      def tearDownServer(self):
-            self.server_site.stopFactory()
-            d = self.server_service.stopService()
-            d.addCallback(lambda x: self.server_port.stopListening())
-            return d
-                        
-      def tearDown(self):
-            d = self.tearDownServer()
-            d.addCallback(self.destroyDb)
-            d.addCallback(lambda x: reactor.disconnectAll())
-            return d
+    def setUp(self):
+        testclock._seconds_reset()
+        pokermemcache.memcache = pokermemcache.MemcacheMockup
+        pokermemcache.memcache_singleton.clear()
+        pokermemcache.memcache_expiration_singleton.clear()
+        self.destroyDb()
+        self.initServer()
 
-      def cleanMemcache(self, x):
-            pokermemcache.memcache_singleton.clear()
-            pokermemcache.memcache_expiration_singleton.clear()
+    def tearDownServer(self):
+        self.server_site.stopFactory()
+        d = self.server_service.stopService()
+        d.addCallback(lambda x: self.server_port.stopListening())
+        return d
 
-      def test01_ping(self):
-            """
-            VIRT (samples: 167, step 3s)
-            34372, stable
-            """
-            def f(ignored):
-                  d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPing"}')
-                  d.addCallback(self.cleanMemcache)
-                  d.addCallback(f)
-            f(None)
+    def tearDown(self):
+        d = self.tearDownServer()
+        d.addCallback(self.destroyDb)
+        d.addCallback(lambda x: reactor.disconnectAll())
+        return d
 
-      def test02_joinTable(self):
-            """
-            VIRT (samples: 63, step: 3s)
-            35792, stable
-            """
-            def f(ignored, i):
-                  serial = 0
-                  session = 'session' + str(i)
-                  self.server_site.memcache.set(session, str(serial))
-                  headers = { 'Cookie': 'TWISTED_SESSION='+session }
-                  d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
-                  d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
-                  d.addCallback(self.cleanMemcache)
-                  d.addCallback(f, i+1)
-            i = 1
-            f(None, i)
+    def cleanMemcache(self, x):
+        pokermemcache.memcache_singleton.clear()
+        pokermemcache.memcache_expiration_singleton.clear()
 
-      def test03_joinTable_guppy(self):
-            import guppy, gc
-            hpy = guppy.hpy()            
-            def f(ignored, last, first, i):
-                  gc.collect()
-                  next = hpy.heap()
-                  print 'SINCE LAST TIME'
-                  print next - last
-                  print 'SINCE FOREVER'
-                  print last - first
-                  serial = 0
-                  session = 'session' + str(i)
-                  self.server_site.memcache.set(session, str(serial))
-                  headers = { 'Cookie': 'TWISTED_SESSION='+session }
-                  d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
-                  d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
-                  d.addCallback(self.cleanMemcache)
-                  d.addCallback(f, next, first, i+1)
-            first = hpy.heap()
-            i = 1
-            f(None, first, first, i)
+    def test01_ping(self):
+        """
+        VIRT (samples: 167, step 3s)
+        34372, stable
+        """
+        def f(ignored):
+            d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPing"}')
+            d.addCallback(self.cleanMemcache)
+            d.addCallback(f)
+        f(None)
+
+    def test02_joinTable(self):
+        """
+        VIRT (samples: 63, step: 3s)
+        35792, stable
+        """
+        def f(ignored, i):
+            serial = 0
+            session = 'session' + str(i)
+            self.server_site.memcache.set(session, str(serial))
+            headers = { 'Cookie': 'TWISTED_SESSION='+session }
+            d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
+            d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
+            d.addCallback(self.cleanMemcache)
+            d.addCallback(f, i+1)
+        i = 1
+        f(None, i)
+
+    def test03_joinTable_guppy(self):
+        import guppy, gc
+        hpy = guppy.hpy()
+        def f(ignored, last, first, i):
+            gc.collect()
+            next = hpy.heap()
+            print 'SINCE LAST TIME'
+            print next - last
+            print 'SINCE FOREVER'
+            print last - first
+            serial = 0
+            session = 'session' + str(i)
+            self.server_site.memcache.set(session, str(serial))
+            headers = { 'Cookie': 'TWISTED_SESSION='+session }
+            d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableJoin","game_id":1}', headers = headers)
+            d.addCallback(lambda x: client.getPage("http://127.0.0.1:19481/POKER_REST", postdata = '{"type":"PacketPokerTableQuit","game_id":1}', headers = headers))
+            d.addCallback(self.cleanMemcache)
+            d.addCallback(f, next, first, i+1)
+        first = hpy.heap()
+        i = 1
+        f(None, first, first, i)
+
+def run():
+    main.installReactor(MyReactor())
+    t = LeakTestCase()
+    t.setUp()
+    t.test01_ping()
+    reactor.run()
+
 
 if __name__ == '__main__':
-      t = LeakTestCase()
-      t.setUp()
-      t.test01_ping()
-      reactor.run()
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-leak-no-trial.py ) ; ( cd ../tests ; VERBOSE_T=-1 ./test-leak-no-trial.py )"
-# End:
+    run()

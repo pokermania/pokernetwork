@@ -1,12 +1,15 @@
-debian/tmp/usr/lib/python???/*-packages/pokernetwork
-debian/tmp/usr/lib/python???/*-packages/twisted/plugins
-debian/tmp/usr/share/poker-network/*.sql
-debian/tmp/usr/sbin
-debian/tmp/usr/lib/cgi-bin
-debian/tmp/usr/share/poker-network/conf/poker.server.xml
-debian/tmp/usr/share/poker-network/conf/poker.bot.xml
-debian/tmp/usr/share/poker-network/conf/poker.pem
-debian/tmp/usr/share/poker-network/upgrades
-debian/tmp/usr/share/munin/plugins
-debian/tmp/usr/share/man/man8
-debian/tmp/usr/lib/pkgconfig
+#debian/tmp/usr/lib/python???/*-packages/pokernetwork
+#debian/tmp/usr/lib/python???/*-packages/twisted/plugins
+#debian/tmp/usr/share/poker-network/*.sql
+#debian/tmp/usr/sbin
+#debian/tmp/usr/lib/cgi-bin
+#debian/tmp/usr/share/poker-network/conf/poker.server.xml
+#debian/tmp/usr/share/poker-network/conf/poker.bot.xml
+#debian/tmp/usr/share/poker-network/conf/poker.pem
+#debian/tmp/usr/share/poker-network/upgrades
+#debian/tmp/usr/share/munin/plugins
+#debian/tmp/usr/share/man/man8
+#debian/tmp/usr/lib/pkgconfig
+database/*.sql upgrades /usr/share/poker-network
+conf/*.xml conf/poker.pem /usr/share/poker-network/conf
+twisted /usr/share/pyshared

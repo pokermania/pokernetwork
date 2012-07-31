@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/env python
 # -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
@@ -24,21 +24,22 @@
 #  Loic Dachary <loic@dachary.org>
 #
 import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
+import log_history
+import sqlmanager
 
 import libxml2
 
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
-from twisted.internet import reactor, defer, error
-from twisted.python import failure
 
 twisted.internet.base.DelayedCall.debug = True
-
-from tests.testmessages import silence_all_messages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-if verbose < 0: silence_all_messages()
 
 from twisted.python.runtime import seconds
 
@@ -56,22 +57,39 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
   <listen tcp="19480" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
-  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="root" root_password="" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 class PokerCrashTestCase(unittest.TestCase):
 
-    def destroyDb(self, arg = None):
-        os.system("@MYSQL@ -u root -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
 
     def setUpServer(self):
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_xml_server)
         #
         # Setup database
         #
@@ -180,15 +198,19 @@ class PokerCrashTestCase(unittest.TestCase):
         cursor.close()
 
 # -----------------------------------------------------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test09"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerCrashTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(reporter.TextReporter,
 #                              tracebackFormat='verbose',
                               tracebackFormat='default',
-                              ).run(suite)
+                              ).run(GetTestSuite())
 
 # -----------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
@@ -196,8 +218,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-servercrash.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokertable.py ../pokernetwork/pokerservice.py  ../pokernetwork/pokerserver.py' TESTS='coverage-reset test-servercrash.py coverage-report' check )"
-# End:

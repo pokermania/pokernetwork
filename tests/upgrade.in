@@ -30,17 +30,13 @@ SCHEMA=$srcdir/schema.sql
 
 . $srcdir/createdatabase
 
-@PYTHON@ ${srcdir}/coverage.py -x  ../database/pokerdatabaseupgrade --dry-run --upgrades=$srcdir/../database $srcdir/poker.server.xml
-@PYTHON@ ${srcdir}/coverage.py -x ../database/pokerdatabaseupgrade --upgrades=$srcdir/../database $srcdir/poker.server.xml
+/usr/bin/env python ${srcdir}/coverage.py -x  ../database/pokerdatabaseupgrade --dry-run --upgrades=$srcdir/../database $srcdir/poker.server.xml
+/usr/bin/env python ${srcdir}/coverage.py -x ../database/pokerdatabaseupgrade --upgrades=$srcdir/../database $srcdir/poker.server.xml
 trap "rm -fr conftest" EXIT
 rm -fr conftest ; mkdir -p conftest
 export PYTHONPATH=$srcdir/..
-@PYTHON@ ${srcdir}/coverage.py -x @POKERCONFIGUPGRADE@ --verbose=1 --reference=$srcdir/conf conftest
+/usr/bin/env python ${srcdir}/coverage.py -x @config.pokerconfigupgrade@ --verbose=1 --reference=$srcdir/conf conftest
 chmod u+w conftest
-@PYTHON@ ${srcdir}/coverage.py -x @POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.bot conftest/poker.bot.xml.in
-@PYTHON@ ${srcdir}/coverage.py -x @POKERCONFIGUPGRADE@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.server conftest/poker.server.xml.in
+/usr/bin/env python ${srcdir}/coverage.py -x @config.pokerconfigupgrade@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.bot conftest/poker.bot.xml.in
+/usr/bin/env python ${srcdir}/coverage.py -x @config.pokerconfigupgrade@ --verbose=1 --module=pokernetwork.pokernetworkconfig --upgrades=$srcdir/../upgrades/poker.server conftest/poker.server.xml.in
 
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/upgrade.py ) ; ( cd ../tests ; make TESTS='upgrade' check )"
-# End:

@@ -1,5 +1,6 @@
-#!@PYTHON@
-# -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
 # more information about the above line at http://www.python.org/dev/peps/pep-0263/
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
@@ -28,9 +29,17 @@
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 #  Cedric Pinson <cpinson@freesheep.org>
 #
-import sys, os, tempfile, shutil
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+import tempfile, shutil
+import sys, os
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
+import log_history
+import sqlmanager
 
 import libxml2
 import locale
@@ -46,8 +55,6 @@ from twisted.internet import reactor, defer
 from twisted.python.runtime import seconds
 
 twisted.internet.base.DelayedCall.debug = True
-
-from tests.testmessages import search_output, clear_all_messages, get_messages
 
 import logging
 from tests.testmessages import TestLoggingHandler
@@ -121,12 +128,26 @@ settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 # Dummy CERT borrowed from Debian's snake-oil certificate.  Including it
 # here since I can't assume what distribution I am on.
@@ -240,13 +261,15 @@ class MockDatabase:
 
 class PokerServiceTestCaseBase(unittest.TestCase):
 
-    def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
 
     def setUp(self, settingsFile = settings_xml):
+        self.log_history = log_history.Log()
         testclock._seconds_reset()
         self.destroyDb()
         self.settings = settings = pokernetworkconfig.Config([])
@@ -301,24 +324,40 @@ monitor_settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 
   <listen tcp="19480" />
 
-  <monitor>../@srcdir@/monitorplugin.py</monitor>
+  <monitor>%(tests_path)s/monitorplugin.py</monitor>
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 class MonitorTestCase(unittest.TestCase):
 
-    def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
 
     def setUp(self):
+        self.log_history = log_history.Log()
         testclock._seconds_reset()
         self.destroyDb()
         settings = pokernetworkconfig.Config([])
@@ -395,15 +434,30 @@ list_table_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
     def setUp(self):
+        self.log_history = log_history.Log()
         PokerServiceTestCaseBase.setUp(self, settingsFile = list_table_xml)
     def test01_my(self):
         self.service.startService()
@@ -499,7 +553,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         self.assertEqual(0, len(tables))
     def test09_currency_and_variant_and_bettingStructure_and_count_withSome(self):
         self.service.startService()
-        clear_all_messages()
+        self.log_history.reset()
         nlHe100Currency1 = 1
         nlHe100Currency2 = 2
         limitHE24Currency2 = 3
@@ -689,46 +743,46 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
                     for betting in [ None, '', '2-4-limit', '100-200-no-limit' ]:
                         tables = self.service.searchTables(currencySerial, variant, betting, ii)
                         self.assertEqual(0, len(tables))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
     def test10_tooMany(self):
         self.service.startService()
 
-        clear_all_messages()
+        self.log_history.reset()
         tables = self.service.listTables('\tholdem\t', 0)
         self.assertEqual(4, len(tables))
-        self.assertEquals(get_messages(), ["Following listTables() criteria query_string has more parameters than expected, ignoring third one and beyond in: \tholdem\t"])
+        self.assertEquals(self.log_history.get_all(), ["Following listTables() criteria query_string has more parameters than expected, ignoring third one and beyond in: \tholdem\t"])
     def test11_currencySerialIsNotAnInteger(self):
         self.service.startService()
 
-        clear_all_messages()
+        self.log_history.reset()
         tables = self.service.listTables("hithere\t", 0)
         self.assertEqual(0, len(tables))
-        self.assertEquals(get_messages(), ["listTables(): currency_serial parameter must be an integer, instead was: hithere"])
+        self.assertEquals(self.log_history.get_all(), ["listTables(): currency_serial parameter must be an integer, instead was: hithere"])
     def test13_emptyArgsShouldGenerateSameAsSelectAll(self):
         self.service.startService()
 
-        clear_all_messages()
+        self.log_history.reset()
         tables = self.service.listTables("all", 0)
         allSelectCount = len(tables)
         self.assertEquals(allSelectCount, 5)
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
 
-        clear_all_messages()
+        self.log_history.reset()
         tables = self.service.listTables("\t", 0)
         self.assertEqual(allSelectCount, len(tables))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
     def test14_sqlInjectionInParametersShouldNotWork(self):
         self.service.startService()
 
-        clear_all_messages()
+        self.log_history.reset()
         tables = self.service.listTables("\tholdem'; DELETE from pokertables WHERE variant = 'holdem", 0)
         self.assertEqual(0, len(tables))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
 
-        clear_all_messages()
+        self.log_history.reset()
         tables = self.service.listTables("\tholdem", 0)
         self.assertEqual(4, len(tables))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
 ###############################################################################
 # Much of GetTableByCriteriaTestCase() is testing the algorithm defined in
 # getTableBestByCriteria()
@@ -740,6 +794,7 @@ class MockPlayerForCriteria:
 
 class GetTableBestByCriteriaTestCase(PokerServiceTestCaseBase):
     def setUp(self):
+        self.log_history = log_history.Log()
         PokerServiceTestCaseBase.setUp(self, settingsFile = list_table_xml)
         self.service.startService()
     def giveUserMoney(self, userSerial, currencySerial, amount):
@@ -855,6 +910,7 @@ class GetTableBestByCriteriaTestCase(PokerServiceTestCaseBase):
 #####################################################################
 class TourneySelectTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
+        self.log_history = log_history.Log()
         PokerServiceTestCaseBase.setUp(self, settingsFile)
         self.createTourneysSchedules()
         
@@ -1024,7 +1080,7 @@ class PlayerPlacesTestCase(PokerServiceTestCaseBase):
         db.db.query("INSERT INTO tourneys (serial, state) VALUES (%d, '%s')" % (tourney_serial+6, 'canceled'))
         places = self.service.getPlayerPlaces(serial)
         self.assertEqual([], places.tables)
-        self.assertEqual([tourney_serial+1, tourney_serial+2, tourney_serial+3, tourney_serial+4], places.tourneys)
+        self.assertEqual(set([tourney_serial+1, tourney_serial+2, tourney_serial+3, tourney_serial+4]), set(places.tourneys))
         self.assertEqual(serial, places.serial)
 
 class ResthostTestCase(unittest.TestCase):
@@ -1042,12 +1098,26 @@ class ResthostTestCase(unittest.TestCase):
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
     xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
@@ -1061,12 +1131,26 @@ class ResthostTestCase(unittest.TestCase):
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
     xml_with_resthost_name = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
@@ -1081,20 +1165,36 @@ class ResthostTestCase(unittest.TestCase):
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
-    def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
 
     def setUp(self):
+        self.log_history = log_history.Log()
         self.destroyDb()
 
     def setUpService(self, xml):
@@ -1250,11 +1350,11 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         for (instanceVar, val) in startedOnlyVars:
             self.assertEquals(instanceVar in self.service.__dict__, False)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.service.startService()
-        self.failUnless(search_output('Unable to find codeset string in language value: this_locale_does_not_exist'))
-        self.failUnless(search_output("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
-        self.failUnless(search_output('Translation setup for this_locale_does_not_exist failed.  Strings for clients requesting this_locale_does_not_exist will likely always be in English'))
+        self.failUnless(self.log_history.search('Unable to find codeset string in language value: this_locale_does_not_exist'))
+        self.failUnless(self.log_history.search("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        self.failUnless(self.log_history.search('Translation setup for this_locale_does_not_exist failed.  Strings for clients requesting this_locale_does_not_exist will likely always be in English'))
         for (instanceVar, val) in startedOnlyVars:
             self.assertEquals(instanceVar in self.service.__dict__, True)
             if instanceVar == "tables":
@@ -1308,16 +1408,16 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.service = pokerservice.PokerService(settings)
-        clear_all_messages()
+        self.log_history.reset()
         self.service.startService()
         self.assertEquals(len(self.service.gettextFuncs), 17)
-        self.failUnless(search_output('Unable to find codeset string in language value: this_locale_does_not_exist'))
-        self.failUnless(search_output("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        self.failUnless(self.log_history.search('Unable to find codeset string in language value: this_locale_does_not_exist'))
+        self.failUnless(self.log_history.search("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
         for ii in ('en_US.UTF-8', 'fr_FR.UTF-8'):
             self.assertEquals(ii in self.service.gettextFuncs, True)
         self.assertEquals(self.service.gettextFuncs['en_US.UTF-8']("Aces"), "Aces")
         self.assertEquals(self.service.gettextFuncs['fr_FR.UTF-8']("Aces"), "d'As")
-        self.assertEquals(search_output("Unable to restore original locale: testing bad setlocale"), True)
+        self.assertEquals(self.log_history.search("Unable to restore original locale: testing bad setlocale"), True)
         locale.setlocale = saveLocale
 
     def test00_05_configValues(self):
@@ -1337,12 +1437,12 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         settings.doc = libxml2.parseMemory(new_settings_xml, len(new_settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.service = pokerservice.PokerService(settings)
-        clear_all_messages()
+        self.log_history.reset()
         self.service.startService()
         self.assertEquals(len(self.service.gettextFuncs), 17)
-        self.failUnless(search_output('Unsupported codeset MAGIC-PIXIE-DUST for fr_FR.MAGIC-PIXIE-DUST in poker-engine; locale ignored: unknown encoding: MAGIC-PIXIE-DUST'))
-        self.failUnless(search_output('Unable to find codeset string in language value: this_locale_does_not_exist'))
-        self.failUnless(search_output("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        self.failUnless(self.log_history.search('Unsupported codeset MAGIC-PIXIE-DUST for fr_FR.MAGIC-PIXIE-DUST in poker-engine; locale ignored: unknown encoding: MAGIC-PIXIE-DUST'))
+        self.failUnless(self.log_history.search('Unable to find codeset string in language value: this_locale_does_not_exist'))
+        self.failUnless(self.log_history.search("No translation for language this_locale_does_not_exist for this_locale_does_not_exist in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
         for ii in ('en_US.UTF-8', 'fr_FR.MAGIC-PIXIE-DUST'):
             self.assertEquals(ii in self.service.gettextFuncs, True)
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
@@ -1358,11 +1458,11 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         settings.doc = libxml2.parseMemory(new_settings_xml, len(new_settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.service = pokerservice.PokerService(settings)
-        clear_all_messages()
+        self.log_history.reset()
         self.service.startService()
         self.assertEquals(len(self.service.gettextFuncs), 17)
-        self.failUnless(search_output('Unable to find codeset string in language value: .MAGIC-PIXIE-DUST'))
-        self.failUnless(search_output("No translation for language .MAGIC-PIXIE-DUST for .MAGIC-PIXIE-DUST in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
+        self.failUnless(self.log_history.search('Unable to find codeset string in language value: .MAGIC-PIXIE-DUST'))
+        self.failUnless(self.log_history.search("No translation for language .MAGIC-PIXIE-DUST for .MAGIC-PIXIE-DUST in poker-engine; locale ignored: [Errno 2] No translation file found for domain: 'poker-engine'"))
         for ii in ('en_US.UTF-8', '.MAGIC-PIXIE-DUST'):
             self.assertEquals(ii in self.service.gettextFuncs, True)
             self.assertEquals(self.service.gettextFuncs[ii]("Aces"), "Aces")
@@ -1375,10 +1475,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.service = pokerservice.PokerService(settings)
-        clear_all_messages()
+        self.log_history.reset()
         self.service.startService()
         self.service._separateCodesetFromLocale('')
-        msgs = get_messages()[-2:]
+        msgs = self.log_history.get_all()[-2:]
         self.assertEquals(msgs, ['Unable to find codeset string in language value: ', 'Unable to find locale string in language value: '])
     def test01_auth(self):
         self.service.startService()
@@ -1783,14 +1883,14 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.avatar_collection.add(self.user1_serial, client1)
         client1.expectedReason = PacketPokerTable.REASON_TOURNEY_START
         heads_up = [t for t in self.service.tourneys.values() if t.name=='sitngo2'][0]
-        clear_all_messages()
+        self.log_history.reset()
         self.service.tourneyRegister(PacketPokerTourneyRegister(
             serial = self.user1_serial,
             tourney_serial = heads_up.serial
         ))
-        self.failUnless(search_output('tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = %d AND currency_serial = 1 AND amount >= 300000' % self.user1_serial), "UPDATE user2money notice not found in verbose output")
-        self.failUnless(search_output('tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (%d, 1, 1)' % self.user1_serial), "INSERT INTO user2tourney notice not found in verbose output")
-        clear_all_messages()
+        self.failUnless(self.log_history.search('tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = %d AND currency_serial = 1 AND amount >= 300000' % self.user1_serial), "UPDATE user2money notice not found in verbose output")
+        self.failUnless(self.log_history.search('tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (%d, 1, 1)' % self.user1_serial), "INSERT INTO user2tourney notice not found in verbose output")
+        self.log_history.reset()
         self.assertEquals(len(client1.packets), 1)
         self.assertEquals(client1.packets[0].type, PACKET_POKER_TOURNEY_REGISTER)
         self.assertEquals(client1.packets[0].serial, self.user1_serial)
@@ -1893,7 +1993,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         cursor.execute("INSERT INTO user2tourney VALUES (2, 1, 4000, 0, -1)")
         cursor.execute("INSERT INTO user2tourney VALUES (3, 1, 4000, 0, -1)")
         self.service.db = pokerdatabase.PokerDatabase(self.settings)
-        self.service.dirs = ['@POKER_ENGINE_PKGDATADIR@/conf']
+        self.service.dirs = [path.join(config.test.engine_path, 'conf')]
         self.service.cleanupTourneys()
         tourney = self.service.tourneys[4000]
         self.assertEqual(set([1, 2, 3]), set(tourney.players.keys()))
@@ -1994,7 +2094,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         for enlo in ('this_locale_does_not_exist', 'en_GB.UTF-8', 'en_US.UTF-8', 'en_CA.UTF-8'):
             self.assertEquals(self.service.locale2translationFunc(enlo)("Aces"), u"Aces".encode('utf8'))
-        clear_all_messages()
+        self.log_history.reset()
         enc = 'UTF-8'
         self.assertEquals(self.service.locale2translationFunc('da_DK', enc)("%(name)s mucks loosing hand"), u'%(name)s mucker tabende hånd'.encode('utf8'))
         self.assertEquals(self.service.locale2translationFunc('de_DE', enc)("%(name)s raises %(amount)s"), u'%(name)s erhöht %(amount)s'.encode('utf8') )
@@ -2013,9 +2113,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         table_serial = self.service.tables.values()[0].game.id
         currency_serial = 1
         self.service.seatPlayer(self.user1_serial, table_serial, 0)
-        clear_all_messages()
+        self.log_history.reset()
         self.service.buyInPlayer(self.user1_serial, table_serial, currency_serial, None)
-        self.failUnless(search_output("called buyInPlayer with None amount (expected > 0); denying buyin"))
+        self.failUnless(self.log_history.search("called buyInPlayer with None amount (expected > 0); denying buyin"))
     def test25_chatMessageArchive(self):
         self.service.startService()
         player_serial = 10
@@ -2034,24 +2134,40 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 ##############################################################################
 class RefillTestCase(unittest.TestCase):
 
-    def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
 
     def setUp(self):
+        self.log_history = log_history.Log()
         settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
         <server verbose="3">
         <listen tcp="19480" />
         <refill serial="1" amount="10000" />
         <delays />
-        <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+        <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
         <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-        <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+          <database
+            host="%(dbhost)s" name="%(dbname)s"
+            user="%(dbuser)s" password="%(dbuser_password)s"
+            root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+            schema="%(tests_path)s/../database/schema.sql"
+            command="%(mysql_command)s" />
         </server>
-        """
+        """ % {
+            'dbhost': config.test.mysql.host,
+            'dbname': config.test.mysql.database,
+            'dbuser': config.test.mysql.user.name,
+            'dbuser_password': config.test.mysql.user.password,
+            'dbroot': config.test.mysql.root_user.name,
+            'dbroot_password': config.test.mysql.root_user.password,
+            'tests_path': TESTS_PATH,
+            'engine_path': config.test.engine_path,
+            'mysql_command': config.test.mysql.command
+        }
         testclock._seconds_reset()
         self.destroyDb()
         self.service = pokerservice.PokerService(settings_xml)
@@ -2099,7 +2215,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         self.createUsers()
         user_serial = self.user1_serial
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
+                                                  dirs = [path.join(config.test.engine_path, 'conf')])
         tourney.currency_serial = 1
         tourney.via_satellite = 0
         self.service.tourneys[tourney_serial] = tourney
@@ -2118,7 +2234,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         user_serial = 1
         self.service.startService()
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
+                                                  dirs = [path.join(config.test.engine_path, 'conf')])
         self.service.tourneys[tourney_serial] = tourney
         p = self.service.tourneyUnregister(PacketPokerTourneyUnregister(serial = user_serial, tourney_serial = tourney_serial))
         self.assertEqual(PacketPokerTourneyUnregister.NOT_REGISTERED, p.code)
@@ -2127,7 +2243,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         user_serial = 1
         self.service.startService()
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
+                                                  dirs = [path.join(config.test.engine_path, 'conf')])
         tourney.register(user_serial)
         tourney.currency_serial = 1
         tourney.state = pokertournament.TOURNAMENT_STATE_RUNNING
@@ -2139,7 +2255,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         user_serial = 1
         self.service.startService()
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
+                                                  dirs = [path.join(config.test.engine_path, 'conf')])
         tourney.register(user_serial)
         tourney.currency_serial = 1
         tourney.buy_in = 1000
@@ -2153,7 +2269,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         self.createUsers()
         user_serial = self.user1_serial
         tourney = pokertournament.PokerTournament(serial = tourney_serial,
-                                                  dirs = ['@POKER_ENGINE_PKGDATADIR@/conf'])
+                                                  dirs = [path.join(config.test.engine_path, 'conf')])
         tourney.register(user_serial)
         tourney.currency_serial = 1
         self.service.tourneys[tourney_serial] = tourney
@@ -2217,13 +2333,13 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
 
         self.service.databaseEvent = dbEventMock
 
-        clear_all_messages()
+        self.log_history.reset()
 
         pack = MockPacket()
         retPack =  self.service.tourneyUnregister(pack)
         self.assertEquals(pack, retPack)
         self.assertEquals(calledDBCount, 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('tourneyUnregister: UPDATE user2money SET amount = amount + 20') >= 0)
         self.failUnless(msgs[1].find('tourneyUnregister: DELETE FROM user2tourney WHERE user_serial = 423') >= 0)
@@ -2244,10 +2360,11 @@ class TourneyCancelTestCase(PokerServiceTestCaseBase):
         self.service.tourneys = {}
         self.service.avatar_collection = {1: [Avatar()]}
         self.service.tourneyCancel(Tournament())
-        self.assertTrue(search_output('tourneyCancel:'))
+        self.assertTrue(self.log_history.search('tourneyCancel:'))
 
 class TourneyManagerTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
+        self.log_history = log_history.Log()
         PokerServiceTestCaseBase.setUp(self, settingsFile)
         self.createTourneysSchedules()
         
@@ -2277,10 +2394,10 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         client1 = TourneyManagerTestCase.ClientMockup(self.user1_serial, self)
         self.service.avatar_collection.add(self.user1_serial, client1)
         self.service.spawnTourney(schedule)
-        clear_all_messages()
+        self.log_history.reset()
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial, tourney_serial = tourney_serial))
-        self.failUnless(search_output('tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = 4 AND currency_serial = 1 AND amount >= 300000'), "UPDATE user2money expected verbose output not found")
-        self.failUnless(search_output('tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (4, 1, 1)'), "INSERT INTO user2tourney")
+        self.failUnless(self.log_history.search('tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = 4 AND currency_serial = 1 AND amount >= 300000'), "UPDATE user2money expected verbose output not found")
+        self.failUnless(self.log_history.search('tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (4, 1, 1)'), "INSERT INTO user2tourney")
         self.assertEquals(len(client1.packets), 1)
         self.assertEquals(client1.packets[0].type, PACKET_POKER_TOURNEY_REGISTER)
         self.assertEquals(client1.packets[0].serial, self.user1_serial)
@@ -2290,9 +2407,9 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.service.db.db.query("INSERT INTO user2table VALUES (%s, %s, %s, 0)" % (self.user1_serial,table_serial,table_money))
         self.service.db.db.query("UPDATE user2tourney SET table_serial = %s" % (table_serial,))
         self.service.tourneys[tourney_serial].can_register = False
-        clear_all_messages()
+        self.log_history.reset()
         packet = self.service.tourneyManager(tourney_serial)
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.assertEqual(tourney_serial, packet.tourney['serial'])
         self.assertNotEqual(None, packet.tourney['rank2prize'])
         self.assertEqual(1, packet.tourney['registered'])
@@ -2352,9 +2469,9 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         realSpawnTourneyInCore = self.service.spawnTourneyInCore
         self.service.spawnTourneyInCore = lambda *a: True
 
-        clear_all_messages()
+        self.log_history.reset()
         self.service.spawnTourney(schedule)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 1)
         self.assertEquals(msgs[0].find("spawnTourney: {'"), 0)
         self.assertEquals(self.service.db.cursorValue.counts, {
@@ -2403,9 +2520,9 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.service.db = MockDBWithDifferentCursorMethod(MockCursor)
         self.service.tourneys = {}
         tourney_serial = 17735
-        clear_all_messages()
+        self.log_history.reset()
         packet = self.service.tourneyManager(tourney_serial)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.failUnless(len(msgs) >= 1, "We should get at least one error message")
         self.assertEquals(msgs[0], 'tourneyManager: tourney_serial(17735) has more than one row in tourneys table, using first row returned')
         self.assertEquals(packet.type, PACKET_POKER_TOURNEY_MANAGER)
@@ -2534,6 +2651,7 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 
 class TourneyNotifyTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
+        self.log_history = log_history.Log()
         PokerServiceTestCaseBase.setUp(self, settingsFile)
         self.createTourneysSchedules()
     def startTournament(self, table_serial, table_money):
@@ -2916,6 +3034,7 @@ class ShutdownCheckTestCase(PokerServiceTestCaseBase):
 
 class TourneySatelliteTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
+        self.log_history = log_history.Log()
         PokerServiceTestCaseBase.setUp(self, settingsFile)
         self.createTourneysSchedules()
         
@@ -3095,6 +3214,7 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
 
 class TourneyFinishedTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
+        self.log_history = log_history.Log()
         PokerServiceTestCaseBase.setUp(self, settingsFile)
         self.createTourneysSchedules()
         
@@ -3190,7 +3310,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         tournament.winners = [ winner_serial ]
         tournament.bailor_serial = 2000
         self.assertEqual(False, self.service.tourneyFinished(tournament))
-        self.assertTrue(search_output("bailor failed to provide requested money"))
+        self.assertTrue(self.log_history.search("bailor failed to provide requested money"))
 
     def test_bailor_zero(self):
         class Tournament:
@@ -3361,6 +3481,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
 ##############################################################################
 class BreakTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
+        self.log_history = log_history.Log()
         PokerServiceTestCaseBase.setUp(self, settingsFile)
         self.service.shutdownGames = lambda *a,**kw: None
     class MockTable:
@@ -3848,6 +3969,7 @@ class PokerFactoryFromPokerServiceTestCase(unittest.TestCase):
 ##############################################################################
 class PokerServiceCoverageTests(unittest.TestCase):
     def setUp(self):
+        self.log_history = log_history.Log()
         testclock._seconds_reset()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -3979,16 +4101,17 @@ class PokerServiceCoverageTests(unittest.TestCase):
         # called back.
         testDestroyCalledDefer = defer.Deferred()
         def testDestroyCalled():
-            msgs = get_messages()
+            msgs = self.log_history.get_all()
             self.assertEquals(len(msgs), 1)
-            self.assertEquals(msgs[0].find('avatar <__main__.MockAvatar instance at '), 0)
+            print msgs
+            self.assertEquals(msgs[0].find('.MockAvatar instance at '), 0)
             self.failUnless(msgs[0].find(' is not in the list of known avatars') > 0)
             self.assertEquals(ma.connectionLostArgs, [ 'disconnected' ])
             self.assertEquals(self.service.avatars, [])
             self.assertEquals(self.service.monitors, [])
             testDestroyCalledDefer.callback(True)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.service.forceAvatarDestroy(ma)
         reactor.callLater(5, testDestroyCalled)
         return testDestroyCalledDefer
@@ -4004,13 +4127,13 @@ class PokerServiceCoverageTests(unittest.TestCase):
         # called back.
         testDestroyCalledDefer = defer.Deferred()
         def testDestroyCalled():
-            self.assertEquals(get_messages(), [])
+            self.assertEquals(self.log_history.get_all(), [])
             self.assertEquals(ma.connectionLostArgs, [ 'disconnected' ])
             self.assertEquals(self.service.avatars, [])
             self.assertEquals(self.service.monitors, [])
             testDestroyCalledDefer.callback(True)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.service.forceAvatarDestroy(ma)
         reactor.callLater(5, testDestroyCalled)
 
@@ -4030,13 +4153,13 @@ class PokerServiceCoverageTests(unittest.TestCase):
         # called back.
         testDestroyCalledDefer = defer.Deferred()
         def testDestroyCalled():
-            self.assertEquals(get_messages(), [])
+            self.assertEquals(self.log_history.get_all(), [])
             self.assertEquals(ma.connectionLostArgs, [ 'disconnected' ])
             self.assertEquals(self.service.avatars, [])
             self.assertEquals(self.service.monitors, [])
             testDestroyCalledDefer.callback(True)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.service.forceAvatarDestroy(ma)
         reactor.callLater(5, testDestroyCalled)
 
@@ -4054,9 +4177,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.failUnless(self.service.sessionStart(5, '192.168.0.1'))
-        self.assertEquals(get_messages(), ["sessionStart(5, 192.168.0.1)"])
+        self.assertEquals(self.log_history.get_all(), ["sessionStart(5, 192.168.0.1)"])
         self.assertEquals(self.service.db.cursorValue.counts,{'REPLACE INTO session' : 1 })
         self.service.db = oldDb
     def test09_sessionStartFail(self):
@@ -4072,9 +4195,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.failUnless(self.service.sessionStart(7, '192.168.0.2'))
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.assertEquals(msgs[0], 'sessionStart(7, 192.168.0.2)')
         self.assertEquals(msgs[1].find("modified 0 rows (expected 1 or 2): REPLACE INTO session ( user_serial, started, ip ) VALUES ( 7, "), 0)
@@ -4095,9 +4218,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.failUnless(self.service.sessionEnd(9))
-        self.assertEquals(get_messages(), ['sessionEnd(9)'])
+        self.assertEquals(self.log_history.get_all(), ['sessionEnd(9)'])
 
         self.assertEquals(self.service.db.cursorValue.counts,{
             'INSERT INTO session_history' : 1,
@@ -4117,9 +4240,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.failUnless(self.service.sessionEnd(9))
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.assertEquals(msgs[0], 'sessionEnd(9)')
         self.assertEquals(msgs[1].find('a) modified 3 rows (expected 1): INSERT INTO session_history'), 0)
@@ -4141,9 +4264,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.failUnless(self.service.sessionEnd(9))
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 3)
         self.assertEquals(msgs[0], 'sessionEnd(9)')
         self.assertEquals(msgs[1].find('a) modified 0 rows (expected 1): INSERT INTO session_history'), 0)
@@ -4170,7 +4293,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
         
         self.service.tourneyBreakCheck = notok
         self.service.tourneyDeal = ok
@@ -4187,7 +4310,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             pokertournament.TOURNAMENT_STATE_RUNNING
         )
         self.assertEquals(self.callCount, 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.assertEquals(msgs[0].find("tourneyNewState: UPDATE tourneys SET state"), 0)
         self.assertEquals(msgs[1], "modified 8 rows (expected 1): UPDATE tourneys SET state = 'running', start_time = 5 WHERE serial = 19")
@@ -4259,10 +4382,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.tourneyDeleteRoute = mockTourneyDeleteRoute
             
         self.service.avatar_collection = PokerAvatarCollection()
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(self.service.tourneyFinished(mockTourney), True)
 
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.assertEquals(self.service.db.cursorValue.counts,
                           {'UPDATE tourneys SET finish_time' : 1})
         self.assertEquals(tourneyDeleteRouteCount, 1)
@@ -4338,7 +4461,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.avatar_collection = PokerAvatarCollection()
         self.service.tables = { 22 : MockTable() }
 
-        clear_all_messages()
+        self.log_history.reset()
         self.service.tourneyGameFilled(MockTourney(), MockGame())
 
         self.assertEquals(self.service.db.cursorValue.counts, {
@@ -4348,7 +4471,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         })
         self.assertEquals(self.service.tables[22].updateCount, 1)
 
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 3)
         self.assertEquals(msgs[0], 'tourneyGameFilled: player 10 disconnected')
         self.assertEquals(msgs[1].find('tourneyGameFilled: update user2tourney set'), 0)
@@ -4388,12 +4511,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         self.service.tourneys = { 77: MockTourney() }
 
-        clear_all_messages()
+        self.log_history.reset()
         pack = self.service.tourneyPlayersList(77)
         self.assertEquals(pack.players, [('joe', -1, 0), ('UNKNOWN', -1, 0), ('anonymous', -1, 0)])
         self.assertEquals(pack.type, PACKET_POKER_TOURNEY_PLAYERS_LIST)
         self.assertEquals(pack.tourney_serial, 77)
-        self.assertEquals(get_messages(), ['getName(6) expected one row got 0'])
+        self.assertEquals(self.log_history.get_all(), ['getName(6) expected one row got 0'])
 
         self.service.db = oldDb
     def test18_tourneyStats_sqlFails(self):
@@ -4436,7 +4559,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase()
 
-        clear_all_messages()
+        self.log_history.reset()
 
         caughtIt = False
         try:
@@ -4447,7 +4570,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             caughtIt = True
 
         self.failUnless(caughtIt)
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
 
         self.service.db = oldDb
     def test19_tourneyStats_succeed(self):
@@ -4465,9 +4588,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(self.service.tourneyStats(), (9,9))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
 
         self.assertEquals(self.service.db.cursorValue.counts,{
             'SELECT COUNT(*) FROM user2tourney': 1,
@@ -4489,10 +4612,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.avatar_collection.add(42, client)
         self.service.tourneys = { }
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.tourneyRegister(MockPacket()))
-        self.assertEquals(get_messages(),['ERROR  type = 3 length = 38 message = Tournament 91 does not exist code = 1 other_type = 116'])
+        self.assertEquals(self.log_history.get_all(),['ERROR  type = 3 length = 38 message = Tournament 91 does not exist code = 1 other_type = 116'])
         self.failUnless(hasattr(client, "errorPacket"))
         self.assertEquals(client.errorPacket.type, PACKET_ERROR)
         self.assertEquals(client.errorPacket.code,PacketPokerTourneyRegister.DOES_NOT_EXIST)
@@ -4564,7 +4687,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.avatar_collection.add(44, client)
         self.service.tourneys = { 99 : tourney }
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.tourneyRegister(MockPacket()))
         self.failUnless(hasattr(client, "errorPackets"))
@@ -4575,7 +4698,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
         self.assertEquals(pack.code,
                           PacketPokerTourneyRegister.ALREADY_REGISTERED)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 1)
         self.failUnless(msgs[0].find('ERROR  type = 3 length = 56 message = Player 44 already registered in tournament 99  code = 2')  == 0)
         self.failUnless(msgs[0].find('other_type = %d' % PACKET_POKER_TOURNEY_REGISTER) >= 0)
@@ -4603,7 +4726,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.avatar_collection.add(29, client)
         self.service.tourneys = { 123 : tourney }
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.tourneyRegister(MockPacket()))
         self.failUnless(hasattr(client, "errorPackets"))
@@ -4613,7 +4736,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(pack.message.find('Registration refused in tournament 123') == 0)
         self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
         self.assertEquals(pack.code, PacketPokerTourneyRegister.REGISTRATION_REFUSED)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 1)
         self.failUnless(msgs[0].find('ERROR  type = 3 length = 49 message = Registration refused in tournament 123') == 0)
 
@@ -4679,7 +4802,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.avatar_collection.add(194, client)
         self.service.tourneys = { 526 : tourney }
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.tourneyRegister(MockPacket()))
         self.failUnless(hasattr(client, "errorPackets"))
@@ -4689,7 +4812,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(pack.message.find('Not enough money to enter the tournament 526') == 0)
         self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
         self.assertEquals(pack.code, PacketPokerTourneyRegister.NOT_ENOUGH_MONEY)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount')  == 0)
         self.failUnless(msgs[1].find('ERROR  type = 3 length = 54 message = Not enough money to enter the tournament 526')  == 0)
@@ -4734,7 +4857,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.avatar_collection.add(194, client)
         self.service.tourneys = { 526 : tourney }
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.tourneyRegister(MockPacket()))
         self.failUnless(hasattr(client, "errorPackets"))
@@ -4744,7 +4867,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(pack.message.find('Server error') == 0)
         self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
         self.assertEquals(pack.code, PacketPokerTourneyRegister.SERVER_ERROR)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount')  == 0)
         self.failUnless(msgs[1].find('modified 2 rows (expected 1): UPDATE user2money SET amount')  == 0)
@@ -4801,7 +4924,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         self.service.databaseEvent = dbEventMock
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.tourneyRegister(MockPacket()))
         self.failUnless(hasattr(client, "errorPackets"))
@@ -4811,7 +4934,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(pack.message.find('Server error') == 0)
         self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
         self.assertEquals(pack.code, PacketPokerTourneyRegister.SERVER_ERROR)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 3)
         self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount = amount - 20 WHERE user_serial = 423') >= 0)
         self.assertEquals(msgs[1], 'tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (423, 10, 865)')
@@ -4832,10 +4955,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(self.service.loadHand(5), None)
-        self.assertEquals(get_messages(), ['loadHand(5) expected one row got 0'])
+        self.assertEquals(self.log_history.get_all(), ['loadHand(5) expected one row got 0'])
         self.service.db = oldDb
     def test28_loadHand_row(self):
         self.service = pokerservice.PokerService(self.settings)
@@ -4852,10 +4975,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(self.service.loadHand(7), None)
-        self.failUnless(search_output('loadHand(7) eval failed for ]'))
+        self.failUnless(self.log_history.search('loadHand(7) eval failed for ]'))
 
         self.service.db = oldDb
     def test29_loadHand_confirm_backslash_r_replaced(self):
@@ -4873,10 +4996,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(self.service.loadHand(9), 14)
-        self.assertEquals(get_messages(),[])
+        self.assertEquals(self.log_history.get_all(),[])
 
         self.service.db = oldDb
     def test30_loadHand_confirm_working_code(self):
@@ -4898,10 +5021,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(self.service.loadHand(3), 8)
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.service.db = oldDb
     def test31_getHandSerial_coverCursorWithLastrowid(self):
         self.service = pokerservice.PokerService(self.settings)
@@ -4919,10 +5042,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(self.service.getHandSerial(), 9)
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.service.db = oldDb
     def test32_getHandSerial_coverCursorWithInsertID(self):
         self.service = pokerservice.PokerService(self.settings)
@@ -4940,10 +5063,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(self.service.getHandSerial(), 22)
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.service.db = oldDb
     def test33_getHandHistory_failedLoadHand(self):
         class MockCursor(MockCursorBase):
@@ -4958,7 +5081,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         pack = self.service.getHandHistory(723, 99)
         self.assertEquals(pack.game_id, 723)
@@ -4967,7 +5090,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.other_type, PACKET_POKER_HAND_HISTORY)
         self.assertEquals(pack.message, "Hand 723 was not found in history of player 99")
 
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.service.db = oldDb
     def test34_getHandHistory_playerProhibited(self):
         class MockCursor(MockCursorBase):
@@ -4983,7 +5106,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         pack = self.service.getHandHistory(636, 222)
         # Note this interesting fact: getHandHistory() returns the
@@ -4997,7 +5120,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.other_type, PACKET_POKER_HAND_HISTORY)
         self.assertEquals(pack.message, "Player 222 did not participate in hand 988")
 
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.service.db = oldDb
     def test35_getHandHistory_succeedWithCardReplacement(self):
         from pokerengine.pokercards import PokerCards
@@ -5033,7 +5156,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         pack = self.service.getHandHistory(696, 222)
         self.assertEquals(pack.history, "[('foo', 3, 988, 1, 100, 'he', '1-2-limit', [113, 222], 8, {}), ('round', 'preflop', [], {113: PokerCards(-1), 222: PokerCards([50])}), ('showdown', [], {113: PokerCards(-1), 222: PokerCards([50])}), ('neither', [], {113: PokerCards([51]), 222: PokerCards([50])})]")
@@ -5042,7 +5165,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.game_id, 988)
         self.assertEquals(pack.serial, 222)
 
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.service.db = oldDb
         PokerCards.loseNotVisible = saveFunc
     def test36_saveHand_badRowcountOnUpdate(self):
@@ -5056,10 +5179,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         pack = self.service.saveHand([("foo", 3, 991, 1, 100, "he", "1-2-limit", [113, 222], 8, {})], 991)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find("saveHand: UPDATE hands SET description = ") == 0)
         self.failUnless(msgs[1].find('modified 5 rows (expected 1 or 0): UPDATE hands') == 0)
@@ -5076,11 +5199,11 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         pack = self.service.saveHand([
                 ("foo", 3, 991, 1, 100, "he", "1-2-limit", [113, 222], 8, {})], 991)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 3)
         self.failUnless(msgs[0].find("saveHand: UPDATE hands SET description = ") == 0)
         self.failUnless(msgs[1].find('saveHand: INSERT INTO user2hand') == 0)
@@ -5101,7 +5224,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         class MockGame:
             def __init__(mgSelf):
@@ -5112,7 +5235,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 mtSelf.tourney = None
 
         self.service.eventTable(MockTable())
-        self.assertEquals(get_messages(), ["eventTable: {'game_id': 99, 'tourney_serial': 0}"])
+        self.assertEquals(self.log_history.get_all(), ["eventTable: {'game_id': 99, 'tourney_serial': 0}"])
         self.service.db = oldDb
     def test39_statsTable(self):
         class MockCursor(MockCursorBase):
@@ -5134,11 +5257,11 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(self.service.statsTables(), (7356,1235))
 
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.service.db = oldDb
     def test40_cleanupTourneys_oneFoundFromPrimarySelect(self):
         class MockCursor(MockCursorBase):
@@ -5200,7 +5323,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDBWithDifferentCursorMethod(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.service.cleanupTourneys()
 
@@ -5209,7 +5332,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[1]], 1)
         self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[2]], 1)
 
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 4)
         self.assertEquals(msgs[0].find("cleanupTourneys: "), 0)
         self.assertEquals(msgs[1].find("cleanupTourneys: "), 0)
@@ -5231,14 +5354,14 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(self.service.getMoney(7775, 2356), 0)
 
         self.assertEquals(self.service.db.cursorValue.counts["SELECT amount FROM user2money "], 1)
         self.assertEquals(self.service.db.cursorValue.closedCount, 1)
 
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.assertEquals(msgs[0].find('SELECT amount FROM user2money'), 0)
         self.failUnless(msgs[0].find("user_serial = 7775") > 0)
@@ -5308,10 +5431,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         packet = self.service.getPlayerInfo(235)
-        self.assertEquals(get_messages(),
+        self.assertEquals(self.log_history.get_all(),
                           ['getPlayerInfo(235) expected one row got 3'])
         self.assertEquals(packet.serial, 235)
         self.assertEquals(packet.name, "anonymous")
@@ -5343,10 +5466,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDBWithDifferentCursorMethod(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         packet = self.service.getUserInfo(765)
-        self.assertEquals(get_messages(),
+        self.assertEquals(self.log_history.get_all(),
                           ['getUserInfo(765) expected one row got 3'])
         self.assertEquals(packet.serial, 765)
         self.assertEquals(packet.type, PACKET_POKER_USER_INFO)
@@ -5374,10 +5497,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.setPersonalInfo(MockPlayerInfo()))
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.assertEquals(msgs[0].find("setPersonalInfo: UPDATE users_private SET"), 0)
         self.assertEquals(msgs[1].find("setPersonalInfo: modified 3 rows (expected 1 or 0): UPDATE users_private"), 0)
@@ -5494,11 +5617,11 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failUnless(self.service.setPlayerInfo(MockPlayerInfo()))
         self.assertEquals(self.service.db.cursorValue.counts["UPDATE users SET "], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 1)
         self.failUnless(msgs[0].find('setPlayerInfo: UPDATE users SET') == 0)
 
@@ -5527,18 +5650,18 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.setPlayerInfo(MockPlayerInfo()), "setPlayerInfo should fail here")
         self.assertEquals(self.service.db.cursorValue.counts["UPDATE users SET "], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('setPlayerInfo: UPDATE users SET') == 0)
         self.failUnless(msgs[1].find('setPlayerInfo: modified 3 rows (expected 1 or 0): UPDATE users SET') == 0)
 
         self.service.db = oldDb
     def test52_getPlayerImage_serial0(self):
-        clear_all_messages()
+        self.log_history.reset()
         self.service = pokerservice.PokerService(self.settings)
         pack = self.service.getPlayerImage(0)
         self.assertEquals(pack.type, PACKET_POKER_PLAYER_IMAGE)
@@ -5546,7 +5669,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.image, '')
         self.assertEquals(pack.image_type, 'image/png')
 
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
     def test53_getPlayerImage_selectRowCount3(self):
         class MockCursor(MockCursorBase):
             def statementActions(cursorSelf, sql, statement):
@@ -5561,7 +5684,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         pack = self.service.getPlayerImage(825)
         self.assertEquals(pack.type, PACKET_POKER_PLAYER_IMAGE)
@@ -5570,7 +5693,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.image_type, 'image/png')
 
         self.assertEquals(self.service.db.cursorValue.counts["SELECT skin_image,"], 1)
-        self.assertEquals(get_messages(), ['getPlayerImage(825) expected one row got 3'])
+        self.assertEquals(self.log_history.get_all(), ['getPlayerImage(825) expected one row got 3'])
 
         self.service.db = oldDb
     def test54_setPlayerImage_rowcountwrong(self):
@@ -5595,12 +5718,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 mpSelf.image_type = 'image/png'
                 mpSelf.serial = 277
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.setPlayerImage(MockPlayerImage()), 'with row returning 3, this should fail')
 
         self.assertEquals(self.service.db.cursorValue.counts["UPDATE users SET"], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find("setPlayerInfo: UPDATE users SET") == 0,'first message should be verbose output')
         self.failUnless(
@@ -5645,12 +5768,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(4, self.service.buyInPlayer(634, 123, 222, 500))
 
         self.assertEquals(self.service.db.cursorValue.counts["UPDATE user2money,user2table SET "], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find("buyInPlayer: UPDATE user2money,user2table SET ") == 0,
                         'first message should be verbose output')
@@ -5683,12 +5806,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.seatPlayer(654, 936, 100), "bad rows should cause error")
 
         self.assertEquals(self.service.db.cursorValue.counts["INSERT INTO user2table"], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find("seatPlayer: INSERT INTO user2table") == 0,
                         'first message should be verbose output')
@@ -5713,11 +5836,11 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(None, self.service.movePlayer(9356, 1249, 6752))
         self.assertEquals(self.service.db.cursorValue.counts["SELECT money FROM user2table"], 1)
-        self.assertEquals(get_messages(), ["movePlayer(9356) expected one row got 0"])
+        self.assertEquals(self.log_history.get_all(), ["movePlayer(9356) expected one row got 0"])
 
         self.service.db = oldDb
     def test59_movePlayer_selectRowCount1WithMoneyPositiveUpdateRowCount3(self):
@@ -5740,10 +5863,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(-1, self.service.movePlayer(8356, 2249, 6752))
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.assertEquals(self.service.db.cursorValue.counts["SELECT money FROM user2table"], 1)
         self.failUnless(msgs[0].find("movePlayer: UPDATE user2table") == 0, "first message wrong")
@@ -5783,12 +5906,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.leavePlayer(236, 6543, 8999))
         for statement in validStatements:
             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 4)
         self.failUnless(msgs[0].find('leavePlayer UPDATE user2money,user2table,pokertables') == 0)
         self.failUnless(msgs[1].find('modified 12 rows (expected 0 or 1): UPDATE user2money,user2table,pokertables') == 0)
@@ -5799,9 +5922,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.databaseEvent = saveDBEvent
     def test61_updatePlayerRake_amountAsZero(self):
         self.service = pokerservice.PokerService(self.settings)
-        clear_all_messages()
+        self.log_history.reset()
         self.failUnless(self.service.updatePlayerRake(7355, 1026, 0))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
     def test62_updatePlayerRake_updateReturns0Rows(self):
         validStatements = ["UPDATE user2money SET"]
         class MockCursor(MockCursorBase):
@@ -5821,12 +5944,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.updatePlayerRake(852, 742, 77))
         for statement in validStatements:
             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('updatePlayerRake: UPDATE user2money SET') == 0, 
                         "Missing expected string in: " + msgs[0])
@@ -5836,9 +5959,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.db = oldDb
     def test63_updatePlayerMoney_amountAsZero(self):
         self.service = pokerservice.PokerService(self.settings)
-        clear_all_messages()
+        self.log_history.reset()
         self.failUnless(self.service.updatePlayerMoney(7355, 1026, 0))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
     def test64_updatePlayerMoney_updateReturns0Rows(self):
         validStatements = ["UPDATE user2table SET"]
         class MockCursor(MockCursorBase):
@@ -5858,12 +5981,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.updatePlayerMoney(742, 852, 77))
         for statement in validStatements:
             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('updatePlayerMoney: UPDATE user2table SET') == 0, 
                         "Missing expected string in: " + msgs[0])
@@ -5890,12 +6013,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.failIf(self.service.updatePlayerMoney(742, 852, 77))
         for statement in acceptList:
             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(
             msgs[0].find('updatePlayerMoney: UPDATE user2table SET') == 0, 
@@ -5919,12 +6042,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
                     cursorSelf.lastrowid = 1567
 
         self.service = pokerservice.PokerService(self.settings)
-        self.service.dirs = ['@POKER_ENGINE_PKGDATADIR@/conf']
+        self.service.dirs = [path.join(config.test.engine_path, 'conf')]
 
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.service.tables = {}
         table = self.service.createTable("bobby", {
@@ -5936,10 +6059,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failIf(self.service.tables.has_key(1567), "Table Should not have been created, INSERT 0 rows!")
         self.assertEquals(table, None)
         
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.failUnless(len(msgs) >= 2, "There should be at least two output messages")
-        self.failUnless(search_output('createTable: INSERT INTO pokertables'))
-        self.failUnless(search_output('inserted 0 rows (expected 1): INSERT INTO pokertables'))
+        self.failUnless(self.log_history.search('createTable: INSERT INTO pokertables'))
+        self.failUnless(self.log_history.search('inserted 0 rows (expected 1): INSERT INTO pokertables'))
         
         self.service.db = oldDb
     def test65b_createTable_insertSucceedsWithLargerThan1ReturnedWithLastRowThere(self):
@@ -5956,12 +6079,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
 
         self.service = pokerservice.PokerService(self.settings)
-        self.service.dirs = ['@POKER_ENGINE_PKGDATADIR@/conf']
+        self.service.dirs = [path.join(config.test.engine_path, 'conf')]
 
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.service.tables = {}
         table = self.service.createTable("bobby", { 
@@ -5978,11 +6101,11 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         for statement in acceptList:
             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.failUnless(len(msgs) >= 3, "There should be at least three output messages")
-        self.failUnless(search_output('createTable: INSERT INTO pokertables'))
-        self.failUnless(search_output('inserted 3 rows (expected 1): INSERT INTO pokertables'))
-        self.failUnless(search_output('table created : This'))
+        self.failUnless(self.log_history.search('createTable: INSERT INTO pokertables'))
+        self.failUnless(self.log_history.search('inserted 3 rows (expected 1): INSERT INTO pokertables'))
+        self.failUnless(self.log_history.search('table created : This'))
         
         self.service.db = oldDb
     def test66_deleteTable_deleteRowsNot1(self):
@@ -6010,7 +6133,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockTable():
             def __init__(mtSelf): mtSelf.game = game
 
-        clear_all_messages()
+        self.log_history.reset()
 
         table = self.service.deleteTable(MockTable())
 
@@ -6019,7 +6142,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         for statement in validStatements:
             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
 
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.failUnless(len(msgs) == 3, "Expected excatly three messages")
         self.assertEquals(msgs[0], 'table Mocky/7775 removed from server')
         self.failUnless(msgs[1].find('deleteTable: DELETE FROM pokertables') == 0)
@@ -6053,9 +6176,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         self.service.avatars = avatarList
 
-        clear_all_messages()
+        self.log_history.reset()
         self.service.broadcast(packet)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
 
         for ii in [ 0, 1, 2]: self.assertEquals(avatarList[ii].packets, [])
         self.assertEquals(avatarList[3].packets, [packet])
@@ -6100,7 +6223,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         # reactor/deferred error on the test if the timer works wrong.
         deferredMessageCheck = defer.Deferred()
         def testThatMessageCheckTimerWorked():
-            self.assertEquals(get_messages(), [])
+            self.assertEquals(self.log_history.get_all(), [])
             deferredMessageCheck.callback(True)
             self.service.db = oldDb
 
@@ -6108,7 +6231,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.realMessageCheck = self.service.messageCheck
         self.service.messageCheck = testThatMessageCheckTimerWorked
 
-        clear_all_messages()
+        self.log_history.reset()
         self.service.delays['messages'] = 3
 
         self.service.realMessageCheck()
@@ -6119,9 +6242,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(self.service.avatars[0].packets[0].string, "Greeting 1")
         self.assertEquals(self.service.avatars[0].packets[1].string, "Goodbye")
 
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
 
-        clear_all_messages()
+        self.log_history.reset()
         return deferredMessageCheck
 ##############################################################################
 class SSLContextFactoryCoverage(unittest.TestCase):
@@ -6198,6 +6321,7 @@ class MockRequestBase():
         mrSelf.method = "GET"
 class PokerTreeCoverageTestCase(unittest.TestCase):
     def setUp(self):
+        self.log_history = log_history.Log()
         testclock._seconds_reset()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -6244,6 +6368,7 @@ class PokerTreeCoverageTestCase(unittest.TestCase):
 from pokernetwork.pokersite import PokerImageUpload, PokerAvatarResource, PokerResource
 class PokerRestTreeCoverageTestCase(unittest.TestCase):
     def setUp(self):
+        self.log_history = log_history.Log()
         testclock._seconds_reset()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -6331,6 +6456,7 @@ class MockContentForPokerXML():
 
 class PokerXMLCoverageTestCase(unittest.TestCase):
     def setUp(self):
+        self.log_history = log_history.Log()
         testclock._seconds_reset()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -6376,7 +6502,7 @@ class PokerXMLCoverageTestCase(unittest.TestCase):
         pxml = pokerservice.PokerXML(service)
         request = MockRequestForPokerXML(MockContentForPokerXML("hello"))
 
-        clear_all_messages()
+        self.log_history.reset()
 
         caughtIt = False
         try:
@@ -6388,7 +6514,7 @@ class PokerXMLCoverageTestCase(unittest.TestCase):
 
         self.assertEquals(request.headerData,
                           {'Content-type': ['text/xml; charset="UTF-8"']})
-        self.failUnless(search_output('render hello'), "render hello should occur in output!")
+        self.failUnless(self.log_history.search('render hello'), "render hello should occur in output!")
     def test04a_maps2result(self):
         service = MockServiceForPokerXML()
         pxml = pokerservice.PokerXML(service)
@@ -6406,7 +6532,7 @@ class PokerXMLCoverageTestCase(unittest.TestCase):
         pxml = pokerservice.PokerXML(service)
         request = MockRequestForPokerXML(MockContentForPokerXML("hello"))
 
-        clear_all_messages()
+        self.log_history.reset()
 
         caughtIt = False
         pxml.encoding = None
@@ -6419,14 +6545,14 @@ class PokerXMLCoverageTestCase(unittest.TestCase):
 
         self.assertEquals(request.headerData, {'Content-type': ['text/xml']})
 
-        self.assertEquals(get_messages(), ['render hello'])
+        self.assertEquals(self.log_history.get_all(), ['render hello'])
     def test06_errorFunction(self):
         service = MockServiceForPokerXML()
         pxml = pokerservice.PokerXML(service)
 
-        clear_all_messages()
+        self.log_history.reset()
         pxml.log.error("Test an error")
-        self.assertEquals(get_messages(), ['Test an error'])
+        self.assertEquals(self.log_history.get_all(), ['Test an error'])
 ##############################################################################
 class TourneySelectInfoTestCase(unittest.TestCase):
 
@@ -6441,10 +6567,13 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <tourney_select_info>UNLIKELY</tourney_select_info>
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path
+}
         try:
             self.service = pokerservice.PokerService(xml)
             self.service.setupTourneySelectInfo()
@@ -6463,11 +6592,14 @@ class TourneySelectInfoTestCase(unittest.TestCase):
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <tourney_select_info>../@srcdir@/testfilter.py</tourney_select_info>
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+  <tourney_select_info>%(tests_path)s/testfilter.py</tourney_select_info>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path
+}
         try:
             self.service = pokerservice.PokerService(xml)
             self.service.setupTourneySelectInfo()
@@ -6486,11 +6618,14 @@ class TourneySelectInfoTestCase(unittest.TestCase):
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <tourney_select_info>../@srcdir@/testtourney_select_info_no_call.py</tourney_select_info>
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+  <tourney_select_info>%(tests_path)s/testtourney_select_info_no_call.py</tourney_select_info>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path
+}
         try:
             self.service = pokerservice.PokerService(xml)
             self.service.setupTourneySelectInfo()
@@ -6501,19 +6636,22 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 
     def test04_ok(self):
         xml = """<?xml version="1.0" encoding="UTF-8"?>
-<server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
-  <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
-
-  <listen tcp="19480" />
-
-  <refill serial="1" amount="10000000" />
-
-  <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <tourney_select_info settings="../@srcdir@/testsettings.xml">../@srcdir@/testtourney_select_info.py</tourney_select_info>
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
-  <users temporary="BOT.*"/>
-</server>
-"""
+        <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
+          <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
+        
+          <listen tcp="19480" />
+        
+          <refill serial="1" amount="10000000" />
+        
+          <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
+          <tourney_select_info settings="%(tests_path)s/testsettings.xml">%(tests_path)s/testtourney_select_info.py</tourney_select_info>
+          <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+          <users temporary="BOT.*"/>
+        </server>
+        """ % {
+            'tests_path': TESTS_PATH,
+            'engine_path': config.test.engine_path
+        }
         self.service = pokerservice.PokerService(xml)
         self.service.setupTourneySelectInfo()
         self.assertEqual(PACKET_POKER_TOURNEY_INFO, self.service.tourneySelectInfo('packet', 'tourneys').type)
@@ -6531,10 +6669,13 @@ class TourneySelectInfoTestCase(unittest.TestCase):
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path
+}
         self.service = pokerservice.PokerService(xml)
         self.service.setupTourneySelectInfo()
         self.assertEqual(None, self.service.tourneySelectInfo('packet', 'tourneys'))
@@ -6571,7 +6712,7 @@ class LadderTestCase(PokerServiceTestCaseBase):
         packet = self.service.getLadder(game_id, 2, 1)
         self.assertEqual(game_id, packet.game_id)
 
-def Run():
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test07_"
     suite = loader.suiteFactory()
@@ -6606,18 +6747,16 @@ def Run():
     suite.addTest(loader.loadClass(TourneySelectInfoTestCase))
     suite.addTest(loader.loadClass(TourneyNotifyTestCase))
     suite.addTest(loader.loadClass(LadderTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-    ).run(suite)
+    ).run(GetTestSuite())
 
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerservice.py tests/test-pokerservice-load.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/pokerservice.py' TESTS='coverage-reset test-pokerservice.py test-pokerservice-load.py coverage-report' check )"
-# End:

@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/env python
 # -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
@@ -24,9 +24,14 @@
 #  Loic Dachary <loic@dachary.org>
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 
-import sys, os, tempfile, shutil, platform
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+import unittest, sys, os
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
 
 import libxml2
 
@@ -87,12 +92,26 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
   <listen tcp="19480" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 settings_xml_client = """<?xml version="1.0" encoding="UTF-8"?>
 <settings display2d="yes" display3d="no" ping="15000" verbose="6" delays="true" tcptimeout="2000" upgrades="no">
@@ -111,12 +130,22 @@ settings_xml_client = """<?xml version="1.0" encoding="UTF-8"?>
   <shadow>yes</shadow>
   <vprogram>yes</vprogram>
   
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path> 
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
 </settings>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 TABLE1 = 1
 TABLE2 = 2
@@ -126,11 +155,22 @@ class PokerClientTestCase(unittest.TestCase):
 
     timeout = 500
     
-    def destroyDb(self, arg = None):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self):
+        if len(config.test.mysql.root_user.password) > 0:
+            os.system("%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
         else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+            os.system("%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
 
     def createTourneysSchedules(self):
         stmts = []
@@ -143,17 +183,27 @@ class PokerClientTestCase(unittest.TestCase):
             'VALUES ("regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", "1000", "holdem", "level-001", "10", 1, "0", "0", "n", "60", "30", "1", "60", unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - INTERVAL 1 HOUR), "n", "0", 3);'
         )
         
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            prefix = "@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -D pokernetworktest -e '%s'"
+        if len(config.test.mysql.root_user.password) > 0:
+            prefix = "%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -D '%(dbname)s' -e '%%s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            }
         else:
-            prefix = "@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -D pokernetworktest -e '%s'"
+            prefix = "%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -D '%(dbname)s' -e '%%s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            }
         for stmt in stmts:
             os.system(prefix % stmt)
 
     def setUpServer(self):
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml_server, len(settings_xml_server))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_xml_server)
         #
         # Setup server
         #
@@ -167,8 +217,7 @@ class PokerClientTestCase(unittest.TestCase):
 
     def setUpClient(self, index):
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_xml_client)
         clear_all_messages()
         self.client_factory[index] = pokerclient.PokerClientFactory(settings = settings)
         self.assertEquals(get_messages(), ["delays {'lag': 60.0, 'end_round_last': 0.0, 'showdown': 0.0, 'blind_ante_position': 0.0, 'position': 0.0, 'begin_round': 0.0, 'end_round': 0.0}"])
@@ -1236,8 +1285,7 @@ class PokerClientFactoryTestCase(unittest.TestCase):
     def setUp(self):
         testclock._seconds_reset()        
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_xml_client)
         self.client_factory = PokerClientFactoryMockup(settings = settings)
 
     def tearDown(self):
@@ -1334,12 +1382,22 @@ settings_xml_client_noChatNoDelays = """<?xml version="1.0" encoding="UTF-8"?>
   <shadow>yes</shadow>
   <vprogram>yes</vprogram>
 
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
 </settings>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 settings_xml_client_delaysWithRoundNoBlindAnte = """<?xml version="1.0" encoding="UTF-8"?>
 <settings display2d="yes" display3d="no" ping="15000" verbose="6" delays="true" tcptimeout="2000" upgrades="no">
@@ -1357,12 +1415,22 @@ settings_xml_client_delaysWithRoundNoBlindAnte = """<?xml version="1.0" encoding
   <shadow>yes</shadow>
   <vprogram>yes</vprogram>
 
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
 </settings>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
     """These tests cover the methods in PokerClientFactory that are not
@@ -1376,8 +1444,7 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
     # ---------------------------------------------------------------------------
     def setUp(self):
         self.settings = pokernetworkconfig.Config([])
-        self.settings.doc = libxml2.parseMemory(settings_xml_client, len(settings_xml_client))
-        self.settings.header = self.settings.doc.xpathNewContext()
+        self.settings.loadFromString(settings_xml_client)
     # ---------------------------------------------------------------------------
     def tearDown(self): pass
     # ---------------------------------------------------------------------------
@@ -1385,8 +1452,7 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
         config_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <nothing/>"""
         config = pokernetworkconfig.Config([])
-        config.doc = libxml2.parseMemory(config_xml, len(config_xml))
-        config.header = config.doc.xpathNewContext()
+        config.loadFromString(config_xml)
         caughtIt = False
         try:
             clientFactory = pokerclient.PokerClientFactory(
@@ -1402,8 +1468,7 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
 <sequence>
 </sequence>"""
         config = pokernetworkconfig.Config([])
-        config.doc = libxml2.parseMemory(config_xml, len(config_xml))
-        config.header = config.doc.xpathNewContext()
+        config.loadFromString(config_xml)
         caughtIt = False
         try:
             clientFactory = pokerclient.PokerClientFactory(
@@ -1420,8 +1485,7 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
 <chips>10 bar</chips>
 </sequence>"""
         config = pokernetworkconfig.Config([])
-        config.doc = libxml2.parseMemory(config_xml, len(config_xml))
-        config.header = config.doc.xpathNewContext()
+        config.loadFromString(config_xml)
         caughtIt = False
         try:
             clientFactory = pokerclient.PokerClientFactory(
@@ -1439,8 +1503,7 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
 <chips>5 200 10 15 20</chips>
 </sequence>"""
         config = pokernetworkconfig.Config([])
-        config.doc = libxml2.parseMemory(config_xml, len(config_xml))
-        config.header = config.doc.xpathNewContext()
+        config.loadFromString(config_xml)
 
         clientFactory = pokerclient.PokerClientFactory(settings = self.settings,
                                                  config = config)
@@ -1449,18 +1512,14 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
     # ---------------------------------------------------------------------------
     def test04_init_missingChatMissingDelays(self):
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml_client_noChatNoDelays,
-                                           len(settings_xml_client_noChatNoDelays))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_xml_client_noChatNoDelays)
         clientFactory = pokerclient.PokerClientFactory(settings = settings)
         self.assertEquals(clientFactory.delays, {})
         self.assertEquals(clientFactory.chat_config, {})
     # ---------------------------------------------------------------------------
     def test05_init_roundPositionOverrides(self):
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml_client_delaysWithRoundNoBlindAnte,
-                                           len(settings_xml_client_delaysWithRoundNoBlindAnte))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_xml_client_delaysWithRoundNoBlindAnte)
 
         # Confirm the delays are properly read from the file before init'ing
         # PokerClientFactory
@@ -1543,7 +1602,8 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
         sys.executable = self.saveExecutable
         reactor.disconnectAll = self.saveReactorDisconnectAll
 # ------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test03"
     suite = loader.suiteFactory()
@@ -1551,10 +1611,13 @@ def Run():
     suite.addTest(loader.loadClass(PokerClientFactoryTestCase))
     suite.addTest(loader.loadClass(PokerSkinMethodUnitTest))
     suite.addTest(loader.loadClass(PokerClientFactoryUnitMethodCoverageTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-    ).run(suite)
+    ).run(GetTestSuite())
 
 # ------------------------------------------------------
 if __name__ == '__main__':
@@ -1562,8 +1625,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerclient.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/pokerclient.py' TESTS='coverage-reset test-pokerclient.py coverage-report' check )"
-# End:

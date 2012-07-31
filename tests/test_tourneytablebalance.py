@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/env python
 # -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
 # more information about the above line at http://www.python.org/dev/peps/pep-0263/
 #
@@ -26,19 +26,17 @@
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 #
 import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+from os import path
 
-import time
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
-from string import split
+from config import config
+import log_history
+import sqlmanager
+
 import libxml2
-import random
-import locale
-import sets
-from _mysql_exceptions import IntegrityError
-from pprint import pprint
-from datetime import date
 
 from tests import testclock
 
@@ -48,31 +46,24 @@ from twisted.internet import reactor, defer
 
 twisted.internet.base.DelayedCall.debug = True
 
-from tests.testmessages import silence_all_messages, search_output, clear_all_messages, get_messages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
-silence_all_messages()
 
 from pokerengine import pokertournament, pokergame
-from pokernetwork import pokerservice, pokernetworkconfig, user
+from pokernetwork import pokerservice, pokernetworkconfig
 from pokernetwork import currencyclient
 from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
-from pokernetwork.packets import PacketError
-from MySQLdb.cursors import DictCursor
 
 class ConstantDeckShuffler:
     def shuffle(self, what):
         what[:] = [40, 13, 32, 9, 19, 31, 15, 14, 50, 34, 20, 6, 43, 44, 28, 29, 48, 3, 21, 45, 23, 37, 35, 11, 5, 22, 24, 30, 27, 39, 46, 33, 0, 8, 1, 42, 36, 16, 49, 2, 10, 26, 4, 18, 7, 41, 47, 17]
 
-from pokerengine import pokergame
 pokergame.shuffler = ConstantDeckShuffler()
 
 class ConstantPlayerShuffler:
     def shuffle(self, what):
         what.sort()
 
-from pokerengine import pokertournament
 pokertournament.shuffler = ConstantPlayerShuffler()
 
 settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
@@ -93,12 +84,26 @@ settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>@POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 class UserMockup:
     def isLogged(self): return True
         
@@ -142,11 +147,12 @@ class ClientMockup:
 
 class TourneyTableBalanceTestCase(unittest.TestCase):
 
-    def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
 
     # ----------------------------------------------------------------
     def setUp(self):
@@ -268,16 +274,18 @@ VALUES ( 'Only6', 'Sit and Go 6 players and only 6 , Holdem', 'Sit and Go 6 play
 
         return d
 # ----------------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
-    loader.methodPrefix = "test01"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(TourneyTableBalanceTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
        reporter.TextReporter,
-#	tracebackFormat='verbose',
         tracebackFormat='default',
-        ).run(suite)
+        ).run(GetTestSuite())
 
 # ----------------------------------------------------------------
 if __name__ == '__main__':
@@ -285,9 +293,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-tourneytablebalance.py ) ; ( cd ../tests ; make COVERAGE_FILES='' TESTS='test-tourneytablebalance.py' check )"
-# End:
-

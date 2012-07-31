@@ -1,5 +1,5 @@
 #!/usr/bin/python2.5
-# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2008 Jean-Paul Calderone <exarkun@twistedmatrix.com>
 # Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
@@ -22,11 +22,16 @@
 
 import guppy, gc
  
-from twisted.trial import unittest
-from twisted.web import client, http
+import sys
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+
+from twisted.web import client
  
 from twisted.web import server, resource
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
  
 hpy = guppy.hpy()
 

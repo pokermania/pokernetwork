@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C)       2008 Bradley M. Kuhn <bkuhn@ebb.org>
@@ -26,11 +26,15 @@
 #  Loic Dachary <loic@dachary.org>
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 #
-import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
 
-from tests import testclock
+import sys
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+import log_history
 
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import protocol, reactor, defer
@@ -40,14 +44,6 @@ from twisted.application import service
 # Must be done before importing pokerclient or pokerclient
 # will have to be patched too.
 #
-
-from tests.testmessages import search_output, clear_all_messages, get_messages
-import logging
-from tests.testmessages import TestLoggingHandler
-logger = logging.getLogger()
-handler = TestLoggingHandler()
-logger.addHandler(handler)
-logger.setLevel(10)
 
 import twisted.internet.base
 twisted.internet.base.DelayedCall.debug = True
@@ -69,7 +65,6 @@ class FakeAvatar:
         self.protocol = protocol
 
     def handlePacket(self, packet):
-        print "FakeAvatar: handlePacket " + str(packet)
         if packet.type == PACKET_ERROR:
             raise Exception, "EXCEPTION TEST"
         return []
@@ -136,6 +131,7 @@ class ClientServerTestBase(unittest.TestCase):
         d.addCallback(setUpProtocol)
 
     def setUp(self):
+        self.log_history = log_history.Log()
         self.setUpServer()
         self.client_factory = [None, None]
         self.setUpClient(0)
@@ -166,16 +162,15 @@ class ClientServer(ClientServerTestBase):
         client = args[0]
         client.sendPacket(PacketQuit())
         client.transport.loseConnection()
-        server = self.server_factory.instance
         def serverPingTimeout(val):
-            self.assertEqual(search_output("ping: timeout Mr.Fakey/-1"), True)
+            self.assertEqual(self.log_history.search("ping: timeout Mr.Fakey/-1"), True)
         client.connection_lost_deferred.addCallback(serverPingTimeout)
         return client.connection_lost_deferred
     # -----------------------------------------------------------------------        
     def ping(self, client):
-        clear_all_messages()
+        self.log_history.reset()
         client.sendPacket(PacketPing())
-        self.assertEquals(get_messages(), ["sendPacket: PING  type = 5 length = 3"])
+        self.assertEquals(self.log_history.get_all(), ["sendPacket: PING  type = 5 length = 3"])
         return (client,)
     # -----------------------------------------------------------------------        
     def setPrefix(self, client):
@@ -211,7 +206,7 @@ class ClientServer(ClientServerTestBase):
     def killThenPing(self, client):
         def sendLostConnectionPacket(val):
             client.sendPacket(PacketPing())
-            self.assertTrue(search_output("bufferized"))
+            self.assertTrue(self.log_history.search("bufferized"))
             self.assertEqual(len(client.bufferized_packets), 1)
             self.assertEqual(client.bufferized_packets[0].type, PACKET_PING)
         d = client.connection_lost_deferred
@@ -233,8 +228,8 @@ class ClientServer(ClientServerTestBase):
         server.sendPackets([PacketPing()])
         self.assertEquals(len(server.bufferized_packets), 1)
         self.assertEquals(server.bufferized_packets[0].type, PACKET_PING)
-        self.assertTrue(search_output("bufferized"))
-        self.assertTrue(search_output("no usuable transport"))
+        self.assertTrue(self.log_history.search("bufferized"))
+        self.assertTrue(self.log_history.search("no usuable transport"))
         server.transport = saveMyTransport
         return client.connection_lost_deferred
 
@@ -251,9 +246,9 @@ class ClientServer(ClientServerTestBase):
                 return "you mock me"
             def check(self, foo):
                 return False
-        clear_all_messages()
+        self.log_history.reset()
         client.connectionLost(ReasonMockUp())
-        self.assertEquals(get_messages(), ['connectionLost: you mock me'])
+        self.assertEquals(self.log_history.get_all(), ['connectionLost: you mock me'])
         self.assertEquals(client._ping_timer, None)
         self.assertEquals(self.client_factory[0].protocol_instance,  None)
         return True
@@ -265,9 +260,9 @@ class ClientServer(ClientServerTestBase):
         return d
     # -----------------------------------------------------------------------
     def dummyClientError(self, client):
-        clear_all_messages()
+        self.log_history.reset()
         client.log.error("stupid dummy error test since client never calls")
-        self.assertEquals(get_messages(), ["stupid dummy error test since client never calls"])
+        self.assertEquals(self.log_history.get_all(), ["stupid dummy error test since client never calls"])
         return (client,)
     # -----------------------------------------------------------------------
     def test06_dummyClientError(self):
@@ -281,12 +276,12 @@ class ClientServer(ClientServerTestBase):
         d = self.client_factory[0].established_deferred
         def bufferPackets(client):
             def checkOutput(client):
-                msgs = get_messages()
+                msgs = self.log_history.get_all()
                 self.assertEquals(msgs[0], 'sendPacket: ACK  type = 4 length = 3')
                 return (client,)
 
             client.bufferized_packets = [ PacketAck() ]
-            clear_all_messages()
+            self.log_history.reset()
             ccd = client.connection_lost_deferred
             ccd.addCallback(checkOutput)
             return ccd
@@ -298,13 +293,13 @@ class ClientServer(ClientServerTestBase):
         d = self.client_factory[0].established_deferred
         def bufferPackets(client):
             def checkOutput(client):
-                msgs = get_messages()
+                msgs = self.log_history.get_all()
                 self.assertEquals(msgs[0], 'sendPacket: ACK  type = 4 length = 3')
                 self.assertEquals(msgs[1], 'sendPacket: SERIAL  type = 6 length = 7 serial = 0')
                 return (client,)
 
             client.bufferized_packets = [ PacketAck(), PacketSerial() ]
-            clear_all_messages()
+            self.log_history.reset()
             ccd = client.connection_lost_deferred
             ccd.addCallback(checkOutput)
             return ccd
@@ -344,7 +339,6 @@ class ClientServerQueuedServerPackets(ClientServerTestBase):
         class BufferedFakeFactory(FakeFactory):
             def buildProtocol(self, addr):
                 proto = FakeFactory.buildProtocol(self, addr)
-                clear_all_messages()
                 proto.bufferized_packets.append(PacketAck())
                 return proto
 
@@ -353,10 +347,10 @@ class ClientServerQueuedServerPackets(ClientServerTestBase):
         self.port = self.p.getHost().port
     # -----------------------------------------------------------------------
     def getServerPacket(self, client):
-        self.failUnless(search_output('protocol established'))
-        clear_all_messages()
+        self.failUnless(self.log_history.search('protocol established'))
+        self.log_history.reset()
         def findBufferedAckPacket(client):
-            self.failUnless(search_output("ACK  type = 4 length = 3"))
+            self.failUnless(self.log_history.search("ACK  type = 4 length = 3"))
 
         d = client.connection_lost_deferred
         d.addCallback(findBufferedAckPacket)
@@ -370,16 +364,16 @@ class ClientServerQueuedServerPackets(ClientServerTestBase):
 class ClientServerDeferredServerPackets(ClientServerTestBase):
     def deferPacket(self, client):
         server = self.server_factory.instance
-        self.failUnless(search_output('protocol established'))
-        clear_all_messages()
+        self.failUnless(self.log_history.search('protocol established'))
+        self.log_history.reset()
         self.deferredPacket = defer.Deferred()
         server.sendPackets([ self.deferredPacket, PacketAck()])
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.deferredPacket.callback(PacketPing())
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         
         def callbackDeferredPacket(client):
-            self.assertTrue(search_output('ACK  type = 4 length = 3'))
+            self.assertTrue(self.log_history.search('ACK  type = 4 length = 3'))
             
         d = client.connection_lost_deferred
         d.addCallback(callbackDeferredPacket)
@@ -392,22 +386,21 @@ class ClientServerDeferredServerPackets(ClientServerTestBase):
     # -----------------------------------------------------------------------
     def deferErrorPacket(self, client):
         server = self.server_factory.instance
-        clear_all_messages()
+        self.log_history.reset()
         self.deferredPacket = defer.Deferred()
         server.sendPackets([ self.deferredPacket, PacketAck()])
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
         self.deferredPacket.errback("forced to fail")
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
 
         def callbackDeferredPacket(client):
             errFound = False
             ackFound = False
-            msgs = get_messages()
-            for msg in get_messages():
-                if msg == "(132 bytes) => type = ERROR(3) message = [Failure instance: Traceback (failure with no frames): <class 'twisted.python.failure.DefaultException'>: forced to fail\n], code = 0, other_type = ERROR":
+            for msg in self.log_history.get_all():
+                if msg == "(132 bytes) => ERROR  type = 3 length = 132 message = [Failure instance: Traceback (failure with no frames): <class 'twisted.python.failure.DefaultException'>: forced to fail\n] code = 0 other_type = 3":
                     self.failIf(errFound or ackFound)
                     errFound = True
-                elif msg == 'ACK  type = 4 length = 3':
+                elif msg == '(3 bytes) => ACK  type = 4 length = 3':
                     self.failUnless(errFound)
                     ackFound = True
             self.failUnless(ackFound and errFound)
@@ -439,28 +432,29 @@ class  MockPingTimer:
 # client running to test it.
 
 class DummyServerTests(unittest.TestCase):
+
+    def setUp(self):
+        self.log_history = log_history.Log()
+
     def test01_invalidProtocol(self):
         self.server_factory = FakeFactory(self)
         self.server_factory.buildProtocol('addr').dataReceived("invalid protocol\n")
     # -----------------------------------------------------------------------
     def test02_pingWithoutTimer(self):
-        clear_all_messages()
         self.server_factory = FakeFactory(self)
         server = self.server_factory.buildProtocol('addr')
         del  server.__dict__['_ping_timer']
         self.assertEquals(server.ping(), None)
-        self.assertEqual(get_messages(), [])
+        self.assertEqual(self.log_history.get_all(), [])
     # -----------------------------------------------------------------------
     def test03_pingWithNoneTimer(self):
-        clear_all_messages()
         self.server_factory = FakeFactory(self)
         server = self.server_factory.buildProtocol('addr')
         server._ping_timer = None
         self.assertEquals(server.ping(), None)
-        self.assertEqual(get_messages(), [])
+        self.assertEqual(self.log_history.get_all(), [])
     # -----------------------------------------------------------------------
     def test04_pingWithActiveTimerNoUser(self):
-        clear_all_messages()
         self.server_factory = FakeFactory(self)
         server = self.server_factory.buildProtocol('addr')
         pt = MockPingTimer()
@@ -472,10 +466,9 @@ class DummyServerTests(unittest.TestCase):
         self.assertEquals(pt.resetValues, [ 10 ])
         self.assertEquals(pt.cancelCount, 0)
         self.assertEquals(server.transport.loseConnectionCount, 0)
-        self.assertEqual(get_messages(), [])
+        self.assertEqual(self.log_history.get_all(), [])
     # -----------------------------------------------------------------------
     def test05_pingWithActiveTimerWithUser(self):
-        clear_all_messages()
         self.server_factory = FakeFactory(self)
         server = self.server_factory.buildProtocol('addr')
         pt = MockPingTimer()
@@ -486,10 +479,9 @@ class DummyServerTests(unittest.TestCase):
         self.assertEquals(pt.resetValues, [ 10 ])
         self.assertEquals(pt.cancelCount, 0)
         self.assertEquals(server.transport.loseConnectionCount, 0)
-        self.assertEqual(get_messages(), ['ping: renew Mr.Fakey/-1'])
+        self.assertEqual(self.log_history.get_all(), ['ping: renew Mr.Fakey/-1'])
     # -----------------------------------------------------------------------
     def test06_pingWithInactiveTimerNoUser(self):
-        clear_all_messages()
         self.server_factory = FakeFactory(self)
         server = self.server_factory.buildProtocol('addr')
         pt = MockPingTimer()
@@ -500,10 +492,9 @@ class DummyServerTests(unittest.TestCase):
         self.assertEquals(pt.resetValues, [ ])
         self.assertEquals(pt.cancelCount, 0)
         self.assertEquals(server.transport.loseConnectionCount, 1)
-        self.assertEqual(get_messages(), [])
+        self.assertEqual(self.log_history.get_all(), [])
     # -----------------------------------------------------------------------
     def test07_pingWithInactiveTimerWithUser(self):
-        clear_all_messages()
         self.server_factory = FakeFactory(self)
         server = self.server_factory.buildProtocol('addr')
         pt = MockPingTimer()
@@ -513,7 +504,7 @@ class DummyServerTests(unittest.TestCase):
         self.assertEquals(pt.resetValues, [ ])
         self.assertEquals(pt.cancelCount, 0)
         self.assertEquals(server.transport.loseConnectionCount, 1)
-        self.assertEqual(get_messages(), ['ping: timeout Mr.Fakey/-1'])
+        self.assertEqual(self.log_history.get_all(), ['ping: timeout Mr.Fakey/-1'])
     # -----------------------------------------------------------------------
     def processQueuesCounter(self):
         global processQueuesCount
@@ -529,7 +520,7 @@ class DummyServerTests(unittest.TestCase):
         global ignoreIncomingDataCount
         ignoreIncomingDataCount = 0
 
-        clear_all_messages()
+        self.log_history.reset()
         self.server_factory = FakeFactory(self)
         server = self.server_factory.buildProtocol('addr')
 
@@ -548,7 +539,7 @@ class DummyServerTests(unittest.TestCase):
         self.assertEquals(ignoreIncomingDataCount, 1)
         self.assertEquals(self.server_factory.destroyedAvatars, [])
 
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
     # -----------------------------------------------------------------------
     def test09_connectionLostNoPingTimerWithAvatarButNoQueues(self):
         global processQueuesCount
@@ -557,7 +548,7 @@ class DummyServerTests(unittest.TestCase):
         global ignoreIncomingDataCount
         ignoreIncomingDataCount = 0
 
-        clear_all_messages()
+        self.log_history.reset()
         self.server_factory = FakeFactory(self)
         server = self.server_factory.buildProtocol('addr')
         server._protocol_ok = True
@@ -577,7 +568,7 @@ class DummyServerTests(unittest.TestCase):
         self.assertEquals(ignoreIncomingDataCount, 1)
         self.assertEquals(len(self.server_factory.destroyedAvatars), 1)
         self.failUnless(isinstance(self.server_factory.destroyedAvatars[0], FakeAvatar))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
 
     # -----------------------------------------------------------------------
     def test10_connectionLostWithInactivePingTimerWithAvatarAndQueues(self):
@@ -587,7 +578,7 @@ class DummyServerTests(unittest.TestCase):
         global ignoreIncomingDataCount
         ignoreIncomingDataCount = 0
 
-        clear_all_messages()
+        self.log_history.reset()
         self.server_factory = FakeFactory(self)
         server = self.server_factory.buildProtocol('addr')
         server._protocol_ok = True
@@ -616,7 +607,7 @@ class DummyServerTests(unittest.TestCase):
         self.assertEquals(pt.resetValues, [])
         self.assertEquals(len(self.server_factory.destroyedAvatars), 1)
         self.failUnless(isinstance(self.server_factory.destroyedAvatars[0], FakeAvatar))
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
     # -----------------------------------------------------------------------
     def test11_connectionLostActivePingTimerNoAvatarOneQueues(self):
         global processQueuesCount
@@ -625,7 +616,7 @@ class DummyServerTests(unittest.TestCase):
         global ignoreIncomingDataCount
         ignoreIncomingDataCount = 0
 
-        clear_all_messages()
+        self.log_history.reset()
         self.server_factory = FakeFactory(self)
         server = self.server_factory.buildProtocol('addr')
         server._protocol_ok = True
@@ -654,7 +645,7 @@ class DummyServerTests(unittest.TestCase):
         self.assertEquals(pt.cancelCount, 1)
         self.assertEquals(pt.resetValues, [])
         self.assertEquals(self.server_factory.destroyedAvatars, [])
-        self.assertEquals(get_messages(), [])
+        self.assertEquals(self.log_history.get_all(), [])
     # -----------------------------------------------------------------------
     def test12_handleConnectionNoException(self):
         """test12_handleConnectionNoException
@@ -708,13 +699,13 @@ class DummyServerTests(unittest.TestCase):
         server.triggerTimer = doMyTrigger
         server.sendPackets = doSendPackets
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(server.exception, None)
 
         server._handleConnection("test12 dummy packets")
 
-        self.assertEquals(get_messages(), ['ping: renew Mr.Fakey/-1'])
+        self.assertEquals(self.log_history.get_all(), ['ping: renew Mr.Fakey/-1'])
         self.assertEquals(pt, server._ping_timer)
         self.assertEquals(pt.resetValues, [ 10 ])
         self.assertEquals(pt.cancelCount, 0)
@@ -769,13 +760,13 @@ class DummyServerTests(unittest.TestCase):
         server.triggerTimer = doMyTrigger
         server.sendPackets = doSendPackets
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(server.exception, None)
 
         server._handleConnection("test13 dummy packets")
 
-        self.assertEquals(get_messages(), ['ping: renew Mr.Fakey/-1'])
+        self.assertEquals(self.log_history.get_all(), ['ping: renew Mr.Fakey/-1'])
         self.assertEquals(pt, server._ping_timer)
         self.assertEquals(pt.resetValues, [ 10 ])
         self.assertEquals(pt.cancelCount, 0)
@@ -833,7 +824,7 @@ class DummyServerTests(unittest.TestCase):
         server.triggerTimer = doMyTrigger
         server.sendPackets = doSendPackets
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(server.exception, None)
 
@@ -848,7 +839,7 @@ class DummyServerTests(unittest.TestCase):
 
         self.assertEquals(exceptionFound, True)
             
-        self.assertEquals(get_messages(), ['ping: renew Mr.Fakey/-1'])
+        self.assertEquals(self.log_history.get_all(), ['ping: renew Mr.Fakey/-1'])
         self.assertEquals(pt, server._ping_timer)
         self.assertEquals(pt.resetValues, [ 10 ])
         self.assertEquals(pt.cancelCount, 0)
@@ -861,10 +852,14 @@ class DummyServerTests(unittest.TestCase):
 # client running to test it.
 
 class DummyClientTests(unittest.TestCase):
+
+    def setUp(self):
+        self.log_history = log_history.Log()
+
     # -----------------------------------------------------------------------
     def test01_pingWithoutTimer(self):
         def myDataWrite(clientSelf): failIf(True)
-        clear_all_messages()
+        self.log_history.reset()
 
         client = pokernetwork.client.UGAMEClientProtocol()
         client.dataWrite = myDataWrite
@@ -872,11 +867,11 @@ class DummyClientTests(unittest.TestCase):
         client.factory = None
 
         self.assertEquals(client.ping(), None)
-        self.assertEqual(get_messages(), [])
+        self.assertEqual(self.log_history.get_all(), [])
     # -----------------------------------------------------------------------
     def test02_pingWithNoneTimer(self):
         def myDataWrite(clientSelf): failIf(True)
-        clear_all_messages()
+        self.log_history.reset()
 
         client = pokernetwork.client.UGAMEClientProtocol()
         client.dataWrite = myDataWrite
@@ -884,11 +879,11 @@ class DummyClientTests(unittest.TestCase):
         client.factory = None
 
         self.assertEquals(client.ping(), None)
-        self.assertEqual(get_messages(), [])
+        self.assertEqual(self.log_history.get_all(), [])
     # -----------------------------------------------------------------------
     def test03_pingWithActiveTimer(self):
         def myDataWrite(clientSelf): failIf(True)
-        clear_all_messages()
+        self.log_history.reset()
 
         client = pokernetwork.client.UGAMEClientProtocol()
         pt = MockPingTimer()
@@ -900,7 +895,7 @@ class DummyClientTests(unittest.TestCase):
         self.assertEquals(pt, client._ping_timer)
         self.assertEquals(pt.resetValues, [ 5 ])
         self.assertEquals(pt.cancelCount, 0)
-        self.assertEqual(get_messages(), [])
+        self.assertEqual(self.log_history.get_all(), [])
     # -----------------------------------------------------------------------
     def test04_pingWithInactiveTimer(self):
         global dataWritten
@@ -914,7 +909,7 @@ class DummyClientTests(unittest.TestCase):
             def __init__(factSelf):
                 factSelf.verbose = 7
 
-        clear_all_messages()
+        self.log_history.reset()
 
         client = pokernetwork.client.UGAMEClientProtocol()
         pt = MockPingTimer()
@@ -939,7 +934,7 @@ class DummyClientTests(unittest.TestCase):
         self.assertEquals(pt.resetValues, [])
         self.assertEquals(pt.cancelCount, 0)
         self.assertEquals(dataWritten, 1)
-        self.assertEqual(get_messages(), ['send ping'])
+        self.assertEqual(self.log_history.get_all(), ['send ping'])
 
         return pingRecallDeferred
     # -----------------------------------------------------------------------
@@ -983,14 +978,14 @@ class DummyClientTests(unittest.TestCase):
         self.assertEquals(client.isLogged(), True)
     # -----------------------------------------------------------------------
     def test10_factoryError(self):
-        clear_all_messages()
+        self.log_history.reset()
         clientFactory = pokernetwork.client.UGAMEClientFactory()
         clientFactory.log.error("test10")
-        self.assertEquals(get_messages(), [ "test10"])
+        self.assertEquals(self.log_history.get_all(), [ "test10"])
 # -----------------------------------------------------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test09"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ClientServer))
     suite.addTest(loader.loadClass(ClientServerBadClientProtocol))
@@ -998,10 +993,13 @@ def Run():
     suite.addTest(loader.loadClass(ClientServerDeferredServerPackets))
     suite.addTest(loader.loadClass(DummyServerTests))
     suite.addTest(loader.loadClass(DummyClientTests))
+    return suite
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-    ).run(suite)
+    ).run(GetTestSuite())
 
 # -----------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
@@ -1009,8 +1007,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-clientserver.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/server.py ../pokernetwork/client.py' TESTS='coverage-reset test-clientserver.py coverage-report' check )"
-# End:

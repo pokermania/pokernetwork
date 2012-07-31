@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2009 Loic Dachary <loic@dachary.org>
 #
@@ -19,33 +19,49 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys, os
-sys.path.insert(0, "@top_srcdir@")
-sys.path.insert(0, "..")
+import unittest, sys, os
+from os import path
 
-import unittest
-import simplejson
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
+from config import config
+import sqlmanager
 
 settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="3" admin="yes">
 
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../database/schema.sql" command="@MYSQL@" />
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 from pokernetwork import pokersql
 from pokernetwork import pokernetworkconfig
 
 class SqlTestCase(unittest.TestCase):
 
-    def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
 
     def setUp(self):
         self.destroyDb()
@@ -58,11 +74,11 @@ class SqlTestCase(unittest.TestCase):
         self.assertTrue("config.xml" in pokersql.getPath(['a/b/config.xml']))
 
     def test02_getSettings(self):
-        settings = pokersql.getSettings('@srcdir@/pokersql.xml')
+        settings = pokersql.getSettings(path.join(TESTS_PATH, 'pokersql.xml'))
         self.assertEquals('true', settings.headerGet("/server/@admin"))
         caught = False
         try:
-            pokersql.getSettings('@srcdir@/pokersqlfail.xml')
+            pokersql.getSettings(path.join(TESTS_PATH, 'pokersqlfail.xml'))
         except AssertionError, e:
             self.assertTrue('enable' in str(e))
             caught = True
@@ -103,7 +119,7 @@ class SqlTestCase(unittest.TestCase):
         self.assertTrue('\n2' in output, output)
 
     def test04_run(self):
-        self.assertEquals("Content-type: text/plain\n\n", pokersql.run(['@srcdir@/pokersql.xml']))
+        self.assertEquals("Content-type: text/plain\n\n", pokersql.run([path.join(TESTS_PATH, 'pokersql.xml')]))
         
 #--------------------------------------------------------------
 def GetTestSuite():
@@ -121,8 +137,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokersql.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokersql.py' TESTS='coverage-reset test-pokersql.py coverage-report' check )"
-# End:

@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2009 Johan Euphrosine <proppy@aminche.com>
@@ -21,20 +21,18 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+from os import path
 
-import libxml2
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+
 import base64
 import cgi
 
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import defer
-from twisted.python import failure
 import twisted.internet.base
 twisted.internet.base.DelayedCall.debug = True
-
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
 
 from tests import testclock
 
@@ -532,10 +530,12 @@ class FilterTestCase(unittest.TestCase):
             testclock._seconds_reset()        
             settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" >
-<rest_filter>../@srcdir@/testfilter.py</rest_filter>
-<rest_filter>../@srcdir@/../pokernetwork/nullfilter.py</rest_filter>
+<rest_filter>%(tests_path)s/testfilter.py</rest_filter>
+<rest_filter>%(tests_path)s/../pokernetwork/nullfilter.py</rest_filter>
 </server>
-"""
+""" % {
+    'tests_path': TESTS_PATH
+}
             self.settings = pokernetworkconfig.Config([])
             self.settings.loadFromString(settings_xml)
             pokermemcache.memcache = pokermemcache.MemcacheMockup
@@ -571,9 +571,11 @@ class FilterErrorTestCase(unittest.TestCase):
             testclock._seconds_reset()        
             settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" >
-<rest_filter>../@srcdir@/testerrorfilter.py</rest_filter>
+<rest_filter>%(tests_path)s/testerrorfilter.py</rest_filter>
 </server>
-"""
+""" % {
+    'tests_path': TESTS_PATH
+}
             self.settings = pokernetworkconfig.Config([])
             self.settings.loadFromString(settings_xml)
             pokermemcache.memcache = pokermemcache.MemcacheMockup
@@ -612,9 +614,11 @@ class FilterFinishTestCase(unittest.TestCase):
             testclock._seconds_reset()        
             settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" >
-<rest_filter>../@srcdir@/finishedfilter.py</rest_filter>
+<rest_filter>%(tests_path)s/finishedfilter.py</rest_filter>
 </server>
-"""
+""" % {
+    'tests_path': TESTS_PATH
+}
             self.settings = pokernetworkconfig.Config([])
             self.settings.loadFromString(settings_xml)
             pokermemcache.memcache = pokermemcache.MemcacheMockup
@@ -993,7 +997,7 @@ class PokerSiteTestCase(PokerSiteBase):
             self.assertEquals(('HOST', 7777, 'PATH'), site.memcache.get('uid'))
             
 
-def Run():
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test01"
     suite = loader.suiteFactory()
@@ -1009,18 +1013,16 @@ def Run():
     suite.addTest(loader.loadClass(PokerSiteTestCase))
     suite.addTest(loader.loadClass(HelpersTestCase))
     suite.addTest(loader.loadClass(PokerTourneyStartTestCase))
+    return Suite()
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-    ).run(suite)
+    ).run(GetTestSuite())
 
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokersite.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokersite.py' VERBOSE_T=-1 TESTS='coverage-reset test-pokersite.py coverage-report' check )"
-# End:

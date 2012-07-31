@@ -21,7 +21,7 @@
 //  Loic Dachary <loic@dachary.org>
 //
 
-ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/pages");
+ini_set('include_path', ini_get('include_path') . ":" . "@srcdir@/pokerweb/pages");
 
 require_once 'PHPUnit/Framework/TestCase.php';
 
@@ -193,11 +193,11 @@ class testpoker extends PHPUnit_Framework_TestCase
     $poker = new poker('fakehost');
     $poker->verbose = VERBOSE;
     $poker->login('user', 'password');
-    $poker->setPlayerImage('@top_srcdir@/tests/chameleon.png', 'image/png', 100, 100);
+    $poker->setPlayerImage('@srcdir@/tests/chameleon.png', 'image/png', 100, 100);
     $poker->getPlayerImage($poker->serial);
-    $poker->setPlayerImage('@top_srcdir@/tests/chameleon.png', 'image/png', 2, 100);
-    $poker->setPlayerImage('@top_srcdir@/tests/chameleon.png', 'image/png', 100, 2);
-    $poker->setPlayerImage('@top_srcdir@/tests/chameleon.png', 'image/png', 2, 2);
+    $poker->setPlayerImage('@srcdir@/tests/chameleon.png', 'image/png', 2, 100);
+    $poker->setPlayerImage('@srcdir@/tests/chameleon.png', 'image/png', 100, 2);
+    $poker->setPlayerImage('@srcdir@/tests/chameleon.png', 'image/png', 2, 2);
   }
 
   public function test03_fail_connect()
@@ -383,7 +383,7 @@ class testpoker extends PHPUnit_Framework_TestCase
     $poker->login('user', 'password');
     $poker->client->e_image_ack = true;
     try {
-      $poker->setPlayerImage('@top_srcdir@/tests/chameleon.png', 'image/png');
+      $poker->setPlayerImage('@srcdir@/tests/chameleon.png', 'image/png');
     } catch (Exception $e) {
       if($e->getCode() == poker::E_IMAGE_ACK)
         return;

@@ -1,4 +1,5 @@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C)             2008 Bradley M. Kuhn <bkuhn@ebb.org>
 #
@@ -21,12 +22,11 @@
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 #
 
-import sys, os
-sys.path.insert(0, "@top_srcdir@")
+import unittest, sys
+from os import path
 
-import unittest
-import os.path
-import types
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
 from pokernetwork.user import User
 from pokernetwork import user as userClass
@@ -233,8 +233,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-user.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/user.py' TESTS='coverage-reset test-user.py coverage-report' check )"
-# End:

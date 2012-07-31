@@ -1,5 +1,5 @@
-#!@PYTHON@ 
-# -*- python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2008, 2009 Loic Dachary <loic@dachary.org>
 #
@@ -19,10 +19,14 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys
-sys.path.insert(0, "@top_srcdir@")
+from os import path
+
+STATS_PATH = path.dirname(path.realpath(__file__))
+
+sys.path.insert(0, path.join(STATS_PATH, '..'))
 
 if(sys.argv[-1][-4:] != ".xml"):
-    sys.argv.append("@POKER_NETWORK_PKGSYSCONFDIR@/poker.stats.xml")
+    sys.argv.append(path.join(STATS_PATH, "/poker.stats.xml"))
 
 from pokerstats.stats import run
 run()

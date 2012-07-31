@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2009       Bradley M. Kuhn <bkuhn@ebb.org>
@@ -28,10 +28,13 @@
 
 
 import sys, os
-sys.path.insert(0, "@top_srcdir@")
-sys.path.insert(0, "..")
+from os import path
 
-from tests import testclock
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
 
 from types import *
 
@@ -45,26 +48,32 @@ twisted.internet.base.DelayedCall.debug = True
 
 from urlparse import urlparse
 
-from tests.testmessages import search_output, clear_all_messages, get_messages
-import logging
-from tests.testmessages import TestLoggingHandler
-logger = logging.getLogger()
-handler = TestLoggingHandler()
-logger.addHandler(handler)
-logger.setLevel(10)
+import log_history
 
 from pokernetwork import currencyclient
 
 class CurrencyClientTestCase(unittest.TestCase):
 
     def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS currencytest'")
+        if len(config.test.mysql.root_user.password) > 0:
+            os.system("%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS currencytest'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
         else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS currencytest'")
+            os.system("%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS currencytest'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
 
     # -----------------------------------------------------------------------------
     def setUp(self):
+        self.log_history = log_history.Log()
         self.destroyDb()
         self.client = currencyclient.CurrencyClient()
         self.client.getPage = self.getPage
@@ -76,21 +85,25 @@ class CurrencyClientTestCase(unittest.TestCase):
 
     def getPage(self, url):
         ( scheme, netloc, path, parameters, query, fragement ) = urlparse(url)
-        cmd = """
-cat <<'EOF' | QUERY_STRING='""" + query + """' @PHP@
+        cmd = "cat <<'EOF' | QUERY_STRING='%s' /usr/bin/env php" % (query,)
+        cmd += """
 <?
-  ini_set('include_path', '@srcdir@/../../pokerweb/pages:' . ini_get('include_path'));
+  ini_set('include_path', '%(tests_path)s/../pokerweb/pages:' . ini_get('include_path'));
   $GLOBALS['currency_db_base'] = 'currencytest';
-  $GLOBALS['currency_db_host'] = '@MYSQL_TEST_DBHOST@';
-  $GLOBALS['currency_db_user'] = '@MYSQL_TEST_DBROOT@';
-  $GLOBALS['currency_db_password'] = '@MYSQL_TEST_DBROOT_PASSWORD@';
+  $GLOBALS['currency_db_host'] = '%(dbhost)s';
+  $GLOBALS['currency_db_user'] = '%(dbroot)s';
+  $GLOBALS['currency_db_password'] = '%(dbroot_password)s';
   require 'currency.php';
   parse_str(getenv('QUERY_STRING'), $_GET);
   currency_main(False);
 ?>
 EOF
-"""
-        #print cmd
+""" % {
+            'dbroot': config.test.mysql.root_user.name,
+            'dbroot_password': config.test.mysql.root_user.password,
+            'dbhost': config.test.mysql.host,
+            'tests_path': TESTS_PATH
+        }
         fd = os.popen(cmd)
         result = fd.read()
         fd.close()
@@ -345,6 +358,7 @@ EOF
 # -----------------------------------------------------------------------------
 class FakeCurrencyClientTestCase(CurrencyClientTestCase):
     def setUp(self):
+        self.log_history = log_history.Log()
         currencyclient.Verbose = True
         currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
         self.destroyDb()
@@ -356,10 +370,10 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         currencyclient.FakeCurrencyFailure = False
     # -----------------------------------------------------------------------------
     def getNote(self, url, value):
-        clear_all_messages()
+        self.log_history.reset()
         d = self.client.getNote(url, value)
-        self.assertEquals(search_output("_buildNote"), True)
-        self.assertEquals(search_output("getNote"), True)
+        self.assertEquals(self.log_history.search("_buildNote"), True)
+        self.assertEquals(self.log_history.search("getNote"), True)
         if "?" in url:
             check_url = url[:url.index("?")]
         else:
@@ -380,9 +394,9 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         return d
     # -----------------------------------------------------------------------------
     def getCommitedNote(self, url, value):
-        clear_all_messages()
+        self.log_history.reset()
         def checkCommitVerboseOutput(result):
-            self.assertEquals(search_output("commit"), True)
+            self.assertEquals(self.log_history.search("commit"), True)
             return result
         ret = CurrencyClientTestCase.getCommitedNote(self, url, value)
         ret.addCallback(checkCommitVerboseOutput)
@@ -394,10 +408,10 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         d = self.getCommitedNote('http://fake/', 100)
 
         def checkNote(result):
-            clear_all_messages()
+            self.log_history.reset()
             note_to_check = result
             d = self.client.checkNote(note_to_check)
-            self.assertEquals(search_output("checkNote"), True)
+            self.assertEquals(self.log_history.search("checkNote"), True)
             def validate(result):
                 if isinstance(result, failure.Failure): raise result
                 checked_note = result
@@ -425,9 +439,9 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
 
         def mergeNotes(note):
             self.assertEquals(2, len(notes))
-            clear_all_messages()
+            self.log_history.reset()
             d = self.client.mergeNotes(*notes)
-            self.assertEquals(search_output("mergeNotes"), True)
+            self.assertEquals(self.log_history.search("mergeNotes"), True)
             def validate(result):
                 if isinstance(result, failure.Failure): raise result
                 self.assertEqual(1, len(result))
@@ -477,7 +491,7 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
 
     def test04_changeNote(self):
         d = self.getCommitedNote('http://fake/', 100)
-        clear_all_messages()
+        self.log_history.reset()
         def changeNote(result):
             class FakeNoteToChange:
                 def copy(self):
@@ -488,7 +502,7 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
                 self.assertEqual(result[0], 8)
                 self.assertEqual(result[1], 2)
                 self.assertEqual(40, len(result[2]))
-                self.assertEquals(search_output("changeNote"), True)
+                self.assertEquals(self.log_history.search("changeNote"), True)
                 return result
             d.addBoth(validate)
             return d
@@ -497,10 +511,10 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         return d
 
     def test07_breakNote(self):
-        clear_all_messages()
+        self.log_history.reset()
         d = CurrencyClientTestCase.test07_breakNote(self)
         def checkOutput(result):
-            self.assertEquals(search_output("breakNote values"), True)
+            self.assertEquals(self.log_history.search("breakNote values"), True)
             return True
 
         d.addCallback(checkOutput)
@@ -538,12 +552,24 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
 # -----------------------------------------------------------------------------
 class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
     def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS currencytest'")
+        if len(config.test.mysql.root_user.password) > 0:
+            os.system("%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS currencytest'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
         else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS currencytest'")
+            os.system("%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS currencytest'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
     # -----------------------------------------------------------------------------
     def setUp(self):
+        self.log_history = log_history.Log()
         self.destroyDb()
     # -----------------------------------------------------------------------------
     def tearDown(self):
@@ -556,7 +582,7 @@ class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
         self.client = currencyclient.RealCurrencyClient()
         caughtIt = False
 
-        clear_all_messages()
+        self.log_history.reset()
         try:
             self.client.parseResultNote("two\tfield")
             self.fail("Previous line should have caused exception")
@@ -565,7 +591,7 @@ class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
             caughtIt = True
             
         self.assertTrue(caughtIt, "Should have caught an exception")
-        self.assertEquals(get_messages(), ["parseResultNote: ignore line: two\tfield"])
+        self.assertEquals(self.log_history.get_all(), ["parseResultNote: ignore line: two\tfield"])
     # -----------------------------------------------------------------------------
     def test02_commit_multiLineResult(self):
         self.client = currencyclient.RealCurrencyClient()
@@ -682,26 +708,22 @@ class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
         chainBegin.callback(True)
         return forceTimeoutErrorIfNotCalledBack
 # -----------------------------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test07"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(CurrencyClientTestCase))
     suite.addTest(loader.loadClass(FakeCurrencyClientTestCase))
     suite.addTest(loader.loadClass(ErrorCondtionsCurrencyClientTestCase))
-    return runner.TrialRunner(reporter.TextReporter,
-#                              tracebackFormat='verbose',
-                              tracebackFormat='default',
-                              ).run(suite)
+    return suite
 
-# -----------------------------------------------------------------------------
+def Run():
+    return runner.TrialRunner(reporter.TextReporter,
+        tracebackFormat='default',
+    ).run(GetTestSuite())
+
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-currencyclient.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/currencyclient.py' TESTS='coverage-reset test-currencyclient.py coverage-report' check )"
-# End:

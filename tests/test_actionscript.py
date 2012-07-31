@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 #
@@ -19,13 +19,11 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys, os
-sys.path.insert(0, "@top_srcdir@")
-sys.path.insert(0, "..")
+import unittest, sys
+from os import path
 
-import unittest
-import simplejson
-from struct import pack, unpack, calcsize
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
 from pokernetwork import pokerclientpackets
 
@@ -272,22 +270,22 @@ public class Packet
         public var type:int;
         public var length:int;
 
-	public function unpack(bytes:ByteArray):ByteArray
+        public function unpack(bytes:ByteArray):ByteArray
         {
-    		this.type = bytes.readUnsignedByte();
-    		this.length = bytes.readUnsignedShort();
+                    this.type = bytes.readUnsignedByte();
+                    this.length = bytes.readUnsignedShort();
                 return bytes;
         }
 
-	public function pack():ByteArray
+        public function pack():ByteArray
         {
-    		var bytes:ByteArray = new ByteArray();
+                    var bytes:ByteArray = new ByteArray();
                 bytes.writeUnsignedByte(this.type);
                 bytes.writeUnsignedShort(this.calcsize());
                 return bytes;
         }
 
-	public function calcsize():int
+        public function calcsize():int
         {
                 return 3;
         }
@@ -295,8 +293,8 @@ public class Packet
 """
         for type in xrange(0, 255):
             if pokerclientpackets.PacketFactory.has_key(type):
-                as = ActionScriptGenerator(pokerclientpackets.PacketFactory[type])
-                as.generate()
+                ascript = ActionScriptGenerator(pokerclientpackets.PacketFactory[type])
+                ascript.generate()
 
 #--------------------------------------------------------------
 def GetTestSuite():
@@ -314,8 +312,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-actionscript.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/packets.py' TESTS='coverage-reset test-actionscript.py coverage-report' check )"
-# End:

@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/env python
 # -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
 #
 # Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
@@ -26,30 +26,26 @@
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 
 import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
+import log_history
 
 import libxml2
 from MySQLdb.cursors import DictCursor
 from MySQLdb.constants import ER
-from pprint import pprint
 
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
-from types import StringType, IntType, LongType, FloatType
-from twisted.internet import reactor, defer
+from twisted.internet import defer
 
 twisted.internet.base.DelayedCall.debug = True
 
-from tests.testmessages import search_output, clear_all_messages, get_messages
-import logging
-from tests.testmessages import TestLoggingHandler
-logger = logging.getLogger()
-handler = TestLoggingHandler()
-logger.addHandler(handler)
-logger.setLevel(10)
-
-from pokernetwork import pokercashier, pokernetworkconfig, user
+from pokernetwork import pokercashier, pokernetworkconfig
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokernetwork.pokerpackets import *
@@ -57,11 +53,25 @@ from pokernetwork.pokerdatabase import PokerDatabase
 
 settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="3">
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 class MockCursorBase:
     def __init__(cursorSelf, testObject, acceptList):
@@ -131,13 +141,25 @@ class MockDatabase:
 
 class PokerCashierTestCase(unittest.TestCase):
     def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        if len(config.test.mysql.root_user.password) > 0:
+            os.system("%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
         else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+            os.system("%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
         
     # --------------------------------------------------------
     def setUp(self):
+        self.log_history = log_history.Log()
         self.destroyDb()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -436,7 +458,7 @@ class PokerCashierTestCase(unittest.TestCase):
 
     # --------------------------------------------------------
     def test07_getCurrencySerial(self):
-        clear_all_messages()
+        self.log_history.reset()
         self.cashier.parameters['user_create'] = 'no';
 
         pe = self.failUnlessRaises(PacketError, self.cashier.getCurrencySerial, 'http://fake')
@@ -445,7 +467,7 @@ class PokerCashierTestCase(unittest.TestCase):
         self.assertEquals(pe.message, 
                         'Invalid currency http://fake and user_create = no in settings.')
         self.assertEquals(pe.code, PacketPokerCashIn.REFUSED)
-        self.assertEquals(get_messages(),
+        self.assertEquals(self.log_history.get_all(),
                           ["SELECT serial FROM currencies WHERE url = 'http://fake'"])
     # --------------------------------------------------------
     def test08_forcecashInUpdateSafeFail(self):
@@ -603,13 +625,25 @@ class PokerCashierTestCase(unittest.TestCase):
 # Following tests use a MockDB rather than the real MySQL database
 class PokerCashierFakeDBTestCase(unittest.TestCase):
     def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        if len(config.test.mysql.root_user.password) > 0:
+            os.system("%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
         else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+            os.system("%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
         
     # --------------------------------------------------------
     def setUp(self):
+        self.log_history = log_history.Log()
         self.destroyDb()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -627,7 +661,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
 #        self.destroyDb()
     # --------------------------------------------------------
     def test01_getCurrencySerial_forceExceptionOnRowCount(self):
-        clear_all_messages()
+        self.log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
         class MockCursor:
             def __init__(cursorSelf):
@@ -662,13 +696,13 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         
         self.failUnless(caughtExeption)
 
-        self.assertEquals(get_messages(), [
+        self.assertEquals(self.log_history.get_all(), [
             "SELECT serial FROM currencies WHERE url = 'http://example.org'", 
             "INSERT INTO currencies (url) VALUES ('http://example.org')"
         ])
     # --------------------------------------------------------
     def test02_getCurrencySerial_forceExceptionOnExecute(self):
-        clear_all_messages()
+        self.log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
         
         class MockCursor(MockCursorBase):
@@ -692,10 +726,10 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(e[0], ER.DUP_ENTRY)
         self.failUnless(caughtExeption)
 
-        self.assertEquals(get_messages(), ["SELECT serial FROM currencies WHERE url = 'http://example.org'"])
+        self.assertEquals(self.log_history.get_all(), ["SELECT serial FROM currencies WHERE url = 'http://example.org'"])
     # --------------------------------------------------------
     def test03_getCurrencySerial_forceRecursionWithNoResolution(self):
-        clear_all_messages()
+        self.log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
                     
         class MockCursor(MockCursorBase):
@@ -723,7 +757,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().counts["SELECT"], 2)
         self.assertEquals(db.cursor().counts["INSERT INTO"], 2)
 
-        self.assertEquals(get_messages(), [
+        self.assertEquals(self.log_history.get_all(), [
             "SELECT serial FROM currencies WHERE url = 'http://example.org'", 
             "SELECT serial FROM currencies WHERE url = 'http://example.org'", 
         ])
@@ -736,7 +770,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         is wrapped in a try/except, so we catch that and make sure the
         operations."""
 
-        clear_all_messages()
+        self.log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
         
         class MockCursor(MockCursorBase):
@@ -776,7 +810,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         On the second call to cashOutCollect(), we return a valid row.
         This causes us to get back a valid packet.  But still an (ignored)
         error on the lock() not existing."""
-        clear_all_messages()
+        self.log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
             
         class MockCursor(MockCursorBase):
@@ -809,7 +843,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().counts['INSERT INTO'], 1)
         self.assertEquals(db.cursor().counts['ROLLBACK'], 0)
         self.assertEquals(db.cursor().counts['COMMIT'], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(msgs[len(msgs)-1], 'cashInUnlock: unexpected missing cash_5 in locks (ignored)')
     # --------------------------------------------------------
     def test06_cashOutUpdateSafe_forceFakeFalsePacket(self):
@@ -817,7 +851,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         We override the second call to cashOutCollect(), so we return a
         valid row.  We force the packet returned to always be false, to
         force the final error code to operate.  """
-        clear_all_messages()
+        self.log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
         class MockCursor:
             def __init__(cursorSelf):
@@ -883,11 +917,11 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().counts['INSERT INTO'], 1)
         self.assertEquals(db.cursor().counts['ROLLBACK'], 0)
         self.assertEquals(db.cursor().counts['COMMIT'], 1)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(msgs[len(msgs)-1], 'cashInUnlock: unexpected missing cash_5 in locks (ignored)')
     # --------------------------------------------------------
     def cashOutUpdateCounter_weirdLen(self, new_notes, message):
-        clear_all_messages()
+        self.log_history.reset()
         class  MockDatabase:
             def cursor(dbSelf): return MockCursor()
         class  MockCursor: pass
@@ -905,7 +939,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(pe.code, PacketPokerCashOut.BREAK_NOTE)
             self.assertEquals(pe.message, "breaking dummy packet resulted in %d notes (%s) instead of 2"
                               % (len(new_notes), message))
-            self.assertEquals(get_messages(),
+            self.assertEquals(self.log_history.get_all(),
                               ["cashOutUpdateCounter: new_notes = %s packet = dummy packet" % message])
         self.failUnless(caughtIt)
     # --------------------------------------------------------
@@ -970,7 +1004,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.cashier.setDb(db)
 
         caughtIt = False
-        clear_all_messages()
+        self.log_history.reset()
         try:
             self.cashier.cashOutUpdateCounter([ (0, 5, "joe", 55), (0, 0, "server", 0)],
                                               MockPacket())
@@ -984,7 +1018,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().counts['ROLLBACK'], 1)
         self.assertEquals(db.cursor().counts['COMMIT'], 0)
         self.assertEquals(db.cursor().counts['START TRANSACTION'], 1)
-        self.assertEquals(get_messages(), 
+        self.assertEquals(self.log_history.get_all(), 
                           ["cashOutUpdateCounter: new_notes = [(0, 5, 'joe', 55), (0, 0, 'server', 0)] packet = MOCK PACKET"])
     # --------------------------------------------------------
     def test09_cashOutUpdateCounter_forceRaiseOnNotesOrder(self):
@@ -992,7 +1026,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         This test handles the case where new_notes do not match what is in
         the packet sent to cashOutUpdateCounter() """
         caughtIt = False
-        clear_all_messages()
+        self.log_history.reset()
         class  MockPacket:
             def __init__(mockPacketSelf): mockPacketSelf.value  = 43
             def __str__(mockPacketSelf):  return "MOCK PACKET"
@@ -1055,7 +1089,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.cashier.setDb(db)
         self.cashier.currency_client = MockCurrencyClient()
 
-        clear_all_messages()
+        self.log_history.reset()
         d = self.cashier.cashOutBreakNote("MEANINGLESS ARG", MockPacket())
 
         for key in db.cursor().counts.keys():
@@ -1064,13 +1098,13 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             else:
                 self.assertEquals(db.cursor().counts[key], 0)
                 
-        self.assertEquals(get_messages(), [
+        self.assertEquals(self.log_history.get_all(), [
             "SELECT transaction_id FROM counter WHERE currency_serial = 12", 
             "cashOutCurrencyCommit", 
             "SELECT serial FROM currencies WHERE url = 'http://cashier.example.org'"
         ])
         
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(d.callback(True), None)
         pack = d.result
@@ -1082,7 +1116,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(pack.value, 100)
         self.assertEquals(pack.application_data, 'application')
         [self.assertEquals(db.cursor().counts[key], 1) for key in db.cursor().counts.keys()]
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 4)
         self.assertEquals(msgs[0], 'cashOutUpdateSafe: 6 777')
         self.assertEquals(msgs[3], 'cashInUnlock: unexpected missing cash_6 in locks (ignored)')
@@ -1109,7 +1143,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         db = MockDatabase(MockCursor)
         self.cashier.setDb(db)
 
-        clear_all_messages()
+        self.log_history.reset()
         caughtIt = False
         failMsg = 'SELECT name, serial, value FROM safe WHERE currency_serial = 12 found 0 records instead of exactly 1'
         try:
@@ -1122,7 +1156,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(pe.code, PacketPokerCashOut.SAFE)
             self.assertEquals(pe.message, failMsg)
         self.failUnless(caughtIt)
-        msgs = get_messages()
+        msgs = self.log_history.get_all()
         self.assertEquals(len(msgs), 3)
         self.assertEquals(msgs[2], "" + failMsg)
 # --------------------------------------------------------
@@ -1131,6 +1165,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
 class PokerCashierLockUnlockTestCase(unittest.TestCase):
     # --------------------------------------------------------
     def setUp(self):
+        self.log_history = log_history.Log()
         from pokernetwork import pokerlock
         class  MockLock:
             def __init__(lockSelf, params):
@@ -1168,16 +1203,16 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         """test01_unlockNonExistent
         Tests when unlock is called on a serial that does not exist."""
         self.assertEquals(self.cashier.locks, {})
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(self.cashier.unlock(5), None)
         self.assertEquals(self.cashier.locks, {})
-        self.assertEquals(get_messages(), ['cashInUnlock: unexpected missing cash_5 in locks (ignored)'])
+        self.assertEquals(self.log_history.get_all(), ['cashInUnlock: unexpected missing cash_5 in locks (ignored)'])
     # --------------------------------------------------------
     def test02_lockCreateTwice(self):
         """test02_lockCreateTwice
         Testing creation of the lock twice."""
         self.assertEquals(self.cashier.locks, {})
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
         cash2Lock = self.cashier.locks['cash_2']
@@ -1191,7 +1226,7 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         Testing creation of the lock again after the activity is turned
         off."""
         self.assertEquals(self.cashier.locks, {})
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
         cash2Lock = self.cashier.locks['cash_2']
@@ -1199,9 +1234,9 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2Lock.started)
         self.assertEquals(cash2Lock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2Lock.acquireCounts['cash_2'], 1)
-        self.assertEquals(get_messages(), ['get lock cash_2'])
+        self.assertEquals(self.log_history.get_all(), ['get lock cash_2'])
 
-        clear_all_messages()
+        self.log_history.reset()
         cash2Lock.alive = False
 
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
@@ -1211,13 +1246,13 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2newLock.started)
         self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2newLock.acquireCounts['cash_2'], 1)
-        self.assertEquals(get_messages(), ['get lock cash_2'])
+        self.assertEquals(self.log_history.get_all(), ['get lock cash_2'])
     # --------------------------------------------------------
     def test04_unlockTwice(self):
         """test03_unlockTwice
         try to unlock a lock twice"""
         self.assertEquals(self.cashier.locks, {})
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
         cash2Lock = self.cashier.locks['cash_2']
@@ -1225,18 +1260,9 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2Lock.started)
         self.assertEquals(cash2Lock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2Lock.acquireCounts['cash_2'], 1)
-        self.assertEquals(get_messages(), ['get lock cash_2'])
+        self.assertEquals(self.log_history.get_all(), ['get lock cash_2'])
 
-        clear_all_messages()
-
-        self.assertEquals(self.cashier.unlock(2), None)
-        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
-        cash2newLock = self.cashier.locks['cash_2']
-        self.failIf(cash2newLock.alive)
-        self.failUnless(cash2newLock.started)
-        self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
-        self.assertEquals(cash2newLock.acquireCounts['cash_2'], 0)
-        self.assertEquals(get_messages(), [])
+        self.log_history.reset()
 
         self.assertEquals(self.cashier.unlock(2), None)
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
@@ -1245,14 +1271,23 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2newLock.started)
         self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2newLock.acquireCounts['cash_2'], 0)
-        self.assertEquals(get_messages(),
+        self.assertEquals(self.log_history.get_all(), [])
+
+        self.assertEquals(self.cashier.unlock(2), None)
+        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
+        cash2newLock = self.cashier.locks['cash_2']
+        self.failIf(cash2newLock.alive)
+        self.failUnless(cash2newLock.started)
+        self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
+        self.assertEquals(cash2newLock.acquireCounts['cash_2'], 0)
+        self.assertEquals(self.log_history.get_all(),
                           ['cashInUnlock: unexpected dead cash_2 pokerlock (ignored)'])
     # --------------------------------------------------------
     def test05_lockCreateTwiceWhenAliven(self):
         """test05_lockCreateTwiceWhenAlive
         relock after lock leaving it alive"""
         self.assertEquals(self.cashier.locks, {})
-        clear_all_messages()
+        self.log_history.reset()
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
         cash2Lock = self.cashier.locks['cash_2']
@@ -1260,9 +1295,9 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2Lock.started)
         self.assertEquals(cash2Lock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2Lock.acquireCounts['cash_2'], 1)
-        self.assertEquals(get_messages(), ['get lock cash_2'])
+        self.assertEquals(self.log_history.get_all(), ['get lock cash_2'])
 
-        clear_all_messages()
+        self.log_history.reset()
 
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 2")
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
@@ -1271,30 +1306,27 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2newLock.started)
         self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2newLock.acquireCounts['cash_2'], 2)
-        self.assertEquals(get_messages(), ['get lock cash_2'])
-# --------------------------------------------------------
-def GetTestSuite():
-    suite = runner.TestSuite(PokerCashierTestCase)
-    suite.addTest(unittest.makeSuite(PokerCashierTestCase))
-    suite.addTest(unittest.makeSuite(PokerCashierFakeDBTestCase))
-    suite.addTest(unittest.makeSuite(PokerCashierLockUnlockTestCase))
-    return suite
+        self.assertEquals(self.log_history.get_all(), ['get lock cash_2'])
 # --------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig
 
 # --------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test11"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerCashierTestCase))
     suite.addTest(loader.loadClass(PokerCashierFakeDBTestCase))
     suite.addTest(loader.loadClass(PokerCashierLockUnlockTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-    ).run(suite)
+    ).run(GetTestSuite())
 
 # --------------------------------------------------------
 if __name__ == '__main__':
@@ -1302,8 +1334,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokercashier.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokercashier.py' TESTS='coverage-reset test-pokercashier.py coverage-report' check )"
-# End:

@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2009 Bradley M. Kuhn <bkuhn@ebb.org>
 #
@@ -21,24 +21,19 @@
 # Authors:
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 #
-import sys, os, tempfile, shutil
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+import sys
+from os import path
 
-import time
-
-from tests import testclock
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
-from twisted.internet import reactor, defer, address
 
 from pokernetwork.proxy import ConnectProtocol, Client, Connector
 
 twisted.internet.base.DelayedCall.debug = True
 
-from tests.testmessages import search_output, clear_all_messages, get_messages
-verbose = int(os.environ.get('VERBOSE_T', '-1'))
 # ----------------------------------------------------------------
 class MockTransport():
     def __init__(self, bufSize = None):
@@ -494,19 +489,21 @@ class ConnectorTestCase(unittest.TestCase):
         self.assertEquals(host.type, 'TCP')
         self.assertEquals(host.port, 1400)
 # ----------------------------------------------------------------
-def Run():
+
+def GetTestSuite():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test_trynow"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ProxyConnectProtocolTestCase))
     suite.addTest(loader.loadClass(ProxyClientTestCase))
     suite.addTest(loader.loadClass(ConnectorTestCase))
+    return suite
+
+def Run():
     return runner.TrialRunner(
-#        reporter.VerboseTextReporter,
        reporter.TextReporter,
-#	tracebackFormat='verbose',
         tracebackFormat='default',
-        ).run(suite)
+        ).run(GetTestSuite())
 
 # ----------------------------------------------------------------
 if __name__ == '__main__':
@@ -514,9 +511,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-proxy.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/proxy.py' TESTS='coverage-reset test-proxy.py coverage-report' check )"
-# End:

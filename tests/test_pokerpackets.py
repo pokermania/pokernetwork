@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 #
@@ -18,12 +18,11 @@
 # along with this program in a file in the toplevel directory called
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
-import sys, os
-sys.path.insert(0, "@top_srcdir@")
-sys.path.insert(0, "@srcdir@")
-sys.path.insert(0, "..")
+import unittest, sys, os
+from os import path
 
-import unittest
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
 from pokernetwork import pokerpackets
 import testpackets
@@ -130,8 +129,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerpackets.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerpackets.py' TESTS='coverage-reset test-pokerpackets.py coverage-report' check )"
-# End:

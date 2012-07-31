@@ -7,10 +7,10 @@
   <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="5" lag="15" />
   <name>test</name>
   <passwd>test</passwd>
-  <servers>@POKER_SERVER_HOST@:19380</servers>
+  <servers>@config.pokernetwork.host@:@config.pokernetwork.port@</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
-  <path>@POKER_ENGINE_PKGDATADIR@/conf</path> 
+  <path>@config.pokerengine.paths.data@</path> 
 
   <table name="One"	count="4" />
   <table name="Two"	count="4" />

@@ -21,7 +21,7 @@ DROP TABLE IF EXISTS prizes_version;
 CREATE TABLE prizes_version (
   version VARCHAR(16) NOT NULL
 ) ENGINE=InnoDB CHARSET=utf8;
-INSERT INTO prizes_version (version) VALUES ("@PACKAGE_VERSION@");
+INSERT INTO prizes_version (version) VALUES ("@version@");
 
 DROP TABLE IF EXISTS `tourneys_schedule2prizes`;
 CREATE TABLE `tourneys_schedule2prizes` (

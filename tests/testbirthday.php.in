@@ -17,7 +17,7 @@
   // along with this program in a file in the toplevel directory called
   // "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 
-ini_set('include_path', ini_get('include_path') . ":" . "@top_srcdir@/pokerweb/pages");
+ini_set('include_path', ini_get('include_path') . ":" . "@srcdir@/pokerweb/pages");
 
 require_once 'PHPUnit/Framework/TestCase.php';
 

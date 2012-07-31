@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/env python
 # -*- mode: python -*-
 #
 # Copyright (C) 2009 Loic Dachary <loic@dachary.org>
@@ -19,8 +19,7 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+sys.path.insert(0, "@srcdir@")
 
 import libxml2
 
@@ -57,8 +56,8 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGSYSCONFDIR@ @POKER_NETWORK_PKGSYSCONFDIR@</path>
+            root_user="@config.test.mysql.root_user.name@" root_password="@config.test.mysql.root_user.password@" schema="@srcdir@/database/schema.sql" command="@config.test.mysql.command@" />
+  <path>@config.pokerengine.paths.conf@ @config.pokernetwork.paths.conf@</path>
   <users temporary="BOT.*"/>
 </server>
 """
@@ -66,10 +65,10 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 class Base(unittest.TestCase):
 
     def destroyDb(self, arg = None):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+        if len("@config.test.mysql.root_user.password@") > 0:
+            os.system("@config.test.mysql.command@ -u @config.test.mysql.root_user.name@ --password='@config.test.mysql.root_user.password@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+            os.system("@config.test.mysql.command@ -u @config.test.mysql.root_user.name@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
 
     # ------------------------------------------------------
     def setUp(self):
@@ -90,7 +89,7 @@ class PokerPrizesTestCase(Base):
         service = pokerservice.PokerService(self.settings)
         service.db = self.db
         xml = """<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="1.7.4" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@srcdir@/../../pokerprizes/schema.sql" />
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="1.7.4" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@srcdir@/pokerprizes/schema.sql" />
 """
         prizes = PokerPrizes(service, xml)
         cursor = self.db.cursor()
@@ -102,7 +101,7 @@ class PokerPrizesTestCase(Base):
         service = pokerservice.PokerService(self.settings)
         service.db = self.db
         xml = """<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="1.7.4" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@srcdir@/../../pokerprizes/schema.sql" />
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="1.7.4" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@srcdir@/pokerprizes/schema.sql" />
 """
         settings = pokernetworkconfig.Config([])
         settings.loadFromString(xml)
@@ -118,7 +117,7 @@ class TourneySelectInfoTestCase(Base):
         service = pokerservice.PokerService(self.settings)
         service.db = self.db
         xml = """<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="1.7.4" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@srcdir@/../../pokerprizes/schema.sql" />
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="prizes.xsd" poker_network_version="1.7.4" tourneys_schedule2prizes="tourneys_schedule2prizes" prizes="prizes" schema="@srcdir@/pokerprizes/schema.sql" />
 """
         prizes = Handle(service, xml)
         cursor = self.db.cursor()
@@ -157,9 +156,4 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status pokerprizes/test-prizes.py ) ; ( cd ../pokerprizes ; make VERBOSE_T=6 TESTS='coverage-reset test-prizes.py coverage-report' check )"
-# End:
 

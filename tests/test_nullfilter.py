@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/env python
 # -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
 # more information about the above line at http://www.python.org/dev/peps/pep-0263/
 #
@@ -20,10 +20,12 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys, os, tempfile, shutil
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
-import unittest
+import unittest, sys
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+
 from pokernetwork import nullfilter
 
 # ------------------------------------------------------------    
@@ -64,8 +66,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-nullfilter.py ) ; ( cd ../tests ; make VERBOSE_T=-1 COVERAGE_FILES='../pokernetwork/nullfilter.py' TESTS='coverage-reset test-nullfilter.py coverage-report' check )"
-# End:

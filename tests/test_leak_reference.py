@@ -1,5 +1,5 @@
-#!/usr/bin/python2.5
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2008 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2008, 2009 Loic Dachary <loic@dachary.org>
@@ -20,6 +20,12 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import sys
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+
 from twisted.trial import unittest, runner, reporter
 from twisted.web import client, http
 
@@ -27,58 +33,60 @@ from twisted.web import server, resource
 from twisted.internet import reactor, defer
 
 class Simple(resource.Resource):
-        isLeaf = True
-        def render_GET(self, request):
-		print request		
-		return "<html>Hello, world!</html>"
-	
+
+    isLeaf = True
+
+    def render_GET(self, request):
+        print request 
+        return "<html>Hello, world!</html>"
+
 class LeakReferenceTestCase(unittest.TestCase):
-	def setUp(self):
-		self.site = server.Site(Simple())
-		self.port = reactor.listenTCP(8080, self.site)
-	def tearDown(self):
-		return self.port.stopListening()    
-	def test01_get_page(self):
-		def f(ignored):
-			d = client.getPage("http://localhost:8080/")
-			d.addCallback(f)
-		f(None)
-		d = defer.Deferred()
-		return d
-	def test02_get_page_guppy(self):
-		import guppy, gc
-		hpy = guppy.hpy()
-		def f(ignored, last, first):
-			gc.collect()
-			next = hpy.heap()
-			print 'SINCE LAST TIME'
-			print next - last
-			print 'SINCE FOREVER'
-			print last - first
-			d = client.getPage("http://localhost:8080/")
-			d.addCallback(f, next, first)
-		first = hpy.heap()			
-		f(None, first, first)
-		d = defer.Deferred()
-		return d
+
+    def setUp(self):
+        self.site = server.Site(Simple())
+        self.port = reactor.listenTCP(8080, self.site)
+
+    def tearDown(self):
+        return self.port.stopListening()
+
+    def test01_get_page(self):
+        def f(ignored):
+            d = client.getPage("http://localhost:8080/")
+            d.addCallback(f)
+        f(None)
+        d = defer.Deferred()
+        return d
+
+    def test02_get_page_guppy(self):
+        import guppy, gc
+        hpy = guppy.hpy()
+        def f(ignored, last, first):
+            gc.collect()
+            next = hpy.heap()
+            print 'SINCE LAST TIME'
+            print next - last
+            print 'SINCE FOREVER'
+            print last - first
+            d = client.getPage("http://localhost:8080/")
+            d.addCallback(f, next, first)
+        first = hpy.heap()            
+        f(None, first, first)
+        d = defer.Deferred()
+        return d
+
+def GetTestSuite():
+    suite = runner.TestLoader().suiteFactory()
+    suite.addTest(unittest.makeSuite(LeakReferenceTestCase))
+    return suite
+
 def Run():
-      loader = runner.TestLoader()
-      loader.methodPrefix = "test02"
-      suite = loader.suiteFactory()
-      suite.addTest(loader.loadClass(LeakReferenceTestCase))
-      return runner.TrialRunner(
-            reporter.TextReporter,
-            tracebackFormat='default',
-#            logfile = '-',
-            ).run(suite)
+    return runner.TrialRunner(
+        reporter.TextReporter,
+        tracebackFormat='default',
+    ).run(GetTestSuite())
 
 if __name__ == '__main__':
-      if Run().wasSuccessful():
-            sys.exit(0)
-      else:
-            sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-leak-reference.py ) ; ( cd ../tests ; make VERBOSE_T=-1 TESTS='test-leak-reference.py' check )"
-# End:
+    if Run().wasSuccessful():
+        sys.exit(0)
+    else:
+        sys.exit(1)

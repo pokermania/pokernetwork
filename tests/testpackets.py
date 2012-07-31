@@ -1,4 +1,4 @@
-# -*- mode: python -*-
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 #

@@ -31,7 +31,7 @@ CREATE TABLE server (
   version VARCHAR(16) NOT NULL
 ) ENGINE=InnoDB CHARSET=utf8;
 
-INSERT INTO server (version) VALUES ("@PACKAGE_VERSION@");
+INSERT INTO server (version) VALUES ("@version@");
 
 DROP TABLE IF EXISTS users;
 

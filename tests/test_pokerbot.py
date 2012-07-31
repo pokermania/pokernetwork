@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010 Johan Euphrosine <proppy@aminche.com>
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
@@ -20,22 +20,15 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys, os
-sys.path.insert(0, "@srcdir@/..")
-sys.path.insert(0, "..")
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
 from twisted.trial import unittest, runner, reporter
 
-from tests.testmessages import search_output, clear_all_messages, get_messages
-import logging
-from tests.testmessages import TestLoggingHandler
-logger = logging.getLogger()
-handler = TestLoggingHandler()
-logger.addHandler(handler)
-logger.setLevel(10)
-
 import tempfile
 from pokernetwork import pokerbot
-from twisted.application import service
 from twisted.internet import defer
 
 settings_xml_bots_generated = """<?xml version="1.0" encoding="UTF-8"?>
@@ -115,6 +108,14 @@ class PokerBotTestCase(unittest.TestCase):
         return d
 
 # ----------------------------------------------------------------
+
+def GetTestSuite():
+    loader = runner.TestLoader()
+#    loader.methodPrefix = "test01"
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(PokerBotTestCase))
+    return suite
+
 def Run():
     loader = runner.TestLoader()
 #    loader.methodPrefix = "test01"
@@ -123,7 +124,7 @@ def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-        ).run(suite)
+        ).run(GetTestSuite())
 
 # ----------------------------------------------------------------
 if __name__ == '__main__':
@@ -131,9 +132,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerbot.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerbot.py' TESTS='coverage-reset test-pokerbot.py coverage-report' check )"
-# End:
-

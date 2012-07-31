@@ -1,5 +1,5 @@
-#!@PYTHON@
-# -*- mode: python -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Copyright (C) 2007, 2008, 2009 Loic Dachary <loic@dachary.org>
 # Copyright (C) 2008, 2009 Bradley M. Kuhn <bkuhn@ebb.org>
@@ -25,8 +25,14 @@
 #  Loic Dachary <loic@dachary.org>
 #
 import sys, os
-sys.path.insert(0, "@top_srcdir@")
-sys.path.insert(0, "..")
+from os import path
+
+TESTS_PATH = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
+import log_history
 
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
@@ -42,38 +48,61 @@ from pokernetwork import pokerdatabase
 from pokernetwork import pokernetworkconfig
 from pokernetwork import version
 
-actualSchemaFile = "@srcdir@/../../database/schema.sql"
+actualSchemaFile = path.join(TESTS_PATH, "../database/schema.sql")
 
 settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernettestuser" password="mytestuser"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="%s" command="@MYSQL@" />
+  <database name="pokernetworktest" host="%(dbhost)s" user="pokernettestuser" password="mytestuser"
+            root_user="%(dbroot)s" root_password="%(dbroot_password)s" schema="%(schema)s" command="%(mysql_command)s" />
 </server>
-""" % actualSchemaFile
+""" % {
+    'dbhost': 'localhost',
+    'dbroot': 'hannes',
+    'dbroot_password': '',
+    'schema': actualSchemaFile,
+    'mysql_command': '/usr/bin/env mysql'
+}
 settings_missing_schema_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="pokernetworktestuser" password="mytestuser"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="/this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql" command="@MYSQL@" />
+  <database name="pokernetworktest" host="%(dbhost)s" user="pokernetworktestuser" password="mytestuser"
+            root_user="%(dbroot)s" root_password="%(dbroot_password)s" schema="/this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql" command="%(mysql_command)s" />
 </server>
-"""
+""" % {
+    'dbhost': 'localhost',
+    'dbroot': 'hannes',
+    'dbroot_password': '',
+    'mysql_command': '/usr/bin/env mysql'
+}
 settings_root_both_users_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <database name="pokernetworktest" host="%(dbhost)s" user="%(dbroot)s" password="%(dbroot_password)s"
+            root_user="%(dbroot)s" root_password="%(dbroot_password)s" schema="%(schema)s" command="%(mysql_command)s" />
 </server>
-"""
+""" % {
+    'dbhost': 'localhost',
+    'dbroot': 'hannes',
+    'dbroot_password': '',
+    'schema': actualSchemaFile,
+    'mysql_command': '/usr/bin/env mysql'
+}
 settings_missing_root_users_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="@MYSQL_TEST_DBHOST@" user="@MYSQL_TEST_DBROOT@" password="@MYSQL_TEST_DBROOT_PASSWORD@"
-  schema="@srcdir@/../../database/schema.sql" command="@MYSQL@" />
+  <database name="pokernetworktest" host="%(dbhost)s" user="%(dbroot)s" password="%(dbroot_password)s"
+  schema="%(schema)s" command="%(mysql_command)s" />
 </server>
-"""
+""" % {
+    'dbhost': 'localhost',
+    'dbroot': 'hannes',
+    'dbroot_password': '',
+    'schema': actualSchemaFile,
+    'mysql_command': '/usr/bin/env mysql'
+}
 class PokerDatabaseTestCase(unittest.TestCase):
     def destroyDb(self):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
+        if len("") > 0:
             os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@'  -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
         else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+            os.system("/usr/bin/env mysql -u hannes -h 'localhost' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
     # ----------------------------------------------------------------------------
     def setUp(self):
         self.tearDown()
@@ -132,7 +161,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
         self.db = pokerdatabase.PokerDatabase(self.settings)
         self.db.setVersionInDatabase("0.0.0")
         self.db.version = version.Version("0.0.0")
-        self.db.upgrade('@srcdir@/../../tests/test-pokerdatabase/good', False)
+        self.db.upgrade(path.join(TESTS_PATH, 'test_pokerdatabase/good'), False)
         self.assertEquals(self.db.getVersion(), self.pokerdbVersion)
     # ----------------------------------------------------------------------------
     def test02_dbVersionTooOld(self):
@@ -284,8 +313,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
         self.db.setVersionInDatabase("0.0.5")
         self.db.version = version.Version("0.0.5")
         try:
-            self.db.upgrade('@srcdir@/../../tests/test-pokerdatabase/bad', False)
-            assert("Should have gotten ExceptionUpgradeFailed and this line should not have been reached.")
+            self.db.upgrade(path.join(TESTS_PATH, 'test_pokerdatabase/bad'), False)
         except pokerdatabase.ExceptionUpgradeFailed, euf:
             self.assertEquals(euf.args[0], "upgrade failed")
         self.assertEquals(self.db.getVersion(), "0.0.5")
@@ -305,33 +333,25 @@ class PokerDatabaseTestCase(unittest.TestCase):
         self.db.db = saveRealDb
         
 # --------------------------------------------------------------------------------
-def GetTestSuite():
-    suite = runner.TestSuite(PokerDatabaseTestCase)
-    suite.addTest(unittest.makeSuite(PokerDatabaseTestCase))
-    return suite
-# --------------------------------------------------------------------------------
 def GetTestedModule():
     return pokerdatabase
   
 # --------------------------------------------------------------------------------
-def Run():
-    loader = runner.TestLoader()
-#    loader.methodPrefix = "test08"
-    os.environ['VERBOSE_T'] = '4'
 
+def GetTestSuite():
+    loader = runner.TestLoader()
     suite = loader.loadClass(PokerDatabaseTestCase)
+    return suite
+
+def Run():
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',
-    ).run(suite)
+    ).run(GetTestSuite())
+
 # --------------------------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokerdatabase.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokerdatabase.py' TESTS='coverage-reset test-pokerdatabase.py coverage-report' check )"
-# End:

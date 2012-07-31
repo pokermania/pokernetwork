@@ -1,3 +1,7 @@
-debian/tmp/usr/lib/python???/*-packages/pokerprizes/*.py
-debian/tmp/usr/share/poker-network/conf/poker.prizes.xml
-debian/tmp/usr/share/poker-network/prizes/*.sql
+#debian/tmp/usr/lib/python???/*-packages/pokerprizes/*.py
+#debian/tmp/usr/share/poker-network/conf/poker.prizes.xml
+#debian/tmp/usr/share/poker-network/prizes/*.sql
+pokerprizes/*.py usr/share/pyshared/pokerprizes
+pokerprizes/*.xml usr/share/poker-network/conf
+pokerprizes/*.sql usr/share/poker-network/prizes
+README AUTHORS LICENSE AGPLv3 GPLv3 usr/share/doc/python-poker-prizes
