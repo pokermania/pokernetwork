@@ -4103,8 +4103,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         def testDestroyCalled():
             msgs = self.log_history.get_all()
             self.assertEquals(len(msgs), 1)
-            print msgs
-            self.assertEquals(msgs[0].find('.MockAvatar instance at '), 0)
+            self.assertTrue('.MockAvatar instance at ' in msgs[0])
             self.failUnless(msgs[0].find(' is not in the list of known avatars') > 0)
             self.assertEquals(ma.connectionLostArgs, [ 'disconnected' ])
             self.assertEquals(self.service.avatars, [])
