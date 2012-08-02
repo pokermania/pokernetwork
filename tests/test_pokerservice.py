@@ -6091,6 +6091,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             'name': "This", 'variant' : 'omaha',
             'betting_structure' : "2-4-limit" 
         })
+        self.assertTrue(1567 in self.service.tables)
         self.assertEquals(self.service.tables[1567], table)
         self.assertEquals(table.owner, 'bobby')
         self.assertEquals(table.game.name, "This")
