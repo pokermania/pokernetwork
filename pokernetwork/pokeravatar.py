@@ -852,6 +852,13 @@ class PokerAvatar:
                 else:
                     self.log.warn("attempt to set auto blind/ante for player %d by player %d that is not the owner of the game",packet.serial, self.getSerial())
             
+            elif packet.type == PACKET_POKER_AUTO_PLAY:
+                self.log.warn("Player(%s), %s" %(packet.serial, packet.auto_play))
+                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
+                    if table.game.getPlayer(packet.serial):
+                        table.game.autoPlay(packet.serial, packet.auto_play)
+                else:
+                    self.log.warn("attempt to set auto play for player %d by player %d that is not the owner of the game", packet.serial, self.getSerial())
             elif packet.type == PACKET_POKER_AUTO_MUCK:
                 if self.getSerial() == packet.serial or self.getSerial() == table.owner:
                     if table.game.getPlayer(packet.serial):
@@ -973,6 +980,8 @@ class PokerAvatar:
                     message = "Not logged in",
                     other_type = PACKET_LOGOUT
                 ))
+        else:
+            pass
 
     # The "perform" methods below are designed so that the a minimal
     # amount of code related to receiving a packet that appears in the
