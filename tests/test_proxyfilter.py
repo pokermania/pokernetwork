@@ -408,9 +408,9 @@ class ProxyFilterTestCase(unittest.TestCase):
         class Packet:
             pass
         r = pokersite.Request(Channel(), True)
-        input = '{"type": "PacketPing"}'
-        r.gotLength(len(input))
-        r.handleContentChunk(input)
+        pinput = '{"type": "PacketPing"}'
+        r.gotLength(len(pinput))
+        r.handleContentChunk(pinput)
         r.setResponseCode(http.OK)
         r.write("FINISHED")
         r.finish()

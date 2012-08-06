@@ -40,7 +40,11 @@ from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer
 
-from collections import OrderedDict
+try:
+    from collections import OrderedDict
+except ImportError:
+    from pokernetwork.ordereddict import OrderedDict
+
 from random import seed, randint
 import copy
 
