@@ -408,8 +408,6 @@ class PokerTable:
                 self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
                 transient = 1 if self.transient else 0
                 self.factory.databaseEvent(event = PacketPokerMonitorEvent.HAND, param1 = hand_serial, param2 = transient)
-            elif event_type == "AutoPlayPolicy":
-                pass
             else:
                 self.log.warn("syncDatabase: unknown history type %s ", event_type)
 
@@ -465,7 +463,7 @@ class PokerTable:
                 'call', 'check', 'fold',
                 'raise', 'canceled', 'position',
                 'blind', 'ante', 'player_list',
-                'rake', 'end', 'sitOut', 'AutoPlayPolicy'
+                'rake', 'end', 'sitOut',
             ):
                 new_history.append(event)
                 
