@@ -117,7 +117,7 @@
   <database
     name="@config.mysql.database@"
     host="@config.mysql.host@"
-    port="@config.mysql.host@"
+    port="@config.mysql.port@"
     user="@config.mysql.user.name@"
     password="@config.mysql.user.password@"
     root_user="@config.mysql.root_user.name@"
