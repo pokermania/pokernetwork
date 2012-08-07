@@ -24,17 +24,6 @@ db_version 2.0
 pokernetwork_group=pokernetwork
 pokernetwork_user=pokernetwork
 
-#
-# Must be done first otherwise the init script will fail.
-# There should be a way to order the invocation of the 
-# DEBHELPER scripts.
-#
-# It does not harm to call pycentral twice.
-#
-if which pycentral >/dev/null 2>&1; then
-		pycentral pkginstall python-poker-network
-fi
-
 prevver="$2" 
 
 case "$1" in
