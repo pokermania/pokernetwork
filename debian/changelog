@@ -1,3 +1,9 @@
+poker-network (2.2.0-6) pokermania; urgency=low
+
+  * 922de2a removed obsolete python-central
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 07 Aug 2012 03:02:29 +0200
+
 poker-network (2.2.0-5) pokermania; urgency=low
 
   * 581ac2e poker-network: updated poker-engine depdency to 1.5.2
