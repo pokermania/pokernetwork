@@ -1,3 +1,18 @@
+poker-network (2.2.0-5) pokermania; urgency=low
+
+  * 581ac2e poker-network: updated poker-engine depdency to 1.5.2
+  * 7dd7390 polishing autoplaypolicy
+  * e89ea86 all: removed python-all dependency
+  * 5bb9a47 dos2unix: ordereddict.py
+  * 086cbf8 added orderreddict for py < 2.7, fixed some wording
+  * 75d39e8 handle auto play and set to not active
+  * df120d6 autoplay instead of fold (for the first hand only)
+  * d16ea94 fixed poker-network install
+  * 21c0ebb no more .in files in tests..
+  * 471325f renamed test files
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 07 Aug 2012 01:58:47 +0200
+
 poker-network (2.2.0-4) pokermania; urgency=low
 
   * a57468a postinstall fix for additions, refs #6536
