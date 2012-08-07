@@ -1,3 +1,9 @@
+poker-network (2.2.0-7) pokermania; urgency=low
+
+  *a2bfc3a another build fix
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 07 Aug 2012 13:15:00 +0200
+
 poker-network (2.2.0-6) pokermania; urgency=low
 
   * 922de2a removed obsolete python-central
