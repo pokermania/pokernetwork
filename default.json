@@ -31,7 +31,7 @@
         }
     },
     "test": {
-        "engine_path": "$HOME/workspace/poker-network-re/poker-engine",
+        "engine_path": "../poker-engine",
         "mysql":{
             "host": "localhost",
             "port": 3306,
