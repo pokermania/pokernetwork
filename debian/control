@@ -2,7 +2,7 @@ Source: poker-network
 Section: python
 Priority: extra
 Maintainer: Andor Goetzendorff <andor@pokermania.de>
-Build-Depends: debhelper, python (>=2.6.6), mysql-client, python-mysqldb, python-openssl, python-simplejson, python-soappy, python-twisted (>= 10.1), python-poker-engine (>= 1.5.0), apg, rsync, python-central, python-poker-reflogging, python-memcache
+Build-Depends: debhelper, python (>=2.6.6), mysql-client, python-mysqldb, python-openssl, python-simplejson, python-soappy, python-twisted (>= 10.1), python-poker-engine (>= 1.5.2), apg, rsync, python-central, python-poker-reflogging, python-memcache
 Standards-Version: 3.8.3
 Homepage: http://github.com/pokermania/poker-network
 
@@ -12,7 +12,7 @@ Architecture: all
 Provides: ${python:Provides}
 Suggests: mysql-server
 Conflicts: python2.3-poker-network (<< 1.0.21), python2.4-poker-network (<< 1.0.21)
-Depends:  ${misc:Depends}, ${python:Depends}, ucf, adduser, python-poker-engine (>= 1.5.0), python-twisted (>= 10.1), python-mysqldb, python-soappy, python-openssl, python-simplejson, python-memcache, libjson-perl, dbconfig-common, mysql-client, apg, rsync, python-crypto, python-poker-reflogging
+Depends:  ${misc:Depends}, ${python:Depends}, ucf, adduser, python-poker-engine (>= 1.5.2), python-twisted (>= 10.1), python-mysqldb, python-soappy, python-openssl, python-simplejson, python-memcache, libjson-perl, dbconfig-common, mysql-client, apg, rsync, python-crypto, python-poker-reflogging
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
