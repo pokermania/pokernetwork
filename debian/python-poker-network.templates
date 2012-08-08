@@ -1,7 +1,7 @@
 Template: python-poker-network/configure
 Type: boolean
 Default: false
-_Description: Do you want to configure and run the poker-network server?
+Description: Do you want to configure and run the poker-network server?
  If you want to configure and run a poker-network server, make sure you
  have administrative rights on a running MySQL server. If you do not want
  to run the poker-network server on this machine, you will be prompted for
@@ -9,7 +9,7 @@ _Description: Do you want to configure and run the poker-network server?
 
 Template: python-poker-network/abort
 Type: note
-_Description: Skipping poker-network server installation
+Description: Skipping poker-network server installation
  If you want to run poker-network at a later time, you will need to
  configure it by hand or by running dpkg-reconfigure
  python-poker-network.
@@ -17,21 +17,21 @@ _Description: Skipping poker-network server installation
 Template: python-poker-network/host
 Type: string
 Default: poker.pokersource.info
-_Description: Hostname or IP address of the default poker-network server:
+Description: Hostname or IP address of the default poker-network server:
  The clients based on poker-network installed on the same machine will be
  able to use this poker-network server host as a default, if needed.
 
 Template: python-poker-network/www
 Type: string
 Default: pokersource.info
-_Description: Hostname or IP address of the default poker-network web server:
+Description: Hostname or IP address of the default poker-network web server:
  The clients based on poker-network installed on the same machine will be
  able to use this address to connect to the web part of the poker server.
 
 Template: python-poker-network/bots
 Type: boolean
 Default: false
-_Description: Do you want to run the poker-network robots?
+Description: Do you want to run the poker-network robots?
  Robot players are simple minded poker players that can be used to
  exercise the poker server when there are not enough human players
  connected.
