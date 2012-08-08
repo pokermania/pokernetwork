@@ -1626,6 +1626,7 @@ class PokerService(service.Service):
     def tourneyCancel(self, tourney):
         players = list(tourney.players.iterkeys())
         self.log.debug("tourneyCancel: %s", players)
+        self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_CANCELED, param1 = tourney.serial)
         for serial in players:
             avatars = self.avatar_collection.get(serial)
             packet = self.tourneyUnregister(PacketPokerTourneyUnregister(
