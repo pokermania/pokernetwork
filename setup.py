@@ -2,10 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys, os
-sys.path.append('../common')
 from distutils.core import setup
-from setup_ext.test import TestCommand
-from setup_ext.configure import ConfigureCommand
 
 from distutils.command.build import build as DistutilsBuild
 
@@ -21,8 +18,6 @@ setup(
     version = '2.2.0',
     packages = ['pokernetwork', 'twisted/plugins'],
     cmdclass = {
-    	'test': TestCommand,
-    	'configure': ConfigureCommand,
     	'build': ExtendedBuild
     }
 )
