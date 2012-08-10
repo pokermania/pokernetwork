@@ -29,7 +29,6 @@ sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
 import log_history
-import sqlmanager
 
 import libxml2
 from string import split
@@ -2499,8 +2498,3 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         sys.exit(1)
-
-# Interpreted by emacs
-# Local Variables:
-# compile-command: "( cd .. ; ./config.status tests/test-pokertable.py ) ; ( cd ../tests ; make COVERAGE_FILES='../pokernetwork/pokertable.py' TESTS='coverage-reset test-pokertable.py coverage-report' check )"
-# End:
