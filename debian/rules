@@ -6,7 +6,7 @@ COVERAGE=/usr/bin/env python-coverage
 PYTHON2=$(shell pyversions -vr)
 
 configure:
-	/usr/bin/env python setup.py configure
+	/usr/bin/env python setup.py configure -b
 
 %: configure
 	dh $@ --buildsystem=python_distutils --with=python2
