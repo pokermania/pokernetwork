@@ -27,6 +27,7 @@ import os
 from os.path import exists
 import MySQLdb
 from MySQLdb.cursors import DictCursor
+import subprocess
 
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerdatabase')
@@ -158,12 +159,16 @@ class PokerDatabase:
         except ExceptionDatabaseTooOld:
             files = ["%s/%s" % (directory,f) for f in os.listdir(directory) if f[-4:]=='.sql']
             parameters = self.parameters
-            mysql = "%s -h '%s' -u '%s' --password='%s' '%s'" % \
-                (self.mysql_command,parameters['host'],parameters['user'],parameters['password'],parameters['name'])
             for f in self.version.upgradeChain(version, files):
                 self.log.inform("apply '%s'", f)
                 if not dry_run:
-                    if os.system("%s < %s" % (mysql,f)):
+                    fd = open(f)
+                    proc = subprocess.Popen(self.mysql_command.split() + [
+                        '-h', parameters['host'],
+                        '-u', parameters['user'],
+                        '-p'+parameters['password']
+                    ], stdin=fd, stderr=subprocess.PIPE)
+                    if proc.wait():
                         raise ExceptionUpgradeFailed, "upgrade failed"
             self.log.inform("upgraded database to version %s", version)
             if not dry_run:

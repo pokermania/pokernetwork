@@ -33,8 +33,11 @@ sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
 import log_history
+import sqlmanager
 
 from twisted.trial import unittest, runner, reporter
+import _mysql_exceptions
+import warnings
 import twisted.internet.base
 from twisted.internet import reactor
 
@@ -48,67 +51,95 @@ from pokernetwork import pokerdatabase
 from pokernetwork import pokernetworkconfig
 from pokernetwork import version
 
+import MySQLdb
+
 actualSchemaFile = path.join(TESTS_PATH, "../database/schema.sql")
 
-settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
+settings_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="%(dbhost)s" user="pokernettestuser" password="mytestuser"
-            root_user="%(dbroot)s" root_password="%(dbroot_password)s" schema="%(schema)s" command="%(mysql_command)s" />
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
 </server>
 """ % {
-    'dbhost': 'localhost',
-    'dbroot': 'hannes',
-    'dbroot_password': '',
-    'schema': actualSchemaFile,
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'mysql_command': config.test.mysql.command
+}
+settings_missing_schema_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
+<server verbose="4">
+  <database
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="/this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql"
+    command="%(mysql_command)s" />
+</server>
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
     'mysql_command': '/usr/bin/env mysql'
 }
-settings_missing_schema_xml = """<?xml version="1.0" encoding="UTF-8"?>
+settings_root_both_users_xml = """\
+<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="%(dbhost)s" user="pokernetworktestuser" password="mytestuser"
-            root_user="%(dbroot)s" root_password="%(dbroot_password)s" schema="/this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql" command="%(mysql_command)s" />
+  <database 
+    host="%(dbhost)s" name="%(dbname)s"
+    user="%(dbroot)s" password="%(dbroot_password)s"
+    root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
 </server>
 """ % {
-    'dbhost': 'localhost',
-    'dbroot': 'hannes',
-    'dbroot_password': '',
-    'mysql_command': '/usr/bin/env mysql'
-}
-settings_root_both_users_xml = """<?xml version="1.0" encoding="UTF-8"?>
-<server verbose="4">
-  <database name="pokernetworktest" host="%(dbhost)s" user="%(dbroot)s" password="%(dbroot_password)s"
-            root_user="%(dbroot)s" root_password="%(dbroot_password)s" schema="%(schema)s" command="%(mysql_command)s" />
-</server>
-""" % {
-    'dbhost': 'localhost',
-    'dbroot': 'hannes',
-    'dbroot_password': '',
-    'schema': actualSchemaFile,
-    'mysql_command': '/usr/bin/env mysql'
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'mysql_command': config.test.mysql.command
 }
 settings_missing_root_users_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="4">
-  <database name="pokernetworktest" host="%(dbhost)s" user="%(dbroot)s" password="%(dbroot_password)s"
-  schema="%(schema)s" command="%(mysql_command)s" />
+  <database
+    host="%(dbhost)s"  name="%(dbname)s"
+    user="%(dbuser)s" password="%(dbuser_password)s"
+    schema="%(tests_path)s/../database/schema.sql"
+    command="%(mysql_command)s" />
 </server>
 """ % {
-    'dbhost': 'localhost',
-    'dbroot': 'hannes',
-    'dbroot_password': '',
-    'schema': actualSchemaFile,
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'tests_path': TESTS_PATH,
     'mysql_command': '/usr/bin/env mysql'
 }
 class PokerDatabaseTestCase(unittest.TestCase):
-    def destroyDb(self):
-        if len("") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@'  -h '@MYSQL_TEST_DBHOST@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("/usr/bin/env mysql -u hannes -h 'localhost' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
     # ----------------------------------------------------------------------------
     def setUp(self):
         self.tearDown()
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
-        settings.header = settings.doc.xpathNewContext()
+        settings.loadFromString(settings_xml)
         self.settings = settings
 
         r = re.compile("""INSERT\s+INTO\s+server\s+\(\s*version\s*\)\s+VALUES\s*\("([\d\.]+)"\s*\)""", flags=re.I)
@@ -130,10 +161,8 @@ class PokerDatabaseTestCase(unittest.TestCase):
         except:
             pass
         try:
-            import MySQLdb
             settings = pokernetworkconfig.Config([])
-            settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
-            settings.header = settings.doc.xpathNewContext()
+            settings.loadFromString(settings_xml)
             parameters = settings.headerGetProperties("/server/database")[0]
             db = MySQLdb.connect(
                 host = parameters["host"],
@@ -143,9 +172,11 @@ class PokerDatabaseTestCase(unittest.TestCase):
                 db = 'mysql'
             )
             try:
-                db.query("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'" % parameters['user'])
-                db.query("drop user '%s'" % parameters['user'])
+                pass
+                #db.query("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'" % parameters['user'])
+                #db.query("drop user '%s'" % parameters['user'])
             except:
+                pass
                 db.query("delete from user where user = '%s'" % parameters['user'])
 
             db.query("FLUSH PRIVILEGES")
@@ -176,7 +207,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
         def dummyConnect(host, port, user, passwd, db='mysql', reconnect=1):
             parameters = self.settings.headerGetProperties("/server/database")[0]
             if user == parameters['user']:
-                raise SqlError
+                raise Exception("SqlError")
             else:
                 return DummyMySQL()
         realconnect = MySQLdb.connect
@@ -185,7 +216,8 @@ class PokerDatabaseTestCase(unittest.TestCase):
             self.db = pokerdatabase.PokerDatabase(self.settings)
         except UserWarning, uw:
             self.assertEqual(uw.args[0], "PokerDatabase: MySQL server version is 3.2.5 but version >= 5.0 is required")
-        MySQLdb.connect = realconnect
+        finally:
+            MySQLdb.connect = realconnect
     # ----------------------------------------------------------------------------
     def test03_schemaFileMissing(self):
         settings = pokernetworkconfig.Config([])
@@ -200,42 +232,31 @@ class PokerDatabaseTestCase(unittest.TestCase):
             self.assertEqual(uw.args[0], "PokerDatabase: schema /this/is/not/a/file/and/should/not/be/there/not-my-schema-go-away.sql file not found")
     # ----------------------------------------------------------------------------
     def test04_rootBothUsers(self):
-        settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_root_both_users_xml,
-                                           len(settings_root_both_users_xml))
-        settings.header = settings.doc.xpathNewContext()
-        self.settings = settings
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.loadFromString(settings_root_both_users_xml)
         try:
             self.db = pokerdatabase.PokerDatabase(self.settings)
-        except OperationalError, oe:
+        except MySQLdb.OperationalError as oe:
+            print self.settings.headerGetProperties('/server/database')[0]
             self.assertEquals(oe.args[0], 1396)
             self.assertEquals(oe.args[1], "Operation CREATE USER failed for 'root'@'%'")
         self.assertEquals(self.db.getVersion(), self.pokerdbVersion)
     # ----------------------------------------------------------------------------
     def test05_missingRootUser(self):
-        import MySQLdb
-
-        settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_missing_root_users_xml,
-                                           len(settings_missing_root_users_xml))
-        settings.header = settings.doc.xpathNewContext()
-        self.settings = settings
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.loadFromString(settings_missing_root_users_xml)
         try:
             self.db = pokerdatabase.PokerDatabase(self.settings)
-            assert("Root user information was missing so this line should not be reached.")
+            assert False, "Root user information was missing so this line should not be reached."
         except MySQLdb.OperationalError, oe: # handle trouble
             self.assertEquals(oe.args[1], "Unknown database 'pokernetworktest'")
             self.assertEquals(oe.args[0], 1049)
     # ----------------------------------------------------------------------------
     def test06_databaseAlreadyExists(self):
         """Test for when the database already exists"""
-        import MySQLdb
-        settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_root_both_users_xml,
-                                           len(settings_root_both_users_xml))
-        settings.header = settings.doc.xpathNewContext()
-        self.settings = settings
-        parameters = settings.headerGetProperties("/server/database")[0]
+        self.settings = pokernetworkconfig.Config([])
+        self.settings.loadFromString(settings_root_both_users_xml)
+        parameters = self.settings.headerGetProperties("/server/database")[0]
         db = MySQLdb.connect(host = parameters["host"],
                              port = int(parameters.get("port", '3306')),
                              user = parameters["root_user"],
@@ -313,7 +334,9 @@ class PokerDatabaseTestCase(unittest.TestCase):
         self.db.setVersionInDatabase("0.0.5")
         self.db.version = version.Version("0.0.5")
         try:
-            self.db.upgrade(path.join(TESTS_PATH, 'test_pokerdatabase/bad'), False)
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', _mysql_exceptions.Error)
+                self.db.upgrade(path.join(TESTS_PATH, 'test_pokerdatabase/bad'), False)
         except pokerdatabase.ExceptionUpgradeFailed, euf:
             self.assertEquals(euf.args[0], "upgrade failed")
         self.assertEquals(self.db.getVersion(), "0.0.5")
