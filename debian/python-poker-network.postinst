@@ -95,8 +95,6 @@ case "$1" in
 			fi
 		done
 
-		init_munin		
-
 	;;
 
 	abort-upgrade|abort-remove|abort-deconfigure)
