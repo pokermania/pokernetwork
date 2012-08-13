@@ -66,7 +66,7 @@ def checkNameAndPassword(name, password):
 def checkAuth(auth):
     return (True,None,None)
 
-class User:
+class User(object):
     REGULAR = 1
     ADMIN = 2
 
@@ -83,7 +83,13 @@ class User:
         self.url = "random"
         self.outfit = "random"
         self.privilege = None
-        
+
+    @property
+    def orgId(self):
+        if self.outfit != "random":
+            return self.outfit
+        return None
+
     def isLogged(self):
         return not self.serial == 0
 
