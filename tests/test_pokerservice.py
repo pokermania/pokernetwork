@@ -6064,50 +6064,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(self.log_history.search('inserted 0 rows (expected 1): INSERT INTO pokertables'))
         
         self.service.db = oldDb
-    def test65b_createTable_insertSucceedsWithLargerThan1ReturnedWithLastRowThere(self):
-        acceptList = ["INSERT INTO pokertables", 'REPLACE INTO route']
-        acceptListRowCount = [3,1]
-        class MockCursor(MockCursorBase):
-            def insert_id(mcBase): return 1567
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, acceptList)
-            def statementActions(cursorSelf, sql, statement):
-                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
-                if statement == "INSERT INTO pokertables":
-                    cursorSelf.lastrowid = 1567
 
-
-        self.service = pokerservice.PokerService(self.settings)
-        self.service.dirs = [path.join(config.test.engine_path, 'conf')]
-
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        self.log_history.reset()
-
-        self.service.tables = {}
-        table = self.service.createTable("bobby", { 
-            'seats' : 7, 'currency_serial' : 2663,
-            'name': "This", 'variant' : 'omaha',
-            'betting_structure' : "2-4-limit" 
-        })
-        self.assertTrue(1567 in self.service.tables)
-        self.assertEquals(self.service.tables[1567], table)
-        self.assertEquals(table.owner, 'bobby')
-        self.assertEquals(table.game.name, "This")
-        self.assertEquals(table.game.variant, "omaha")
-        self.assertEquals(table.game.max_players, 7)
-        self.assertEquals(table.currency_serial, 2663)
-
-        for statement in acceptList:
-            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
-        msgs = self.log_history.get_all()
-        self.failUnless(len(msgs) >= 3, "There should be at least three output messages")
-        self.failUnless(self.log_history.search('createTable: INSERT INTO pokertables'))
-        self.failUnless(self.log_history.search('inserted 3 rows (expected 1): INSERT INTO pokertables'))
-        self.failUnless(self.log_history.search('table created : This'))
-        
-        self.service.db = oldDb
     def test66_deleteTable_deleteRowsNot1(self):
         validStatements = ["DELETE FROM pokertables"]
         class MockCursor(MockCursorBase):
