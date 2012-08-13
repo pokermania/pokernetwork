@@ -402,7 +402,7 @@ class PokerTable:
             elif event_type == "leave":
                 pass
 
-            elif event_type == "finish":
+            elif event_type == "finish" and self.tourney:
                 hand_serial = event[1]
                 self.factory.saveHand(self.compressedHistory(self.game.historyGet()), hand_serial)
                 self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
