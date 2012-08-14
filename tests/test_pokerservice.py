@@ -2357,6 +2357,14 @@ class TourneyCancelTestCase(PokerServiceTestCaseBase):
             def sendPacketVerbose(self,packet):
                 return
 
+        def dbEventMock(event=None, param1=None, param2=None, param3=None):
+            self.assertEquals(event, PacketPokerMonitorEvent.TOURNEY_CANCELED)
+            self.assertEquals(param1, 1)
+            self.assertEquals(param2, None)
+            self.assertEquals(param3, None)
+
+        self.service.databaseEvent = dbEventMock
+
         self.service.tourneys = {}
         self.service.avatar_collection = {1: [Avatar()]}
         self.service.tourneyCancel(Tournament())
