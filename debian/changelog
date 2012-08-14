@@ -1,3 +1,12 @@
+poker-network (2.2.0-8) pokermania; urgency=low
+
+  * 3f9f51d fix test, because of new tourney canceled event
+  * 7603a80 hand monitor wird nur noch bei regulären spielen aufgerufen
+  * c6c95b1 fix test_pokerdatabase.py
+  * 6127f92 Send an tourney cancel event
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 14 Aug 2012 17:35:00 +0200
+
 poker-network (2.2.0-7) pokermania; urgency=low
 
   *a2bfc3a another build fix
