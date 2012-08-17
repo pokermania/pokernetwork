@@ -409,7 +409,7 @@ class PokerTable:
                 transient = 1 if self.transient else 0
                 self.factory.databaseEvent(event = PacketPokerMonitorEvent.HAND, param1 = hand_serial, param2 = transient)
             else:
-                self.log.warn("syncDatabase: unknown history type %s ", event_type)
+                self.log.warn("syncDatabase: unknown history type %s", event_type)
 
         for (serial, amount) in updates.iteritems():
             self.factory.updatePlayerMoney(serial, self.game.id, amount)
