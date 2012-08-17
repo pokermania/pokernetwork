@@ -407,7 +407,7 @@ class PokerTable:
                 self.factory.saveHand(self.compressedHistory(self.game.historyGet()), hand_serial)
                 self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
                 transient = 1 if self.transient else 0
-                self.factory.databaseEvent(event = PacketPokerMonitorEvent.HAND, param1 = hand_serial, param2 = transient)
+                self.factory.databaseEvent(event=PacketPokerMonitorEvent.HAND, param1=hand_serial, param2=transient)
             else:
                 self.log.warn("syncDatabase: unknown history type %s", event_type)
 
