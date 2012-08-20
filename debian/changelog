@@ -1,3 +1,11 @@
+poker-network (2.2.0-9) pokermania; urgency=low
+
+  * d804173 more polishing
+  * 09b221f polishing: remove trailing space in log msg
+  * 7e46aa4 Revert "hand monitor wird nur noch bei regulären spielen aufgerufen"
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 20 Aug 2012 20:35:00 +0200
+
 poker-network (2.2.0-8) pokermania; urgency=low
 
   * 3f9f51d fix test, because of new tourney canceled event
