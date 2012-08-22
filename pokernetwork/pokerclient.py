@@ -43,7 +43,7 @@ class PokerSkin:
 
     def __init__(self, *args, **kwargs):
         self.settings = kwargs['settings']
-        ( self.url, self.outfit ) = self.interpret("random", "random")
+        ( self.url, self.outfit ) = self.interpret("", "")
 
     def destroy(self):
         pass

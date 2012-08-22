@@ -1154,8 +1154,8 @@ serial: integer uniquely identifying a player.
     
     info = PacketPokerId.info + (
         ('name', 'noname', 's'),
-        ('outfit', 'random', 's'),
-        ('url', 'random', 's'),
+        ('outfit', '', 's'),
+        ('url', '', 's'),
         # FIXME_PokerPlayerInfoLocale: 
         # (see also sr #2262 )
         # should "locale" be here?  It's
@@ -1182,7 +1182,7 @@ Context: this packet is the server answer to successfull
 will be specified in the next PACKET_POKER_SEATS packet.
 
 name: login name of the player.
-outfit: unique name of the player outfit.
+outfit: name of the player outfit, usually referring to the organization he belongs
 serial: integer uniquely identifying a player.
 game_id: integer uniquely identifying a game.
 """

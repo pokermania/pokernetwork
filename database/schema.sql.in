@@ -46,7 +46,7 @@ CREATE TABLE users (
   -- serial of the users record to which this user is affiliated
   affiliate INT UNSIGNED DEFAULT 0 NOT NULL,
   -- client interpreted URL from which the player avatar can be downloaded
-  skin_url VARCHAR(255) DEFAULT "random" NOT NULL,
+  skin_url VARCHAR(255) DEFAULT "" NOT NULL,
   -- client interpreted textual description of the player aspect
   skin_outfit TEXT,
   -- base64 encoded player picture of type skin_image_type

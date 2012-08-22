@@ -73,15 +73,15 @@ class User:
     def __init__(self, serial = 0):
         self.serial = serial
         self.name = "anonymous"
-        self.url = "random"
-        self.outfit = "random"
+        self.url = ""
+        self.outfit = ""
         self.privilege = None
 
     def logout(self):
         self.serial = 0
         self.name = "anonymous"
-        self.url = "random"
-        self.outfit = "random"
+        self.url = ""
+        self.outfit = ""
         self.privilege = None
         
     def isLogged(self):

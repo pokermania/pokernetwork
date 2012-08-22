@@ -4670,7 +4670,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.locale, 'ourlocal')
         self.assertEquals(pack.name, 'ourname')
         self.assertEquals(pack.url, 'ourskinurl')
-        self.assertEquals(pack.outfit, 'random')
+        self.assertEquals(pack.outfit, '')
 
         self.service.db = oldDb
     def test22_tourneyRegister_tourneyAlreadyRegistering(self):
@@ -5417,8 +5417,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
         packet = self.service.getPlayerInfo(0)
         self.assertEquals(packet.serial, 0)
         self.assertEquals(packet.name, "anonymous")
-        self.assertEquals(packet.url, "random")
-        self.assertEquals(packet.outfit, "random")
+        self.assertEquals(packet.url, "")
+        self.assertEquals(packet.outfit, "")
         # FIXME_PokerPlayerInfoLocale: (see also sr #2262 )
         # PokerService.getPlayerInfo() sends locale argument when creating
         # the PokerPlayerInfo() packet, but that argument is not used.
@@ -5445,8 +5445,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                           ['getPlayerInfo(235) expected one row got 3'])
         self.assertEquals(packet.serial, 235)
         self.assertEquals(packet.name, "anonymous")
-        self.assertEquals(packet.url, "random")
-        self.assertEquals(packet.outfit, "random")
+        self.assertEquals(packet.url, "")
+        self.assertEquals(packet.outfit, "")
         # FIXME_PokerPlayerInfoLocale: (see also sr #2262 )
         # PokerService.getPlayerInfo() sends locale argument when creating
         # the PokerPlayerInfo() packet, but that argument is not used.

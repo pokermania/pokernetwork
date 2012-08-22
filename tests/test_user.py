@@ -49,8 +49,8 @@ class PokerUserTestCase(unittest.TestCase):
         self.assertEquals(user.isLogged(), True)
         self.assertEquals(user.serial, 4815162342)
         self.assertEquals(user.name, 'anonymous')
-        self.assertEquals(user.url, 'random')
-        self.assertEquals(user.outfit, 'random')
+        self.assertEquals(user.url, '')
+        self.assertEquals(user.outfit, '')
         self.assertEquals(user.privilege, None)
     # -----------------------------------------------------------------------------------------------------    
     def test02_logout(self):
@@ -72,8 +72,8 @@ class PokerUserTestCase(unittest.TestCase):
         self.assertEquals(user.isLogged(), False)
         self.assertEquals(user.serial, 0)
         self.assertEquals(user.name, 'anonymous')
-        self.assertEquals(user.url, 'random')
-        self.assertEquals(user.outfit, 'random')
+        self.assertEquals(user.url, '')
+        self.assertEquals(user.outfit, '')
         self.assertEquals(user.privilege, None)
     # -----------------------------------------------------------------------------------------------------    
     def test03_hasPrivilege(self):

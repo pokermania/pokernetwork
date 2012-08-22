@@ -1337,34 +1337,34 @@ class PokerSkinMethodUnitTest(unittest.TestCase):
     def test00_destroyDoesNothing(self):
         skin = PokerSkin(settings = 'testing')
         skin.destroy()
-        self.assertEquals(skin.url, "random")
-        self.assertEquals(skin.outfit, "random")
+        self.assertEquals(skin.url, "")
+        self.assertEquals(skin.outfit, "")
         self.assertEquals(skin.settings, "testing")
     # ---------------------------------------------------------------------------
     def test02_getAndSetURL(self):
         skin = PokerSkin(settings = 'testing')
-        self.assertEquals(skin.getUrl(), "random")
+        self.assertEquals(skin.getUrl(), "")
         skin.setUrl("http://www.example.org/poker")
         self.assertEquals(skin.getUrl(), "http://www.example.org/poker")
     # ---------------------------------------------------------------------------
     def test03_getAndSetOutfit(self):
         skin = PokerSkin(settings = 'testing')
-        self.assertEquals(skin.getOutfit(), "random")
+        self.assertEquals(skin.getOutfit(), "")
         skin.setOutfit("naked")
         self.assertEquals(skin.getOutfit(), "naked")
     # ---------------------------------------------------------------------------
     def test04_hideOutfitEditorDoesNothing(self):
         skin = PokerSkin(settings = 'testing')
         skin.hideOutfitEditor()
-        self.assertEquals(skin.url, "random")
-        self.assertEquals(skin.outfit, "random")
+        self.assertEquals(skin.url, "")
+        self.assertEquals(skin.outfit, "")
         self.assertEquals(skin.settings, "testing")
     # ---------------------------------------------------------------------------
     def test05_showOutfitEditorDoesNothing(self):
         skin = PokerSkin(settings = 'testing')
         skin.showOutfitEditor(None)
-        self.assertEquals(skin.url, "random")
-        self.assertEquals(skin.outfit, "random")
+        self.assertEquals(skin.url, "")
+        self.assertEquals(skin.outfit, "")
         self.assertEquals(skin.settings, "testing")
 # ------------------------------------------------------
 settings_xml_client_noChatNoDelays = """<?xml version="1.0" encoding="UTF-8"?>

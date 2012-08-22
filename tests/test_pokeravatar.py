@@ -3277,8 +3277,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
         avatar = self.service.avatars[id]
-        self.assertEquals(avatar.getUrl(), "random")
-        self.assertEquals(avatar.getOutfit(), "random")
+        self.assertEquals(avatar.getUrl(), "")
+        self.assertEquals(avatar.getOutfit(), "")
     # ------------------------------------------------------------------------
     def test64_testTinyFunctions(self):
         """Test a few small functions that are not otherwise called"""

@@ -443,7 +443,7 @@ class MockClient:
                 self.player = player
                 self.name = self.player.getName()
                 self.url = "http://fake"
-                self.outfit = "random"
+                self.outfit = ""
         return MockPlayerInfo(self)
 
 

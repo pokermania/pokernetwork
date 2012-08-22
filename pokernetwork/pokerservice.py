@@ -2167,18 +2167,8 @@ class PokerService(service.Service):
         placeholder = PacketPokerPlayerInfo(
             serial = serial,
             name = "anonymous",
-            url= "random",
-            outfit = "random",
-            # FIXME_PokerPlayerInfoLocale:
-            # (see also sr #2262 )
-            # this sets locale but
-            # PacketPokerPlayerInfo()
-            # doesn't currently use locale
-            # argument.  I am unsure why I
-            # added this here (it was
-            # probably me that added it).
-            # It needs investigation.
-            #  -- bkuhn
+            url= "",
+            outfit = "",
             locale = "en_US"
         )
         if serial == 0:
@@ -2194,8 +2184,7 @@ class PokerService(service.Service):
             self.log.error("getPlayerInfo(%d) expected one row got %d", serial, cursor.rowcount)
             return placeholder
         (locale,name,skin_url,skin_outfit) = cursor.fetchone()
-        if skin_outfit == None:
-            skin_outfit = "random"
+        if skin_outfit == None: skin_outfit = ""
         cursor.close()
         packet = PacketPokerPlayerInfo(
             serial = serial,
