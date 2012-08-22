@@ -2928,7 +2928,8 @@ variant:           base name of the variant for the new sit-n-go
 betting_structure: base name of the betting structure that must
                    match a poker.<betting_structure>.xml file containing
                    a full description of the betting structure.
-seats_per_game:     Maximum number of seats for each table in this tournament.
+skin:              The skin used for all tourneys and its tables 
+seats_per_game:    Maximum number of seats for each table in this tournament.
 player_timeout:    the number of seconds after which a player in position is forced to
                    play (by folding).
 currency_serial:   int currency id
@@ -2946,6 +2947,7 @@ players:           Serials of the players participating in the tournament.
         ('players_quota',0,'I'),
         ('variant', 'holdem', 's'),
         ('betting_structure', 'level-001', 's'),
+        ('skin', 'default', 's'),
         ('seats_per_game', 10, 'I'),
         ('player_timeout', 60, 'I'),
         ('currency_serial', 0, 'I'),

@@ -244,6 +244,8 @@ CREATE TABLE tourneys_schedule (
   variant VARCHAR(32) NOT NULL,
   -- Betting structure (level-001, level-10-15-pot-limit, level-10-20-no-limit, level-15-30-no-limit, level-2-4-limit)
   betting_structure VARCHAR(32) NOT NULL,
+  -- The skin of the tourneys_schedule, used then for the tourney and its tables
+  skin VARCHAR(255) NOT NULL DEFAULT 'default',
   -- Number of seats, in the range 2 and 10 included.
   seats_per_game INT DEFAULT 10 NOT NULL,
   -- Maximum number of seconds before a player times out when in position.
@@ -431,6 +433,7 @@ CREATE TABLE tourneys (
   players_min INT DEFAULT 2 NOT NULL,
   variant VARCHAR(32) NOT NULL,
   betting_structure VARCHAR(32) NOT NULL,
+  skin VARCHAR(255) NOT NULL DEFAULT 'default',
   seats_per_game INT DEFAULT 10 NOT NULL,
   player_timeout INT DEFAULT 60 NOT NULL,
   currency_serial INT NOT NULL,

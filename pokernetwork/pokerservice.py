@@ -754,6 +754,7 @@ class PokerService(service.Service):
                 'players_min': schedule['players_min'],
                 'variant': schedule['variant'],
                 'betting_structure': schedule['betting_structure'],
+                'skin': schedule['skin'],
                 'seats_per_game': schedule['seats_per_game'],
                 'player_timeout': schedule['player_timeout'],
                 'currency_serial': currency_serial,
@@ -1067,6 +1068,7 @@ class PokerService(service.Service):
             ),
             'variant': tourney.variant,
             'betting_structure': tourney.betting_structure,
+            'skin': tourney.skin,
             'seats': tourney.seats_per_game,
             'currency_serial': 0,
             'player_timeout': tourney.player_timeout,
@@ -1204,8 +1206,8 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         sql = \
             "INSERT INTO tourneys_schedule " \
-            "(resthost_serial, name, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, player_timeout, currency_serial, prize_currency, prize_min, bailor_serial, buy_in, rake, sit_n_go, start_time)" \
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            "(resthost_serial, name, description_short, description_long, players_quota, variant, betting_structure, skin, seats_per_game, player_timeout, currency_serial, prize_currency, prize_min, bailor_serial, buy_in, rake, sit_n_go, start_time)" \
+            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         params = (
             self.resthost_serial,
             packet.name,
@@ -1214,6 +1216,7 @@ class PokerService(service.Service):
             packet.players_quota if packet.players_quota > len(packet.players) else len(packet.players),
             packet.variant,
             packet.betting_structure,
+            packet.skin,
             packet.seats_per_game,
             packet.player_timeout,
             packet.currency_serial,
