@@ -1,18 +1,18 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 
-COVERAGE=/usr/bin/env python-coverage
+#COVERAGE=/usr/bin/env python-coverage
 
 PYTHON2=$(shell pyversions -vr)
 
-configure:
+build:
 	/usr/bin/env python setup.py configure -b
+	dh $@ --buildsystem=python_distutils --with=python2
 
-%: configure
+%:
 	dh $@ --buildsystem=python_distutils --with=python2
 
 #override_dh_auto_test:
-#	$(COVERAGE) run setup.py test
-#	$(COVERAGE) report pokerengine/*.py
+#	$(COVERAGE) -x setup.py test -f
+#	$(COVERAGE) -r pokernetwork/*.py
 #	rm .coverage
-

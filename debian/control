@@ -2,7 +2,21 @@ Source: poker-network
 Section: python
 Priority: extra
 Maintainer: Andor Goetzendorff <andor@pokermania.de>
-Build-Depends: debhelper, python (>= 2.6.6), mysql-client, python-mysqldb, python-openssl, python-simplejson, python-soappy, python-twisted (>= 10.1), python-poker-engine (>= 1.5.2), python-poker-distutils (>= 0.1.0-3), apg, rsync, python-poker-reflogging, python-memcache
+Build-Depends:
+    debhelper,
+    python-all,
+    mysql-client,
+    python-mysqldb,
+    python-openssl,
+    python-simplejson,
+    python-soappy,
+    python-twisted (>= 10.1),
+    python-poker-engine (>= 1.5.2),
+    python-poker-distutils (>= 0.1.0-3),
+    apg,
+    rsync,
+    python-poker-reflogging,
+    python-memcache
 Standards-Version: 3.8.3
 Homepage: http://github.com/pokermania/poker-network
 
@@ -11,8 +25,26 @@ Section: python
 Architecture: all
 Provides: ${python:Provides}
 Suggests: mysql-server
-Conflicts: python2.3-poker-network (<< 1.0.21), python2.4-poker-network (<< 1.0.21)
-Depends:  ${misc:Depends}, ${python:Depends}, ucf, adduser, python-poker-engine (>= 1.5.2), python-twisted (>= 10.1), python-mysqldb, python-soappy, python-openssl, python-simplejson, python-memcache, libjson-perl, dbconfig-common, mysql-client, apg, rsync, python-crypto, python-poker-reflogging
+X-Python-Version: >= 2.6.6
+Depends:
+    ${misc:Depends},
+    ${python:Depends},
+    ucf,
+    adduser,
+    python-poker-engine (>= 1.5.2),
+    python-twisted (>= 10.1),
+    python-mysqldb,
+    python-soappy,
+    python-openssl,
+    python-simplejson,
+    python-memcache,
+    libjson-perl,
+    dbconfig-common,
+    mysql-client,
+    apg,
+    rsync,
+    python-crypto,
+    python-poker-reflogging
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
@@ -30,8 +62,16 @@ Package: poker-web
 Section: web
 Priority: optional
 Architecture: all
-Provides: ${python:Provides}
-Depends: ${misc:Depends}, dbconfig-common, ucf, php5 | php5-cgi, php5-mysql, php5-gd, apache2, php-pear, gettext
+Depends:
+    ${misc:Depends},
+    dbconfig-common,
+    ucf,
+    php5 | php5-cgi,
+    php5-mysql,
+    php5-gd,
+    apache2,
+    php-pear,
+    gettext
 Description: Web interface to a poker-network server
  Play poker with other players connected on a poker-network server
  (holdem, omaha, omaha high/low, stud 7 ...) in ring games, sit and go
@@ -42,10 +82,16 @@ Section: python
 Architecture: all
 Priority: optional
 Provides: ${python:Provides}
-Depends: ${misc:Depends}, ${python:Depends}, python-poker-network (= ${source:Version}), ucf
+X-Python-Version: >= 2.6.6
+Depends:
+    ${misc:Depends},
+    ${python:Depends},
+    python-poker-network (= ${source:Version}),
+    ucf
 Description: statistics poker-network client
  poker-stats collects statistics from running poker-network servers
- and consolidate them in a separate set of tables, in a separate
+ and consolidate them in a separate set of tables,
+    in a separate
  database.
 
 Package: python-poker-prizes
@@ -53,7 +99,12 @@ Section: python
 Architecture: all
 Priority: optional
 Provides: ${python:Provides}
-Depends: ${misc:Depends}, ${python:Depends}, python-poker-network (= ${source:Version}), ucf
+X-Python-Version: >= 2.6.6
+Depends:
+    ${misc:Depends},
+    ${python:Depends},
+    python-poker-network (= ${source:Version}),
+    ucf
 Description: real prizes addon for poker-network
  poker-prizes adds support for real prizes to the poker-network
  multiplayer online poker server.
