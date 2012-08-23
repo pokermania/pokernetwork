@@ -107,11 +107,13 @@
        however, it can be a security risk and should be used only during debugging -->
   <!-- <resthost host="localhost" port="19384" path="/POKER_REST" /> -->
 
-  <!-- <auth script="/usr/local/share/poker-network/pokerauth.py"/> -->
+  <!-- <auth script="pokernetwork.pokerauth"/> -->
 
-  <!-- <rest_filter>/usr/share/pyshared/pokernetwork/nullfilter.py</rest_filter> -->
-  <!-- <rest_filter>/usr/share/pyshared/pokernetwork/sessionproxyfilter.py</rest_filter> -->
-  <!-- <tourney_select_info settings="/etc/poker/poker.prizes.xml">/usr/share/pyshared/pokernetwork/tourneyselectinfo.py</tourney_select_info> -->
+  <!-- <rest_filter>pokernetwork.nullfilter</rest_filter> -->
+  <!-- <rest_filter>pokernetwowk.sessionproxyfilter/rest_filter> -->
+
+  <!-- <tourney_select_info settings="/etc/poker/poker.prizes.xml">pokerprizes.tourneyselectinfo</tourney_select_info> -->
+
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
   <refill serial="1" amount="5000000"/>
   <database

@@ -34,7 +34,6 @@ import re
 import locale
 import gettext
 import libxml2
-import imp
 
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerservice')
@@ -86,6 +85,13 @@ from datetime import date
 UPDATE_TOURNEYS_SCHEDULE_DELAY = 2 * 60
 CHECK_TOURNEYS_SCHEDULE_DELAY = 60
 DELETE_OLD_TOURNEYS_DELAY = 1 * 60 * 60
+
+def _import(m):
+    from imp import load_module as _load, find_module as _find
+    m, _m = m.split('.'), None
+    for i in range(len(m)):
+        _m = _load(".".join(m[:i+1]), *_find(m[i], _m and [_m.__file__.rsplit('/', 1)[0]]))
+    return _m
 
 class IPokerService(Interface):
 
@@ -169,11 +175,11 @@ class PokerService(service.Service):
         self.shutdown_deferred = None
         self.resthost_serial = 0
         self.has_ladder = None
-        self.monitor_plugins = []
+        self.monitor_plugins = [
+            getattr(_import(path.content), 'handle_event')
+            for path in settings.header.xpathEval("/server/monitor")
+        ]
         self.chat_filter = None
-        for monitor in settings.header.xpathEval("/server/monitor"):
-            module = imp.load_source("monitor", monitor.content)
-            self.monitor_plugins.append(getattr(module, "handle_event"))
         self.remove_completed = self.settings.headerGetInt("/server/@remove_completed")
         self.getPage = client.getPage
         self.long_poll_timeout = settings.headerGetInt("/server/@long_poll_timeout")
@@ -229,7 +235,7 @@ class PokerService(service.Service):
         settings = self.settings
         for path in settings.header.xpathEval("/server/tourney_select_info"):
             self.log.inform("trying to load '%s'", path.content)
-            module = imp.load_source("tourney_select_info", path.content)
+            module = _import(path.content)
             path = settings.headerGet("/server/tourney_select_info/@settings")
             if path:
                 s = pokernetworkconfig.Config(settings.dirs)

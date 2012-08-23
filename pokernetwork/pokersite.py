@@ -21,7 +21,6 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 import re
-import imp
 import base64
 
 from traceback import format_exc
@@ -38,10 +37,17 @@ PacketFactoryWithNames = dict((packet_class.__name__,packet_class) for packet_cl
 from pokernetwork import log as network_log
 log = network_log.getChild('site')
 
-_arg2packet_re = re.compile("^[a-zA-Z]+$")
+def _import(m):
+    from imp import load_module as _load, find_module as _find
+    m, _m = m.split('.'), None
+    for i in range(len(m)):
+        _m = _load(".".join(m[:i+1]), *_find(m[i], _m and [_m.__file__.rsplit('/', 1)[0]]))
+    return _m
 
 def args2packets(args):
     return (arg2packet(arg)[0] for arg in args)
+
+_arg2packet_re = re.compile("^[a-zA-Z]+$")
 
 def arg2packet(arg):
     packet_class = None
@@ -394,10 +400,10 @@ class PokerSite(server.Site):
         if sessionTimeout > 0:
             self.sessionFactory.sessionTimeout = sessionTimeout
         self.memcache = None
-        self.pipes = []
-        for path in settings.header.xpathEval("/server/rest_filter"):
-            module = imp.load_source("poker_pipe", path.content)
-            self.pipes.append(getattr(module, "rest_filter"))
+        self.pipes = [
+            getattr(_import(path.content ), 'rest_filter')
+            for path in settings.header.xpathEval("/server/rest_filter")
+        ]
         resthost = settings.headerGetProperties("/server/resthost")
         if resthost:
             resthost = resthost[0]
