@@ -31,7 +31,7 @@ from twisted.internet import reactor
 
 from pokernetwork import currencyclient
 from pokernetwork import pokerlock
-from pokernetwork.pokerpackets import *
+from pokerpackets.networkpackets import *
 from pokernetwork import log as network_log
 log = network_log.getChild('pokercashier')
 

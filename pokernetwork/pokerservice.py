@@ -71,8 +71,8 @@ from pokernetwork.protocol import UGAMEProtocol
 from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
-from pokernetwork.packets import packets2maps
-from pokernetwork.pokerpackets import *
+from pokerpackets.packets import packets2maps
+from pokerpackets.networkpackets import *
 from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource, args2packets
 from pokernetwork.pokertable import PokerTable, PokerAvatarCollection
 from pokernetwork import pokeravatar

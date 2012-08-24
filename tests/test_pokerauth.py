@@ -49,7 +49,7 @@ from pokernetwork import pokerauth
 from pokernetwork.user import User
 from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerdatabase import PokerDatabase
-from pokernetwork.packets import PACKET_LOGIN
+from pokerpackets.packets import PACKET_LOGIN
 
 import libxml2
 

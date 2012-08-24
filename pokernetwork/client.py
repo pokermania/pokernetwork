@@ -23,7 +23,7 @@
 # 
 from twisted.internet import reactor, protocol, error, defer
 
-from pokernetwork.packets import *
+from pokerpackets.packets import *
 from pokernetwork.protocol import UGAMEProtocol
 from pokernetwork.user import User
 from pokernetwork import log as network_log

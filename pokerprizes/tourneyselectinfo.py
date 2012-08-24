@@ -20,7 +20,7 @@
 #
 from pokerprizes.prizes import PokerPrizes
 from MySQLdb.cursors import DictCursor
-from pokernetwork.pokerpackets import PacketPokerTourneyInfo
+from pokerpackets.networkpackets import PacketPokerTourneyInfo
 
 class Handle(PokerPrizes):
 

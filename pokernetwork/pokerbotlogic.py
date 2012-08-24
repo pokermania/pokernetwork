@@ -30,8 +30,8 @@ from twisted.internet import reactor
 
 from pokerengine.pokertournament import *
 from pokernetwork.user import checkName
-from pokernetwork.pokerpackets import *
-from pokernetwork.pokerclientpackets import *
+from pokerpackets.networkpackets import *
+from pokerpackets.clientpackets import *
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerbotlogic')
 

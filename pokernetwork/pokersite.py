@@ -31,8 +31,8 @@ from twisted.internet import defer
 
 from pokerpackets.packets import packets2maps
 
-from pokernetwork.packets import *
-from pokernetwork.pokerpackets import *
+from pokerpackets.packets import *
+from pokerpackets.networkpackets import *
 PacketFactoryWithNames = dict((packet_class.__name__,packet_class) for packet_class in PacketFactory.itervalues())
 
 from pokernetwork import log as network_log

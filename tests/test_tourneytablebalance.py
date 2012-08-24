@@ -52,7 +52,7 @@ from pokernetwork import pokerservice, pokernetworkconfig
 from pokernetwork import currencyclient
 from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
-from pokernetwork.pokerpackets import *
+from pokerpackets.networkpackets import *
 
 class ConstantDeckShuffler:
     def shuffle(self, what):

@@ -29,7 +29,7 @@
 
 import MySQLdb
 from pokernetwork.user import User
-from pokernetwork.packets import PACKET_LOGIN
+from pokerpackets.packets import PACKET_LOGIN
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerauthmysql')
 

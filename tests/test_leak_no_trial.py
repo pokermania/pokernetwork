@@ -46,7 +46,7 @@ from pokernetwork import pokermemcache
 from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
-from pokernetwork.pokerpackets import *
+from pokerpackets.networkpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server ping="300000" autodeal="yes" simultaneous="4" chat="yes" >

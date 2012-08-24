@@ -51,7 +51,7 @@ twisted.internet.base.DelayedCall.debug = True
 import pokernetwork.server
 import pokernetwork.client
 import pokernetwork.protocol
-from pokernetwork.packets import *
+from pokerpackets.packets import *
 
 class FakeService(service.Service):
     def __init__(self):

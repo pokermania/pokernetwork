@@ -34,9 +34,8 @@ from twisted.persisted import sob
 from twisted.internet import error, defer
 
 from pokernetwork import pokernetworkconfig
-from pokernetwork.pokerclientpackets import *
 from pokernetwork.pokerclient import PokerClientFactory
-from pokernetwork.pokerclientpackets import *
+from pokerpackets.clientpackets import *
 from pokerstats.statslogic import PokerStats
 
 class PokerStatsFactory(PokerClientFactory):

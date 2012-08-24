@@ -17,7 +17,8 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from pokernetwork.pokerpackets import PacketPokerTourneyInfo
+
+from pokerpackets.networkpackets import PacketPokerTourneyInfo
 
 class Handle:
     def __init__(self, service, settings):

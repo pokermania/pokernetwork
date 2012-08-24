@@ -29,7 +29,7 @@
 
 from twisted.python.runtime import seconds
 from pokernetwork.user import User
-from pokernetwork.packets import PACKET_LOGIN, PACKET_AUTH
+from pokerpackets.packets import PACKET_LOGIN, PACKET_AUTH
 from pokernetwork import log as network_log
 log = network_log.getChild("pokerauth")
 

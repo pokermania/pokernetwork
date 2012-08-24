@@ -30,7 +30,7 @@ from pokernetwork import log as network_log
 log = network_log.getChild('server')
 
 from pokernetwork.protocol import UGAMEProtocol
-from pokernetwork.packets import PacketError
+from pokerpackets.packets import PacketError
 
 class PokerServerProtocol(UGAMEProtocol):
     """UGAMEServerProtocol"""

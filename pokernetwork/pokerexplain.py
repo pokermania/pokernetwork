@@ -25,8 +25,8 @@ from twisted.python.runtime import seconds
 from pokerengine.pokerchips import PokerChips
 from pokerengine.pokergame import history2messages
 from pokernetwork.pokergameclient import PokerNetworkGameClient
-from pokernetwork.pokerpackets import * #@UnusedWildImport
-from pokernetwork.pokerclientpackets import * #@UnusedWildImport
+from pokerpackets.networkpackets import * #@UnusedWildImport
+from pokerpackets.clientpackets import * #@UnusedWildImport
 from pokernetwork import log as network_log
 log = network_log.getChild('explain')
 

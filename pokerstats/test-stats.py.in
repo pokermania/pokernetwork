@@ -45,7 +45,7 @@ from pokernetwork import pokerdatabase
 from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerclient
-from pokernetwork.pokerclientpackets import *
+from pokerpackets.clientpackets import *
 from pokerstats import stats, statslogic
 
 settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>

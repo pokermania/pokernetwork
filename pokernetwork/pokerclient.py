@@ -31,7 +31,7 @@ from twisted.python.runtime import seconds
 from pokerengine.pokerchips import PokerChips
 from pokerengine.pokerengineconfig import Config
 from pokernetwork.client import UGAMEClientProtocol, UGAMEClientFactory
-from pokernetwork.pokerclientpackets import *
+from pokerpackets.clientpackets import *
 from pokernetwork.pokerexplain import PokerGames, PokerExplain
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerclient')

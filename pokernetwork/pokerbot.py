@@ -52,7 +52,7 @@ from twisted.internet import error
 
 from pokerengine.pokertournament import *
 from pokernetwork import pokernetworkconfig
-from pokernetwork.pokerclientpackets import *
+from pokerpackets.clientpackets import *
 from pokernetwork.pokerclient import PokerClientFactory, PokerClientProtocol
 from pokernetwork.pokerbotlogic import StringGenerator, NoteGenerator, PokerBot
 

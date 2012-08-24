@@ -66,7 +66,7 @@ class PokerGamesTestCase(unittest.TestCase):
         self.failIf(self.games.getGame(1))
 
 from pokernetwork.pokerexplain import PokerExplain
-from pokernetwork.pokerclientpackets import *
+from pokerpackets.clientpackets import *
 
 class PokerExplainTestCase(unittest.TestCase):
 

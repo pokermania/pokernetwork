@@ -44,8 +44,8 @@ from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
 from pokernetwork import proxyfilter
-from pokernetwork.packets import Packet
-from pokernetwork.pokerpackets import *
+from pokerpackets.packets import Packet
+from pokerpackets.networkpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >

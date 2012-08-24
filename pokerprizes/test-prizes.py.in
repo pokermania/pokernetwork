@@ -44,7 +44,7 @@ twisted.internet.base.DelayedCall.debug = True
 from pokernetwork import pokerdatabase
 from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig
-from pokernetwork.pokerpackets import *
+from pokerpackets.networkpackets import *
 from pokerprizes.prizes import PokerPrizes
 from pokerprizes.tourneyselectinfo import Handle
 

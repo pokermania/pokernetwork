@@ -41,7 +41,7 @@ from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokeravatar
 from pokernetwork.pokertable import PokerAvatarCollection
-from pokernetwork.pokerpackets import *
+from pokerpackets.networkpackets import *
 
 class PokerAuthMockup:
     def GetLevel(self, *a, **kw):

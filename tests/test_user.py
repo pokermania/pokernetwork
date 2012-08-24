@@ -30,7 +30,7 @@ sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
 from pokernetwork.user import User
 from pokernetwork import user as userClass
-from pokernetwork.pokerpackets import PacketPokerSetAccount as mylimits
+from pokerpackets.networkpackets import PacketPokerSetAccount as mylimits
 
 class PokerUserTestCase(unittest.TestCase):
         

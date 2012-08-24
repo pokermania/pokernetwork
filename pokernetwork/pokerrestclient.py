@@ -23,7 +23,7 @@ from twisted.web import http, client
 from twisted.python.util import InsensitiveDict
 from twisted.python.runtime import seconds
 
-from pokernetwork.pokerpackets import *
+from pokerpackets.networkpackets import *
 from pokernetwork import pokersite
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerrestclient')

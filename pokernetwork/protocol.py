@@ -24,7 +24,7 @@
 from twisted.internet import reactor, protocol
 from twisted.python.runtime import seconds
 
-from pokernetwork.packets import Packet, PacketFactory, PACKET_PING
+from pokerpackets.packets import Packet, PacketFactory, PACKET_PING
 from pokernetwork import protocol_number
 from pokernetwork.version import Version
 from pokernetwork import log as network_log
