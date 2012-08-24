@@ -2716,6 +2716,28 @@ player_chips_max_name: the name of the currently leading player
 Packet.infoDeclare(globals(), PacketPokerTourneyPlayerStats, Packet, "POKER_TOURNEY_PLAYER_STATS", 158) # 0x9e # %SEQ%
 
 ########################################
+class PacketPokerTourneyCancel(PacketSerial):
+    """\
+
+Semantics: If sent from a client with appropriate permissions, the tourney 
+will be canceled. This can only happen while the tourney is in the REGISTERING state.
+
+Direction: server <= client
+
+Context: This packet can be sent by a bailor or a user with administrative rights for
+a tourney
+
+serial: integer uniquely identifying a player. 
+tourney_serial: integer uniquely identifying a tournament.
+"""
+    
+    info = PacketSerial.info + (
+            ('tourney_serial', 0, 'I'),
+            )
+    
+Packet.infoDeclare(globals(), PacketPokerTourneyCancel, Packet, "POKER_TOURNEY_CANCEL", 159) # 0x9f # %SEQ%
+
+########################################
 class PacketPokerStateInformation(PacketPokerId):
     """\
 Semantics: This message is sent to a client whenever the server

@@ -957,6 +957,14 @@ class PokerAvatar:
                     packet.tourney_serial, packet.serial, self.getSerial()
                 )
                 
+        elif packet.type == PACKET_POKER_TOURNEY_CANCEL:
+            if self.getSerial() == packet.serial:
+                self.sendPacketVerbose(self.performPacketPokerTourneyStart(packet))
+            else:
+                self.log.warn("attempt to start tournament %d for player %d by player %d",
+                    packet.tourney_serial, packet.serial, self.getSerial()
+                )
+                
         
         elif packet.type == PACKET_QUIT:
             for table in self.tables.values():
@@ -1073,24 +1081,29 @@ class PokerAvatar:
         return self.service.tourneyCreate(packet)
         
     def performPacketPokerTourneyStart(self, packet):
-        serial = packet.serial
-        tourney_serial = packet.tourney_serial
+        can_perform_changes, error = self.canPerformTourneyChanges(packet.serial, packet.tourney_serial)
+        return error if not can_perform_changes else self.service.tourneyStart(self.service.tourneys[packet.tourney_serial])
+        
+    def performPacketPokerTourneyCancel(self, packet):
+        can_perform_changes, error = self.canPerformTourneyChanges(packet.serial, packet.tourney_serial)
+        return error if not can_perform_changes else self.service.tourneyCancel(self.service.tourneys[packet.tourney_serial])
+    
+    def canPerformTourneyChanges(self, serial, tourney_serial):
+        tourney = self.service.tourneys.get(tourney_serial,None)
         error = None
         
-        tourney = self.service.tourneys.get(tourney_serial,None)
-        
-        if tourney is None:
+        if tourney_serial not in self.service.tourneys.iterk is None:
             error = PacketError(
                 other_type = PACKET_POKER_TOURNEY_START,
                 code = PacketPokerTourneyStart.DOES_NOT_EXIST,
-                message = "Tournament %d does not exist" % packet.tourney_serial
+                message = "Tournament %d does not exist" % tourney_serial
             )
         
         elif tourney.state != TOURNAMENT_STATE_REGISTERING:
             error = PacketError(
                 other_type = PACKET_POKER_TOURNEY_START,
                 code = PacketPokerTourneyStart.WRONG_STATE,
-                message = "Tournament %d not in state %s" % (packet.tourney_serial,TOURNAMENT_STATE_REGISTERING)
+                message = "Tournament %d not in state %s" % (tourney_serial,TOURNAMENT_STATE_REGISTERING)
             )
         
         # user has to be the bailor (or an admin) in order to start a tourney
@@ -1103,11 +1116,10 @@ class PokerAvatar:
             
         if error:
             self.log.error("%s", error)
-            return error
-        
-        return self.service.tourneyStart(tourney)
-        
-    
+            return (False, error)
+        else:
+            return (True, None)
+                
     # -------------------------------------------------------------------------
     def performPacketPokerTablePicker(self, packet):
         mySerial = self.getSerial()
