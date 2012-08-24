@@ -25,7 +25,7 @@ from os import path
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
-from pokernetwork import pokerclientpackets
+from pokerpackets import clientpackets
 
 class JavaScriptGenerator:
     def __init__(self, type):
@@ -37,7 +37,7 @@ class JavaScriptGeneratorTestCase(unittest.TestCase):
     #--------------------------------------------------------------    
     def test_all(self):
         result = []
-        for (index, name) in pokerclientpackets.PacketNames.iteritems():
+        for (index, name) in clientpackets.PacketNames.iteritems():
             result.append(name + ": "  + str(index))
 
 #--------------------------------------------------------------

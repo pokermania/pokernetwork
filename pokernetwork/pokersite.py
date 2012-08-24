@@ -29,7 +29,7 @@ from traceback import format_exc
 from twisted.web import server, resource, http
 from twisted.internet import defer
 
-from pokernetwork.packets import packets2maps
+from pokerpackets.packets import packets2maps
 
 from pokernetwork.packets import *
 from pokernetwork.pokerpackets import *

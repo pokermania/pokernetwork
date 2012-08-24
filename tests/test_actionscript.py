@@ -25,7 +25,7 @@ from os import path
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
-from pokernetwork import pokerclientpackets
+from pokerpackets import clientpackets
 
 class ActionScriptGenerator:
     def __init__(self, type):
@@ -201,11 +201,11 @@ class ActionScriptGenerator:
         return code
             
     def generate(self):
-        if self.type.type in ( pokerclientpackets.PACKET_NONE,
-                               pokerclientpackets.PACKET_BOOTSTRAP ):
+        if self.type.type in ( clientpackets.PACKET_NONE,
+                               clientpackets.PACKET_BOOTSTRAP ):
             return
         info = self.type.info[2:]
-        print "// code for " + pokerclientpackets.PacketNames[self.type.type] + " "  + str(info)
+        print "// code for " + clientpackets.PacketNames[self.type.type] + " "  + str(info)
         print "public class " + self.type.__name__ + " extends Packet"
         print "{"
         for (variable, default, pack_type) in info:
@@ -255,8 +255,8 @@ class ActionScriptGeneratorTestCase(unittest.TestCase):
     def test_all(self):
         classes = []
         for type in xrange(0, 255):
-            if pokerclientpackets.PacketFactory.has_key(type):
-                c = pokerclientpackets.PacketFactory[type].__name__
+            if clientpackets.PacketFactory.has_key(type):
+                c = clientpackets.PacketFactory[type].__name__
                 classes.append(c)
             else:
                 classes.append('null')
@@ -292,8 +292,8 @@ public class Packet
 }
 """
         for type in xrange(0, 255):
-            if pokerclientpackets.PacketFactory.has_key(type):
-                ascript = ActionScriptGenerator(pokerclientpackets.PacketFactory[type])
+            if clientpackets.PacketFactory.has_key(type):
+                ascript = ActionScriptGenerator(clientpackets.PacketFactory[type])
                 ascript.generate()
 
 #--------------------------------------------------------------

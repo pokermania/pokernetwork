@@ -38,7 +38,7 @@ from pokerengine.pokergame import PokerGameServer
 from pokerengine import pokergame, pokertournament
 from pokerengine.pokercards import PokerCards
 
-from pokernetwork.pokerpackets import *  # @UnusedWildImport
+from pokerpackets.networkpackets import *  # @UnusedWildImport
 from pokernetwork.lockcheck import LockCheck
 
 from pokernetwork import pokeravatar
