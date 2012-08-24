@@ -1013,7 +1013,7 @@ def GetTestSuite():
     suite.addTest(loader.loadClass(PokerSiteTestCase))
     suite.addTest(loader.loadClass(HelpersTestCase))
     suite.addTest(loader.loadClass(PokerTourneyStartTestCase))
-    return Suite()
+    return suite
 
 def Run():
     return runner.TrialRunner(
