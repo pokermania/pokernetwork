@@ -33,9 +33,9 @@ class ActionScriptGenerator:
 
     @staticmethod
     def pack_type2as_type(pack_type):
-        if pack_type in ('I', 'B', 'b', 'H', 'c', 'bool', 'cbool', 'Bnone'):
+        if pack_type in ('I', 'Q', 'B', 'b', 'H', 'c', 'bool', 'cbool', 'Bnone'):
             return 'int'
-        elif pack_type in ('s', 'j'):
+        elif pack_type in ('s', 'j','u', 'bs'):
             return 'String'
         elif pack_type in ('Bl', 'Hl', 'Il', 'pl', 'players'):
             return 'Array'
@@ -201,8 +201,7 @@ class ActionScriptGenerator:
         return code
             
     def generate(self):
-        if self.type.type in ( clientpackets.PACKET_NONE,
-                               clientpackets.PACKET_BOOTSTRAP ):
+        if self.type.type in ( clientpackets.PACKET_NONE, clientpackets.PACKET_BOOTSTRAP ):
             return
         info = self.type.info[2:]
         print "// code for " + clientpackets.PacketNames[self.type.type] + " "  + str(info)
