@@ -1,3 +1,9 @@
+poker-network (2.2.1-2) pokermania; urgency=low
+
+  * b675474 remove twisted/plugins/__init__.py
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 27 Aug 2012 18:30:00 +0200
+
 poker-network (2.2.1-1) pokermania; urgency=low
 
   * ab88a46 corrected test_actionscript
