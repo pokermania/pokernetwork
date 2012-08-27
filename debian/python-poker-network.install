@@ -1,3 +1,4 @@
 debian/tmp/usr/lib/python???
+twisted/plugins usr/share/pyshared/twisted
 database/*.sql upgrades usr/share/poker-network
 conf/*.xml conf/poker.pem usr/share/poker-network/conf
