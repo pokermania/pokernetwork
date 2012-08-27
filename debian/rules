@@ -6,6 +6,10 @@
 PYTHON2=$(shell pyversions -vr)
 
 build:
+	/usr/bin/env python setup.py configure -s "mysql.host=_DBC_DBSERVER_"
+	/usr/bin/env python setup.py configure -s "mysql.database=_DBC_DBNAME_"
+	/usr/bin/env python setup.py configure -s "mysql.user.name=_DBC_DBUSER_"
+	/usr/bin/env python setup.py configure -s "mysql.user.password=_DBC_DBPASS_"
 	/usr/bin/env python setup.py configure -b
 	dh $@ --buildsystem=python_distutils --with=python2
 

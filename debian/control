@@ -1,8 +1,8 @@
 Source: poker-network
 Section: python
-X-Python-Version: >= 2.6.6
 Priority: extra
 Maintainer: Andor Goetzendorff <andor@pokermania.de>
+X-Python-Version: >= 2.6, << 3.0
 Build-Depends:
     debhelper,
     python-all,
