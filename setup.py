@@ -16,7 +16,7 @@ class ExtendedBuild(DistutilsBuild):
 setup(
     name = 'poker-network',
     version = '2.2.0',
-    packages = ['pokernetwork'],
+    packages = ['pokernetwork', 'twisted/plugins'],
     cmdclass = {
     	'build': ExtendedBuild
     }
