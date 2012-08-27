@@ -1,3 +1,17 @@
+poker-network (2.2.1-1) pokermania; urgency=low
+
+  * ab88a46 corrected test_actionscript
+  * e7e16de rewrite import statements for all files importing pokerpackets, refs #6639
+  * 48f997c poker-packets are a single package, refs #6639
+  * ed1e1c6 added PacketPokerTourneyCancel
+  * cc9d1af adding the game_id as 3rd Event.HAND param
+  * a7ba3db changing users' default skin_url to '' instead of 'random'
+  * b7c8747 added skin to tourneys_schedule and tourneys in order to pass it to table
+  * 7e46aa4 Revert "hand monitor wird nur noch bei regulären spielen
+            aufgerufen" (added in additions)
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 27 Aug 2012 16:45:00 +0200
+
 poker-network (2.2.0-9) pokermania; urgency=low
 
   * d804173 more polishing
