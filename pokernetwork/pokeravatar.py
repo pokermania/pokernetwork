@@ -1084,8 +1084,13 @@ class PokerAvatar:
         can_perform_changes, error = self.canPerformTourneyChanges(packet.serial, packet.tourney_serial)
         if not can_perform_changes: return error
         tourney = self.service.tourneys[packet.tourney_serial]
-        tourney.changeState(TOURNAMENT_STATE_RUNNING)
-        return PacketAck()
+        if tourney.registered <= 1:
+            return PacketError(
+                other_type = PACKET_POKER_TOURNEY,
+                code = PacketPokerTourneyStart.NOT_ENOUGH_USERS,
+                message = "Tournament %d needs a min. of 2 users" % tourney.serial
+            )
+        return self.service.tourneyStart(tourney)
         
     def performPacketPokerTourneyCancel(self, packet):
         can_perform_changes, error = self.canPerformTourneyChanges(packet.serial, packet.tourney_serial)
@@ -1100,14 +1105,14 @@ class PokerAvatar:
         
         if tourney_serial not in self.service.tourneys:
             error = PacketError(
-                other_type = PACKET_POKER_TOURNEY_START,
+                other_type = PACKET_POKER_TOURNEY,
                 code = PacketPokerTourneyStart.DOES_NOT_EXIST,
                 message = "Tournament %d does not exist" % tourney_serial
             )
         
         elif tourney.state != TOURNAMENT_STATE_REGISTERING:
             error = PacketError(
-                other_type = PACKET_POKER_TOURNEY_START,
+                other_type = PACKET_POKER_TOURNEY,
                 code = PacketPokerTourneyStart.WRONG_STATE,
                 message = "Tournament %d not in state %s" % (tourney_serial,TOURNAMENT_STATE_REGISTERING)
             )
@@ -1115,7 +1120,7 @@ class PokerAvatar:
         # user has to be the bailor (or an admin) in order to start a tourney
         elif not self.user.hasPrivilege(User.ADMIN) and tourney.bailor_serial != serial:
             error = PacketError(
-                other_type = PACKET_POKER_TOURNEY_START,
+                other_type = PACKET_POKER_TOURNEY,
                 code = PacketPokerTourneyStart.NOT_BAILOR,
                 message = "Player %d is not the bailor for Tournament %d" % (serial, tourney_serial)
             )

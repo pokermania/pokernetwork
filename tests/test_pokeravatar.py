@@ -23,6 +23,7 @@
 
 import sys, os
 from os import path
+from pokerengine.pokertournament import TOURNAMENT_STATE_RUNNING, TOURNAMENT_STATE_REGISTERING, TOURNAMENT_STATE_CANCELED
 
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
@@ -4234,6 +4235,103 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.assertEquals(True, 1 in self.service.tables[2].game.serial2player)
         self.service.seatPlayer = _seatPlayer
 
+    def test89_canPerformTourneyChanges(self):
+        print self.service.tourneys
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        def checkForPrivileges((client,packet)):
+            avatar = self.service.avatars[0]
+            tourney = self.service.tourneys[1]
+            # user cannot perform changes as a regular user
+            can_perform_changes, error = avatar.canPerformTourneyChanges(avatar.getSerial(),tourney.serial)
+            self.assertFalse(can_perform_changes)
+            # if the user is the bailor, he can perform changes
+            old_bailor_serial, tourney.bailor_serial = tourney.bailor_serial, avatar.getSerial()
+            can_perform_changes, error = avatar.canPerformTourneyChanges(avatar.getSerial(),tourney.serial)
+            self.assertTrue(can_perform_changes)
+            tourney.bailor_serial = old_bailor_serial
+            # if the user is admin, he can perform changes
+            avatar.user.privilege = avatar.user.ADMIN
+            can_perform_changes, error = avatar.canPerformTourneyChanges(avatar.getSerial(),tourney.serial)
+            self.assertTrue(can_perform_changes)
+            return (client,packet)
+            
+        d.addCallback(checkForPrivileges)
+        return d
+    
+    def test90_tourneyStart(self):
+        tourney = self.service.tourneys[1]
+        tourney.players_quota = 3
+        tourney.register(1000)
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        def startTourney((client, packet)):
+            avatar = self.service.avatars[0]
+            avatar.queuePackets()
+            tourney.bailor_serial = avatar.getSerial()
+            
+            # cannot start tourney with less than 2 players
+            avatar.handlePacketLogic(PacketPokerTourneyStart(
+                serial = avatar.getSerial(),
+                tourney_serial = tourney.serial
+            ))
+            found = False
+            packets = [
+                p for p in avatar.resetPacketsQueue() 
+                if p.type == PACKET_ERROR 
+                and p.other_type == PACKET_POKER_TOURNEY 
+                and p.code == PacketPokerTourneyStart.NOT_ENOUGH_USERS
+            ]
+            self.assertTrue(len(packets) > 0)
+            self.assertEqual(tourney.state,TOURNAMENT_STATE_REGISTERING)
+            
+            # can start if at least 2 players are registered
+            tourney.register(1001)
+            avatar.handlePacketLogic(PacketPokerTourneyStart(
+                serial = avatar.getSerial(),
+                tourney_serial = tourney.serial
+            ))
+            packets = [
+                p for p in avatar.resetPacketsQueue() 
+                if p.type == PACKET_ACK 
+            ]
+            self.assertTrue(len(packets) > 0)
+            self.assertEqual(tourney.state,TOURNAMENT_STATE_RUNNING)
+            return (client, packet)
+        d.addCallback(startTourney)
+        return d
+    
+    def test91_tourneyCancel(self):
+        tourney = self.service.tourneys[1]
+        tourney.players_quota = 3
+        tourney.register(1000)
+        self.createClients(1)
+        d = self.client_factory[0].established_deferred
+        d.addCallback(self.sendExplain)
+        d.addCallback(self.login, 0)
+        def cancelTourney((client, packet)):
+            avatar = self.service.avatars[0]
+            avatar.queuePackets()
+            tourney.bailor_serial = avatar.getSerial()
+            
+            # cannot start tourney with less than 2 players
+            avatar.handlePacketLogic(PacketPokerTourneyCancel(
+                serial = avatar.getSerial(),
+                tourney_serial = tourney.serial
+            ))
+            packets = [
+                p for p in avatar.resetPacketsQueue() 
+                if p.type == PACKET_ACK 
+            ]
+            self.assertTrue(len(packets) > 0)
+            self.assertEqual(tourney.state,TOURNAMENT_STATE_CANCELED)
+            return (client, packet)
+        d.addCallback(cancelTourney)
+        return d
 ##############################################################################
 class PokerAvatarNoClientServerTestCase(unittest.TestCase):
     timeout = 500
