@@ -113,7 +113,7 @@ settings_xml_server = """\
         schema="%(tests_path)s/../database/schema.sql"
         command="%(mysql_command)s" />
     <tourney_select_info>%(tests_path)s/testtourney_select_info.py</tourney_select_info>
-    <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+    <path>%(engine_path)s/conf %(tests_path)s/conf</path>
     <users temporary="BOT.*"/>
 </server>
 """ % {
@@ -145,7 +145,7 @@ settings_xml_client = """\
   <shadow>yes</shadow>
   <vprogram>yes</vprogram>
   
-  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+  <path>%(engine_path)s/conf %(tests_path)s/conf</path>
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
@@ -4236,7 +4236,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.service.seatPlayer = _seatPlayer
 
     def test89_canPerformTourneyChanges(self):
-        print self.service.tourneys
         self.createClients(1)
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
@@ -4559,7 +4558,7 @@ settings_xml_table_picker_server = """<?xml version="1.0" encoding="UTF-8"?>
         schema="%(tests_path)s/../database/schema.sql"
         command="%(mysql_command)s" />
     <tourney_select_info>%(tests_path)s/testtourney_select_info.py</tourney_select_info>
-    <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+    <path>%(engine_path)s/conf %(tests_path)s/conf</path>
     <users temporary="BOT.*"/>
 </server>
 """ % {
