@@ -41,7 +41,7 @@ from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokerrestclient import PokerRestClient
 from pokernetwork.pokerpacketizer import createCache, history2packets
 
-from pokerengine.pokertournament import TOURNAMENT_STATE_REGISTERING
+from pokerengine.pokertournament import TOURNAMENT_STATE_REGISTERING, TOURNAMENT_STATE_CANCELED, TOURNAMENT_STATE_RUNNING
 
 from pokernetwork import log as network_log
 log = network_log.getChild('pokeravatar')
@@ -959,9 +959,9 @@ class PokerAvatar:
                 
         elif packet.type == PACKET_POKER_TOURNEY_CANCEL:
             if self.getSerial() == packet.serial:
-                self.sendPacketVerbose(self.performPacketPokerTourneyStart(packet))
+                self.sendPacketVerbose(self.performPacketPokerTourneyCancel(packet))
             else:
-                self.log.warn("attempt to start tournament %d for player %d by player %d",
+                self.log.warn("attempt to cancel tournament %d for player %d by player %d",
                     packet.tourney_serial, packet.serial, self.getSerial()
                 )
                 
@@ -1082,17 +1082,23 @@ class PokerAvatar:
         
     def performPacketPokerTourneyStart(self, packet):
         can_perform_changes, error = self.canPerformTourneyChanges(packet.serial, packet.tourney_serial)
-        return error if not can_perform_changes else self.service.tourneyStart(self.service.tourneys[packet.tourney_serial])
+        if not can_perform_changes: return error
+        tourney = self.service.tourneys[packet.tourney_serial]
+        tourney.changeState(TOURNAMENT_STATE_RUNNING)
+        return PacketAck()
         
     def performPacketPokerTourneyCancel(self, packet):
         can_perform_changes, error = self.canPerformTourneyChanges(packet.serial, packet.tourney_serial)
-        return error if not can_perform_changes else self.service.tourneyCancel(self.service.tourneys[packet.tourney_serial])
+        if not can_perform_changes: return error
+        tourney = self.service.tourneys[packet.tourney_serial]
+        tourney.changeState(TOURNAMENT_STATE_CANCELED)
+        return PacketAck()
     
     def canPerformTourneyChanges(self, serial, tourney_serial):
         tourney = self.service.tourneys.get(tourney_serial,None)
         error = None
         
-        if tourney_serial not in self.service.tourneys.iterk is None:
+        if tourney_serial not in self.service.tourneys:
             error = PacketError(
                 other_type = PACKET_POKER_TOURNEY_START,
                 code = PacketPokerTourneyStart.DOES_NOT_EXIST,

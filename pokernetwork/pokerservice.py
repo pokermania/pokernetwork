@@ -1611,8 +1611,8 @@ class PokerService(service.Service):
         return packet
 
     def tourneyStart(self, tourney):
-        ''' \
-        start a registering tourney immediately.
+        '''start a registering tourney immediately.
+        
         if more than one player is registered, players_min and quota is set to the
         amount of the currently registered players.
         '''
