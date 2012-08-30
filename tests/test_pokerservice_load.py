@@ -1,4 +1,4 @@
-#!@PYTHON@
+#!/usr/bin/env python
 # -*- py-indent-offset: 4; coding: utf-8; mode: python -*-
 # more information about the above line at http://www.python.org/dev/peps/pep-0263/
 #
