@@ -47,7 +47,7 @@ def GetTestSuite():
     return suite
     
 #--------------------------------------------------------------
-def Run(verbose = 2):
+def Run(verbose = 1):
     return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
     
 #--------------------------------------------------------------

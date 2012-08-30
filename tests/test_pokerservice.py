@@ -324,7 +324,7 @@ monitor_settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 
   <listen tcp="19480" />
 
-  <monitor>%(tests_path)s/monitorplugin.py</monitor>
+  <monitor>tests.monitorplugin</monitor>
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database
     host="%(dbhost)s" name="%(dbname)s"
@@ -1988,7 +1988,17 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     def test18_cleanupTourneys_registering(self):
         cursor = self.db.cursor()
-        cursor.execute("INSERT INTO tourneys (serial, sit_n_go, name, start_time) VALUES (4000, 'n', 'regular3', " + str(testclock._seconds_value + 120) + ")")
+        cursor.execute("INSERT INTO tourneys SET "
+            "serial = 4000, "
+            "sit_n_go = 'n', "
+            "name = 'regular3', "
+            "description_long = 'no description long', "
+            "description_short = 'no description short', "
+            "variant = 'holdem', "
+            "betting_structure = '1-2-no-limit', "
+            "currency_serial = 1, "
+            "schedule_serial = 1,"
+            "start_time = %d" % (testclock._seconds_value + 120,))
         cursor.execute("INSERT INTO user2tourney VALUES (1, 1, 4000, 0, -1)")
         cursor.execute("INSERT INTO user2tourney VALUES (2, 1, 4000, 0, -1)")
         cursor.execute("INSERT INTO user2tourney VALUES (3, 1, 4000, 0, -1)")
@@ -6543,7 +6553,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
             self.service = pokerservice.PokerService(xml)
             self.service.setupTourneySelectInfo()
             caught = False
-        except exceptions.IOError:
+        except ImportError:
             caught = True
         self.assertEqual(True, caught)
 
@@ -6558,7 +6568,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
-  <tourney_select_info>%(tests_path)s/testfilter.py</tourney_select_info>
+  <tourney_select_info>tests.testfilter</tourney_select_info>
   <users temporary="BOT.*"/>
 </server>
 """ % {
@@ -6584,7 +6594,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
-  <tourney_select_info>%(tests_path)s/testtourney_select_info_no_call.py</tourney_select_info>
+  <tourney_select_info>tests.testtourney_select_info_no_call</tourney_select_info>
   <users temporary="BOT.*"/>
 </server>
 """ % {
@@ -6609,8 +6619,8 @@ class TourneySelectInfoTestCase(unittest.TestCase):
           <refill serial="1" amount="10000000" />
         
           <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-          <tourney_select_info settings="%(tests_path)s/testsettings.xml">%(tests_path)s/testtourney_select_info.py</tourney_select_info>
-          <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+          <tourney_select_info settings="%(tests_path)s/testsettings.xml">tests.testtourney_select_info</tourney_select_info>
+          <path>%(engine_path)s/conf %(tests_path)s/conf</path>
           <users temporary="BOT.*"/>
         </server>
         """ % {

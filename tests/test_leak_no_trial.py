@@ -25,6 +25,10 @@ from os import path
 
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
+sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
+
+from config import config
+import sqlmanager
 
 from twisted.internet import selectreactor, main
 class MyReactor(selectreactor.SelectReactor):
@@ -59,20 +63,35 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
   <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-  <database name="pokernetworktest" host="localhost" user="pokernetworktest" password="pokernetwork"
-            root_user="@MYSQL_TEST_DBROOT@" root_password="@MYSQL_TEST_DBROOT_PASSWORD@" schema="@srcdir@/../database/schema.sql" command="@MYSQL@" />
-  <path>.. ../@srcdir@ @POKER_ENGINE_PKGDATADIR@/conf @POKER_NETWORK_PKGSYSCONFDIR@</path>
+    <database
+        host="%(dbhost)s" name="%(dbname)s"
+        user="%(dbuser)s" password="%(dbuser_password)s"
+        root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+        schema="%(tests_path)s/../database/schema.sql"
+        command="%(mysql_command)s" />
+  <path>%(engine_path)s/conf %(tests_path)s/conf</path>
   <users temporary="BOT.*"/>
 </server>
-"""
+""" % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
+    'tests_path': TESTS_PATH,
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
+}
 
 class LeakTestCase:
 
-    def destroyDb(self, arg = None):
-        if len("@MYSQL_TEST_DBROOT_PASSWORD@") > 0:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ --password='@MYSQL_TEST_DBROOT_PASSWORD@' -e 'DROP DATABASE IF EXISTS pokernetworktest'")
-        else:
-            os.system("@MYSQL@ -u @MYSQL_TEST_DBROOT@ -e 'DROP DATABASE IF EXISTS pokernetworktest'")
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
 
     def initServer(self):
         settings = pokernetworkconfig.Config([])
@@ -158,7 +177,7 @@ class LeakTestCase:
         f(None, first, first, i)
 
 def run():
-    main.installReactor(MyReactor())
+    #main.installReactor(MyReactor())
     t = LeakTestCase()
     t.setUp()
     t.test01_ping()

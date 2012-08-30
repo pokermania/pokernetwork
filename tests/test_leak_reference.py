@@ -75,8 +75,9 @@ class LeakReferenceTestCase(unittest.TestCase):
         return d
 
 def GetTestSuite():
-    suite = runner.TestLoader().suiteFactory()
-    suite.addTest(unittest.makeSuite(LeakReferenceTestCase))
+    loader = runner.TestLoader()
+    suite = loader.suiteFactory()
+    suite.addTest(loader.loadClass(LeakReferenceTestCase))
     return suite
 
 def Run():

@@ -68,7 +68,7 @@ class PokerLockTestCase(unittest.TestCase):
     def setUp(self):
         self.log_history = log_history.Log()
         pokerlock.PokerLock.acquire_sleep = 1
-        self.parameters = {'host': 'localhost', 'user': 'root', 'password': 'holahola'}
+        self.parameters = {'host': config.test.mysql.host, 'user': config.test.mysql.root_user.name, 'password': config.test.mysql.root_user.password}
         pokerlock.PokerLock.queue_timeout = 30
         self.locker = pokerlock.PokerLock(self.parameters)
         self.locker.start()
@@ -456,17 +456,13 @@ class PokerLockTestCase(unittest.TestCase):
         self.locker.isAlive = oldIsAlive
 # ----------------------------------------------------------------
 def GetTestSuite():
-    suite = runner.TestSuite(PokerLockTestCase)
-    suite.addTest(unittest.makeSuite(PokerLockTestCase))
+    loader = runner.TestLoader()
+    suite = loader.suiteFactory()
+#    loader.methodPrefix = "test02"
+    suite.addTest(loader.loadClass(PokerLockTestCase))
     return suite
 # ----------------------------------------------------------------
-def GetTestedModule():
-    return currencyclient
-# ----------------------------------------------------------------
 def Run():
-    loader = runner.TestLoader()
-#    loader.methodPrefix = "test02"
-    suite = loader.loadClass(PokerLockTestCase)
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',

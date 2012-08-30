@@ -117,7 +117,7 @@ settings_xml_proxy = """<?xml version="1.0" encoding="UTF-8"?>
 
   <listen tcp="19480" />
 
-  <rest_filter>%(tests_path)s/../pokernetwork/sessionproxyfilter.py</rest_filter>
+  <rest_filter>pokernetwork.sessionproxyfilter</rest_filter>
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database

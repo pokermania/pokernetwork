@@ -203,7 +203,7 @@ def GetTestSuite():
     return suite
 
 def Run():
-    main.installReactor(MyReactor())
+    #main.installReactor(MyReactor())
     return runner.TrialRunner(
         reporter.TextReporter,
         tracebackFormat='default',

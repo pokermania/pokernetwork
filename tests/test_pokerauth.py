@@ -488,7 +488,7 @@ def GetTestSuite():
     
 # -----------------------------------------------------------------------------------------------------
 def Run(verbose = 1):
-    return unittest.TextTestRunner(verbosity=2).run(GetTestSuite())
+    return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
     
 # -----------------------------------------------------------------------------------------------------
 if __name__ == '__main__':

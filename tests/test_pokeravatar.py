@@ -31,6 +31,7 @@ sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
 import log_history
+import sqlmanager
 
 import locale
 import libxml2
@@ -112,7 +113,7 @@ settings_xml_server = """\
         root_user="%(dbroot)s" root_password="%(dbroot_password)s"
         schema="%(tests_path)s/../database/schema.sql"
         command="%(mysql_command)s" />
-    <tourney_select_info>%(tests_path)s/testtourney_select_info.py</tourney_select_info>
+    <tourney_select_info>tests.testtourney_select_info</tourney_select_info>
     <path>%(engine_path)s/conf %(tests_path)s/conf</path>
     <users temporary="BOT.*"/>
 </server>
@@ -160,22 +161,12 @@ settings_xml_client = """\
 class PokerAvatarTestCaseBaseClass(unittest.TestCase):
     timeout = 500
 
-    def destroyDb(self, arg=None):
-        if len(config.test.mysql.root_user.password) > 0:
-            os.system("%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
-                'mysql_command': config.test.mysql.command,
-                'dbroot': config.test.mysql.root_user.name,
-                'dbroot_password': config.test.mysql.root_user.password,
-                'dbhost': config.test.mysql.host,
-                'dbname': config.test.mysql.database
-            })
-        else:
-            os.system("%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
-                'mysql_command': config.test.mysql.command,
-                'dbroot': config.test.mysql.root_user.name,
-                'dbhost': config.test.mysql.host,
-                'dbname': config.test.mysql.database
-            })
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
 
     def createTourneysSchedules(self):
         stmts = []
@@ -4557,7 +4548,7 @@ settings_xml_table_picker_server = """<?xml version="1.0" encoding="UTF-8"?>
         root_user="%(dbroot)s" root_password="%(dbroot_password)s"
         schema="%(tests_path)s/../database/schema.sql"
         command="%(mysql_command)s" />
-    <tourney_select_info>%(tests_path)s/testtourney_select_info.py</tourney_select_info>
+    <tourney_select_info>testtourney_select_info</tourney_select_info>
     <path>%(engine_path)s/conf %(tests_path)s/conf</path>
     <users temporary="BOT.*"/>
 </server>

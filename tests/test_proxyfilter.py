@@ -85,7 +85,7 @@ settings_xml_proxy = """<?xml version="1.0" encoding="UTF-8"?>
 
   <listen tcp="19480" />
 
-  <rest_filter>%(tests_path)s/../pokernetwork/proxyfilter.py</rest_filter>
+  <rest_filter>pokernetwork.proxyfilter</rest_filter>
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database
@@ -274,7 +274,19 @@ class ProxyTestCase(unittest.TestCase):
         #
         db = self.server_service.db
         cursor = db.cursor()
-        cursor.execute("INSERT INTO tourneys_schedule (resthost_serial, active, start_time, description_long) VALUES (%s, 'y', %s, '')", ( self.server_service.resthost_serial, seconds() + 36000))
+        cursor.execute("INSERT INTO tourneys_schedule SET "
+            "resthost_serial = %(rh_serial)d, "
+            "active = 'y', "
+            "start_time = %(stime)d, "
+            "description_long = 'no description long', "
+            "name = 'regularX', "
+            "variant = 'holem', "
+            "betting_structure = '1-2-no-limit', "
+            "currency_serial = 1" % {
+                'rh_serial': self.server_service.resthost_serial,
+                'stime': seconds() + 36000
+            }
+        )
         schedule_serial = cursor.lastrowid
         self.server_service.updateTourneysSchedule()
         cursor.execute("SELECT serial FROM tourneys WHERE schedule_serial = %s", schedule_serial)

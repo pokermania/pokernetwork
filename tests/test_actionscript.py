@@ -204,48 +204,48 @@ class ActionScriptGenerator:
         if self.type.type in ( clientpackets.PACKET_NONE, clientpackets.PACKET_BOOTSTRAP ):
             return
         info = self.type.info[2:]
-        print "// code for " + clientpackets.PacketNames[self.type.type] + " "  + str(info)
-        print "public class " + self.type.__name__ + " extends Packet"
-        print "{"
+        #print "// code for " + clientpackets.PacketNames[self.type.type] + " "  + str(info)
+        #print "public class " + self.type.__name__ + " extends Packet"
+        #print "{"
         for (variable, default, pack_type) in info:
             if pack_type == 'no net':
                 continue
-            print "\tpublic var " + variable + ":" + self.pack_type2as_type(pack_type) + ";"
-        print 
-        print "\tpublic override function unpack(bytes:ByteArray):ByteArray"
-        print "\t{"
-        print "\t\tbytes = super.unpack(bytes);"
+            #print "\tpublic var " + variable + ":" + self.pack_type2as_type(pack_type) + ";"
+        #print 
+        #print "\tpublic override function unpack(bytes:ByteArray):ByteArray"
+        #print "\t{"
+        #print "\t\tbytes = super.unpack(bytes);"
         for field in info:
             if field[2] == 'no net':
                 continue
-            for line in self.field2as_unpack(field):
-                print "\t\t" + line
-        print "\t\treturn bytes;"
-        print "\t}"
-        print 
-        print "\tpublic override function pack():ByteArray"
-        print "\t{"
-        print "\t\tvar bytes:ByteArray = super.pack();"
+            #for line in self.field2as_unpack(field):
+                #print "\t\t" + line
+        #print "\t\treturn bytes;"
+        #print "\t}"
+        #print 
+        #print "\tpublic override function pack():ByteArray"
+        #print "\t{"
+        #print "\t\tvar bytes:ByteArray = super.pack();"
         for field in info:
             if field[2] == 'no net':
                 continue
-            for line in self.field2as_pack(field):
-                print "\t\t" + line
-        print "\t\treturn bytes;"
-        print "\t}"
-        print 
-        print "\tpublic override function calcsize():int"
-        print "\t{"
-        print "\t\tvar size:int = super.calcsize();"
+            #for line in self.field2as_pack(field):
+                #print "\t\t" + line
+        #print "\t\treturn bytes;"
+        #print "\t}"
+        #print 
+        #print "\tpublic override function calcsize():int"
+        #print "\t{"
+        #print "\t\tvar size:int = super.calcsize();"
         for field in info:
             if field[2] == 'no net':
                 continue
-            for line in self.field2as_calcsize(field):
-                print "\t\t" + line
-        print "\t\treturn size;"
-        print "\t}"
+            #for line in self.field2as_calcsize(field):
+                #print "\t\t" + line
+        #print "\t\treturn size;"
+        #print "\t}"
 
-        print "}"
+        #print "}"
         
     
 class ActionScriptGeneratorTestCase(unittest.TestCase):
@@ -259,37 +259,37 @@ class ActionScriptGeneratorTestCase(unittest.TestCase):
                 classes.append(c)
             else:
                 classes.append('null')
-        print "Packet.types = Array(" + ", ".join(classes) + ");"
+        #print "Packet.types = Array(" + ", ".join(classes) + ");"
 
-        print """
-public class Packet
-{
-        public static var types:Array = new Array();
-
-        public var type:int;
-        public var length:int;
-
-        public function unpack(bytes:ByteArray):ByteArray
-        {
-                    this.type = bytes.readUnsignedByte();
-                    this.length = bytes.readUnsignedShort();
-                return bytes;
-        }
-
-        public function pack():ByteArray
-        {
-                    var bytes:ByteArray = new ByteArray();
-                bytes.writeUnsignedByte(this.type);
-                bytes.writeUnsignedShort(this.calcsize());
-                return bytes;
-        }
-
-        public function calcsize():int
-        {
-                return 3;
-        }
-}
-"""
+        #print """
+#public class Packet
+#{
+#        public static var types:Array = new Array();
+#
+#        public var type:int;
+#        public var length:int;
+#
+#        public function unpack(bytes:ByteArray):ByteArray
+#        {
+#                    this.type = bytes.readUnsignedByte();
+#                    this.length = bytes.readUnsignedShort();
+#                return bytes;
+#        }
+#
+#        public function pack():ByteArray
+#        {
+#                    var bytes:ByteArray = new ByteArray();
+#                bytes.writeUnsignedByte(this.type);
+#                bytes.writeUnsignedShort(this.calcsize());
+#                return bytes;
+#        }
+#
+#        public function calcsize():int
+#        {
+#                return 3;
+#        }
+#}
+#"""
         for type in xrange(0, 255):
             if clientpackets.PacketFactory.has_key(type):
                 ascript = ActionScriptGenerator(clientpackets.PacketFactory[type])
@@ -302,7 +302,7 @@ def GetTestSuite():
     return suite
     
 #--------------------------------------------------------------
-def Run(verbose = 2):
+def Run(verbose = 1):
     return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
     
 #--------------------------------------------------------------

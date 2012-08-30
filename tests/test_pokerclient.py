@@ -98,7 +98,7 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
     root_user="%(dbroot)s" root_password="%(dbroot_password)s"
     schema="%(tests_path)s/../database/schema.sql"
     command="%(mysql_command)s" />
-  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+  <path>%(engine_path)s/conf %(tests_path)s/conf</path>
   <users temporary="BOT.*"/>
 </server>
 """ % {
@@ -130,7 +130,7 @@ settings_xml_client = """<?xml version="1.0" encoding="UTF-8"?>
   <shadow>yes</shadow>
   <vprogram>yes</vprogram>
   
-  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+  <path>%(engine_path)s/conf %(tests_path)s/conf</path>
   <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
@@ -1459,7 +1459,7 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
                 settings = self.settings, config = config)
             self.fail("previous line should have thrown exception")
         except UserWarning, uw:
-            self.assertEquals(uw.__str__(), "PokerClientFactory: no /sequence/chips found in None")
+            self.assertEquals(uw.__str__(), "PokerClientFactory: no /sequence/chips found in <string>")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
     # ---------------------------------------------------------------------------
@@ -1475,7 +1475,7 @@ class PokerClientFactoryUnitMethodCoverageTestCase(unittest.TestCase):
                 settings = self.settings, config = config)
             self.fail("previous line should have thrown exception")
         except UserWarning, uw:
-            self.assertEquals(uw.__str__(), "PokerClientFactory: no /sequence/chips found in None")
+            self.assertEquals(uw.__str__(), "PokerClientFactory: no /sequence/chips found in <string>")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
     # ---------------------------------------------------------------------------

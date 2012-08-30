@@ -155,11 +155,11 @@ def GetTestSuite():
 def GetTestedModule():
     return pokerservice
 # ----------------------------------------------------------------
-def Run(verbose):
+def Run(verbose=1):
     return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
 # ----------------------------------------------------------------
 if __name__ == '__main__':
-    if Run(2).wasSuccessful():
+    if Run().wasSuccessful():
         sys.exit(0)
     else:
         sys.exit(1)

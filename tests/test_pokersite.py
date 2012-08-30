@@ -530,8 +530,8 @@ class FilterTestCase(unittest.TestCase):
             testclock._seconds_reset()        
             settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" >
-<rest_filter>%(tests_path)s/testfilter.py</rest_filter>
-<rest_filter>%(tests_path)s/../pokernetwork/nullfilter.py</rest_filter>
+<rest_filter>tests.testfilter</rest_filter>
+<rest_filter>pokernetwork.nullfilter</rest_filter>
 </server>
 """ % {
     'tests_path': TESTS_PATH
@@ -571,7 +571,7 @@ class FilterErrorTestCase(unittest.TestCase):
             testclock._seconds_reset()        
             settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" >
-<rest_filter>%(tests_path)s/testerrorfilter.py</rest_filter>
+<rest_filter>tests.testerrorfilter</rest_filter>
 </server>
 """ % {
     'tests_path': TESTS_PATH
@@ -614,7 +614,7 @@ class FilterFinishTestCase(unittest.TestCase):
             testclock._seconds_reset()        
             settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" >
-<rest_filter>%(tests_path)s/finishedfilter.py</rest_filter>
+<rest_filter>tests.finishedfilter</rest_filter>
 </server>
 """ % {
     'tests_path': TESTS_PATH

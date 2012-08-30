@@ -62,7 +62,7 @@ settings_xml_server_manhole = """\
     root_user="%(dbroot)s" root_password="%(dbroot_password)s"
     schema="%(tests_path)s/../database/schema.sql"
     command="%(mysql_command)s" />
-  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+  <path>%(engine_path)s/conf %(tests_path)s/conf</path>
   <users temporary="BOT.*"/>
 </server>
 """ % {
@@ -132,7 +132,7 @@ settings_xml_server_open_options = """<?xml version="1.0" encoding="UTF-8"?>
     root_user="%(dbroot)s" root_password="%(dbroot_password)s"
     schema="%(tests_path)s/../database/schema.sql"
     command="%(mysql_command)s" />
-  <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+  <path>%(engine_path)s/conf %(tests_path)s/conf</path>
   <users temporary="BOT.*"/>
 </server>
 """ % {
