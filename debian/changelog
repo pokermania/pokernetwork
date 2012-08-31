@@ -4,7 +4,7 @@ poker-network (2.2.2-1) pokermania; urgency=low
   * 6845464 tests for PacketPokerTourneyCancel and -Start implemented, refs #6221
   * 01019da PacketPokerTourneyCancel and -Start implemented, refs #6621
 
- -- Andor Goetzendorff <andor@pokermania.de>  Mon, 39 Aug 2012 11:00:00 +0200
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 30 Aug 2012 11:00:00 +0200
 
 poker-network (2.2.1-2) pokermania; urgency=low
 
