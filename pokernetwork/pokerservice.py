@@ -207,6 +207,8 @@ class PokerService(service.Service):
         # hand cache
         self.hand_cache = OrderedDict()
 
+        self.timer_remove_player = {}
+
     def setupLadder(self):
         cursor = self.db.cursor()
         cursor.execute("SHOW TABLES LIKE 'rank'")
@@ -652,7 +654,7 @@ class PokerService(service.Service):
         return refill
 
     def updateTourneysSchedule(self):
-        self.log.debug("updateTourneysSchedule")
+        self.log.debug("updateTourneysSchedule. (%s)" % self.resthost_serial)
         cursor = self.db.cursor(DictCursor)
         try:
             sql = \
@@ -828,8 +830,9 @@ class PokerService(service.Service):
         tourney.callback_game_filled = self.tourneyGameFilled
         tourney.callback_destroy_game = self.tourneyDestroyGame
         tourney.callback_move_player = self.tourneyMovePlayer
-        tourney.callback_remove_player = self.tourneyRemovePlayer
+        tourney.callback_remove_player = self.tourneyRemovePlayerLater
         tourney.callback_cancel = self.tourneyCancel
+        tourney.callback_reenter_game = self.tourneyReenterGame
         if schedule_serial not in self.schedule2tourneys:
             self.schedule2tourneys[schedule_serial] = []
         self.schedule2tourneys[schedule_serial].append(tourney)
@@ -969,12 +972,16 @@ class PokerService(service.Service):
             table.broadcast(PacketPokerTableTourneyBreakDone(game_id = gameId))
 
     def tourneyEndTurn(self, tourney, game_id):
-        if not tourney.endTurn(game_id):
-            self.tourneyFinished(tourney)
-            self.tourneySatelliteWaitingList(tourney)
+        tourney.endTurn(game_id)
+        self.tourneyFinishHandler(tourney, game_id)
 
     def tourneyUpdateStats(self,tourney,game_id):
         tourney.stats.update(game_id)
+
+    def tourneyFinishHandler(self, tourney, game_id):
+        if not tourney.tourneyEnd(game_id):
+            self.tourneyFinished(tourney)
+            self.tourneySatelliteWaitingList(tourney)
 
     def tourneyFinished(self, tourney):
         prizes = tourney.prizes()
@@ -1132,27 +1139,52 @@ class PokerService(service.Service):
         finally:
             cursor.close()
 
-    def tourneyRemovePlayer(self, tourney, game_id, serial):
+    def tourneyReenterGame(self, game_id, serial):
+        self.log.debug('tourneyReenterGame game_id(%d) serial(%d)', game_id, serial)
+        timer = self.timer_remove_player[serial]
+        if timer.active(): timer.cancel()
+        del self.timer_remove_player[serial]
+
+    def tourneyRemovePlayerLater(self, tourney, game_id, serial, now=False):
+        table = self.getTable(game_id)
+        avatars = self.avatar_collection.get(serial)
+        for avatar in avatars:
+            table.sitOutPlayer(avatar, serial)
+        if not now:
+            if serial not in self.timer_remove_player:
+                self.timer_remove_player[serial] = reactor.callLater(20, self.tourneyRemovePlayer, tourney, serial)
+        else:
+            if serial in self.timer_remove_player:
+                if self.timer_remove_player[serial].active():
+                    self.timer_remove_player[serial].cancel()
+                del self.timer_remove_player[serial]
+            self.tourneyRemovePlayer(tourney, serial)
+
+
+    def tourneyRemovePlayer(self, tourney, serial):
+        self.log.debug('remove now tourney(%d) serial(%d)', tourney.serial, serial)
+        # the following line causes an IndexError if the player is not in any game. this is a good thing. 
+        table = [t for t in self.tables.itervalues() if t.tourney is tourney and serial in t.game.serial2player][0]
         cursor = self.db.cursor()
+        tourney.finallyRemovePlayer(serial)
         try:
             prizes = tourney.prizes()
             rank = tourney.getRank(serial)
             players = len(tourney.players)
             money = 0
-            if rank-1 < len(prizes):
+            if 0 <= rank-1 < len(prizes):
                 money = prizes[rank-1]
             avatars = self.avatar_collection.get(serial)
             if avatars:
                 packet = PacketPokerTourneyRank(
                     serial = tourney.serial,
-                    game_id = game_id,
+                    game_id = table.game.id,
                     players = players,
                     rank = rank,
                     money = money
                 )
                 for avatar in avatars:
                     avatar.sendPacketVerbose(packet)
-            table = self.getTable(game_id)
             table.kickPlayer(serial)
             cursor.execute(
                 "UPDATE user2tourney " \
@@ -1167,6 +1199,8 @@ class PokerService(service.Service):
             self.tourneySatelliteSelectPlayer(tourney, serial, rank)
         finally:
             cursor.close()
+
+        self.tourneyEndTurn(tourney, table.game.id)
 
     def tourneySatelliteLookup(self, tourney):
         if tourney.satellite_of == 0:

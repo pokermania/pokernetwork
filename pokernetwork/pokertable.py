@@ -1154,10 +1154,6 @@ class PokerTable:
             self.log.warn("player %d can't rebuy before paying the buy in", serial)
             return False
 
-        if self.transient:
-            self.log.warn("player %d can't rebuy on a transient table", serial)
-            return False
-
         maximum = self.game.maxBuyIn() - self.game.getPlayerMoney(serial)
         if maximum <= 0:
             self.log.warn("player %d can't bring more money to the table", serial)
@@ -1172,9 +1168,15 @@ class PokerTable:
             self.log.warn("player %d is broke and cannot rebuy", serial)
             return False
 
+        if self.tourney and not self.tourney.isRebuyAllowed(serial):
+            return False
+
         if not self.game.rebuy(serial, amount):
             self.log.warn("player %d rebuy denied", serial)
             return False
+
+        if self.tourney:
+            self.tourney.reenterGame(self.game.id, serial)
 
         self.broadcast(PacketPokerRebuy(
             game_id = self.game.id,
