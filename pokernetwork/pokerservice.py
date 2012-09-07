@@ -264,7 +264,7 @@ class PokerService(service.Service):
         self.cleanupCrashedTables()
         cleanup = self.settings.headerGet("/server/@cleanup")
         if cleanup != 'no':
-            self.cleanUp('^'+self.settings.headerGet("/server/users/@temporary")+'$')
+            self.cleanUp()
         self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
         self.poker_auth = get_auth_instance(self.db, self.memcache, self.settings)
@@ -2023,19 +2023,17 @@ class PokerService(service.Service):
         cursor.close()
         return ( result, game_id )
 
-    def cleanUp(self, temporary_users=''):
+    def cleanUp(self):
         cursor = self.db.cursor()
 
-        if len(temporary_users) > 2:
-            params = (temporary_users,)
-            sql = "DELETE session_history FROM session_history, users WHERE session_history.user_serial = users.serial AND users.name RLIKE %s"
-            cursor.execute(sql,params)
-            sql = "DELETE session FROM session, users WHERE session.user_serial = users.serial AND users.name RLIKE %s"
-            cursor.execute(sql,params)
-            sql = "DELETE user2tourney FROM user2tourney, users WHERE users.name RLIKE %s AND users.serial = user2tourney.user_serial"
-            cursor.execute(sql,params)
-            sql = "DELETE FROM users WHERE name RLIKE %s"
-            cursor.execute(sql,params)
+        sql = "DELETE session_history FROM session_history, users WHERE session_history.user_serial = users.serial AND users.serial > 2 AND users.serial < 1000"
+        cursor.execute(sql)
+        sql = "DELETE session FROM session, users WHERE session.user_serial = users.serial AND users.serial > 2 AND users.serial < 1000"
+        cursor.execute(sql)
+        sql = "DELETE user2tourney FROM user2tourney, users WHERE users.serial > 2 AND users.serial < 1000 AND users.serial = user2tourney.user_serial"
+        cursor.execute(sql)
+        sql = "DELETE FROM users WHERE users.serial > 2 AND users.serial < 1000"
+        cursor.execute(sql)
 
         sql = "INSERT INTO session_history ( user_serial, started, ended, ip ) SELECT user_serial, started, %s, ip FROM session"
         cursor.execute(sql,(seconds(),))

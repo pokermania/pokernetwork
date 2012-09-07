@@ -31,9 +31,6 @@
 from twisted.internet import reactor
 from twisted.python.runtime import seconds
 
-import re
-import traceback
-
 from pokerengine.pokergame import PokerGameServer
 from pokerengine import pokergame, pokertournament
 from pokerengine.pokercards import PokerCards
@@ -147,7 +144,6 @@ class PokerTable:
 
         self.delays = settings.headerGetProperties("/server/delays")[0]
         self.autodeal = settings.headerGet("/server/@autodeal") == "yes"
-        self.temporaryPlayersPattern = re.compile(settings.headerGet("/server/users/@temporary")+'$')
         self.autodealTemporary = settings.headerGet("/server/users/@autodeal_temporary") == 'yes'
         self.cache = createCache()
         self.owner = 0
@@ -608,11 +604,11 @@ class PokerTable:
             #
             onlyTemporaryPlayers = True
             for serial in self.game.serialsSit():
-                if not self.temporaryPlayersPattern.match(self.getName(serial)):
+                if not 2 < user_serial < 1000:
                     onlyTemporaryPlayers = False
                     break
             if onlyTemporaryPlayers:
-                self.log.debug("Not autodealing because player names sit in match temporaryPlayersPattern")
+                self.log.debug("Not autodealing because player ids sit in are greater the 2 and smaller than 1000")
                 return
 
         delay = self.game_delay["delay"]
