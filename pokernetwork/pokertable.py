@@ -604,7 +604,7 @@ class PokerTable:
             #
             onlyTemporaryPlayers = True
             for serial in self.game.serialsSit():
-                if not 2 < user_serial < 1000:
+                if not 2 < serial < 1000:
                     onlyTemporaryPlayers = False
                     break
             if onlyTemporaryPlayers:
