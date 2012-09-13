@@ -2656,17 +2656,6 @@ class PokerService(service.Service):
         )
         cursor.close()
 
-    def tableMoneyAndBet(self, table_id):
-        cursor = self.db.cursor()
-        cursor.execute("SELECT sum(money), sum(bet) FROM user2table WHERE table_serial = %s",(table_id,))
-        (money, bet) = cursor.fetchone()
-        cursor.close()
-        if not money: money = 0
-        elif type(money) == StringType: money = int(money)
-        if not bet: bet = 0
-        elif type(bet) == StringType: bet = int(bet)
-        return (money, bet)
-
     def destroyTable(self, table_id):
 
 #         # HACK CHECK

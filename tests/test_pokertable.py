@@ -239,9 +239,6 @@ class MockService:
         self.hand_serial += 1
         return self.hand_serial
 
-    def tableMoneyAndBet(self, table_id):
-        return (0, 500)
-
     def leavePlayer(self, serial, table_id, currency_serial):
         if serial in self.players:
             del self.players[serial]
@@ -2382,7 +2379,6 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         game = table.game
         self.service.has_ladder = False
         table.factory.buyInPlayer = lambda *a,**kw: table.game.maxBuyIn()
-        table.factory.tableMoneyAndBet = lambda *a,**kw: (0,0)
         
         def addPlayerAndReorder(self, *a,**kw):
             was_added = self.addPlayerOrig(*a,**kw)

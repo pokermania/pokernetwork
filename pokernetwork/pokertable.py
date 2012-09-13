@@ -415,14 +415,6 @@ class PokerTable:
 
         if reset_bet:
             self.factory.resetBet(self.game.id)
-        elif hasattr(self, "factory"):
-            bet = self.factory.tableMoneyAndBet(self.game.id)[1]
-            if bet and self.game.potAndBetsAmount() != bet:
-                self.log.warn("table %d bet mismatch %d in memory versus %d in database",
-                    self.game.id,
-                    self.game.potAndBetsAmount(),
-                    bet
-                )
 
     def compressedHistory(self, history):
         new_history = []
