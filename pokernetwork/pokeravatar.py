@@ -125,7 +125,8 @@ class PokerAvatar:
         self.user.privilege = User.REGULAR if serial != 2 else User.ADMIN
         self.user.url = player_info.url
         self.user.outfit = player_info.outfit
-        self._setDefaultLocale(player_info.locale)
+        if hasattr(player_info, 'locale'):
+            self._setDefaultLocale(player_info.locale)
 
         if self.explain:
             self.explain.handleSerial(PacketSerial(serial = serial))
@@ -142,7 +143,8 @@ class PokerAvatar:
         player_info = self.service.getPlayerInfo(serial)
         self.user.url = player_info.url
         self.user.outfit = player_info.outfit
-        self._setDefaultLocale(player_info.locale)
+        if hasattr(player_info, 'locale'):
+            self._setDefaultLocale(player_info.locale)
 
         self.sendPacketVerbose(PacketSerial(serial = self.user.serial))
         if PacketPokerRoles.PLAY in self.roles:
