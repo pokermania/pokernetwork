@@ -263,7 +263,7 @@ class PokerService(service.Service):
         self.setupResthost()
         self.cleanupCrashedTables()
         cleanup = self.settings.headerGet("/server/@cleanup")
-        if cleanup != 'no':
+        if cleanup == 'yes':
             self.cleanUp()
         self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
