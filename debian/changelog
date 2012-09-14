@@ -1,3 +1,14 @@
+poker-network (2.2.2-2) pokermania; urgency=low
+
+  * ef4973e smaller MockCursor for deadlock test, refs #6829
+  * a00b248 Execute Query again if it fails the first (2) time(s) while moving a player, refs #6829
+  * a530f5e support serial range and names, refs #6852
+  * 5c1b64a deleted tableMoneyAndBet which caused 20% of sql querys for utter nonsense
+  * bcdca0d cleanup has to be set to "yes" to cleanup temporary users, refs #6850
+  * 2c353f4 temporary_users werden nun anhand der Serial ermittelt fixes #6765
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Fri, 14 Sep 2012 16:00:00 +0200
+
 poker-network (2.2.2-1) pokermania; urgency=low
 
   * 7c7339f now using new import paths in config file, fixes #6578
