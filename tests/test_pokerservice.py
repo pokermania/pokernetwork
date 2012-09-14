@@ -400,8 +400,8 @@ class CleanUpTestCase(PokerServiceTestCaseBase):
         cursor.execute("INSERT INTO users (serial, name, password, created) VALUES (43, 'BOTAA', 'passwordAA', 0)")
         cursor.execute("INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (43, 1, 200)")
         cursor.execute("INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (44, 1, 200)")
-        self.service.cleanUp('BOT')
-        cursor.execute("SELECT COUNT(*) FROM users WHERE name like 'BOT%'")
+        self.service.cleanUp('^BOT.*$')
+        cursor.execute("SELECT COUNT(*) FROM users WHERE name RLIKE '^BOT.*$'")
         self.assertEqual(0, cursor.fetchone()[0])
         #
         # Bot removed from tourney

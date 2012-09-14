@@ -27,6 +27,7 @@
 #  Bradley M. Kuhn <bkuhn@ebb.org> (2008-)
 #  Henry Precheur <henry@precheur.org> (2004)
 #
+import re
 
 from twisted.internet import reactor
 from twisted.python.runtime import seconds
@@ -144,7 +145,10 @@ class PokerTable:
 
         self.delays = settings.headerGetProperties("/server/delays")[0]
         self.autodeal = settings.headerGet("/server/@autodeal") == "yes"
-        self.autodealTemporary = settings.headerGet("/server/users/@autodeal_temporary") == 'yes'
+        self.temporary_users_pattern = re.compile('^'+settings.headerGet("/server/users/@temporary")+'$')
+        self.temporary_serial_min = settings.headerGetInt("/server/users/@temporary_serial_min")
+        self.temporary_serial_max = settings.headerGetInt("/server/users/@temporary_serial_max")
+        self.autodeal_temporary = settings.headerGet("/server/users/@autodeal_temporary") == 'yes'
         self.cache = createCache()
         self.owner = 0
         self.avatar_collection = PokerAvatarCollection("Table%d" % id)
@@ -569,39 +573,42 @@ class PokerTable:
         self.cancelDealTimeout()
         if self.factory.shutting_down:
             self.log.debug("Not autodealing because server is shutting down")
-            return
+            return False
         if not self.autodeal:
             self.log.debug("No autodeal")
-            return
+            return False
         if self.isRunning():
             self.log.debug("Not autodealing %d because game is running", self.game.id)
-            return
+            return False
         if self.game.state == pokergame.GAME_STATE_MUCK:
             self.log.debug("Not autodealing %d because game is in muck state", self.game.id)
-            return
+            return False
         if self.game.sitCount() < 2:
             self.log.debug("Not autodealing %d because less than 2 players willing to play", self.game.id)
-            return
+            return False
         if self.game.isTournament():
             if self.tourney:
                 if self.tourney.state != pokertournament.TOURNAMENT_STATE_RUNNING:
                     self.log.debug("Not autodealing %d because in tournament state %s", self.game.id, self.tourney.state)
                     if self.tourney.state == pokertournament.TOURNAMENT_STATE_BREAK_WAIT:
                         self.broadcastMessage(PacketPokerGameMessage, "Tournament will break when the other tables finish their hand")
-                    return
-        elif not self.autodealTemporary:
+                    return False
+        elif not self.autodeal_temporary:
             #
             # Do not auto deal a table where there are only temporary
             # users (i.e. bots)
             #
-            onlyTemporaryPlayers = True
+            only_temporary_users = True
             for serial in self.game.serialsSit():
-                if not 2 < serial < 1000:
-                    onlyTemporaryPlayers = False
+                if not (
+                    self.temporary_serial_min <= serial <= self.temporary_serial_max or 
+                    self.temporary_users_pattern.match(self.getName(serial))
+                ):
+                    only_temporary_users = False
                     break
-            if onlyTemporaryPlayers:
-                self.log.debug("Not autodealing because player ids sit in are greater the 2 and smaller than 1000")
-                return
+            if only_temporary_users:
+                self.log.debug("Not autodealing because players are categorized as temporary")
+                return False
 
         delay = self.game_delay["delay"]
         if not self.allReadyToPlay() and delay > 0:
@@ -618,6 +625,7 @@ class PokerTable:
         self.log.debug("AutodealCheck scheduled in %f seconds", delta)
         autodeal_check = max(0.01, float(self.delays.get("autodeal_check", 15)))
         self.timer_info["dealTimeout"] = reactor.callLater(min(autodeal_check, delta), self.autoDealCheck, autodeal_check, delta)
+        return True
 
     def updatePlayerUserData(self, serial, key, value):
         if self.game.isSeated(serial):

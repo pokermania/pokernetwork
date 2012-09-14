@@ -616,24 +616,46 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     def test01_autodeal(self):
         self.createPlayer(1)
         self.createPlayer(2)
-        self.table.scheduleAutoDeal()
-        return defer.DeferredList((self.clients[1].waitFor(PACKET_POKER_START),
-                                   self.clients[2].waitFor(PACKET_POKER_START)))
+        self.assertEquals(True, self.table.scheduleAutoDeal())
+        return defer.DeferredList([
+            self.clients[1].waitFor(PACKET_POKER_START),
+            self.clients[2].waitFor(PACKET_POKER_START)
+        ])
+    # -------------------------------------------------------------------
+    def test01_4_autodealTemporarySerials(self):
+        """Test that autodeal won't happen if the only users connected have 
+        serials in the range of being categorized temporary."""
+        self.table.temporary_serial_min, self.table.temporary_serial_max = 100, 110
+        self.createPlayer(100)
+        self.createPlayer(110)
+        self.assertEquals(False, self.table.scheduleAutoDeal())
+        
     # -------------------------------------------------------------------
     def test01_5_autodealWithBots(self):
-        """Test that autodeal won't happen when it's all bots sitting down.  I
-        wish there was a packet we could catch here to confirm, but I
-        can't even do a raise_if_packet because none are coming."""
+        """Test that autodeal won't happen when it's all bots sitting down."""
         self.createBot(1)
         self.createBot(2)
-        self.createBot(3)
-        self.assertEquals(None, self.table.scheduleAutoDeal())
+        self.assertEquals(False, self.table.scheduleAutoDeal())
+        
+    # -------------------------------------------------------------------
+    def test01_6_autodealWithBotsDealTemporary(self):
+        """Test that autodeal will happen when it's all bots sitting down, 
+        and autodeal_temporary is set on true"""
+        self.createBot(1)
+        self.createBot(2)
+        self.table.autodeal_temporary = True
+        self.assertEquals(True, self.table.scheduleAutoDeal())
+        return defer.DeferredList([
+            self.clients[1].waitFor(PACKET_POKER_START),
+            self.clients[2].waitFor(PACKET_POKER_START)
+        ])
+        
     # -------------------------------------------------------------------
     def test01_7_autodealShutDown(self):
         self.createPlayer(1)
         self.createPlayer(2)
         self.service.shutting_down = True
-        self.assertEquals(None, self.table.scheduleAutoDeal())
+        self.assertEquals(False, self.table.scheduleAutoDeal())
 
     # -------------------------------------------------------------------
     def test01_8_testClientsBogusPokerProcessingHand(self):
