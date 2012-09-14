@@ -5891,6 +5891,47 @@ class PokerServiceCoverageTests(unittest.TestCase):
                         "second message wrong")
 
         self.service.db = oldDb
+
+    def test59b_movePlayer_DB_update_fail(self):
+        class MockCursor(MockCursorBase):
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, ["SELECT money FROM user2table"])
+                cursorSelf._executed = ''
+                cursorSelf.cnt = 0
+            def execute(self, *args):
+                sql = args[0]
+                params = args[1] if len(args)>1 else []
+                if '%s' in sql:
+                    sql = sql % tuple(map(MockCursorBase.literal, params))
+
+                self.row = (1500, )
+                self.executed = sql
+                if sql.startswith('SELECT money FROM user2table'):
+                    self.rowcount = 1
+                elif sql.startswith('UPDATE user2table SET table_serial'):
+                    if self.cnt == 0:
+                        self.cnt += 1
+                        raise Exception('ha')
+                    else:
+                        self.rowcount = 1
+                        self.row = tuple()
+            #def fetchone(self):
+            #    return (15000, )
+            pass
+
+        self.service = pokerservice.PokerService(self.settings)
+
+        oldDb = self.service.db
+        self.service.db = MockDatabase(MockCursor)
+
+        self.log_history.reset()
+        def foo(*args, **kw):
+            pass
+        self.service.databaseEvent = foo
+        self.service.stopServiceFinish = foo
+        #import rpdb2; rpdb2.start_embedded_debugger('bla')
+        self.assertEquals(1500, self.service.movePlayer(9356, 1249, 6752))
+
     def test60_leavePlayer_updateRowCountTooHigh(self):
         validStatements = ["UPDATE user2money,user2table,pokertables", "DELETE FROM user2table"]
         class MockCursor(MockCursorBase):

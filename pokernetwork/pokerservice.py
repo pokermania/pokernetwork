@@ -2535,32 +2535,42 @@ class PokerService(service.Service):
 
     def movePlayer(self, serial, from_table_id, to_table_id):
         cursor = self.db.cursor()
-        cursor.execute(
-            "SELECT money FROM user2table " \
-            "WHERE user_serial = %s " \
-            "AND table_serial = %s",
-            (serial,from_table_id)
-        )
-        if cursor.rowcount != 1:
-            self.log.error("movePlayer(%d) expected one row got %d", serial, cursor.rowcount)
-        (money,) = cursor.fetchone()
-        cursor.close()
-
-        if money > 0:
-            cursor = self.db.cursor()
+        try:
             cursor.execute(
-                "UPDATE user2table " \
-                "SET table_serial = %s " \
+                "SELECT money FROM user2table " \
                 "WHERE user_serial = %s " \
                 "AND table_serial = %s",
-                (to_table_id,serial,from_table_id)
+                (serial,from_table_id)
             )
-            self.log.debug("movePlayer: %s", cursor._executed)
             if cursor.rowcount != 1:
-                self.log.error("modified %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
-                money = -1
-            cursor.close()
+                self.log.error("movePlayer(%d) expected one row got %d", serial, cursor.rowcount)
+            (money,) = cursor.fetchone()
 
+            if money > 0:
+                sql = "UPDATE user2table " \
+                    "SET table_serial = %s " \
+                    "WHERE user_serial = %s " \
+                    "AND table_serial = %s"
+                params = (to_table_id,serial,from_table_id)
+                error_cnt = 0
+                for i in xrange(3):
+                    # blablaba
+                    try:
+                        cursor.execute( sql, params)
+                        break
+                    except:
+                        self.log.warn("ERROR: couldn't execute %r with params %r for %s times" % (sql, params,error_cnt))
+                        if i >= 3:
+                            raise
+
+
+                self.log.debug("movePlayer: %s", cursor._executed)
+                if cursor.rowcount != 1:
+                    self.log.error("modified %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
+                    money = -1
+
+        finally:
+            cursor.close()
         return money
 
     def leavePlayer(self, serial, table_id, currency_serial):
@@ -2703,26 +2713,13 @@ class PokerService(service.Service):
 #         self.log.debug("setRating: %s", content)
 
     def resetBet(self, table_id):
-        status = True
         cursor = self.db.cursor()
-        sql = ( "update user2table set bet = 0 "
-                " where table_serial = " + str(table_id) )
-        self.log.debug("resetBet: %s", sql)
-        cursor.execute(sql)
-        cursor.close()
-
-#         # HACK CHECK
-#         cursor = self.db.cursor()
-#         sql = ( "select sum(money), sum(bet) from user2table" )
-#         cursor.execute(sql)
-#         (money,bet) = cursor.fetchone()
-#         if money + bet != 120000:
-#             self.log.warn("BUG(2) %d", money + bet)
-#             os.abort()
-#         cursor.close()
-#         # END HACK CHECK
-
-        return status
+        try:
+            cursor.execute("UPDATE user2table SET bet = 0 WHERE table_serial = %s", (table_id,))
+            self.log.debug("resetBet: %s", cursor._executed)
+        finally:
+            cursor.close()
+        return True
 
     def getTable(self, game_id):
         return self.tables.get(game_id, False)
