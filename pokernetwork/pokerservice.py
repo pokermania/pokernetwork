@@ -2552,17 +2552,15 @@ class PokerService(service.Service):
                     "WHERE user_serial = %s " \
                     "AND table_serial = %s"
                 params = (to_table_id,serial,from_table_id)
-                error_cnt = 0
-                for i in xrange(3):
-                    # blablaba
+                
+                for error_cnt in xrange(3):
                     try:
-                        cursor.execute( sql, params)
+                        cursor.execute(sql, params)
                         break
                     except:
                         self.log.warn("ERROR: couldn't execute %r with params %r for %s times" % (sql, params,error_cnt))
-                        if i >= 3:
+                        if error_cnt >= 3:
                             raise
-
 
                 self.log.debug("movePlayer: %s", cursor._executed)
                 if cursor.rowcount != 1:

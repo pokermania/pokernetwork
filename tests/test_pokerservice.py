@@ -5893,32 +5893,20 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.db = oldDb
 
     def test59b_movePlayer_DB_update_fail(self):
+        acceptList = ["SELECT money FROM user2table","UPDATE user2table SET table_serial"]
         class MockCursor(MockCursorBase):
             def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, ["SELECT money FROM user2table"])
-                cursorSelf._executed = ''
-                cursorSelf.cnt = 0
-            def execute(self, *args):
-                sql = args[0]
-                params = args[1] if len(args)>1 else []
-                if '%s' in sql:
-                    sql = sql % tuple(map(MockCursorBase.literal, params))
-
-                self.row = (1500, )
-                self.executed = sql
-                if sql.startswith('SELECT money FROM user2table'):
-                    self.rowcount = 1
-                elif sql.startswith('UPDATE user2table SET table_serial'):
-                    if self.cnt == 0:
-                        self.cnt += 1
-                        raise Exception('ha')
-                    else:
-                        self.rowcount = 1
-                        self.row = tuple()
-            #def fetchone(self):
-            #    return (15000, )
-            pass
-
+                cursorSelf.select_counter = 0
+                MockCursorBase.__init__(cursorSelf, self, acceptList)
+            def statementActions(cursorSelf, sql, statement):
+                if statement == "SELECT money FROM user2table":
+                    cursorSelf.row = (1500,)
+                elif statement == "UPDATE user2table SET table_serial":
+                    cursorSelf.select_counter += 1
+                    if cursorSelf.select_counter == 1:
+                        raise Exception('Deadlock found when trying to get lock; try restarting transaction')
+                cursorSelf.rowcount = 1
+                
         self.service = pokerservice.PokerService(self.settings)
 
         oldDb = self.service.db
