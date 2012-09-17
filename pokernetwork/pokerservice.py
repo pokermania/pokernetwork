@@ -35,6 +35,9 @@ import locale
 import gettext
 import libxml2
 
+try: from collections import OrderedDict
+except ImportError: from pokernetwork.ordereddict import OrderedDict
+
 from pokernetwork import log as network_log
 log = network_log.getChild('pokerservice')
 
@@ -46,7 +49,6 @@ from twisted.web import client
 
 # disable noisy on HTTPClientFactory
 client.HTTPClientFactory.noisy = False
-
 
 try:
     from OpenSSL import SSL
@@ -194,6 +196,9 @@ class PokerService(service.Service):
         self._lock_check_locked = False
         self._lock_check_running = None
         self._lock_check_break = None
+        #
+        # hand cache
+        self.hand_cache = OrderedDict()
 
     def setupLadder(self):
         cursor = self.db.cursor()
@@ -1707,7 +1712,13 @@ class PokerService(service.Service):
             serial2name = str(serial2name)
         )
 
-    def loadHand(self, hand_serial):
+    def loadHand(self, hand_serial, load_from_cache=True):
+        #
+        # load from hand_cache if needed and available
+        if load_from_cache and hand_serial in self.hand_cache:
+            return self.hand_cache[hand_serial]
+        #
+        # else fetch the hand from the database
         cursor = self.db.cursor()
         sql = "SELECT description FROM hands WHERE serial = %s"
         cursor.execute(sql,(hand_serial,))
@@ -1724,11 +1735,16 @@ class PokerService(service.Service):
             self.log.error("loadHand(%d) eval failed for %s", hand_serial, description, exc_info=1)
         return history
 
-    def saveHand(self, description, hand_serial):
+    def saveHand(self, description, hand_serial, save_to_cache=True):
         (hand_type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = description[0] #@UnusedVariable
+        #
+        # save the value to the hand_cache if needed
+        if save_to_cache:
+            for obsolete_hand_serial in self.hand_cache.keys()[:-3]:
+                del self.hand_cache[obsolete_hand_serial]
+            self.hand_cache[hand_serial] = description
         
         cursor = self.db.cursor()
-        
         sql = "UPDATE hands SET description = %s WHERE serial = %s"
         params = (str(description), hand_serial)
         cursor.execute(sql, params)
@@ -1737,7 +1753,6 @@ class PokerService(service.Service):
             self.log.error("modified %d rows (expected 1 or 0): %s", cursor.rowcount, cursor._executed)
             cursor.close()
             return
-
         sql = "INSERT INTO user2hand VALUES "
         sql += ", ".join("(%d, %d)" % (player_serial, hand_serial) for player_serial in player_list)
         cursor.execute(sql)
