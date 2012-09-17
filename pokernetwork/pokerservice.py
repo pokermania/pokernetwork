@@ -160,8 +160,8 @@ class PokerService(service.Service):
         self.client_queued_packet_max = self.settings.headerGetInt("/server/@max_queued_client_packets")
         if self.client_queued_packet_max <= 0: self.client_queued_packet_max = 500
         
+        self.throttle = settings.headerGet('/server/@throttle') == 'yes'
         self.delays = settings.headerGetProperties("/server/delays")[0]
-        
         self.chunk_size = settings.headerGetInt("/server/@chunk_size")
         
         refill = settings.headerGetProperties("/server/refill")
