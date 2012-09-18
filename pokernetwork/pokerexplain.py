@@ -821,18 +821,15 @@ class PokerExplain:
                     packets.append(packet)
 
         for (serial, best) in game.serial2best.iteritems():
-            for (side, (value, bestcards)) in best.iteritems():
+            valid_best_items = ((side,valuation) for (side,valuation) in best.iteritems() if valuation)
+            for (side, (_value, bestcards)) in valid_best_items:
                 if serial in game.side2winners[side]:
-                    if len(bestcards) > 1:
+                    if bestcards:
                         side = game.isHighLow() and side or ""
-                        if side == "low":
-                            hand = ""
-                        else:
-                            hand = game.readableHandValueShort(side, bestcards[0], bestcards[1:])
+                        side = side if game.isHighLow() else ""
                         cards = game.getPlayer(serial).hand.toRawList()
-                        best_hand = 0
-                        if serial == serial_delta_max:
-                            best_hand = 1
+                        hand = game.readableHandValueShort(side, bestcards[0], bestcards[1:]) if side == "low" else ""
+                        best_hand = 1 if serial == serial_delta_max else 0
                         packets.append(PacketPokerBestCards(
                             game_id = game.id,
                             serial = serial,
