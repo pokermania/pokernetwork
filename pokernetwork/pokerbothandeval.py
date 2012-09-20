@@ -54,9 +54,8 @@ class PokerHandEval:
         hand = game.getHandAsString(serial)
         board = game.getBoardAsString()
         board_list = board.split(" ")
-        if len(board_list) < 5:
-            for i in range(len(board_list), 5):
-                board_list.append("__")
+        for _i in range(len(board_list), 5):
+            board_list.append("__")
         hand_list = hand.split(" ")
         cards = hand_list + board_list
         return self.eval.best_hand("hi", self.eval.string2card(cards), [] )
