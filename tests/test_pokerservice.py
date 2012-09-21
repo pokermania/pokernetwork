@@ -6649,7 +6649,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
           <refill serial="1" amount="10000000" />
         
           <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
-          <tourney_select_info settings="%(tests_path)s/testsettings.xml">tests.testtourney_select_info</tourney_select_info>
+          <tourney_select_info settings="%(tests_path)s/conf/tourney_select_info.xml">tests.testtourney_select_info</tourney_select_info>
           <path>%(engine_path)s/conf %(tests_path)s/conf</path>
           <users temporary="BOT.*"/>
         </server>
@@ -6662,7 +6662,7 @@ class TourneySelectInfoTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_TOURNEY_INFO, self.service.tourneySelectInfo('packet', 'tourneys').type)
         self.assertEqual('tourneys', self.service.tourney_select_info.tourneys)
         self.assertEqual('packet', self.service.tourney_select_info.packet)
-        self.assertTrue(self.service.tourney_select_info.settings.path.find('testsettings.xml'))
+        self.assertTrue(self.service.tourney_select_info.settings.path.find('tourney_select_info.xml'))
 
     def test05_non_specified(self):
         xml = """<?xml version="1.0" encoding="UTF-8"?>
