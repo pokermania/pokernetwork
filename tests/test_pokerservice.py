@@ -391,16 +391,17 @@ class MonitorTestCase(unittest.TestCase):
         cursor.execute("SELECT COUNT(*) FROM monitor WHERE event = 1")
         self.assertEquals(1, cursor.rowcount)
 
-class CleanUpTestCase(PokerServiceTestCaseBase):
+class CleanUpTemporaryUsersTestCase(PokerServiceTestCaseBase):
 
-    def test01_cleanUp(self):
+    def test01_cleanUpTemporaryUsers(self):
         self.service.startService()
         db = self.service.db
         cursor = db.cursor()
         cursor.execute("INSERT INTO users (serial, name, password, created) VALUES (43, 'BOTAA', 'passwordAA', 0)")
         cursor.execute("INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (43, 1, 200)")
         cursor.execute("INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (44, 1, 200)")
-        self.service.cleanUp('^BOT.*$')
+        self.service.temporary_users_pattern = '^BOT.*$'
+        self.service.cleanUpTemporaryUsers()
         cursor.execute("SELECT COUNT(*) FROM users WHERE name RLIKE '^BOT.*$'")
         self.assertEqual(0, cursor.fetchone()[0])
         #
@@ -6740,7 +6741,7 @@ def GetTestSuite():
     suite.addTest(loader.loadClass(GetTableBestByCriteriaTestCase))
     suite.addTest(loader.loadClass(TourneySelectTestCase))
     suite.addTest(loader.loadClass(PlayerPlacesTestCase))
-    suite.addTest(loader.loadClass(CleanUpTestCase))
+    suite.addTest(loader.loadClass(CleanUpTemporaryUsersTestCase))
     suite.addTest(loader.loadClass(ResthostTestCase))
     suite.addTest(loader.loadClass(PokerFactoryFromPokerServiceTestCase))
     suite.addTest(loader.loadClass(PokerServiceCoverageTests))

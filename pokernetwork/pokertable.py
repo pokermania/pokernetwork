@@ -145,9 +145,6 @@ class PokerTable:
 
         self.delays = settings.headerGetProperties("/server/delays")[0]
         self.autodeal = settings.headerGet("/server/@autodeal") == "yes"
-        self.temporary_users_pattern = re.compile('^'+settings.headerGet("/server/users/@temporary")+'$')
-        self.temporary_serial_min = settings.headerGetInt("/server/users/@temporary_serial_min")
-        self.temporary_serial_max = settings.headerGetInt("/server/users/@temporary_serial_max")
         self.autodeal_temporary = settings.headerGet("/server/users/@autodeal_temporary") == 'yes'
         self.cache = createCache()
         self.owner = 0
@@ -600,10 +597,7 @@ class PokerTable:
             #
             only_temporary_users = True
             for serial in self.game.serialsSit():
-                if not (
-                    self.temporary_serial_min <= serial <= self.temporary_serial_max or 
-                    self.temporary_users_pattern.match(self.getName(serial))
-                ):
+                if not self.factory.isTemporaryUser(serial):
                     only_temporary_users = False
                     break
             if only_temporary_users:

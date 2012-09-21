@@ -150,6 +150,7 @@ class PokerService(service.Service):
             settings_object.header = settings_object.doc.xpathNewContext()
             settings = settings_object
         self.settings = settings
+        
         self.joined_max = self.settings.headerGetInt("/server/@max_joined")
         if self.joined_max <= 0: self.joined_max = 4000
         
@@ -182,10 +183,17 @@ class PokerService(service.Service):
             for path in settings.header.xpathEval("/server/monitor")
         ]
         self.chat_filter = None
-        self.remove_completed = self.settings.headerGetInt("/server/@remove_completed")
+        self.remove_completed = settings.headerGetInt("/server/@remove_completed")
         self.getPage = client.getPage
         self.long_poll_timeout = settings.headerGetInt("/server/@long_poll_timeout")
         if self.long_poll_timeout <= 0: self.long_poll_timeout = 20
+        #
+        #
+        self.temporary_users_cleanup = self.settings.headerGet("/server/@cleanup") == "yes" 
+        self.temporary_users_pattern = '^'+settings.headerGet("/server/users/@temporary")+'$'
+        self.temporary_serial_min = settings.headerGetInt("/server/users/@temporary_serial_min")
+        self.temporary_serial_max = settings.headerGetInt("/server/users/@temporary_serial_max")
+
         #
         #badwords list
         chat_filter_filepath = settings.headerGet("/server/badwordschatfilter/@file")
@@ -267,12 +275,9 @@ class PokerService(service.Service):
         self.setupLadder()
         self.setupResthost()
         self.cleanupCrashedTables()
-        cleanup = self.settings.headerGet("/server/@cleanup")
-        if cleanup == 'yes':
-            temporary_users_pattern = '^'+self.settings.headerGet("/server/users/@temporary")+'$'
-            temporary_serial_min = self.settings.headerGetInt("/server/users/@temporary_serial_min")
-            temporary_serial_max = self.settings.headerGetInt("/server/users/@temporary_serial_max")
-            self.cleanUp(temporary_users_pattern, temporary_serial_min, temporary_serial_max)
+        
+        if self.temporary_users_cleanup: self.cleanUpTemporaryUsers()
+        
         self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
         self.poker_auth = get_auth_instance(self.db, self.memcache, self.settings)
@@ -2041,10 +2046,9 @@ class PokerService(service.Service):
         cursor.close()
         return ( result, game_id )
 
-    def cleanUp(self, temporary_users_pattern='^$', serial_min=0, serial_max=0):
+    def cleanUpTemporaryUsers(self):
         cursor = self.db.cursor()
-        
-        params = (serial_min,serial_max,temporary_users_pattern)
+        params = (self.temporary_serial_min,self.temporary_serial_max,self.temporary_users_pattern)
         sql = "DELETE session_history FROM session_history, users WHERE session_history.user_serial = users.serial AND (users.serial BETWEEN %s AND %s OR users.name RLIKE %s)"
         cursor.execute(sql,params)
         sql = "DELETE session FROM session, users WHERE session.user_serial = users.serial AND (users.serial BETWEEN %s AND %s OR users.name RLIKE %s)"
@@ -2245,6 +2249,12 @@ class PokerService(service.Service):
             serial = serial[0]
         return self.getPlayerPlaces(serial)
 
+    def isTemporaryUser(self,serial):
+        return (
+            self.temporary_serial_min <= serial <= self.temporary_serial_max or 
+            re.match(self.temporary_users_pattern,self.getName(serial))
+        )
+        
     def getUserInfo(self, serial):
         cursor = self.db.cursor(DictCursor)
 
