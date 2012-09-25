@@ -1,3 +1,14 @@
+poker-network (2.2.2-3) pokermania; urgency=low
+
+  * 451779c some fixes found out during tourney_rebuy development
+  * ee82f65 removed obsolete chunk_size field
+  * 9ab23d6 added isTemporaryUser, refs #6913
+  * 1111594 squash commit for #4956
+  * 9e57959 add hand_cache in service, used by saveHand/loadHand, refs #6879
+  * 76fa08d add throttle option in service object, refs #6879
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 25 Sep 2012 16:00:00 +0200
+
 poker-network (2.2.2-2) pokermania; urgency=low
 
   * ef4973e smaller MockCursor for deadlock test, refs #6829
