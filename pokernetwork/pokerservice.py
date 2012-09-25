@@ -1034,7 +1034,8 @@ class PokerService(service.Service):
         return True
 
     def tourneyDeleteRoute(self, tourney):
-        key = 'tourney_delete_route_%d' % id(tourney)
+        key = 'tourney_delete_route_%d' % tourney.serial
+        if key in self.timer: return
         wait = int(self.delays.get('extra_wait_tourney_finish', 0))
         def doTourneyDeleteRoute():
             self.cancelTimer(key)
@@ -2249,7 +2250,7 @@ class PokerService(service.Service):
         return self.getPlayerPlaces(serial)
 
     def isTemporaryUser(self,serial):
-        return (
+        return bool(
             self.temporary_serial_min <= serial <= self.temporary_serial_max or 
             re.match(self.temporary_users_pattern,self.getName(serial))
         )
