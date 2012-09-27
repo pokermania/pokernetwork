@@ -140,7 +140,7 @@ class PokerBot:
                 ))
                 
         elif packet.type == PACKET_AUTH_OK:
-            log.info('bot credentials are ok for user %s', protocol.user.name)
+            log.inform('bot credentials are ok for user %s', protocol.user.name)
             self.state = STATE_RECONNECTING
             
         elif packet.type == PACKET_AUTH_REFUSED:
