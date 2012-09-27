@@ -25,17 +25,24 @@
 #  Loic Dachary <loic@dachary.org>
 #  Henry Precheur <henry@precheur.org> (2004)
 #
+
+from pokernetwork import log as network_log
+log = network_log.getChild('pokerbot')
+
+
 import sys
+import os
 sys.path.insert(0, "..")
 
 import platform
 from os.path import exists
 from random import randint
 
-from pokernetwork import log as network_log
-log = network_log.getChild('pokerbot')
-
 from twisted.application import internet, service, app
+
+from twisted.python import log as twisted_log
+from reflogging import TwistedHandler, SingleLineFormatter
+import logging
 
 if platform.system() != "Windows":
     if 'twisted.internet.reactor' not in sys.modules:
@@ -230,6 +237,16 @@ def makeService(configuration):
     settings = pokernetworkconfig.Config([''])
     settings.load(configuration)
 
+    log_level = int(os.environ['LOG_LEVEL']) \
+        if 'LOG_LEVEL' in os.environ \
+        else settings.headerGetInt("/server/@log_level")
+        
+    logger = logging.getLogger()
+    handler = TwistedHandler(twisted_log.theLogPublisher)
+    handler.setFormatter(SingleLineFormatter('[%(refs)s] %(message)s'))
+    logger.addHandler(handler)
+    logger.setLevel(log_level or logging.WARNING)
+    
     PokerBotFactory.string_generator = StringGenerator(settings.headerGet("/settings/@name_prefix"))
     PokerBot.note_generator = NoteGenerator(settings.headerGet("/settings/currency"))
 
@@ -284,6 +301,7 @@ def makeService(configuration):
     return services
 
 def run():
+    twisted_log.startLogging(sys.stdout)
     application = makeApplication(sys.argv[1:])
     app.startApplication(application, None)
     reactor.run()
