@@ -208,7 +208,7 @@ class PokerBot:
             
         elif packet.type == PACKET_POKER_SEAT:
             if packet.seat == -1:
-                self.log.inform("Not allowed to get a seaet, give up")
+                self.log.inform("Not allowed to get a seat, give up")
                 protocol.transport.loseConnection()
 
         elif packet.type == PACKET_POKER_ERROR or packet.type == PACKET_ERROR:

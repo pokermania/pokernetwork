@@ -146,7 +146,6 @@ class PokerBotFactory(PokerClientFactory):
         self.bot.parent.removeService(self.bot)
         
     def clientConnectionLost(self, connector, reason):
-        reconnect = False
         if self.reconnect:
             if self.went_broke:
                 if 'name' not in self.kwargs:
@@ -159,13 +158,11 @@ class PokerBotFactory(PokerClientFactory):
                 self.log.debug("%s Re-establishing in %d seconds.", self.name, delay)
                 self.disconnected_volontarily = False
                 reactor.callLater(delay, connector.connect)
-                reconnect = True
         else:
             self.log.debug("The bot server connection to %s was closed, reason: %s",
                 self.join_info['name'],
                 reason if not reason.check(error.ConnectionDone) else None
             )
-        if not reconnect:
             self.bot.parent.removeService(self.bot)
 
 class Bots(service.MultiService):
