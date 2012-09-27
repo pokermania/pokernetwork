@@ -118,15 +118,13 @@ class PokerBot:
     def bootstrap(self, protocol):
         user = protocol.user
         protocol.sendPacket(PacketPokerSetRole(roles = PacketPokerRoles.PLAY))
-        protocol.sendPacket(PacketLogin(name = user.name,
-                                        password = user.password))
+        protocol.sendPacket(PacketLogin(name = user.name, password = user.password))
         protocol.sendPacket(PacketPokerTableSelect(string = "my"))
-        self.state = STATE_RECONNECTING
         
     def _handleConnection(self, protocol, packet):
 
         if packet.type == PACKET_BOOTSTRAP:
-            reactor.callLater(self.factory.serial * 0.1, lambda: self.bootstrap(protocol))
+            reactor.callLater(self.factory.serial * 0.1, self.bootstrap, protocol)
             
         elif packet.type == PACKET_POKER_BATCH_MODE:
             self.state = STATE_BATCH
@@ -140,6 +138,14 @@ class PokerBot:
                     serial=packet.serial,
                     **dict(zip(('url', 'bserial', 'name', 'value'), note))
                 ))
+                
+        elif packet.type == PACKET_AUTH_OK:
+            log.info('bot credentials are ok for user %s', protocol.user.name)
+            self.state = STATE_RECONNECTING
+            
+        elif packet.type == PACKET_AUTH_REFUSED:
+            log.error('bot credentials are wrong for user %s', protocol.user.name)
+            protocol.transport.loseConnection()
             
         elif packet.type == PACKET_POKER_STREAM_MODE:
             self.state = STATE_RUNNING
@@ -154,17 +160,12 @@ class PokerBot:
                 for table in packet.packets:
                     if table.name == table_info["name"]:
                         found = True
-                        protocol.sendPacket(PacketPokerTableJoin(game_id = table.id,
-                                                                 serial = protocol.getSerial()))
+                        protocol.sendPacket(PacketPokerTableJoin(game_id = table.id, serial = protocol.getSerial()))
                         if not self.factory.watch:
-                            protocol.sendPacket(PacketPokerSeat(game_id = table.id,
-                                                                serial = protocol.getSerial()))
-                            protocol.sendPacket(PacketPokerBuyIn(game_id = table.id,
-                                                                 serial = protocol.getSerial()))
-                            protocol.sendPacket(PacketPokerAutoBlindAnte(game_id = table.id,
-                                                                         serial = protocol.getSerial()))
-                            protocol.sendPacket(PacketPokerSit(game_id = table.id,
-                                                               serial = protocol.getSerial()))
+                            protocol.sendPacket(PacketPokerSeat(game_id = table.id, serial = protocol.getSerial()))
+                            protocol.sendPacket(PacketPokerBuyIn(game_id = table.id, serial = protocol.getSerial()))
+                            protocol.sendPacket(PacketPokerAutoBlindAnte(game_id = table.id, serial = protocol.getSerial()))
+                            protocol.sendPacket(PacketPokerSit(game_id = table.id, serial = protocol.getSerial()))
                         break
 
                 if not found:
@@ -177,10 +178,8 @@ class PokerBot:
                     self.lookForGame(protocol)
                 elif len(tables) == 1:
                     table = tables[0]
-                    protocol.sendPacket(PacketPokerTableJoin(game_id = table.id,
-                                                             serial = protocol.getSerial()))
-                    protocol.sendPacket(PacketPokerSit(game_id = table.id,
-                                                       serial = protocol.getSerial()))
+                    protocol.sendPacket(PacketPokerTableJoin(game_id = table.id, serial = protocol.getSerial()))
+                    protocol.sendPacket(PacketPokerSit(game_id = table.id, serial = protocol.getSerial()))
                     self.state = STATE_RUNNING
                 else:
                     self.log.inform("Unexpected number of tables %d", len(tables))
@@ -227,7 +226,6 @@ class PokerBot:
                     giveup = False
             elif packet.other_type == PACKET_POKER_REBUY or packet.other_type == PACKET_POKER_BUY_IN:
                 self.factory.went_broke = True
-
             if giveup:
                 self.log.error("%s", packet)
             if giveup:
@@ -235,8 +233,7 @@ class PokerBot:
             
         elif packet.type == PACKET_POKER_BLIND_REQUEST:
             if packet.serial == protocol.getSerial():
-                protocol.sendPacket(PacketPokerBlind(game_id = packet.game_id,
-                                                     serial = packet.serial))
+                protocol.sendPacket(PacketPokerBlind(game_id = packet.game_id, serial = packet.serial))
 
         elif packet.type == PACKET_POKER_PLAYER_LEAVE:
             if packet.serial == protocol.getSerial():
@@ -252,10 +249,8 @@ class PokerBot:
                     game = self.factory.packet2game(packet)
                     serial = protocol.getSerial()
                     if ( game and game.isBroke(serial) ):
-                        protocol.sendPacket(PacketPokerRebuy(game_id = game.id,
-                                                             serial = serial))
-                        protocol.sendPacket(PacketPokerSit(game_id = game.id,
-                                                           serial = serial))
+                        protocol.sendPacket(PacketPokerRebuy(game_id = game.id, serial = serial))
+                        protocol.sendPacket(PacketPokerSit(game_id = game.id, serial = serial))
             
         elif packet.type == PACKET_POKER_SELF_IN_POSITION:
             game = self.factory.packet2game(packet)
@@ -329,10 +324,7 @@ class PokerBot:
         self.log.debug("%s serial = %d, hand = %s, board = %s", name, serial, game.getHandAsString(serial), game.getBoardAsString())
         self.log.debug("%s wants to %s (ev = %d)", name, desired_action, ev)
         self.log.inform("%s serial = %d, hand = %s, board = %s",
-            name,
-            serial,
-            game.getHandAsString(serial),
-            game.getBoardAsString()
+            name, serial, game.getHandAsString(serial), game.getBoardAsString()
         )
         self.log.inform("%s wants to %s (ev = %d)", name, desired_action, ev)
         while not desired_action in actions:
@@ -344,19 +336,14 @@ class PokerBot:
                 desired_action = "call"
 
         if desired_action == "fold":
-            protocol.sendPacket(PacketPokerFold(game_id = game.id,
-                                                serial = serial))
+            protocol.sendPacket(PacketPokerFold(game_id = game.id, serial = serial))
         elif desired_action == "check":
-            protocol.sendPacket(PacketPokerCheck(game_id = game.id,
-                                                 serial = serial))
+            protocol.sendPacket(PacketPokerCheck(game_id = game.id, serial = serial))
         elif desired_action == "call":
-            protocol.sendPacket(PacketPokerCall(game_id = game.id,
-                                                serial = serial))
+            protocol.sendPacket(PacketPokerCall(game_id = game.id, serial = serial))
         elif desired_action == "raise":
             (min_bet, max_bet, to_call) = game.betLimits(serial)
-            protocol.sendPacket(PacketPokerRaise(game_id = game.id,
-                                                 serial = serial,
-                                                 amount = min_bet * 2))
+            protocol.sendPacket(PacketPokerRaise(game_id = game.id, serial = serial, amount = min_bet * 2))
         else:
             self.log.warn("=> unexpected actions = %s", actions)
         self.factory.can_disconnect = True

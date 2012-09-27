@@ -71,7 +71,7 @@ class PokerBotProtocol(PokerClientProtocol):
         if self.factory.disconnect_delay:
             delay = randint(*self.factory.disconnect_delay)
             self.log.debug("%s: will disconnect in %d seconds (for kicks)", self.user.name, delay)
-            reactor.callLater(delay, lambda: self.disconnectMyself(self.user.name))
+            reactor.callLater(delay, self.disconnectMyself, self.user.name)
 
     def disconnectMyself(self, name):
         if name == self.user.name:
@@ -82,7 +82,7 @@ class PokerBotProtocol(PokerClientProtocol):
             else:
                 delay = randint(*self.factory.disconnect_delay)
                 self.log.debug("%s: scheduled disconnect not allowed, will try again in %d seconds (for kicks)", self.user.name, delay)
-                reactor.callLater(delay, lambda: self.disconnectMyself(self.user.name))
+                reactor.callLater(delay, self.disconnectMyself, self.user.name)
         
 class PokerBotFactory(PokerClientFactory):
 
@@ -105,10 +105,10 @@ class PokerBotFactory(PokerClientFactory):
         self.wait = settings.headerGetInt("/settings/@wait")
         self.disconnect_delay = settings.headerGet("/settings/@disconnect_delay")
         if self.disconnect_delay:
-            self.disconnect_delay = tuple(map(lambda x: int(x), self.disconnect_delay.split(',')))
+            self.disconnect_delay = tuple(map(int, self.disconnect_delay.split(',')))
         self.reconnect_delay = settings.headerGet("/settings/@reconnect_delay")
         if self.reconnect_delay:
-            self.reconnect_delay = tuple(map(lambda x: int(x), self.reconnect_delay.split(',')))
+            self.reconnect_delay = tuple(map(int, self.reconnect_delay.split(',')))
         self.currency = settings.headerGetInt("/settings/currency")
         self.currency_id = settings.headerGet("/settings/currency/@id")
         self.bot = None
@@ -124,6 +124,8 @@ class PokerBotFactory(PokerClientFactory):
         pokerbot = PokerBot(self)
         protocol._poll = False
         protocol.registerHandler(True, PACKET_BOOTSTRAP, pokerbot._handleConnection)
+        protocol.registerHandler(True, PACKET_AUTH_OK, pokerbot._handleConnection)
+        protocol.registerHandler(True, PACKET_AUTH_REFUSED, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_ERROR, pokerbot._handleConnection)
         protocol.registerHandler('outbound', PACKET_SERIAL, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_BATCH_MODE, pokerbot._handleConnection)
@@ -273,7 +275,7 @@ def makeService(configuration):
     for table in settings.headerGetProperties("/settings/table"):
         table['tournament'] = False
         if 'count' in table:
-            for i in range(0, int(table["count"])):
+            for _i in range(0, int(table["count"])):
                 create_bot(settings = settings,
                            join_info = table,
                            serial = bot_serial.next())

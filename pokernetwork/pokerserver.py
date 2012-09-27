@@ -83,7 +83,7 @@ def makeService(configuration):
             "Unsupported log level %d. Supported log levels "
             "are DEBUG(10), INFO(20), WARNING(30), ERROR(40), CRITICAL(50)." % (log_level,)
         )
-    logger.setLevel(log_level if log_level else logging.WARNING)
+    logger.setLevel(log_level or logging.WARNING)
 
     #
     # Poker protocol (with or without SSL)
