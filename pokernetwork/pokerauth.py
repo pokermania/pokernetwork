@@ -33,12 +33,9 @@ from pokerpackets.packets import PACKET_LOGIN, PACKET_AUTH
 from pokernetwork import log as network_log
 log = network_log.getChild("pokerauth")
 
-def _import(m):
-    from imp import load_module as _load, find_module as _find
-    m, _m = m.split('.'), None
-    for i in range(len(m)):
-        _m = _load(".".join(m[:i+1]), *_find(m[i], _m and [_m.__file__.rsplit('/', 1)[0]]))
-    return _m
+def _import(path):
+    module = __import__(path)
+    return eval(path.replace(path.split('.')[0], 'module', 1))
 
 class PokerAuth:
 
@@ -139,7 +136,7 @@ def get_auth_instance(db, memcache, settings):
         if script:
             try:
                 log.debug("get_auth_instance: trying to load: '%s'", script)
-                get_instance = getattr(_import(script), "get_auth_instance")
+                get_instance = _import(script).get_auth_instance
                 log.debug("get_auth_instance: using custom implementation of get_auth_instance: %s", script)
                 _get_auth_instance = get_instance
             except:

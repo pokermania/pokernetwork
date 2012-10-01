@@ -88,12 +88,9 @@ UPDATE_TOURNEYS_SCHEDULE_DELAY = 2 * 60
 CHECK_TOURNEYS_SCHEDULE_DELAY = 60
 DELETE_OLD_TOURNEYS_DELAY = 1 * 60 * 60
 
-def _import(m):
-    from imp import load_module as _load, find_module as _find
-    m, _m = m.split('.'), None
-    for i in range(len(m)):
-        _m = _load(".".join(m[:i+1]), *_find(m[i], _m and [_m.__file__.rsplit('/', 1)[0]]))
-    return _m
+def _import(path):
+    module = __import__(path)
+    return eval(path.replace(path.split('.')[0], 'module', 1))
 
 class IPokerService(Interface):
 
@@ -178,7 +175,7 @@ class PokerService(service.Service):
         self.resthost_serial = 0
         self.has_ladder = None
         self.monitor_plugins = [
-            getattr(_import(path.content), 'handle_event')
+            _import(path.content).handle_event
             for path in settings.header.xpathEval("/server/monitor")
         ]
         self.chat_filter = None
