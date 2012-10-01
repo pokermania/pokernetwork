@@ -39,7 +39,9 @@ log = network_log.getChild('site')
 
 def _import(path):
     module = __import__(path)
-    return eval(path.replace(path.split('.')[0], 'module', 1))
+    for i in path.split(".")[1:]:
+        module = getattr(module, i)
+    return return module
 
 def args2packets(args):
     return (arg2packet(arg)[0] for arg in args)

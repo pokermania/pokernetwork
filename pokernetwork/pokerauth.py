@@ -35,7 +35,9 @@ log = network_log.getChild("pokerauth")
 
 def _import(path):
     module = __import__(path)
-    return eval(path.replace(path.split('.')[0], 'module', 1))
+    for i in path.split(".")[1:]:
+        module = getattr(module, i)
+    return return module
 
 class PokerAuth:
 

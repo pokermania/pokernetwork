@@ -90,7 +90,9 @@ DELETE_OLD_TOURNEYS_DELAY = 1 * 60 * 60
 
 def _import(path):
     module = __import__(path)
-    return eval(path.replace(path.split('.')[0], 'module', 1))
+    for i in path.split(".")[1:]:
+        module = getattr(module, i)
+    return return module
 
 class IPokerService(Interface):
 
