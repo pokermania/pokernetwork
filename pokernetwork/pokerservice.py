@@ -92,7 +92,7 @@ def _import(path):
     module = __import__(path)
     for i in path.split(".")[1:]:
         module = getattr(module, i)
-    return return module
+    return module
 
 class IPokerService(Interface):
 

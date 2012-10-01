@@ -41,7 +41,7 @@ def _import(path):
     module = __import__(path)
     for i in path.split(".")[1:]:
         module = getattr(module, i)
-    return return module
+    return module
 
 def args2packets(args):
     return (arg2packet(arg)[0] for arg in args)
