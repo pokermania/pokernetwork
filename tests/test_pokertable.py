@@ -2017,7 +2017,7 @@ class MockServiceWithLadder(MockService):
     def getLadder(self, game_id, currency_serial, user_serial):
         self.calledLadderMockup = user_serial
         return PacketPokerPlayerStats()
-
+    
 # --------------------------------------------------------------------------------
 class PokerTableMoveTestCase(PokerTableTestCaseBase):
     def setUp(self, ServiceClass = MockServiceWithLadder):
@@ -2493,14 +2493,91 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)
         d1.addCallback(firstGame)
         return d1
+    
+    def test56_strange(self):
+        self.table = table = self.table9
+        game = table.game
+        self.service.has_ladder = False
+        table.factory.buyInPlayer = lambda *a,**kw: table.game.maxBuyIn()
+        
+        def addPlayerAndReorder(self, *a,**kw):
+            was_added = self.addPlayerOrig(*a,**kw)
+            if was_added:
+                self.serial2player = OrderedDict(sorted(self.serial2player.items(),key=lambda (k,v):od_order.index(k)))
+            return was_added
+        
+        game.addPlayerOrig = game.addPlayer
+        game.addPlayer = lambda *a,**kw: addPlayerAndReorder(game,*a,**kw) 
+        
+        clients_all = {}
+        clients = {}        
+        s_sit = [61615, 106548, 1789, 43743]
+        s_all = [61615, 1789, 43743, 106548, 40712]
+        s_seats = [0,1,2,4,5,6,7,8,9]
+        od_order = [61615, 106548, 1789, 43743, 40712]
+        
+        def checkPlayerlistAndMoney():
+            pl = game.player_list
+            mm = game.moneyMap()
+            for client in clients_all.values():
+                client_game = client.explain.games.getGame(game.id)
+                self.assertTrue(pl==client_game.player_list)
+                self.assertTrue(mm==client_game.moneyMap())
+                
+        def joinAndSeat(serial,should_sit,pos,explain=True):
+            clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            if explain:
+                client.setExplain(PacketPokerExplain.REST)
+            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
+            table.game.noAutoBlindAnte(serial)
+            if should_sit:
+                clients[serial] = client
+                table.sitPlayer(client, serial)
+            table.update()
+        
+        #
+        # get seats for all players
+        for pos,serial in enumerate(s_all):
+            joinAndSeat(serial,serial in s_sit,s_seats[pos])
+        #
+        # setup game (forced_dealer does not work because of first_turn == False)
+        table.game.dealer_seat = 1
+        table.game.first_turn = False
+        #
+        # put missed_blind on None, if not all missed_blinds are reset
+        for serial in s_all:
+            table.game.serial2player[serial].missed_blind = None
+        #
+        # setup 49610 
+        table.game.serial2player[40712].missed_blind = 'small'
+        #
+        def firstGame(packet):
+            clients[40712] = clients_all[40712]
+            s_sit.append(40712)
+            self.assertFalse(table.seatPlayer(clients[40712], 40712, -1))
+            table.game.noAutoBlindAnte(40712)
+            table.sitPlayer(clients[40712], 40712)
+            table.update()
+            table.game.blind(106548); table.update()
+            table.game.blind(61615)
+            table.update()
+                
+            
+        self.log_history.reset()
+        table.scheduleAutoDeal()
+        d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)
+        d1.addCallback(firstGame)
+        return d1
         
 # --------------------------------------------------------------------------------
 
 def GetTestSuite():
     seed(time.time())
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test50"
-#    os.environ['VERBOSE_T'] = '4'
+    # loader.methodPrefix = "_test"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarCollectionTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCase))

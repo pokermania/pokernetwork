@@ -432,6 +432,15 @@ class PokerExplain:
 
             elif packet.type == PACKET_POKER_IN_GAME:
                 game.setStaticPlayerList(packet.players)
+                
+                serial_in_position = game.getSerialInPosition()
+                game.buildPlayerList(None)
+                game.setPosition(
+                    game.player_list.index(serial_in_position) 
+                    if serial_in_position in game.player_list
+                    else -1
+                )
+                
                 for serial in game.serialsAll():
                     player = game.getPlayer(serial)
                     wait_for = player.wait_for
