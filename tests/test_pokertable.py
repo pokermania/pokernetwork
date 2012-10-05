@@ -21,6 +21,7 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys
+import re
 from os import path
 
 TESTS_PATH = path.dirname(path.realpath(__file__))
@@ -170,6 +171,9 @@ class MockService:
         self.joined_max = 1000
         self.chat_messages = []
         self.chat_filter = MockChatFilter()
+        self.temporary_serial_min = 0
+        self.temporary_serial_max = 0
+        self.temporary_users_pattern = '^BOT.*$'
 
     def getMissedRoundMax(self):
         return 5  # if you change this, change it in settings_xml above
@@ -205,7 +209,7 @@ class MockService:
         print "MockService " + message
         
     def getName(self, serial):
-        return "MockServiceName%d" % serial
+        return "MockServicePlayerName%d" % serial
 
     def getPlayerInfo(self, serial):
         class Dummy:
@@ -335,6 +339,13 @@ class MockService:
 
     def chatMessageArchive(self, player_serial, game_id, message):
         self.chat_messages.append((player_serial, game_id, message))
+    
+    def isTemporaryUser(self,serial):
+        return bool(
+            self.temporary_serial_min <= serial <= self.temporary_serial_max or 
+            re.match(self.temporary_users_pattern,self.getName(serial))
+        )        
+        
             
 class MockClient:
     class User:
@@ -616,39 +627,35 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     def test01_autodeal(self):
         self.createPlayer(1)
         self.createPlayer(2)
-        self.assertEquals(True, self.table.scheduleAutoDeal())
-        return defer.DeferredList([
-            self.clients[1].waitFor(PACKET_POKER_START),
-            self.clients[2].waitFor(PACKET_POKER_START)
-        ])
+        # test is run also in subclass where self.table.autodeal is False, hence the check for self.table.autodeal
+        self.assertEquals(self.table.autodeal, self.table.scheduleAutoDeal())
     # -------------------------------------------------------------------
     def test01_4_autodealTemporarySerials(self):
         """Test that autodeal won't happen if the only users connected have 
         serials in the range of being categorized temporary."""
-        self.table.temporary_serial_min, self.table.temporary_serial_max = 100, 110
+        self.service.temporary_serial_min, self.service.temporary_serial_max = 100, 110
         self.createPlayer(100)
         self.createPlayer(110)
         self.assertEquals(False, self.table.scheduleAutoDeal())
         
     # -------------------------------------------------------------------
-    def test01_5_autodealWithBots(self):
+    def test01_5_autodealWithTemporaryUsers(self):
         """Test that autodeal won't happen when it's all bots sitting down."""
-        self.createBot(1)
-        self.createBot(2)
+        self.service.temporary_users_pattern = '^MockServicePlayerName.*$'
+        self.createPlayer(1)
+        self.createPlayer(2)
         self.assertEquals(False, self.table.scheduleAutoDeal())
         
     # -------------------------------------------------------------------
     def test01_6_autodealWithBotsDealTemporary(self):
         """Test that autodeal will happen when it's all bots sitting down, 
         and autodeal_temporary is set on true"""
-        self.createBot(1)
-        self.createBot(2)
+        self.service.temporary_users_pattern = '^MockServicePlayerName.*$'
+        self.createPlayer(1)
+        self.createPlayer(2)
         self.table.autodeal_temporary = True
-        self.assertEquals(True, self.table.scheduleAutoDeal())
-        return defer.DeferredList([
-            self.clients[1].waitFor(PACKET_POKER_START),
-            self.clients[2].waitFor(PACKET_POKER_START)
-        ])
+        # test is run also in subclass where self.table.autodeal is False, hence the check for self.table.autodeal
+        self.assertEquals(self.table.autodeal, self.table.scheduleAutoDeal())
         
     # -------------------------------------------------------------------
     def test01_7_autodealShutDown(self):
@@ -678,8 +685,10 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         threeGetsStart.addCallback(checkValues)
 
         self.log_history.reset()
-        return defer.DeferredList((self.clients[2].waitFor(PACKET_POKER_START),
-                                   threeGetsStart))
+        return defer.DeferredList([
+            self.clients[2].waitFor(PACKET_POKER_START),
+            threeGetsStart
+        ])
     # -------------------------------------------------------------------
     def test02_autodeal_check(self):
         self.createPlayer(1)
@@ -912,7 +921,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
 
         self.log_history.reset()
         self.table.update()
-        self.assertEquals(self.log_history.get_all(), ['table %d bet mismatch 0 in memory versus 500 in database' % self.table.game.id, 'AutodealCheck scheduled in 0.000000 seconds'])
+        self.assertEquals(self.log_history.get_all(), ['AutodealCheck scheduled in 0.000000 seconds'])
 
         return expectPlayerAutoFold
     # -------------------------------------------------------------------
@@ -1001,7 +1010,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     # -------------------------------------------------------------------
     def test19_avatar_collection_empty(self):
         """Test replay of hand from pokertable"""
-        self.assertEqual("MockServiceName1", self.table.getName(1))
+        self.assertEqual("MockServicePlayerName1", self.table.getName(1))
         d = self.table.getPlayerInfo(1)
         self.failUnlessSubstring("MockServicePlayerInfo", d.name)
     # -------------------------------------------------------------------
@@ -1540,10 +1549,11 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         def failedToCancelTimeout():
             self.fail("existing playerTimeout was not replaced as expected")
 
-        self.table.timer_info = { 'playerTimeout' : 
-                                  reactor.callLater(20, failedToCancelTimeout), 
-                                  'playerTimeoutSerial' : 229 }
-                                  # Note: serial is diff from one in position
+        self.table.timer_info = { 
+            'playerTimeout': reactor.callLater(20, failedToCancelTimeout), 
+            'playerTimeoutSerial': 229 
+        }
+        # Note: serial is diff from one in position
         self.log_history.reset()
         self.table.updatePlayerTimers()
 
@@ -1598,12 +1608,6 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         PokerTableTestCase.setUp(self, settingsXmlStr, ServiceClass)
 
     # -------------------------------------------------------------------
-    def test01_autodeal(self):
-        self.createPlayer(1)
-        self.createPlayer(2)
-        # Nothing should happen, we don't have autodeal
-        self.assertEqual(None, self.table.scheduleAutoDeal())
-    # -------------------------------------------------------------------
     def test01_8_testClientsBogusPokerProcessingHand(self):
         """Test specific situation in autodeal when poker clients send a
         Processing Hand before a Ready To Play: not needed when autodeal is off"""
@@ -1615,7 +1619,7 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         self.table.game_delay["delay"] = 2
         self.table.game_delay["start"] = testclock._seconds_value
         self.createPlayer(2)
-        self.assertEqual(None, self.table.scheduleAutoDeal())
+        self.assertEqual(False, self.table.scheduleAutoDeal())
     # -------------------------------------------------------------------
     def test12_everyone_timeout(self):
         """Test if all players fall through timeout"""
@@ -1626,10 +1630,12 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         self.table.beginTurn()
         self.table.update()
 
-        return defer.DeferredList((player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
-                                   player[2].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
-                                   player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
-                                   player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)))
+        return defer.DeferredList([
+           player[1].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+           player[2].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+           player[3].waitFor(PACKET_POKER_TIMEOUT_NOTICE),
+           player[4].waitFor(PACKET_POKER_TIMEOUT_NOTICE)
+        ])
     # -------------------------------------------------------------------
     def test16_autoMuckTimeoutPolicy(self):
         """Make sure other timeout policies function properly"""
