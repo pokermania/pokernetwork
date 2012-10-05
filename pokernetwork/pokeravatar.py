@@ -92,6 +92,7 @@ class PokerAvatar:
                     return False
 
                 self.explain = PokerExplain(dirs = self.service.dirs, explain = what)
+                self.explain.serial = self.getSerial()
         else:
             self.explain = None
         return True
