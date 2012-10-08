@@ -186,6 +186,9 @@ class PokerTable:
         # cancel DealTimeout timer
         self.cancelDealTimeout()
         #
+        # cancel PlayerTimeout timers
+        self.cancelPlayerTimers()
+        #
         # destroy factory table
         if self.transient:
             self.factory.destroyTable(self.game.id)
