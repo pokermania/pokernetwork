@@ -1,3 +1,9 @@
+poker-network (2.2.2-7) pokermania; urgency=low
+
+  * 80e77f6 changed _import, now uses sys.modules
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 09 Oct 2012 15:30:00 +0200
+
 poker-network (2.2.2-6) pokermania; urgency=low
 
   * bed8c17 fix for explain IndexError, refs #7088
