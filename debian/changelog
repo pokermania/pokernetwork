@@ -1,3 +1,12 @@
+poker-network (2.2.2-6) pokermania; urgency=low
+
+  * bed8c17 fix for explain IndexError, refs #7088
+  * eccb7c9 cancel player timers on table.destroy
+  * 4324f81 set explain serial to user serial for better reference
+  * 0a65f9e updated _import function to use __import__
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 09 Oct 2012 12:00:00 +0200
+
 poker-network (2.2.2-5) pokermania; urgency=low
 
   * rebuild because of wrong protocol_number
