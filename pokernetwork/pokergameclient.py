@@ -57,13 +57,4 @@ class PokerNetworkGameClient(PokerGameClient):
     def buildPlayerList(self, with_wait_for):
         self.player_list = self.getStaticPlayerList()
         self.log.debug("buildPlayerList %s", self.player_list)
-
-        asserted_player_list = [s for s in self.player_list if self.serial2player[s].isSit()]
-
-        if self.player_list != asserted_player_list:
-            self.log.error("self.player_list %s differs from asserted_player_list %s",
-                self.player_list,
-                asserted_player_list
-            )
-
         return True
