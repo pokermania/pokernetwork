@@ -335,13 +335,13 @@ class PokerAvatar:
                 self.explain.explain(packet)
                 packets = self.explain.forward_packets
             except Exception:
-                packets = [ PacketError(other_type = PACKET_NONE, message = format_exc()) ]
-                self.log.inform("%s", packets[0].message)
-                self.explain = None # disabling the explain instance
-                                    # that issued the exception, as it
-                                    # may be in an inconsistent state,
-                                    # and used before the avatar
-                                    # destruction
+                explain_error_message = format_exc()
+                packets = [ PacketError(other_type=PACKET_NONE, message=explain_error_message) ]
+                self.log.warn('%s', explain_error_message)
+                
+                # disabling the explain instance that issued the exception, as it
+                # may be in an inconsistent state, and used before the avatar destruction
+                self.explain = None
                 self.service.forceAvatarDestroy(self)
         else:
             packets = [ packet ]
