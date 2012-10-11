@@ -855,9 +855,8 @@ class PokerAvatar:
                     self.log.warn("attempt to set auto blind/ante for player %d by player %d that is not the owner of the game",packet.serial, self.getSerial())
             
             elif packet.type == PACKET_POKER_AUTO_MUCK:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    if table.game.getPlayer(packet.serial):
-                        table.game.autoMuck(packet.serial, packet.auto_muck)
+                if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.getPlayer(packet.serial):
+                    game.autoMuck(packet.serial, packet.auto_muck)
                 else:
                     self.log.warn("attempt to set auto muck for player %d by player %d that is not the owner of the game", packet.serial, self.getSerial())
                 
@@ -874,9 +873,8 @@ class PokerAvatar:
                     self.log.warn("attempt to deny muck for player %d by player %d that is not the owner of the game", packet.serial, self.getSerial())
                 
             elif packet.type == PACKET_POKER_AUTO_PLAY:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    if table.game.getPlayer(packet.serial):
-                        table.game.autoPlay(packet.serial, packet.auto_muck)
+                if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.getPlayer(packet.serial):
+                    table.game.autoPlay(packet.serial, packet.auto_muck)
                 else:
                     self.log.warn("attempt to set auto play for player %d by player %d that is not the owner of the game", packet.serial, self.getSerial())
 
