@@ -154,7 +154,6 @@ class PokerBotFactory(PokerClientFactory):
                 if 'name' not in self.kwargs:
                     self.name = PokerBotFactory.string_generator.getName()
                 self.log.debug("%s Re-establishing in %d seconds (get more money).", self.name, delay)
-                self.log.debug("%sRe-establishing .")
                 self.went_broke = False
             elif self.disconnected_volontarily:
                 self.log.debug("%s Re-establishing in %d seconds (volontarily).", self.name, delay)
@@ -243,7 +242,7 @@ def makeService(configuration):
 
     log_level = int(os.environ['LOG_LEVEL']) \
         if 'LOG_LEVEL' in os.environ \
-        else settings.headerGetInt("/server/@log_level")
+        else settings.headerGetInt("/settings/@log_level")
         
     root_logger = RootLogger()
     handler = SyslogHandler('pokerbot', 0)
