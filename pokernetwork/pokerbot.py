@@ -147,17 +147,19 @@ class PokerBotFactory(PokerClientFactory):
         
     def clientConnectionLost(self, connector, reason):
         if self.reconnect:
+            delay = randint(*self.reconnect_delay)
             if self.went_broke:
                 if 'name' not in self.kwargs:
                     self.name = PokerBotFactory.string_generator.getName()
-                self.log.debug("Re-establishing (get more money).")
+                self.log.debug("%s Re-establishing in %d seconds (get more money).", self.name, delay)
+                self.log.debug("%sRe-establishing .")
                 self.went_broke = False
-                reactor.callLater(self.wait, connector.connect)
             elif self.disconnected_volontarily:
-                delay = randint(*self.reconnect_delay)
-                self.log.debug("%s Re-establishing in %d seconds.", self.name, delay)
+                self.log.debug("%s Re-establishing in %d seconds (volontarily).", self.name, delay)
                 self.disconnected_volontarily = False
-                reactor.callLater(delay, connector.connect)
+            else:
+                self.log.inform("%s Re-establishing in %d seconds (other).", self.name, delay)
+            reactor.callLater(delay, connector.connect)
         else:
             self.log.debug("The bot server connection to %s was closed, reason: %s",
                 self.join_info['name'],
