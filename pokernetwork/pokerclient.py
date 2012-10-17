@@ -34,7 +34,7 @@ from pokernetwork.client import UGAMEClientProtocol, UGAMEClientFactory
 from pokerpackets.clientpackets import *
 from pokernetwork.pokerexplain import PokerGames, PokerExplain
 from pokernetwork import log as network_log
-log = network_log.getChild('pokerclient')
+log = network_log.get_child('pokerclient')
 
 DEFAULT_PLAYER_USER_DATA = { 'delay': 0, 'timeout': None }
 
@@ -73,9 +73,10 @@ class PokerSkin:
 class PokerClientFactory(UGAMEClientFactory):
     "client factory"
 
+    log = log.get_child('PokerClientFactory')
+
     def __init__(self, *args, **kwargs):
         UGAMEClientFactory.__init__(self, *args, **kwargs)
-        self.log = log.getChild(self.__class__.__name__)
         self.settings = kwargs["settings"]
         self.config = kwargs.get("config", None)
         #
@@ -273,9 +274,11 @@ DEFAULT_LAGMAX = 15
 class PokerClientProtocol(UGAMEClientProtocol):
     """Poker client"""
 
+    log = log.get_child('PokerClientProtocol')
+
     def __init__(self):
         UGAMEClientProtocol.__init__(self)
-        self.log = log.getChild('ClientProtocol', refs=[
+        self.log = PokerClientProtocol.log.get_instance(self, refs=[
             ('User', self, lambda client: client.user.serial if client.user else None)
         ])
         self.callbacks = {

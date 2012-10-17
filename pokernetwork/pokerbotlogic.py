@@ -33,7 +33,7 @@ from pokernetwork.user import checkName
 from pokerpackets.networkpackets import *
 from pokerpackets.clientpackets import *
 from pokernetwork import log as network_log
-log = network_log.getChild('pokerbotlogic')
+log = network_log.get_child('pokerbotlogic')
 
 LEVEL2ITERATIONS = {
     0: 10,
@@ -99,9 +99,9 @@ class NoteGenerator(Pool):
 class PokerBot:
 
     note_generator = NoteGenerator("exit 1")
+    log = log.get_child('PokerBot')
     
     def __init__(self, factory):
-        self.log = log.getChild(self.__class__.__name__)
         self.factory = factory
         self.state = STATE_RUNNING
         self.batch_end_action = None

@@ -44,14 +44,16 @@ from pokernetwork.pokerpacketizer import createCache, history2packets
 from pokerengine.pokertournament import TOURNAMENT_STATE_REGISTERING, TOURNAMENT_STATE_CANCELED, TOURNAMENT_STATE_RUNNING
 
 from pokernetwork import log as network_log
-log = network_log.getChild('pokeravatar')
+log = network_log.get_child('pokeravatar')
 
 DEFAULT_PLAYER_USER_DATA = { 'ready': True }
 
 class PokerAvatar:
 
+    log = log.get_child('PokerAvatar')
+
     def __init__(self, service):
-        self.log = log.getChild(self.__class__.__name__, refs=[
+        self.log = PokerAvatar.log.get_instance(self, refs=[
             ('User', self, lambda avatar: avatar.user.serial if avatar.user else None)
         ])
         self.protocol = None

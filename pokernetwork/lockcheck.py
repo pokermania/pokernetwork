@@ -1,12 +1,13 @@
 from twisted.internet import reactor
 
 from pokernetwork import log as network_log
-log = network_log.getChild('lockcheck')
+log = network_log.get_child('lockcheck')
 
 class LockCheck(object):
 
+    log = log.get_child('LockCheck')
+
     def __init__(self, timeout, callback, cb_args=()):
-        self.log = log.getChild(self.__class__.__name__)
         self._timeout = timeout
         self._callback = callback
         self._callback_args = cb_args

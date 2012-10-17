@@ -29,12 +29,13 @@
 
 from pokernetwork.user import User
 from pokernetwork import log as network_log
-log = network_log.getChild("pokerauthnopassword")
+log = network_log.get_child("pokerauthnopassword")
     
 class PokerAuth:
 
+    log = log.get_child('PokerAuth')
+
     def __init__(self, db, settings):
-        self.log = log.getChild(self.__class__.__name__)
         self.db = db
         self.type2auth = {}
         self.auto_create_account = settings.headerGet("/server/@auto_create_account") != 'no'

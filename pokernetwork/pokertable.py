@@ -43,12 +43,13 @@ from pokernetwork import pokeravatar
 from pokernetwork.pokerpacketizer import createCache, history2packets
 
 from pokernetwork import log as network_log
-log = network_log.getChild('pokertable')
+log = network_log.get_child('pokertable')
 
 class PokerAvatarCollection:
 
+    log = log.get_child('PokerAvatarCollection')
+
     def __init__(self, prefix=''):
-        self.log = log.getChild(self.__class__.__name__)
         self.serial2avatars = {}
         self.prefix = prefix
 
@@ -105,9 +106,11 @@ class PokerPredefinedDecks:
 class PokerTable:
     
     TIMEOUT_DELAY_COMPENSATION = 2
+
+    log = log.get_child('PokerTable')
     
     def __init__(self, factory, id=0, description=None):
-        self.log = log.getChild(self.__class__.__name__, refs=[
+        self.log = PokerTable.log.get_instance(self, refs=[
             ('Game', self, lambda table: table.game.id),
             ('Hand', self, lambda table: table.game.hand_serial if table.game.hand_serial > 1 else None)
         ])

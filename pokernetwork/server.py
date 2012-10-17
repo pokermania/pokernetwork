@@ -27,7 +27,7 @@ import sys
 from twisted.internet import reactor, protocol, defer
 
 from pokernetwork import log as network_log
-log = network_log.getChild('server')
+log = network_log.get_child('server')
 
 from pokernetwork.protocol import UGAMEProtocol
 from pokerpackets.packets import PacketError
@@ -35,8 +35,9 @@ from pokerpackets.packets import PacketError
 class PokerServerProtocol(UGAMEProtocol):
     """UGAMEServerProtocol"""
 
+    log = log.get_child('PokerServerProtocol')
+
     def __init__(self):
-        self.log = log.getChild(self.__class__.__name__)
         self._ping_timer = None
         self.bufferized_packets = []
         self.avatar = None

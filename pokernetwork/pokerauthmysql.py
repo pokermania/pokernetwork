@@ -31,12 +31,13 @@ import MySQLdb
 from pokernetwork.user import User
 from pokerpackets.packets import PACKET_LOGIN
 from pokernetwork import log as network_log
-log = network_log.getChild('pokerauthmysql')
+log = network_log.get_child('pokerauthmysql')
 
 class PokerAuth:
 
+    log = log.get_child('PokerAuth')
+
     def __init__(self, db, memcache, settings):
-        self.log = log.getChild(self.__class__.__name__)
         self.db = db
         self.memcache = memcache
         self.type2auth = {}

@@ -33,14 +33,15 @@ from pokernetwork import currencyclient
 from pokernetwork import pokerlock
 from pokerpackets.networkpackets import *
 from pokernetwork import log as network_log
-log = network_log.getChild('pokercashier')
+log = network_log.get_child('pokercashier')
 
 PokerLock = pokerlock.PokerLock
 
 class PokerCashier:
 
+    log = log.get_child('PokerCashier')
+
     def __init__(self, settings):
-        self.log = log.getChild(self.__class__.__name__)
         self.settings = settings
         self.currency_client = currencyclient.CurrencyClient()
         self.parameters = settings.headerGetProperties("/server/cashier")[0]

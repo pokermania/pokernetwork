@@ -21,7 +21,7 @@ from twisted.internet import defer, protocol, reactor, error
 from twisted.web import http
 
 from pokernetwork import log as network_log
-log = network_log.getChild('proxyfilter')
+log = network_log.get_child('proxyfilter')
 
 local_reactor = reactor
 
@@ -65,8 +65,9 @@ class ProxyClientFactory(protocol.ClientFactory):
     noisy = False
     protocol = ProxyClient
 
+    log = log.get_child('ProxyClientFactory')
+
     def __init__(self, command, rest, version, headers, data, father, destination):
-        self.log = log.getChild(self.__class__.__name__)
         self.father = father
         self.command = command
         self.rest = rest

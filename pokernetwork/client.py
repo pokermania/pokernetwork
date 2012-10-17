@@ -28,12 +28,13 @@ from pokernetwork.protocol import UGAMEProtocol
 from pokernetwork.user import User
 from pokernetwork import log as network_log
 
-log = network_log.getChild('client')
+log = network_log.get_child('client')
 
 class UGAMEClientProtocol(UGAMEProtocol):
     """ """
+    log = log.get_child('UGAMEClientProtocol')
     def __init__(self):
-        self.log = log.getChild(self.__class__.__name__, refs=[
+        self.log = UGAMEClientProtocol.log.get_instance(self, refs=[
             ('User', self, lambda x: x.user.serial if x.user.serial > 0 else None)
         ])
         self._ping_timer = None
@@ -117,7 +118,6 @@ class UGAMEClientProtocol(UGAMEProtocol):
 class UGAMEClientFactory(protocol.ClientFactory):
 
     def __init__(self, *args, **kwargs):
-        self.log = log.getChild(self.__class__.__name__)
         self.protocol = UGAMEClientProtocol
         self.protocol_instance = None
         self.established_deferred = defer.Deferred()

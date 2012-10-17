@@ -35,7 +35,7 @@ from pokerpackets.networkpackets import *
 PacketFactoryWithNames = dict((packet_class.__name__,packet_class) for packet_class in PacketFactory.itervalues())
 
 from pokernetwork import log as network_log
-log = network_log.getChild('site')
+log = network_log.get_child('site')
 
 def _import(path):
     import sys
@@ -111,7 +111,6 @@ class Session(server.Session):
 
     def __init__(self, site, uid, auth, explain):
         server.Session.__init__(self, site, uid)
-        self._log = log.getChild(self.__class__.__name__)
         self.auth = auth
         self.avatar = site.resource.service.createAvatar()
         self.explain_default = explain
@@ -134,8 +133,9 @@ class Session(server.Session):
             
 class PokerResource(resource.Resource):
 
+    _log = log.get_child('PokerResource')
+
     def __init__(self, service):
-        self._log = log.getChild(self.__class__.__name__)
         resource.Resource.__init__(self)
         self.service = service
         self.isLeaf = True
@@ -273,9 +273,10 @@ class PokerResource(resource.Resource):
 
 class PokerImageUpload(resource.Resource):
 
+    _log = log.get_child('PokerImageUpload')
+
     def __init__(self, service):
         resource.Resource.__init__(self)
-        self._log = log.getChild(self.__class__.__name__)
         self.service = service
         self.deferred = defer.succeed(None)
         self.isLeaf = True
@@ -321,9 +322,10 @@ class PokerImageUpload(resource.Resource):
 
 class PokerTourneyStartResource(resource.Resource):
 
+    _log = log.get_child('PokerTourneyStartResource')
+
     def __init__(self, service):
         resource.Resource.__init__(self)
-        self._log = log.getChild(self.__class__.__name__)
         self.service = service
         self.deferred = defer.succeed(None)
         self.isLeaf = True
@@ -340,9 +342,10 @@ class PokerTourneyStartResource(resource.Resource):
 
 class PokerAvatarResource(resource.Resource):
 
+    _log = log.get_child('PokerAvatarResource')
+
     def __init__(self, service):
         resource.Resource.__init__(self)
-        self._log = log.getChild(self.__class__.__name__)
         self.service = service
         self.deferred = defer.succeed(None)
         self.isLeaf = True
@@ -387,9 +390,10 @@ class PokerSite(server.Site):
     requestFactory = Request
     sessionFactory = Session
 
+    _log = log.get_child('PokerSite')
+
     def __init__(self, settings, resource, **kwargs):
         server.Site.__init__(self, resource, **kwargs)
-        self._log = log.getChild(self.__class__.__name__)
         cookieTimeout = settings.headerGetInt("/server/@cookie_timeout")
         if cookieTimeout > 0:
             self.cookieTimeout = cookieTimeout

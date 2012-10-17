@@ -28,7 +28,7 @@ from pokerpackets.packets import Packet, PacketFactory, PACKET_PING
 from pokernetwork import protocol_number
 from pokernetwork.version import Version
 from pokernetwork import log as network_log
-log = network_log.getChild('protocol')
+log = network_log.get_child('protocol')
 
 protocol_version = Version(protocol_number)
 
@@ -45,9 +45,10 @@ class UGAMEProtocol(protocol.Protocol):
 
     _stats_read = 0
     _stats_write = 0
+
+    log = log.get_child('UGAMEProtocol')
     
     def __init__(self):
-        self.log = log.getChild(self.__class__.__name__)
         self._packet = []
         self._packet_len = 0
         self._timer = None

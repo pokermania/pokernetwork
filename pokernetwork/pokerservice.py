@@ -39,7 +39,7 @@ try: from collections import OrderedDict
 except ImportError: from pokernetwork.ordereddict import OrderedDict
 
 from pokernetwork import log as network_log
-log = network_log.getChild('pokerservice')
+log = network_log.get_child('pokerservice')
 
 from twisted.application import service
 from twisted.internet import protocol, reactor, defer
@@ -140,9 +140,10 @@ class PokerService(service.Service):
     STATE_OFFLINE = 0
     STATE_ONLINE = 1
     STATE_SHUTTING_DOWN = 2
+
+    log = log.get_child('PokerService')
     
     def __init__(self, settings):
-        self.log = log.getChild(self.__class__.__name__)
         if type(settings) is StringType:
             settings_object = pokernetworkconfig.Config(['.'])
             settings_object.doc = libxml2.parseMemory(settings, len(settings))
@@ -2941,7 +2942,6 @@ from twisted.web import resource, server
 class PokerTree(resource.Resource):
 
     def __init__(self, service):
-        self.log = log.getChild(self.__class__.__name__)
         resource.Resource.__init__(self)
         self.service = service
         self.putChild("RPC2", PokerXMLRPC(self.service))
@@ -3020,8 +3020,9 @@ class PokerXML(resource.Resource):
 
     encoding = "UTF-8"
 
+    log = log.get_child('PokerXML')
+
     def __init__(self, service):
-        self.log = log.getChild(self.__class__.__name__)
         resource.Resource.__init__(self)
         self.service = service
 

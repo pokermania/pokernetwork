@@ -31,7 +31,7 @@ import Queue
 import time
 
 from pokernetwork import log as network_log
-log = network_log.getChild('pokerlock')
+log = network_log.get_child('pokerlock')
 
 class PokerLock(threading.Thread):
 
@@ -42,9 +42,10 @@ class PokerLock(threading.Thread):
     acquire_timeout = 60
     queue_timeout = 2 * 60
     acquire_sleep = 0.1
+
+    log = log.get_child('PokerLock')
     
     def __init__(self, parameters):
-        self.log = log.getChild(self.__class__.__name__)
         self.q = Queue.Queue()
         self.lock = threading.Lock()
         self.db = None

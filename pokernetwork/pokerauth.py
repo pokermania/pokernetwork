@@ -31,7 +31,7 @@ from twisted.python.runtime import seconds
 from pokernetwork.user import User
 from pokerpackets.packets import PACKET_LOGIN, PACKET_AUTH
 from pokernetwork import log as network_log
-log = network_log.getChild("pokerauth")
+log = network_log.get_child("pokerauth")
 
 def _import(path):
     import sys
@@ -40,8 +40,9 @@ def _import(path):
 
 class PokerAuth:
 
+    log = log.get_child('PokerAuth')
+
     def __init__(self, db, memcache, settings):
-        self.log = log.getChild(self.__class__.__name__)
         self.db = db
         self.memcache = memcache
         self.type2auth = {}

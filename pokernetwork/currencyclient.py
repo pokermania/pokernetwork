@@ -26,12 +26,13 @@ from twisted.web import client
 from twisted.internet import defer, reactor
 
 from pokernetwork import log as network_log
-log = network_log.getChild('currencyclient')
+log = network_log.get_child('currencyclient')
 
 class RealCurrencyClient:
 
+    log = log.get_child('RealCurrencyClient')
+
     def __init__(self):
-        self.log = log.getChild(self.__class__.__name__)
         self.getPage = client.getPage
 
     def request(self, *args, **kwargs):
@@ -143,8 +144,10 @@ FakeCurrencyFailure = False
 
 class FakeCurrencyClient:
 
+    log = log.get_child('FakeCurrencyClient')
+
     def __init__(self):
-        self.log = log.getChild('RealCurrencyClient', refs=[
+        self.log = FakeCurrencyClient.log.get_instance(self, refs=[
             ('Currency', self, lambda currency: currency.serial)
         ])
         self.serial = 1

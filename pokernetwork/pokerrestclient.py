@@ -26,16 +26,17 @@ from twisted.python.runtime import seconds
 from pokerpackets.networkpackets import *
 from pokernetwork import pokersite
 from pokernetwork import log as network_log
-log = network_log.getChild('pokerrestclient')
+log = network_log.get_child('pokerrestclient')
 
 
 class RestClientFactory(protocol.ClientFactory):
 
     protocol = client.HTTPPageGetter
     noisy = False
+
+    log = log.get_child('ClientFactory')
     
     def __init__(self, host, port, path, data, timeout = 60):
-        self.log = log.getChild('ClientFactory')
         self.timeout = timeout
         self.agent = "RestClient"
         self.headers = InsensitiveDict()
@@ -92,9 +93,10 @@ class RestClientFactory(protocol.ClientFactory):
 
 class PokerRestClient:
     DEFAULT_LONG_POLL_FREQUENCY = 0.1
+
+    log = log.get_child('PokerRestClient')
     
     def __init__(self, host, port, path, longPollCallback, timeout = 60):
-        self.log = log.getChild(self.__class__.__name__)
         self.queue = defer.succeed(True)
         self.pendingLongPoll = False
         self.minLongPollFrequency = 0.01
@@ -178,8 +180,9 @@ class PokerProxyClient(http.HTTPClient):
     Used by PokerProxyClientFactory to implement a simple web proxy.
     """
 
+    log = log.get_child('PokerProxyClient')
+
     def __init__(self, command, rest, version, headers, data, father):
-        self.log = log.getChild(self.__class__.__name__)
         self.father = father
         self.command = command
         self.rest = rest
@@ -214,8 +217,9 @@ class PokerProxyClientFactory(protocol.ClientFactory):
     noisy = False
     protocol = PokerProxyClient
 
+    log = log.get_child('PokerProxyClientFactory')
+
     def __init__(self, command, rest, version, headers, data, father, destination):
-        self.log = log.getChild(self.__class__.__name__)
         self.father = father
         self.command = command
         self.rest = rest

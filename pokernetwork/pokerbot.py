@@ -27,7 +27,7 @@
 #
 
 from pokernetwork import log as network_log
-log = network_log.getChild('pokerbot')
+log = network_log.get_child('pokerbot')
 
 
 import sys
@@ -88,8 +88,10 @@ class PokerBotFactory(PokerClientFactory):
 
     string_generator = None
 
+    log = log.get_child('PokerBotFactory')
+
     def __init__(self, *args, **kwargs):
-        self.log = log.getChild(self.__class__.__name__, refs=[
+        self.log = PokerBotFactory.log.get_instance(self, refs=[
             ("User", self, lambda factory: factory.serial if factory.serial else None)
         ])
         PokerClientFactory.__init__(self, *args, **kwargs)
@@ -168,10 +170,11 @@ class PokerBotFactory(PokerClientFactory):
             self.bot.parent.removeService(self.bot)
 
 class Bots(service.MultiService):
+
+    log = log.get_child('Bots')
     
     def __init__(self, *a, **kw):
         service.MultiService.__init__(self, *a, **kw)
-        self.log = log.getChild(self.__class__.__name__)
 
     def setSettings(self, settings):
         self.count = 0

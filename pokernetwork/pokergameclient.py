@@ -19,15 +19,16 @@
 #
 from pokerengine.pokergame import PokerGameClient
 from pokernetwork import log as network_log
-log = network_log.getChild('pokergameclient')
+log = network_log.get_child('pokergameclient')
 
 class PokerNetworkGameClient(PokerGameClient):
     SERIAL_IN_POSITION = 0
     POSITION_OBSOLETE = 1
 
+    log = log.get_child('PokerNetworkGameClient')
+
     def __init__(self, url, dirs):
         PokerGameClient.__init__(self, url, dirs)
-        self.log = log.getChild(self.__class__.__name__)
         self.level_skin = ""
         self.currency_serial = 0
         self.history_index = 0

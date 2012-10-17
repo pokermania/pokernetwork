@@ -30,7 +30,7 @@ from MySQLdb.cursors import DictCursor
 import subprocess
 
 from pokernetwork import log as network_log
-log = network_log.getChild('pokerdatabase')
+log = network_log.get_child('pokerdatabase')
 
 class ExceptionDatabaseTooOld(Exception): pass
 class ExceptionSoftwareTooOld(Exception): pass
@@ -41,8 +41,9 @@ from pokernetwork.version import Version, version
 
 class PokerDatabase:
 
+    log = log.get_child('PokerDatabase')
+
     def __init__(self, settings):
-        self.log = log.getChild(self.__class__.__name__)
         self.parameters = settings.headerGetProperties("/server/database")[0]
         self.mysql_command = settings.headerGet("/server/database/@command")
         try:

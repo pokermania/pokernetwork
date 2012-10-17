@@ -28,14 +28,15 @@ from pokernetwork.pokergameclient import PokerNetworkGameClient
 from pokerpackets.networkpackets import * #@UnusedWildImport
 from pokerpackets.clientpackets import * #@UnusedWildImport
 from pokernetwork import log as network_log
-log = network_log.getChild('explain')
+log = network_log.get_child('explain')
 
 DEFAULT_PLAYER_USER_DATA = { 'timeout': None }
 
 class PokerGames:
 
+    log = log.get_child('PokerGames')
+
     def __init__(self, **kwargs):
-        self.log = log.getChild(self.__class__.__name__)
         self.games = {}
         self.dirs = kwargs.get("dirs", [])
         self.prefix = kwargs.get("prefix", "")
@@ -86,8 +87,9 @@ class ListHintSubset(Exception):
 class PokerExplain:
     """Expand poker packets for the caller when they know nothing about poker """
 
+    log = log.get_child('PokerExplain')
+
     def __init__(self, *args, **kwargs):
-        self.log = log.getChild(self.__class__.__name__)
         self.serial = 0
         self.no_display_packets = False
         self.pending_auth_request = False
@@ -291,9 +293,7 @@ class PokerExplain:
                 new_game.level_skin = packet.skin
                 new_game.currency_serial = packet.currency_serial
                 new_game.history_index = 0
-                new_game.log.addRef('Explain', self, lambda explain: explain.serial)
-                new_game.log.addRef('Game', new_game, lambda game: game.id)
-                new_game.log.addRef('Hand', new_game, lambda game: game.hand_serial if game.hand_serial > 1 else None)
+                new_game.log.add_ref('Explain', self, lambda explain: explain.serial)
                 self.updatePotsChips(new_game, [])
                 new_game.position_info = [ 0, 0 ]
                 self.forward_packets.append(self.currentGames())
