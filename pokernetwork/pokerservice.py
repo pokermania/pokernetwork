@@ -945,7 +945,6 @@ class PokerService(service.Service):
                 remaining = "%d minutes" % int(remaining / 60)
             for game in tourney.games:
                 table = self.getTable(game.id)
-                table.broadcastMessage(PacketPokerGameMessage, "Tournament is now on break for " + remaining)
 
             self.timer[key] = reactor.callLater(int(self.delays.get('breaks_check', 30)), self.tourneyBreakCheck, tourney)
 
@@ -966,7 +965,6 @@ class PokerService(service.Service):
     def tourneyBreakResume(self, tourney):
         for gameId in map(lambda game: game.id, tourney.games):
             table = self.getTable(gameId)
-            table.broadcastMessage(PacketPokerGameMessage, "Tournament resumes")
             table.broadcast(PacketPokerTableTourneyBreakDone(game_id = gameId))
 
     def tourneyEndTurn(self, tourney, game_id):
