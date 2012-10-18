@@ -435,11 +435,12 @@ class PokerExplain:
                 
                 serial_in_position = game.getSerialInPosition()
                 game.buildPlayerList(None)
-                game.setPosition(
-                    game.player_list.index(serial_in_position) 
-                    if serial_in_position in game.player_list
-                    else -1
-                )
+                if game.isRunning():
+                    game.setPosition(
+                        game.player_list.index(serial_in_position) 
+                        if serial_in_position in game.player_list
+                        else -1
+                    )
                 
                 for serial in game.serialsAll():
                     player = game.getPlayer(serial)
