@@ -41,8 +41,8 @@ from random import randint
 from twisted.application import internet, service, app
 
 from twisted.python import log as twisted_log
-from reflogging import TwistedHandler, SingleLineFormatter
-import logging
+from reflogging import RootLogger
+from reflogging.handlers import SyslogHandler
 
 if platform.system() != "Windows":
     if 'twisted.internet.reactor' not in sys.modules:
@@ -245,11 +245,10 @@ def makeService(configuration):
         if 'LOG_LEVEL' in os.environ \
         else settings.headerGetInt("/server/@log_level")
         
-    logger = logging.getLogger()
-    handler = TwistedHandler(twisted_log.theLogPublisher)
-    handler.setFormatter(SingleLineFormatter('[%(refs)s] %(message)s'))
-    logger.addHandler(handler)
-    logger.setLevel(log_level or logging.WARNING)
+    root_logger = RootLogger()
+    handler = SyslogHandler('pokerbot', 0)
+    root_logger.add_handler(handler)
+    root_logger.set_level(log_level or 30)
     
     PokerBotFactory.string_generator = StringGenerator(settings.headerGet("/settings/@name_prefix"))
     PokerBot.note_generator = NoteGenerator(settings.headerGet("/settings/currency"))
