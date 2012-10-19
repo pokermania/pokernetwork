@@ -2700,6 +2700,130 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         d1.addCallback(firstGame)
         return d1
 
+    def test58_assertionTest(self):
+        self.table = table = self.table9
+        game = table.game
+        self.service.has_ladder = False
+        table.factory.buyInPlayer = lambda *a,**kw: table.game.maxBuyIn()
+        
+#        deck info        
+        cards_to_player = (
+            
+            (31628, ('Kh', 'Jh')),
+            (143489, ('9h', '2d')),
+            (105400, ('5d', '9d')),
+            (145864, ('4c', 'Qh')),
+        )
+        cards_board = ('2h', '4h', '7h', 'Ks', 'Qc')
+#        build deck
+        cards = []
+        for i in range(2):
+            for (player,card_strings) in cards_to_player:
+                cards.append(table.game.eval.string2card(card_strings[i]))
+        cards.extend(table.game.eval.string2card(cards_board))
+        
+        cards.reverse()
+        
+        table.game.deck = table.game.eval.card2string(cards)
+        table.game.shuffler = PokerPredefinedDecks([cards])
+
+        def addPlayerAndReorder(self, *a,**kw):
+            was_added = self.addPlayerOrig(*a,**kw)
+            if was_added:
+                self.serial2player = OrderedDict(sorted(self.serial2player.items(),key=lambda (k,v):od_order.index(k)))
+            return was_added
+        
+        game.addPlayerOrig = game.addPlayer
+        game.addPlayer = lambda *a,**kw: addPlayerAndReorder(game,*a,**kw) 
+        
+        clients_all = {}
+        clients = {}
+
+        s_all      = [145867, 31628, 143489, 105400, 145864,]
+        s_sit      = [        31628, 143489, 105400,        ]
+        s_seats    = [     0,     1,      3,      4,      5,      6,     7,      8]
+        money_list = [     0, 37854,  90856,  36500,      0,]
+
+        od_order = s_all[:]
+        #od_order = [66002, 44053, 114530, 121957, 142321, 119737, 47167, 84761]
+
+        def joinAndSeat(serial,should_sit,pos,explain=True,skip=True):
+            if serial == 145867 and skip:
+                return
+            clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            if explain:
+                client.setExplain(PacketPokerExplain.ALL)
+            self.assertTrue(table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, serial, pos))
+            money = table.game.maxBuyIn()
+            table.game.noAutoBlindAnte(serial)
+            self.assertTrue(table.buyInPlayer(client, money))
+            if should_sit:
+                clients[serial] = client
+                table.sitPlayer(client, serial)
+
+            table.update()
+        
+        #
+        # get seats for all players
+        for seat,serial in zip(s_seats, s_all):
+            joinAndSeat(serial, (serial in s_sit), seat)
+
+        #
+        # setup game (forced_dealer does not work because of first_turn == False)
+        table.game.dealer_seat = 3
+        table.game.first_turn = False
+        #
+        # put missed_blind on None, if not all missed_blinds are reset
+        for serial, money in zip(s_all, money_list):
+            if serial == 145867:
+                continue
+            table.game.serial2player[serial].money = money
+            if serial == 145864:
+                table.game.serial2player[serial].blind = 'late'
+                table.game.serial2player[serial].missed_blind = 'big'
+                table.game.serial2player[serial].buy_in_payed = True
+                table.game.serial2player[serial].wait_for = None
+            else:
+                pass
+
+        def firstGame(packet):
+            for predicted_serial, todo in [(145864, 'rebuy'), (105400, 'blind'), (31628, 'blind'),(145867, "sit"), (145864, 'blind')]:
+                if todo == "blind":
+                    serial = table.game.getSerialInPosition()
+                    self.assertEqual(serial, predicted_serial)
+                    table.game.blind(serial)
+                elif todo == "sit":
+                    joinAndSeat(145867, True, 0, skip=False)
+                else:
+                    serial = predicted_serial
+                    client = clients_all[serial]
+                    clients[serial] = client
+                    table.rebuyPlayerRequest(client, 10000)
+                    table.sitPlayer(client, serial)
+                table.update()
+
+            for serial, action, value in [
+                (31628, "raise", 36854),
+                (143489, "fold", None),
+                (105400, "fold", None),
+                (145864, "call", None),
+            ]:
+                assert serial in s_all, "%s not in s_all" % serial
+                assert action in ("check", "raise", "fold", "call")
+                if action == "raise":
+                    table.game.callNraise(serial, value)
+                else:
+                    getattr(table.game, action)(serial)
+                table.update()
+
+        self.log_history.reset()
+        table.scheduleAutoDeal()
+        d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)
+        d1.addCallback(firstGame)
+        return d1
+
 # --------------------------------------------------------------------------------
 
 def GetTestSuite():
