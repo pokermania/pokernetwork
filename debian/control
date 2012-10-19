@@ -17,7 +17,7 @@ Build-Depends:
     python-poker-distutils (>= 0.1.0-3),
     apg,
     rsync,
-    python-poker-reflogging,
+    python-reflogging,
     python-memcache
 Standards-Version: 3.8.3
 Homepage: http://github.com/pokermania/poker-network
@@ -46,7 +46,7 @@ Depends:
     apg,
     rsync,
     python-crypto,
-    python-poker-reflogging
+    python-reflogging
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
