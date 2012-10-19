@@ -1411,119 +1411,98 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             },
             'hand_hist': {
                 'output': "%sattempt to get history%s" % (messageStart, ofPlayerByPlayer),
-                'packet': PacketPokerHandHistory(
-                    serial = someoneElseSerial,
-                    serial2name = { someoneElseSerial: "YOU_BEEN_CRACKED" },
-                    history = 'CRACKED') 
+                'packet': PacketPokerHandHistory(serial=someoneElseSerial, serial2name={someoneElseSerial:"YOU_BEEN_CRACKED"}, history='CRACKED')
             },
             'ready': {
-                'output': "%sattempt to set ready to play%s %s" % (
-                    messageStart, forPlayerByPlayer, "that is not the owner of the game"
-                ),
-                'packet': PacketPokerReadyToPlay(serial = someoneElseSerial, game_id = gameId) 
+                'output': "%sattempt to set ready to play%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerReadyToPlay(serial=someoneElseSerial, game_id=gameId) 
             },
             'proc': {
-                'output': "%sattempt to set processing hand%s %s" % (
-                    messageStart, forPlayerByPlayer, "that is not the owner of the game"
-                ),
-                'packet': PacketPokerProcessingHand(serial = someoneElseSerial, game_id = gameId) },
+                'output': "%sattempt to set processing hand%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerProcessingHand(serial=someoneElseSerial, game_id=gameId)
+            },
             'seat': {
-                'output': "%sattempt to get seat%s %s" % (messageStart, forPlayerByPlayer, "that is not the owner of the game"),
-                'packet': PacketPokerSeat(serial = someoneElseSerial, seat = 255, game_id = gameId) 
+                'output': "%sattempt to get seat%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerSeat(serial=someoneElseSerial, seat=255, game_id=gameId) 
             },
             'buyin': {
                 'output': "%sattempt to bring money%s" % (messageStart, forPlayerByPlayer),
-                'packet': PacketPokerBuyIn(serial = someoneElseSerial, amount = 1000, game_id = gameId)
+                'packet': PacketPokerBuyIn(serial=someoneElseSerial, amount=1000, game_id=gameId)
             },
             'table_picker': {
                 'output': "%sattempt to run table picker%s" % (messageStart, forPlayerByPlayer),
                 'err_type': PACKET_POKER_ERROR,
-                'packet': PacketPokerTablePicker(serial = someoneElseSerial) 
+                'packet': PacketPokerTablePicker(serial=someoneElseSerial) 
             },
             'rebuy': {
                 'output': "%sattempt to rebuy%s" % (messageStart, forPlayerByPlayer),
-                'packet': PacketPokerRebuy(serial = someoneElseSerial, amount = 1000, game_id = gameId)
+                'packet': PacketPokerRebuy(serial=someoneElseSerial, amount=1000, game_id=gameId)
             },
             'chat': {
-                'output': "%sattempt chat%s" % (messageStart, forPlayerByPlayer),
-                'packet': PacketPokerChat(
-                    serial = someoneElseSerial, game_id = gameId,
-                    message = "I AM IN YOUR SERIALZ CHATING YOUR POKERZ") 
+                'output': "%sattempt to chat%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerChat(serial=someoneElseSerial, game_id=gameId, message="I AM IN YOUR SERIALZ CHATING YOUR POKERZ")
             },
             'leave': {
-                'output': "%sattempt to leave%s %s" % (
-                    messageStart, forPlayerByPlayer, "that is not the owner of the game"
-                ),
-                'packet': PacketPokerPlayerLeave(serial = someoneElseSerial, game_id = gameId, seat = 2) 
+                'output': "%sattempt to leave%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerPlayerLeave(serial= someoneElseSerial, game_id= gameId, seat=2) 
             },
             'sit': {
-                'output': "%sattempt to sit back%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                'packet': PacketPokerSit(serial = someoneElseSerial, game_id = gameId) },
+                'output': "%sattempt to sit back%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerSit(serial=someoneElseSerial, game_id=gameId)
+            },
             'sitout': {
-                'output': "%sattempt to sit out%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                'packet': PacketPokerSitOut(serial = someoneElseSerial, game_id = gameId) },
+                'output': "%sattempt to sit out%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerSitOut(serial=someoneElseSerial, game_id=gameId)
+            },
             'autoblind': {
-                'output': "%sattempt to set auto blind/ante%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                'packet': PacketPokerAutoBlindAnte(serial = someoneElseSerial, game_id = gameId) },
+                'output': "%sattempt to set auto blind/ante%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerAutoBlindAnte(serial=someoneElseSerial, game_id=gameId) },
             'noautoblind': {
-                'output': "%sattempt to set auto blind/ante%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                'packet': PacketPokerNoautoBlindAnte(serial = someoneElseSerial, game_id = gameId) },
+                'output': "%sattempt to set auto blind/ante%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerNoautoBlindAnte(serial=someoneElseSerial, game_id=gameId)
+            },
             'muckaccept': {
-                'output': "%sattempt to accept muck%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                'packet': PacketPokerMuckAccept(serial = someoneElseSerial, game_id = gameId) },
+                'output': "%sattempt to accept muck%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerMuckAccept(serial=someoneElseSerial, game_id=gameId)
+            },
             'muckdeny': {
-                'output': "%sattempt to deny muck%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                'packet': PacketPokerMuckDeny(serial = someoneElseSerial, game_id = gameId) },
+                'output': "%sattempt to deny muck%s" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerMuckDeny(serial=someoneElseSerial, game_id=gameId)
+            },
             'setaccount': {
                 'output': "password must be at least 5 characters long",
-                'packet': PacketPokerSetAccount(serial= someoneElseSerial),
-                             'err_type': PACKET_ERROR,
-                             'other_type': PACKET_POKER_SET_ACCOUNT },
+                'packet': PacketPokerSetAccount(serial=someoneElseSerial),
+                'err_type': PACKET_ERROR,
+                'other_type': PACKET_POKER_SET_ACCOUNT
+            },
             'automuck': {
-                'output': "%sattempt to set auto muck%s %s" % (
-                    messageStart, forPlayerByPlayer, "that is not the owner of the game"
-                ),
-                'packet': PacketPokerAutoMuck(serial = someoneElseSerial, game_id = gameId, info = 0x01) 
+                'output': "%sattempt to set auto muck%s, or player is not in game" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerAutoMuck(serial=someoneElseSerial, game_id=gameId, info = 0x01) 
             },
             'blind': {
-                'output': "%sattempt to pay the blind%s %s" % (
-                    messageStart, ofPlayerByPlayer, "that is not the owner of the game"
-                ),
-                'packet': PacketPokerBlind(
-                    serial = someoneElseSerial, 
-                    game_id = gameId, 
-                    dead = 0,
-                    amount = 100) 
+                'output': "%sattempt to pay the blind%s, or player is not not playing" % (messageStart, ofPlayerByPlayer),
+                'packet': PacketPokerBlind(serial=someoneElseSerial, game_id=gameId, dead=0, amount=100)
             },
             'waitblind': {
-                'output': "%sattempt to wait for big blind%s %s" % (
-                    messageStart, ofPlayerByPlayer, "that is not the owner of the game"
-                ),
-                'packet': PacketPokerWaitBigBlind(serial = someoneElseSerial, game_id = gameId) },
+                'output': "%sattempt to wait for big blind%s" % (messageStart, ofPlayerByPlayer),
+                'packet': PacketPokerWaitBigBlind(serial = someoneElseSerial, game_id = gameId)
+            },
             'ante': {
-                'output': "%sattempt to pay the ante%s %s" % (
-                    messageStart, ofPlayerByPlayer, "that is not the owner of the game"
-                ),
-                'packet': PacketPokerAnte(serial = someoneElseSerial, game_id = gameId,amount = 10) },
+                'output': "%sattempt to pay the ante%s, or player is not not playing" % (messageStart, ofPlayerByPlayer ),
+                'packet': PacketPokerAnte(serial = someoneElseSerial, game_id = gameId,amount = 10) 
+            },
             'fold': {
-                'output': "%sattempt to fold%s %s" % (
-                        messageStart, playerByPlayer, "that is not the owner of the game"
-                ),
-                'packet': PacketPokerFold(serial = someoneElseSerial, game_id = gameId) },
+                'output': "%sattempt to fold%s, or player is not not playing" % (messageStart, playerByPlayer ),
+                'packet': PacketPokerFold(serial = someoneElseSerial, game_id = gameId)
+            },
             'call': {
-                'output': "%sattempt to call%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                'packet': PacketPokerCall(serial = someoneElseSerial, game_id = gameId) },
+                'output': "%sattempt to call%s, or player is not not playing" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerCall(serial = someoneElseSerial, game_id = gameId)
+            },
             'raise': {
-                'output': "%sattempt to raise%s %s" % (messageStart, \
-                            forPlayerByPlayer, "that is not the owner of the game"),
-                'packet': PacketPokerRaise(serial = someoneElseSerial, game_id = gameId, amount=100) },
+                'output': "%sattempt to raise%s, or player is not not playing" % (messageStart, forPlayerByPlayer),
+                'packet': PacketPokerRaise(serial = someoneElseSerial, game_id = gameId, amount=100)
+            },
 # Note that the 'start' packet test that follows is different from all the
 # other packets in this group.  The point is that if a game.isEndorNull()
 # is true at line 411 of pokeravatar.py, the message sent back --
@@ -1551,10 +1530,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 #  bootm else block (see details in pokeravatar.handlePacketLogic()
 #                        'err_type' : PACKET_POKER_START },
             'check': {
-                'output': "%sattempt to check%s %s" % (
-                    messageStart,
-                    forPlayerByPlayer, "that is not the owner of the game"
-                ),
+                'output': "%sattempt to check%s, or player is not not playing" % (messageStart, forPlayerByPlayer),
                 'packet': PacketPokerCheck(serial = someoneElseSerial, game_id = gameId) 
             }
         }
@@ -2839,47 +2815,43 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     def variousPacketsWithStringOrSinglePacketReturn(self, (client, packet), avid, gameId):
         avatar = self.service.avatars[avid]
         packetTests = {
-            'muck_accept' : { 'output' : 
-                          "muck: game state muck expected, found null",
-                          'packet' :
-                                  PacketPokerMuckAccept(game_id = gameId,
-                                                        serial = client.getSerial()) },
-            'muck_deny' : { 'output' : 
-                          "muck: game state muck expected, found null",
-                          'packet' :
-                                  PacketPokerMuckDeny(game_id = gameId,
-                                                        serial = client.getSerial()) },
-            'wait_blind' : { 'output' : 
-                          "player %d cannot pay blind while in state null" % (client.getSerial(),),
-                          'packet' :
-                                  PacketPokerWaitBigBlind(game_id = gameId,
-                                                        serial = client.getSerial()) },
-            'ante' : { 'output' : 
-                          "no ante due",
-                          'packet' :
-                                  PacketPokerAnte(game_id = gameId, amount = 500,
-                                                        serial = client.getSerial()) },
-            'lookcards' : { 'answer_type' : PACKET_POKER_LOOK_CARDS,
-                          'packet' :
-                                  PacketPokerLookCards(game_id = gameId,
-                                                        serial = client.getSerial()) },
-            'fold' : { 'output' : "player %d cannot fold." % client.getSerial(),
-                          'packet' :
-                                  PacketPokerFold(game_id = gameId,
-                                                        serial = client.getSerial()) },
-            'call' : { 'output' : "player %d cannot call." % client.getSerial(),
-                          'packet' :
-                                  PacketPokerCall(game_id = gameId,
-                                                        serial = client.getSerial()) },
-            'raise' : { 'output' : "player %d cannot raise." % client.getSerial(),
-                          'packet' :
-                                  PacketPokerRaise(game_id = gameId, amount = 0,
-                                                        serial = client.getSerial()) },
-            'check' : { 'output' : "player %d cannot check." % client.getSerial(),
-                          'packet' :
-                                  PacketPokerCheck(game_id = gameId,
-                                                        serial = client.getSerial()) },
-            }
+            'muck_accept': {
+                'output': "muck: game state muck expected, found null",
+                'packet': PacketPokerMuckAccept(game_id = gameId, serial = client.getSerial())
+            },
+            'muck_deny': {
+                'output': "muck: game state muck expected, found null",
+                'packet': PacketPokerMuckDeny(game_id = gameId, serial = client.getSerial())
+            },
+            'wait_blind': {
+                'output': "player %d cannot pay blind while in state null" % (client.getSerial(),),
+                'packet': PacketPokerWaitBigBlind(game_id = gameId, serial = client.getSerial())
+            },
+            'ante': {
+                'output': "no ante due",
+                'packet': PacketPokerAnte(game_id = gameId, amount = 500, serial = client.getSerial())
+            },
+            'lookcards': {
+                'answer_type': PACKET_POKER_LOOK_CARDS,
+                'packet': PacketPokerLookCards(game_id = gameId, serial = client.getSerial())
+            },
+            'fold': {
+                'output': "player %d cannot fold." % client.getSerial(),
+                'packet': PacketPokerFold(game_id = gameId, serial = client.getSerial())
+            },
+            'call': {
+                'output': "player %d cannot call." % client.getSerial(),
+                'packet': PacketPokerCall(game_id = gameId, serial = client.getSerial())
+            },
+            'raise': {
+                'output': "player %d cannot raise." % client.getSerial(),
+                'packet': PacketPokerRaise(game_id = gameId, amount = 0, serial = client.getSerial())
+            },
+            'check': {
+                'output': "player %d cannot check." % client.getSerial(),
+                'packet': PacketPokerCheck(game_id = gameId, serial = client.getSerial())
+            },
+        }
         # Next, we loop through all the serial-related bad pack list,
         # attempting to handle each one.  Also, catch any error packets
         # for those we expect to receive.
