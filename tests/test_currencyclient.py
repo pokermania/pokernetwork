@@ -48,7 +48,7 @@ twisted.internet.base.DelayedCall.debug = True
 
 from urlparse import urlparse
 
-import log_history
+from log_history import log_history
 
 from pokernetwork import currencyclient
 
@@ -73,7 +73,6 @@ class CurrencyClientTestCase(unittest.TestCase):
 
     # -----------------------------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         self.destroyDb()
         self.client = currencyclient.CurrencyClient()
         self.client.getPage = self.getPage
@@ -358,7 +357,6 @@ EOF
 # -----------------------------------------------------------------------------
 class FakeCurrencyClientTestCase(CurrencyClientTestCase):
     def setUp(self):
-        self.log_history = log_history.Log()
         currencyclient.Verbose = True
         currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
         self.destroyDb()
@@ -370,10 +368,10 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         currencyclient.FakeCurrencyFailure = False
     # -----------------------------------------------------------------------------
     def getNote(self, url, value):
-        self.log_history.reset()
+        log_history.reset()
         d = self.client.getNote(url, value)
-        self.assertEquals(self.log_history.search("_buildNote"), True)
-        self.assertEquals(self.log_history.search("getNote"), True)
+        self.assertEquals(log_history.search("_buildNote"), True)
+        self.assertEquals(log_history.search("getNote"), True)
         if "?" in url:
             check_url = url[:url.index("?")]
         else:
@@ -394,9 +392,9 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         return d
     # -----------------------------------------------------------------------------
     def getCommitedNote(self, url, value):
-        self.log_history.reset()
+        log_history.reset()
         def checkCommitVerboseOutput(result):
-            self.assertEquals(self.log_history.search("commit"), True)
+            self.assertEquals(log_history.search("commit"), True)
             return result
         ret = CurrencyClientTestCase.getCommitedNote(self, url, value)
         ret.addCallback(checkCommitVerboseOutput)
@@ -408,10 +406,10 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         d = self.getCommitedNote('http://fake/', 100)
 
         def checkNote(result):
-            self.log_history.reset()
+            log_history.reset()
             note_to_check = result
             d = self.client.checkNote(note_to_check)
-            self.assertEquals(self.log_history.search("checkNote"), True)
+            self.assertEquals(log_history.search("checkNote"), True)
             def validate(result):
                 if isinstance(result, failure.Failure): raise result
                 checked_note = result
@@ -439,9 +437,9 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
 
         def mergeNotes(note):
             self.assertEquals(2, len(notes))
-            self.log_history.reset()
+            log_history.reset()
             d = self.client.mergeNotes(*notes)
-            self.assertEquals(self.log_history.search("mergeNotes"), True)
+            self.assertEquals(log_history.search("mergeNotes"), True)
             def validate(result):
                 if isinstance(result, failure.Failure): raise result
                 self.assertEqual(1, len(result))
@@ -491,7 +489,7 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
 
     def test04_changeNote(self):
         d = self.getCommitedNote('http://fake/', 100)
-        self.log_history.reset()
+        log_history.reset()
         def changeNote(result):
             class FakeNoteToChange:
                 def copy(self):
@@ -502,7 +500,7 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
                 self.assertEqual(result[0], 8)
                 self.assertEqual(result[1], 2)
                 self.assertEqual(40, len(result[2]))
-                self.assertEquals(self.log_history.search("changeNote"), True)
+                self.assertEquals(log_history.search("changeNote"), True)
                 return result
             d.addBoth(validate)
             return d
@@ -511,10 +509,10 @@ class FakeCurrencyClientTestCase(CurrencyClientTestCase):
         return d
 
     def test07_breakNote(self):
-        self.log_history.reset()
+        log_history.reset()
         d = CurrencyClientTestCase.test07_breakNote(self)
         def checkOutput(result):
-            self.assertEquals(self.log_history.search("breakNote values"), True)
+            self.assertEquals(log_history.search("breakNote values"), True)
             return True
 
         d.addCallback(checkOutput)
@@ -569,7 +567,6 @@ class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
             })
     # -----------------------------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         self.destroyDb()
     # -----------------------------------------------------------------------------
     def tearDown(self):
@@ -582,7 +579,7 @@ class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
         self.client = currencyclient.RealCurrencyClient()
         caughtIt = False
 
-        self.log_history.reset()
+        log_history.reset()
         try:
             self.client.parseResultNote("two\tfield")
             self.fail("Previous line should have caused exception")
@@ -591,7 +588,7 @@ class ErrorCondtionsCurrencyClientTestCase(unittest.TestCase):
             caughtIt = True
             
         self.assertTrue(caughtIt, "Should have caught an exception")
-        self.assertEquals(self.log_history.get_all(), ["parseResultNote: ignore line: two\tfield"])
+        self.assertEquals(log_history.get_all(), ["parseResultNote: ignore line: two\tfield"])
     # -----------------------------------------------------------------------------
     def test02_commit_multiLineResult(self):
         self.client = currencyclient.RealCurrencyClient()

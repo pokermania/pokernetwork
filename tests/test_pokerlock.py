@@ -34,7 +34,7 @@ sys.path.insert(0, path.join(TESTS_PATH, ".."))
 sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
-import log_history
+from log_history import log_history
 
 from twisted.python import failure
 from twisted.trial import unittest, runner, reporter
@@ -56,17 +56,16 @@ logger.addHandler(handler)
 logger.setLevel(10)
 
 class PokerLockTestCase(unittest.TestCase):
-    # A note about self.log_history.reset()() calls: Note that due to the
+    # A note about log_history.reset()() calls: Note that due to the
     #  threading nature of the pokerlock methods, you must be very careful
-    #  when you call self.log_history.reset()() in these tests.  This is because
+    #  when you call log_history.reset()() in these tests.  This is because
     #  a thread can wake up and write the messages you are hoping for to
     #  check in your tests while you are clearing them.  The most
     #  important rule-of-thumb that I discovered was to make sure that you
-    #  always call self.log_history.reset()() before each lock.aquire() method
+    #  always call log_history.reset()() before each lock.aquire() method
     #  call.
     #  ----------------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         pokerlock.PokerLock.acquire_sleep = 1
         self.parameters = {'host': config.test.mysql.host, 'user': config.test.mysql.root_user.name, 'password': config.test.mysql.root_user.password}
         pokerlock.PokerLock.queue_timeout = 30
@@ -77,13 +76,13 @@ class PokerLockTestCase(unittest.TestCase):
         self.locker.close()
     # ----------------------------------------------------------------    
     def test01_simple(self):
-        self.log_history.reset()()
+        log_history.reset()()
         d = self.locker.acquire('lock01')
         def validate(result):
             if isinstance(result, failure.Failure): raise result
             for string in  ['__acquire lock01',
                          '__acquire got MySQL lock', 'acquired' ]:
-                self.failUnless(self.log_history.search(string), "missing '%s' in output" % string)
+                self.failUnless(log_history.search(string), "missing '%s' in output" % string)
             self.assertEqual("lock01", result)
             self.locker.release('lock01')
             return result
@@ -105,16 +104,16 @@ class PokerLockTestCase(unittest.TestCase):
                 '__acquire lock01', 'acquired', 'exception in function', 'loop, queue size'
             ]
             for s in needed:
-                self.assertTrue(self.log_history.search(s), "missing '%s' in output (got %s)" % (s,self.log_history.get_all()))
+                self.assertTrue(log_history.search(s), "missing '%s' in output (got %s)" % (s,log_history.get_all()))
 
-            self.log_history.reset()()
+            log_history.reset()()
             self.locker.release('lock01')
             self.assertTrue(isinstance(result, failure.Failure))
             self.assertEqual(result.value[0], pokerlock.PokerLock.TIMED_OUT)
             self.locker2.close()
 
         def locker2():
-            self.log_history.reset()()
+            log_history.reset()()
             self.locker2 = pokerlock.PokerLock(self.parameters)
             self.locker2.start()
             d = self.locker2.acquire('lock01', 0)
@@ -131,25 +130,25 @@ class PokerLockTestCase(unittest.TestCase):
                 '__acquire got MySQL lock'
             ]
             for s in needed:
-                self.assertTrue(self.log_history.search(s), "missing '%s' in output (got %s)" % (s,self.log_history.get_all()))
+                self.assertTrue(log_history.search(s), "missing '%s' in output (got %s)" % (s,log_history.get_all()))
             self.assertEqual("lock01", result)
             return locker2()
 
-        self.log_history.reset()()
+        log_history.reset()()
         d = self.locker.acquire('lock01', 0)
         d.addBoth(validate)
         return d
     # ----------------------------------------------------------------    
     def test03_acquire_dead(self):
         self.locker.close()
-        self.log_history.reset()()
+        log_history.reset()()
         try:
             self.locker.acquire('lock01')
             problem = True
         except Exception, e:
             problem = False
             self.assertEqual(e[0], pokerlock.PokerLock.DEAD)
-            self.failUnless(self.log_history.search('acquire'), "missing 'acquire' in output")
+            self.failUnless(log_history.search('acquire'), "missing 'acquire' in output")
         if problem:
             self.fail("acquire on dead PokerLock did not raise exception")
     # ----------------------------------------------------------------    
@@ -159,26 +158,26 @@ class PokerLockTestCase(unittest.TestCase):
             self.assertEqual("lock01", result)
             for string in ['__acquire lock01', 'acquired',
                            '__acquire got MySQL lock']:
-                if not self.log_history.search(string): print self.log_history.get_all()
-                self.failUnless(self.log_history.search(string), "%s not found in output" % string)
+                if not log_history.search(string): print log_history.get_all()
+                self.failUnless(log_history.search(string), "%s not found in output" % string)
 
-            self.log_history.reset()()
+            log_history.reset()()
             self.locker.release("lock01")
-            self.failUnless(self.log_history.search('release lock01'),
+            self.failUnless(log_history.search('release lock01'),
                             "missing 'release lock01' in output")
-            self.log_history.reset()()
+            log_history.reset()()
             try:
                 self.locker.release("lock01")
                 problem = True
             except Exception, e:
                 problem = False
                 self.assertEqual(e[0], pokerlock.PokerLock.RELEASE)
-                self.failUnless(self.log_history.search('release lock01'),
+                self.failUnless(log_history.search('release lock01'),
                                 "missing 'release lock01' in output")
             if problem:
                 self.fail("double release did not raise exception")
 
-        self.log_history.reset()()
+        log_history.reset()()
         d = self.locker.acquire('lock01')
         d.addBoth(validate)
         return d
@@ -196,7 +195,7 @@ class PokerLockTestCase(unittest.TestCase):
             d = self.locker.acquire('lock01', 3)
             d.addBoth(show)
             dl.append(d)
-        self.log_history.reset()()
+        log_history.reset()()
         return defer.DeferredList(dl)
     # ----------------------------------------------------------------    
     def test06_aquireTimeout(self):
@@ -210,14 +209,14 @@ class PokerLockTestCase(unittest.TestCase):
         def lockTimeoutExpected_failed(result):
             self.assertTrue(isinstance(result, failure.Failure))
             self.assertEqual(result.value[0], pokerlock.PokerLock.TIMED_OUT)
-            self.failUnless(self.log_history.search('__acquire TIMED OUT'),
+            self.failUnless(log_history.search('__acquire TIMED OUT'),
                             "missing '__acquire TIMED OUT' in output")
             
         def lockFastTimeout():
-            self.failUnless(self.log_history.search('acquire'),
+            self.failUnless(log_history.search('acquire'),
                             "missing 'acquire' in output")
             pokerlock.PokerLock.acquire_sleep = 1
-            self.log_history.reset()()
+            log_history.reset()()
             d = self.locker.acquire('lock01', 0)
             d.addCallback(lockTimeoutExpected_succeeded)
             d.addErrback(lockTimeoutExpected_failed)
@@ -228,26 +227,26 @@ class PokerLockTestCase(unittest.TestCase):
             self.assertEqual("lock01", result)
             for string in  ['__acquire lock01',
                          '__acquire got MySQL lock', 'acquired' ]:
-                if not self.log_history.search(string):
-                    print self.log_history.get_all()
-                self.failUnless(self.log_history.search(string), "missing '%s' in output" % string)
+                if not log_history.search(string):
+                    print log_history.get_all()
+                self.failUnless(log_history.search(string), "missing '%s' in output" % string)
             return lockFastTimeout()
 
         pokerlock.PokerLock.acquire_sleep = 0.01
-        self.log_history.reset()()
+        log_history.reset()()
         d = self.locker.acquire('lock01', 30)
         d.addBoth(validate)
         return d
     # ----------------------------------------------------------------    
     def test07_mainTests_stopped(self):
-        self.log_history.reset()()
+        log_history.reset()()
         self.locker.stopping()
-        self.failUnless(self.log_history.search("stopping"), "missing 'stopping' in output")
-        self.log_history.reset()()
+        self.failUnless(log_history.search("stopping"), "missing 'stopping' in output")
+        log_history.reset()()
         d = defer.Deferred()
         def checker(val):
             self.failIf(self.locker.running)
-            self.failUnless(self.log_history.search("stopped"), "missing 'stopped' in output")
+            self.failUnless(log_history.search("stopped"), "missing 'stopped' in output")
         reactor.callLater(pokerlock.PokerLock.acquire_sleep*3, lambda: d.callback(True))
         return d
     # ----------------------------------------------------------------    
@@ -290,13 +289,13 @@ class PokerLockTestCase(unittest.TestCase):
                 self.connect(parameters)
                 threading.Thread.__init__(self, target = self.main)
 
-        self.log_history.reset()()
+        log_history.reset()()
         mockLocker = MockInitLock(self.parameters)
         mockLocker.start()
         mockLocker.close()
-        self.failUnless(self.log_history.search("timeout"),
+        self.failUnless(log_history.search("timeout"),
                           "output does not contain 'timeout'")
-        self.failUnless(self.log_history.search("loop"),
+        self.failUnless(log_history.search("loop"),
                           "output does not contain 'loop'")
         self.failUnless(myMockQueue.qSizeCallCount > 0,
                         "MockQueue.qSize() should be called at least once.")
@@ -366,14 +365,14 @@ class PokerLockTestCase(unittest.TestCase):
             def release(lSelf):
                 lSelf.calledReleaseCount += 1
 
-        self.log_history.reset()()
+        log_history.reset()()
         anotherLock = pokerlock.PokerLock(self.parameters)
         anotherLock.q = MockQueue()
         anotherLock.lock = MockLock()
         myLock = anotherLock
         anotherLock.start()
         time.sleep(2)
-        self.failUnless(self.log_history.search('release because not running'), 
+        self.failUnless(log_history.search('release because not running'), 
                         "missing 'release because not running' in output")
         self.assertEquals(anotherLock.running, False)
         self.assertEquals(anotherLock.lock.calledReleaseCount, 1)
@@ -421,7 +420,7 @@ class PokerLockTestCase(unittest.TestCase):
             def release(lSelf):
                 raise MockException("MOCKY NO LOCK RELEASE")
 
-        self.log_history.reset()()
+        log_history.reset()()
         anotherLock = pokerlock.PokerLock(self.parameters)
 
         anotherLock.q = MockQueue()
@@ -435,7 +434,7 @@ class PokerLockTestCase(unittest.TestCase):
             'failed to release lock after exception',
             'raise MockException("MOCKY NO LOCK RELEASE")'
         ]:
-            self.failUnless(self.log_history.search(string), "missing '%s' in output" % string)
+            self.failUnless(log_history.search(string), "missing '%s' in output" % string)
     # ----------------------------------------------------------------    
     def test12_mainTests_makeSureDBCloses(self):
         class  MockDB:

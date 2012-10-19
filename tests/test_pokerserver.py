@@ -30,7 +30,7 @@ sys.path.insert(0, path.join(TESTS_PATH, ".."))
 sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
-import log_history
+from log_history import log_history
 import sqlmanager
 
 from twisted.trial import unittest, runner, reporter
@@ -157,7 +157,6 @@ class PokerServerMakeServiceManholeTestCase(unittest.TestCase):
         )
     # -------------------------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         self.filename = os.path.join(self.tmpdir, "poker.server.xml")
@@ -193,7 +192,6 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         )
     # -------------------------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         self.filename = os.path.join(self.tmpdir, "poker.server.xml")
@@ -616,7 +614,6 @@ class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
         )
     # -------------------------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
     # -------------------------------------------------------------------------
@@ -667,7 +664,6 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
         )
     # -------------------------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         self.saveArgv = None
@@ -696,7 +692,7 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
             self.assertEquals(e.__str__(), "1")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
-        self.assertTrue(self.log_history.search("reactor already installed"))
+        self.assertTrue(log_history.search("reactor already installed"))
         
     def test01_missingConfigFileGivenOnCLI_forceReactorInstall(self):
         import platform
@@ -727,7 +723,7 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
         
-        self.assertTrue(self.log_history.search("installing epoll reactor"))
+        self.assertTrue(log_history.search("installing epoll reactor"))
 
         self.failIf(reactorCalled, "epoll reactor should have been installed")
 

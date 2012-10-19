@@ -31,7 +31,7 @@ sys.path.insert(0, path.join(TESTS_PATH, ".."))
 sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
-import log_history
+from log_history import log_history
 import sqlmanager
 
 import libxml2

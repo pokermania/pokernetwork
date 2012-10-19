@@ -2941,6 +2941,8 @@ from twisted.web import resource, server
 
 class PokerTree(resource.Resource):
 
+    _log = log.get_child('PokerTree')
+
     def __init__(self, service):
         resource.Resource.__init__(self)
         self.service = service
@@ -2948,7 +2950,7 @@ class PokerTree(resource.Resource):
         try:
             self.putChild("SOAP", PokerSOAP(self.service))
         except:
-            self.log.error("SOAP service not available")
+            self._log.error("SOAP service not available")
         self.putChild("", self)
 
     def render_GET(self, request):

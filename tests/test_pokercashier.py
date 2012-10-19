@@ -33,7 +33,7 @@ sys.path.insert(0, path.join(TESTS_PATH, ".."))
 sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
-import log_history
+from log_history import log_history
 
 import libxml2
 from MySQLdb.cursors import DictCursor
@@ -159,7 +159,6 @@ class PokerCashierTestCase(unittest.TestCase):
         
     # --------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         self.destroyDb()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -458,7 +457,7 @@ class PokerCashierTestCase(unittest.TestCase):
 
     # --------------------------------------------------------
     def test07_getCurrencySerial(self):
-        self.log_history.reset()
+        log_history.reset()
         self.cashier.parameters['user_create'] = 'no';
 
         pe = self.failUnlessRaises(PacketError, self.cashier.getCurrencySerial, 'http://fake')
@@ -467,7 +466,7 @@ class PokerCashierTestCase(unittest.TestCase):
         self.assertEquals(pe.message, 
                         'Invalid currency http://fake and user_create = no in settings.')
         self.assertEquals(pe.code, PacketPokerCashIn.REFUSED)
-        self.assertEquals(self.log_history.get_all(),
+        self.assertEquals(log_history.get_all(),
                           ["SELECT serial FROM currencies WHERE url = 'http://fake'"])
     # --------------------------------------------------------
     def test08_forcecashInUpdateSafeFail(self):
@@ -643,7 +642,6 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         
     # --------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         self.destroyDb()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -661,7 +659,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
 #        self.destroyDb()
     # --------------------------------------------------------
     def test01_getCurrencySerial_forceExceptionOnRowCount(self):
-        self.log_history.reset()
+        log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
         class MockCursor:
             def __init__(cursorSelf):
@@ -696,13 +694,13 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         
         self.failUnless(caughtExeption)
 
-        self.assertEquals(self.log_history.get_all(), [
+        self.assertEquals(log_history.get_all(), [
             "SELECT serial FROM currencies WHERE url = 'http://example.org'", 
             "INSERT INTO currencies (url) VALUES ('http://example.org')"
         ])
     # --------------------------------------------------------
     def test02_getCurrencySerial_forceExceptionOnExecute(self):
-        self.log_history.reset()
+        log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
         
         class MockCursor(MockCursorBase):
@@ -726,10 +724,10 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(e[0], ER.DUP_ENTRY)
         self.failUnless(caughtExeption)
 
-        self.assertEquals(self.log_history.get_all(), ["SELECT serial FROM currencies WHERE url = 'http://example.org'"])
+        self.assertEquals(log_history.get_all(), ["SELECT serial FROM currencies WHERE url = 'http://example.org'"])
     # --------------------------------------------------------
     def test03_getCurrencySerial_forceRecursionWithNoResolution(self):
-        self.log_history.reset()
+        log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
                     
         class MockCursor(MockCursorBase):
@@ -757,7 +755,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().counts["SELECT"], 2)
         self.assertEquals(db.cursor().counts["INSERT INTO"], 2)
 
-        self.assertEquals(self.log_history.get_all(), [
+        self.assertEquals(log_history.get_all(), [
             "SELECT serial FROM currencies WHERE url = 'http://example.org'", 
             "SELECT serial FROM currencies WHERE url = 'http://example.org'", 
         ])
@@ -770,7 +768,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         is wrapped in a try/except, so we catch that and make sure the
         operations."""
 
-        self.log_history.reset()
+        log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
         
         class MockCursor(MockCursorBase):
@@ -810,7 +808,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         On the second call to cashOutCollect(), we return a valid row.
         This causes us to get back a valid packet.  But still an (ignored)
         error on the lock() not existing."""
-        self.log_history.reset()
+        log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
             
         class MockCursor(MockCursorBase):
@@ -843,7 +841,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().counts['INSERT INTO'], 1)
         self.assertEquals(db.cursor().counts['ROLLBACK'], 0)
         self.assertEquals(db.cursor().counts['COMMIT'], 1)
-        msgs = self.log_history.get_all()
+        msgs = log_history.get_all()
         self.assertEquals(msgs[len(msgs)-1], 'cashInUnlock: unexpected missing cash_5 in locks (ignored)')
     # --------------------------------------------------------
     def test06_cashOutUpdateSafe_forceFakeFalsePacket(self):
@@ -851,7 +849,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         We override the second call to cashOutCollect(), so we return a
         valid row.  We force the packet returned to always be false, to
         force the final error code to operate.  """
-        self.log_history.reset()
+        log_history.reset()
         self.cashier.parameters['user_create'] = 'yes'
         class MockCursor:
             def __init__(cursorSelf):
@@ -917,11 +915,11 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().counts['INSERT INTO'], 1)
         self.assertEquals(db.cursor().counts['ROLLBACK'], 0)
         self.assertEquals(db.cursor().counts['COMMIT'], 1)
-        msgs = self.log_history.get_all()
+        msgs = log_history.get_all()
         self.assertEquals(msgs[len(msgs)-1], 'cashInUnlock: unexpected missing cash_5 in locks (ignored)')
     # --------------------------------------------------------
     def cashOutUpdateCounter_weirdLen(self, new_notes, message):
-        self.log_history.reset()
+        log_history.reset()
         class  MockDatabase:
             def cursor(dbSelf): return MockCursor()
         class  MockCursor: pass
@@ -939,7 +937,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(pe.code, PacketPokerCashOut.BREAK_NOTE)
             self.assertEquals(pe.message, "breaking dummy packet resulted in %d notes (%s) instead of 2"
                               % (len(new_notes), message))
-            self.assertEquals(self.log_history.get_all(),
+            self.assertEquals(log_history.get_all(),
                               ["cashOutUpdateCounter: new_notes = %s packet = dummy packet" % message])
         self.failUnless(caughtIt)
     # --------------------------------------------------------
@@ -1004,7 +1002,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.cashier.setDb(db)
 
         caughtIt = False
-        self.log_history.reset()
+        log_history.reset()
         try:
             self.cashier.cashOutUpdateCounter([ (0, 5, "joe", 55), (0, 0, "server", 0)],
                                               MockPacket())
@@ -1018,7 +1016,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(db.cursor().counts['ROLLBACK'], 1)
         self.assertEquals(db.cursor().counts['COMMIT'], 0)
         self.assertEquals(db.cursor().counts['START TRANSACTION'], 1)
-        self.assertEquals(self.log_history.get_all(), 
+        self.assertEquals(log_history.get_all(), 
                           ["cashOutUpdateCounter: new_notes = [(0, 5, 'joe', 55), (0, 0, 'server', 0)] packet = MOCK PACKET"])
     # --------------------------------------------------------
     def test09_cashOutUpdateCounter_forceRaiseOnNotesOrder(self):
@@ -1026,7 +1024,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         This test handles the case where new_notes do not match what is in
         the packet sent to cashOutUpdateCounter() """
         caughtIt = False
-        self.log_history.reset()
+        log_history.reset()
         class  MockPacket:
             def __init__(mockPacketSelf): mockPacketSelf.value  = 43
             def __str__(mockPacketSelf):  return "MOCK PACKET"
@@ -1089,7 +1087,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.cashier.setDb(db)
         self.cashier.currency_client = MockCurrencyClient()
 
-        self.log_history.reset()
+        log_history.reset()
         d = self.cashier.cashOutBreakNote("MEANINGLESS ARG", MockPacket())
 
         for key in db.cursor().counts.keys():
@@ -1098,13 +1096,13 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             else:
                 self.assertEquals(db.cursor().counts[key], 0)
                 
-        self.assertEquals(self.log_history.get_all(), [
+        self.assertEquals(log_history.get_all(), [
             "SELECT transaction_id FROM counter WHERE currency_serial = 12", 
             "cashOutCurrencyCommit", 
             "SELECT serial FROM currencies WHERE url = 'http://cashier.example.org'"
         ])
         
-        self.log_history.reset()
+        log_history.reset()
 
         self.assertEquals(d.callback(True), None)
         pack = d.result
@@ -1116,7 +1114,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         self.assertEquals(pack.value, 100)
         self.assertEquals(pack.application_data, 'application')
         [self.assertEquals(db.cursor().counts[key], 1) for key in db.cursor().counts.keys()]
-        msgs = self.log_history.get_all()
+        msgs = log_history.get_all()
         self.assertEquals(len(msgs), 4)
         self.assertEquals(msgs[0], 'cashOutUpdateSafe: 6 777')
         self.assertEquals(msgs[3], 'cashInUnlock: unexpected missing cash_6 in locks (ignored)')
@@ -1143,7 +1141,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
         db = MockDatabase(MockCursor)
         self.cashier.setDb(db)
 
-        self.log_history.reset()
+        log_history.reset()
         caughtIt = False
         failMsg = 'SELECT name, serial, value FROM safe WHERE currency_serial = 12 found 0 records instead of exactly 1'
         try:
@@ -1156,7 +1154,7 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
             self.assertEquals(pe.code, PacketPokerCashOut.SAFE)
             self.assertEquals(pe.message, failMsg)
         self.failUnless(caughtIt)
-        msgs = self.log_history.get_all()
+        msgs = log_history.get_all()
         self.assertEquals(len(msgs), 3)
         self.assertEquals(msgs[2], "" + failMsg)
 # --------------------------------------------------------
@@ -1165,7 +1163,6 @@ class PokerCashierFakeDBTestCase(unittest.TestCase):
 class PokerCashierLockUnlockTestCase(unittest.TestCase):
     # --------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         from pokernetwork import pokerlock
         class  MockLock:
             def __init__(lockSelf, params):
@@ -1203,16 +1200,16 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         """test01_unlockNonExistent
         Tests when unlock is called on a serial that does not exist."""
         self.assertEquals(self.cashier.locks, {})
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(self.cashier.unlock(5), None)
         self.assertEquals(self.cashier.locks, {})
-        self.assertEquals(self.log_history.get_all(), ['cashInUnlock: unexpected missing cash_5 in locks (ignored)'])
+        self.assertEquals(log_history.get_all(), ['cashInUnlock: unexpected missing cash_5 in locks (ignored)'])
     # --------------------------------------------------------
     def test02_lockCreateTwice(self):
         """test02_lockCreateTwice
         Testing creation of the lock twice."""
         self.assertEquals(self.cashier.locks, {})
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
         cash2Lock = self.cashier.locks['cash_2']
@@ -1226,7 +1223,7 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         Testing creation of the lock again after the activity is turned
         off."""
         self.assertEquals(self.cashier.locks, {})
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
         cash2Lock = self.cashier.locks['cash_2']
@@ -1234,9 +1231,9 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2Lock.started)
         self.assertEquals(cash2Lock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2Lock.acquireCounts['cash_2'], 1)
-        self.assertEquals(self.log_history.get_all(), ['get lock cash_2'])
+        self.assertEquals(log_history.get_all(), ['get lock cash_2'])
 
-        self.log_history.reset()
+        log_history.reset()
         cash2Lock.alive = False
 
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
@@ -1246,13 +1243,13 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2newLock.started)
         self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2newLock.acquireCounts['cash_2'], 1)
-        self.assertEquals(self.log_history.get_all(), ['get lock cash_2'])
+        self.assertEquals(log_history.get_all(), ['get lock cash_2'])
     # --------------------------------------------------------
     def test04_unlockTwice(self):
         """test03_unlockTwice
         try to unlock a lock twice"""
         self.assertEquals(self.cashier.locks, {})
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
         cash2Lock = self.cashier.locks['cash_2']
@@ -1260,18 +1257,9 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2Lock.started)
         self.assertEquals(cash2Lock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2Lock.acquireCounts['cash_2'], 1)
-        self.assertEquals(self.log_history.get_all(), ['get lock cash_2'])
+        self.assertEquals(log_history.get_all(), ['get lock cash_2'])
 
-        self.log_history.reset()
-
-        self.assertEquals(self.cashier.unlock(2), None)
-        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
-        cash2newLock = self.cashier.locks['cash_2']
-        self.failIf(cash2newLock.alive)
-        self.failUnless(cash2newLock.started)
-        self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
-        self.assertEquals(cash2newLock.acquireCounts['cash_2'], 0)
-        self.assertEquals(self.log_history.get_all(), [])
+        log_history.reset()
 
         self.assertEquals(self.cashier.unlock(2), None)
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
@@ -1280,14 +1268,23 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2newLock.started)
         self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2newLock.acquireCounts['cash_2'], 0)
-        self.assertEquals(self.log_history.get_all(),
+        self.assertEquals(log_history.get_all(), [])
+
+        self.assertEquals(self.cashier.unlock(2), None)
+        self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
+        cash2newLock = self.cashier.locks['cash_2']
+        self.failIf(cash2newLock.alive)
+        self.failUnless(cash2newLock.started)
+        self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
+        self.assertEquals(cash2newLock.acquireCounts['cash_2'], 0)
+        self.assertEquals(log_history.get_all(),
                           ['cashInUnlock: unexpected dead cash_2 pokerlock (ignored)'])
     # --------------------------------------------------------
     def test05_lockCreateTwiceWhenAliven(self):
         """test05_lockCreateTwiceWhenAlive
         relock after lock leaving it alive"""
         self.assertEquals(self.cashier.locks, {})
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 1")
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
         cash2Lock = self.cashier.locks['cash_2']
@@ -1295,9 +1292,9 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2Lock.started)
         self.assertEquals(cash2Lock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2Lock.acquireCounts['cash_2'], 1)
-        self.assertEquals(self.log_history.get_all(), ['get lock cash_2'])
+        self.assertEquals(log_history.get_all(), ['get lock cash_2'])
 
-        self.log_history.reset()
+        log_history.reset()
 
         self.assertEquals(self.cashier.lock(2), "ACQUIRED cash_2: 2")
         self.assertEquals(self.cashier.locks.keys(), ['cash_2'])
@@ -1306,7 +1303,7 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.failUnless(cash2newLock.started)
         self.assertEquals(cash2newLock.acquireCounts.keys(), [ 'cash_2' ])
         self.assertEquals(cash2newLock.acquireCounts['cash_2'], 2)
-        self.assertEquals(self.log_history.get_all(), ['get lock cash_2'])
+        self.assertEquals(log_history.get_all(), ['get lock cash_2'])
 # --------------------------------------------------------
 def GetTestedModule():
     return pokerengineconfig

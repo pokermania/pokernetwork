@@ -32,7 +32,7 @@ TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
 sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
-import log_history
+from log_history import log_history
 
 from pokernetwork import protocol
 from pokernetwork import protocol_number
@@ -98,7 +98,6 @@ class UGAMEProtocolTestCase(unittest.TestCase):
     """Test case for class UGAMEProtocol"""
 
     def setUp(self):
-        self.log_history = log_history.Log()
         self.u = protocol.UGAMEProtocol()
         self.u.transport = FakeTransport()
         self.u.factory = FakeFactory(int(os.environ.get('VERBOSE_T', 6)))
@@ -187,7 +186,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
  
     def testConnectionLost(self):
         """Testing ConnectionLost"""
-        self.log_history.reset()
+        log_history.reset()
         self.u.established = 1
         self.u.connectionLost("testing")
             
@@ -195,7 +194,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
 
     def testConnectionLostWithProtocolOk(self):
         """Testing ConnectionLostWithProtocolOk"""
-        self.log_history.reset()
+        log_history.reset()
         self.u.established = 1
         self.u._protocol_ok = True
         self.u.connectionLost("another")
@@ -204,11 +203,11 @@ class UGAMEProtocolTestCase(unittest.TestCase):
     
     def testHandleConnection(self):
         """Testing _handleConnection"""        
-        self.log_history.reset()
+        log_history.reset()
         # there is just a pass here in the implementation, there is really
         # nothing to be done to truly test it.
         self.assertEquals(self.u._handleConnection("..."), None)
-        self.assertEquals(self.log_history.get_all(), [])
+        self.assertEquals(log_history.get_all(), [])
 
     def testIgnoreIncomingData(self):
         """Testing ignoreIncomingData"""
@@ -223,25 +222,25 @@ class UGAMEProtocolTestCase(unittest.TestCase):
 
         assert self.u._protocol_ok == False        , "_protocol_ok : False expected"
         # Messages should be empty, protocol is not established
-        self.log_history.reset()
+        log_history.reset()
         self.u._handleVersion()
-        self.assertEquals(self.log_history.get_all(), [])
+        self.assertEquals(log_history.get_all(), [])
         
         assert self.u._protocol_ok == False        ,"_protocol_ok change unexpected"
         
         self.u._packet = list('\n')
         # Messages should be empty, protocol is not established
-        self.log_history.reset()
+        log_history.reset()
         self.u._handleVersion()
-        self.assertEquals(self.log_history.get_all(), [])
+        self.assertEquals(log_history.get_all(), [])
         assert self.u.transport._loseConnection == True , "loseConnection not called"
 
         self.u.transport = FakeTransport()      # transport re-init
         self.u._packet = list('CGI a.b\n')
         # Messages should be empty, protocol is not established
-        self.log_history.reset()
+        log_history.reset()
         self.u._handleVersion()
-        self.assertEquals(self.log_history.get_all(), [])
+        self.assertEquals(log_history.get_all(), [])
         assert self.u.transport._loseConnection == True , "loseConnection not called"
 
         self.u.transport = FakeTransport()      # transport re-init
@@ -249,9 +248,9 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         PROTOCOL_MAJOR = "%03d" % vers.major()
         PROTOCOL_MINOR = "%d%02d" % ( vers.medium(), vers.minor() )
         self.u._packet = list( 'CGI %s.%s \n' % (PROTOCOL_MAJOR, PROTOCOL_MINOR ))
-        self.log_history.reset()
+        log_history.reset()
         self.u._handleVersion()
-        self.assertEquals(self.log_history.get_all(), ["protocol established"])
+        self.assertEquals(log_history.get_all(), ["protocol established"])
 
         assert self.u._protocol_ok == True ,  "_protocol_ok value unexpected"
 
@@ -339,7 +338,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.u._queues[3].packets.insert( 0, FakePacket(threeArg, "three") )
 
         # Ok, Test blocked first -- nothing happens
-        self.log_history.reset()
+        log_history.reset()
         self.u._blocked = True
         self.u._processQueues()
         k = self.u._queues.keys()
@@ -347,7 +346,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
 
         k.sort()
         self.assertEquals(k, [ 0, 1, 2, 3 ])
-        self.assertEquals(self.log_history.get_all(), [])
+        self.assertEquals(log_history.get_all(), [])
         self.assertEquals(self.u._lag, 0)
 
         # Unblocked test, function fully runs
@@ -381,9 +380,9 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.assertEquals(len(self.u._queues[3].packets), 1)
         self.assertEquals(triggerTimerCallCount,  1)
 
-        self.assertEquals(len(self.log_history.get_all()), 2)
-        self.assertEquals(self.log_history.get_all()[0], ' => queue 1 delay canceled because lag too high')
-        self.assertEquals(self.log_history.get_all()[1].find('seconds before handling the next packet in queue 3') > 0, True)
+        self.assertEquals(len(log_history.get_all()), 2)
+        self.assertEquals(log_history.get_all()[0], ' => queue 1 delay canceled because lag too high')
+        self.assertEquals(log_history.get_all()[1].find('seconds before handling the next packet in queue 3') > 0, True)
 
     def triggerTimer_expectNoCallLater(self, doneOk):
         def mockProcessQueue(): self.fail()
@@ -498,31 +497,31 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.u._expected_len = 3
         self.u._packet.append("\x00\x00\x03")
         self.u._packet_len = len("\x00\x00\x03")
-        self.log_history.reset()
+        log_history.reset()
         self.u.handleData() 
-        self.assertEquals(self.log_history.get_all(), ['(3 bytes) => type = NONE(0)'])
+        self.assertEquals(log_history.get_all(), ['(3 bytes) => type = NONE(0)'])
 
         self.u._poll = False
         self.u._packet.append("\x00\x00\x03")
         self.u._packet_len = len("\x00\x00\x03")
-        self.log_history.reset()
+        log_history.reset()
         self.u.handleData()
-        self.assertEquals(self.log_history.get_all(), ['(3 bytes) => type = NONE(0)'])
+        self.assertEquals(log_history.get_all(), ['(3 bytes) => type = NONE(0)'])
 
         self.u._packet.append("\xff\x00\x03")
         self.u._packet_len = len("\xff\x00\x03")
-        self.log_history.reset()
+        log_history.reset()
         self.u.handleData()
-        self.assertEquals(self.log_history.get_all(), [': unknown message received (id 255, length 3)\n'])
+        self.assertEquals(log_history.get_all(), [': unknown message received (id 255, length 3)\n'])
         # trying with wrong packet
         self.u._packet.append("\xff\x00\x00")
         self.u._packet_len = len("\xff\x00\x00")
-        self.log_history.reset()
+        log_history.reset()
         self.u.handleData()
         # FIXME (maybe): I am not completely sure it's correct that we
         # should get absolutely no output when we send the "wrong packet".
         # I've asked Loic to take a look.
-        self.assertEquals(self.log_history.get_all(), [])
+        self.assertEquals(log_history.get_all(), [])
         return fakeProcessQueuesDeferred
         
     def testDataReceived(self):
@@ -564,7 +563,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         
     def testCoverDataWrite(self):
         """Testing data write"""
-        self.log_history.reset()
+        log_history.reset()
         tot = protocol.UGAMEProtocol._stats_write
 
         global calledWrite
@@ -581,7 +580,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.assertEquals(tot + len(myData), protocol.UGAMEProtocol._stats_write)
 
         self.assertEquals(calledWrite, 1)
-        self.assertEquals(self.log_history.get_all(), [])
+        self.assertEquals(log_history.get_all(), [])
 
 #------------------------------------------------------------------------
 

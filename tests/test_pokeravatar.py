@@ -30,7 +30,7 @@ sys.path.insert(0, path.join(TESTS_PATH, ".."))
 sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
-import log_history
+from log_history import log_history
 import sqlmanager
 
 import locale
@@ -234,7 +234,6 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         return d
     # ------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         testclock._seconds_reset()        
 
         self.avatarLocales = {}
@@ -1573,9 +1572,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         def assertBadAttempt(key,info):
             avatar.resetPacketsQueue()
             avatar.queuePackets()
-            self.log_history.reset()
+            log_history.reset()
             avatar.handlePacketLogic(info['packet'])
-            self.assertEqual(self.log_history.search(info['output']), True, info['output'])
+            self.assertEqual(log_history.search(info['output']), True, info['output'])
 
             found = False
             for packet in avatar.resetPacketsQueue():
@@ -2565,17 +2564,17 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
 
         avatar.queuePackets()
-        self.log_history.reset()
+        log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
-        self.assertEqual(self.log_history.search("tried to start a new game but is not the owner of the table"), True)
+        self.assertEqual(log_history.search("tried to start a new game but is not the owner of the table"), True)
         # Coverage for when the server is shutting down
 
         avatar.service.shutting_down = True
 
         avatar.queuePackets()
-        self.log_history.reset()
+        log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
-        self.assertEqual(self.log_history.search("Not autodealing because server is shutting down"), True)
+        self.assertEqual(log_history.search("Not autodealing because server is shutting down"), True)
 
         # Coverage for the table owner is not the player, but it would
         # otherwise be a valid start
@@ -2586,9 +2585,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar.resetPacketsQueue()
         avatar.queuePackets()
-        self.log_history.reset()
+        log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
-        self.assertEquals(self.log_history.search('tried to start a new game but is not the owner of the table'), True)
+        self.assertEquals(log_history.search('tried to start a new game but is not the owner of the table'), True)
                           
         # Coverage for the table owner is the player
         avatar.service.shutting_down = False
@@ -2598,7 +2597,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar.resetPacketsQueue()
         avatar.queuePackets()
-        self.log_history.reset()
+        log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
         found = 0
         for packet in avatar.resetPacketsQueue():
@@ -2635,8 +2634,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         self.assertEquals(found, 14)
         # This game start should "succeed" (but later fail due to game running) because 
         #  the owner of the table is our player.
-        self.assertEqual(self.log_history.search("tried to start a new game while in game"), False)
-        self.assertEqual(self.log_history.search("No autodeal"), True)
+        self.assertEqual(log_history.search("tried to start a new game while in game"), False)
+        self.assertEqual(log_history.search("No autodeal"), True)
 
         # Following is coverage for when someone else owns the table
 
@@ -2645,10 +2644,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         table = self.service.getTable(gameId)
         table.owner = client.getSerial() - 3
         avatar.queuePackets()
-        self.log_history.reset()
+        log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
-        self.assertEqual(self.log_history.search("tried to start a new game while in game"), True)
-        self.assertEqual(self.log_history.search("No autodeal"), True)
+        self.assertEqual(log_history.search("tried to start a new game while in game"), True)
+        self.assertEqual(log_history.search("No autodeal"), True)
     # ------------------------------------------------------------------------
     def test47_startPackets(self):
         def client(gameId):
@@ -2889,7 +2888,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             avatar.queuePackets()
             avatar.handlePacketLogic(info['packet'])
             if 'output' in info:
-                self.assertEqual(self.log_history.search(info['output']), True, info['output'])
+                self.assertEqual(log_history.search(info['output']), True, info['output'])
             found = False
             for packet in avatar.resetPacketsQueue():
                 found = True
@@ -3015,7 +3014,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerHandReplay(serial= client.getSerial()))
-        self.assertEqual(self.log_history.search("loadHand(%d) expected one row got 0" % client.getSerial()), True)
+        self.assertEqual(log_history.search("loadHand(%d) expected one row got 0" % client.getSerial()), True)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test56_handReplyNoTable(self):
@@ -3431,7 +3430,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar = self.service.avatars[avid]
         avatar.queuePackets()
-        self.log_history.reset()
+        log_history.reset()
         avatar.handlePacketLogic(PacketPokerSetLocale(serial = client.getSerial(), 
                                                       locale = myLocale))
         foundCount = 0
@@ -3451,7 +3450,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     self.assertEquals(packet.serial, client.getSerial())
                     self.assertEquals(packet.other_type, PACKET_POKER_SET_LOCALE)
                     foundCount += 1
-                    self.failUnless(self.log_history.search("Locale, 'Klingon_Kronos.UTF-8' not available. Klingon_Kronos.UTF-8 "
+                    self.failUnless(log_history.search("Locale, 'Klingon_Kronos.UTF-8' not available. Klingon_Kronos.UTF-8 "
                         "must not have been provide via <language/> tag in settings, or errors occured during loading."))
         self.assertEquals(foundCount, 1)
         return (client, packet)
@@ -3780,7 +3779,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             for ii in [ 0, 1]:
                 self.assertEquals(expectedCount, len(avatars[ii]._packets_queue))
                 if expectedCount >= 15:
-                    self.assertTrue(self.log_history.search("user %d has more than 15 packets queued; will force-disconnect when 21 are queued" % clients[ii].getSerial()))
+                    self.assertTrue(log_history.search("user %d has more than 15 packets queued; will force-disconnect when 21 are queued" % clients[ii].getSerial()))
                 packets.extend(avatars[ii].resetPacketsQueue())
             while bbPacket == None:
                 for packet in packets:
@@ -3798,15 +3797,15 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         table.autodeal = True
         expectedCount = 14
 
-        self.log_history.reset()
+        log_history.reset()
         self.dealTable((client, packet), gameId)
         self.assertNotEquals(findBigBlind(0, expectedCount), None)
         avatars[1].handlePacketLogic(PacketPokerFold(serial = clients[1].getSerial(), game_id = gameId))
         
         # we should get the warning on the observer
-        self.assertTrue(self.log_history.search("user %d has more than 15 packets queued; will force-disconnect when 21 are queued"  % clients[2].getSerial()))
+        self.assertTrue(log_history.search("user %d has more than 15 packets queued; will force-disconnect when 21 are queued"  % clients[2].getSerial()))
         expectedCount = 20
-        self.log_history.reset()
+        log_history.reset()
         self.dealTable((client, packet), gameId)
         self.assertNotEquals(findBigBlind(1, expectedCount), None)
         avatars[0].handlePacketLogic(PacketPokerFold(serial = clients[0].getSerial(), game_id = gameId))
@@ -3820,7 +3819,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         #  called.
         realLogout = avatars[2].user.logout
         self.service.verbose = 6
-        self.log_history.reset()
+        log_history.reset()
         checkLogoutDeferred = defer.Deferred()
         # The array can't have a closure around it, it appears.... I did
         # this to save time rather than resarching closures around arrays
@@ -3829,9 +3828,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         av1 = avatars[1]
         av2 = avatars[2]
         def checkLogout():
-            self.assertEquals(self.log_history.search('connection lost for %s/%d' % (av2.getName(), av2.getSerial())), True)
+            self.assertEquals(log_history.search('connection lost for %s/%d' % (av2.getName(), av2.getSerial())), True)
             self.assertEquals(
-                self.log_history.search('removing player %d from game' % (av2.getSerial(),)), 
+                log_history.search('removing player %d from game' % (av2.getSerial(),)), 
                 True
             )
             self.assertTrue(len(av2._packets_queue) > 21)
@@ -4360,7 +4359,6 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
             meSelf.handleSerialPackets.append(pack)
     # ------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         testclock._seconds_reset()        
 
         self.avatarLocales = {}
@@ -4515,14 +4513,14 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         class Explain:
             def explain(self, what):
                 raise Exception("FAILURE")
-        self.log_history.reset()
+        log_history.reset()
         avatar.explain = Explain()
         avatar.queuePackets()
         avatar.sendPacket(Packet())
         packets = avatar.resetPacketsQueue()
         self.assertEquals(PACKET_ERROR, packets[0].type)
         self.assertSubstring('FAILURE', packets[0].message)
-        self.assertEquals(True, self.log_history.search('FAILURE'))
+        self.assertEquals(True, log_history.search('FAILURE'))
         self.assertEquals(None, avatar.explain)
         self.assertEquals(True, forceAvatarDestroyMockup.called)
 ##############################################################################

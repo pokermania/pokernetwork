@@ -40,7 +40,7 @@ sys.path.insert(0, path.join(TESTS_PATH, ".."))
 sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
-import log_history
+from log_history import log_history
 import sqlmanager
 
 from twisted.python.runtime import seconds
@@ -183,7 +183,6 @@ class PokerAuthTestCase(unittest.TestCase):
         )
     # --------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         self.destroyDb()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -238,7 +237,7 @@ class PokerAuthTestCase(unittest.TestCase):
         auth = pokerauth.get_auth_instance(db, None, settings)
 
         self.assertEquals(auth.auth(PACKET_LOGIN,('joe_schmoe', 'foo')), ((4, 'joe_schmoe', 1), None))
-        self.assertEquals(self.log_history.get_all()[-3:], [
+        self.assertEquals(log_history.get_all()[-3:], [
             'user joe_schmoe does not exist, create it',
             'creating user joe_schmoe', 
             'create user with serial 4'
@@ -253,7 +252,7 @@ class PokerAuthTestCase(unittest.TestCase):
 
         self.assertEquals(auth.auth(PACKET_LOGIN,('john_smith', 'blah')), (False, 'Invalid login or password'))
         if expectedMessage:
-            self.assertTrue(self.log_history.search(expectedMessage))
+            self.assertTrue(log_history.search(expectedMessage))
         self.failUnless(len(self.checkIfUserExistsInDB('john_smith')) == 0)
     # -----------------------------------------------------------------------------------------------------    
     def test05_authWhenDoubleEntry(self):
@@ -272,9 +271,9 @@ class PokerAuthTestCase(unittest.TestCase):
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
         
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('doyle_brunson', 'foo')), (False, "Invalid login or password"))
-        self.assertEquals(self.log_history.get_all(), ['more than one row for doyle_brunson'])
+        self.assertEquals(log_history.get_all(), ['more than one row for doyle_brunson'])
     # -----------------------------------------------------------------------------------------------------    
     def test06_validAuthWhenEntryExists(self):
         """test06_validAuthWhenEntryExists
@@ -289,13 +288,13 @@ class PokerAuthTestCase(unittest.TestCase):
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
 
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'bar')), ((4L, 'dan_harrington', 1L), None))
-        self.assertEquals(self.log_history.get_all(), [])
+        self.assertEquals(log_history.get_all(), [])
         
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'wrongpass')), (False, 'Invalid login or password'))
-        self.assertEquals(self.log_history.get_all(), ['password mismatch for dan_harrington'])
+        self.assertEquals(log_history.get_all(), ['password mismatch for dan_harrington'])
     # -----------------------------------------------------------------------------------------------------    
     def test07_mysql11userCreate(self):
         """test07_mysql11userCreate
@@ -312,8 +311,8 @@ class PokerAuthTestCase(unittest.TestCase):
             
         auth = pokerauth.get_auth_instance(MockDatabase(), None, self.settings)
         self.assertEquals(auth.userCreate("nobody", "nothing"), 4815)
-        self.assertTrue(self.log_history.search('creating user nobody'))
-        self.assertTrue(self.log_history.search('create user with serial 4815'))
+        self.assertTrue(log_history.search('creating user nobody'))
+        self.assertTrue(log_history.search('create user with serial 4815'))
     # -----------------------------------------------------------------------------------------------------    
     def test08_mysqlbeyond11userCreate(self):
         """test08_mysqlbeyond11userCreate
@@ -330,8 +329,8 @@ class PokerAuthTestCase(unittest.TestCase):
 
         auth = pokerauth.get_auth_instance(MockDatabase(), None, self.settings)
         self.assertEquals(auth.userCreate("somebody", "something"), 162342)
-        self.assertTrue(self.log_history.search('creating user somebody'))
-        self.assertTrue(self.log_history.search('create user with serial 162342'))
+        self.assertTrue(log_history.search('creating user somebody'))
+        self.assertTrue(log_history.search('create user with serial 162342'))
     # -----------------------------------------------------------------------------------------------------    
     def test09_setAndGetLevel(self):
         """test09_setAndGetLevel
@@ -381,7 +380,6 @@ import MySQLdb
 class PokerAuthMysqlTestCase(PokerAuthTestCase):
     # -----------------------------------------------------------------------------------------------------
     def setUp(self):
-        self.log_history = log_history.Log()
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_mysql_xml, len(settings_mysql_xml))
         self.settings.header = self.settings.doc.xpathNewContext()
@@ -444,9 +442,9 @@ class PokerAuthMysqlTestCase(PokerAuthTestCase):
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
         
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('doyle_brunson', 'foo')), (False, "Invalid login or password"))
-        self.assertEquals(self.log_history.get_all(), ['more than one row for doyle_brunson'])
+        self.assertEquals(log_history.get_all(), ['more than one row for doyle_brunson'])
     # -----------------------------------------------------------------------------------------------------    
     def test06_validAuthWhenEntryExists(self):
         """test06_validAuthWhenEntryExists
@@ -461,13 +459,13 @@ class PokerAuthMysqlTestCase(PokerAuthTestCase):
 
         auth = pokerauth.get_auth_instance(self.db, None, self.settings)
 
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'bar')), (('dan_harrington', 'dan_harrington', 1L), None))
-        self.assertEquals(self.log_history.get_all(), [])
+        self.assertEquals(log_history.get_all(), [])
         
-        self.log_history.reset()
+        log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'wrongpass')), (False, 'Invalid login or password'))
-        self.assertEquals(self.log_history.get_all(), ['password mismatch for dan_harrington'])
+        self.assertEquals(log_history.get_all(), ['password mismatch for dan_harrington'])
     # -----------------------------------------------------------------------------------------------------    
     def test07_mysql11userCreate(self):
         """test08_mysqlbeyond11userCreate is not needed for MySQLAUTH"""
