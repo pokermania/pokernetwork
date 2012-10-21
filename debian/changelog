@@ -1,3 +1,12 @@
+poker-network (2.2.3-1) pokermania; urgency=low
+
+  * 4899145 rebuy history will be added even if the player is playing right now, fixes #7133
+  * 82952d6 fixed some tests in test_pokeravatar
+  * 45173d2 debian/control: python-poker-reflogging -> python-reflogging
+  * 1137cf8 explain: set position to -1 if game is not running yet
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 22 Oct 2012 12:40:00 +0200
+
 poker-network (2.2.2-9) pokermania; urgency=low
 
   * d3f0227 typo in bot log_level loading fixed
