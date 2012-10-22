@@ -1017,6 +1017,10 @@ class PokerAvatar:
                     serial = self.getSerial(),
                     game_id = 0
                 ))
+            else:
+                player = table.game.getPlayer(self.getSerial())
+                if player and player.isAuto():
+                    self.sendPacketVerbose(PacketPokerAutoFold(serial=packet.serial))
         return table
     # -------------------------------------------------------------------------
     def performPacketPokerSeat(self, packet, table, game):
