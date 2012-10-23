@@ -2065,6 +2065,10 @@ class PokerService(service.Service):
     def abortRunningTourneys(self):
         cursor = self.db.cursor()
         try:
+            cursor.execute("SELECT tourney_serial FROM tourneys WHERE state IN ('running', 'break', 'breakwait')")
+            for (tourney_serial,) in cursor.fetchall():
+                self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_CANCELED, param1 = tourney_serial)
+
             cursor.execute(
                 "UPDATE tourneys AS t " \
                     "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
@@ -2077,6 +2081,7 @@ class PokerService(service.Service):
             )
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: %s", cursor._executed)
+
         finally:
             cursor.close()
 
