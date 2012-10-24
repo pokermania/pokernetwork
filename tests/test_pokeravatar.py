@@ -98,11 +98,11 @@ settings_xml_server = """\
     <language value="en_US.UTF-8"/>
     <language value="de_DE.UTF-8"/>
 
-    <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-    <table name="Table2" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table2" variant="holdem" betting_structure="1-2_20-200_limit" seats="10" player_timeout="60" currency_serial="1" />
     <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10"
         player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
-    <table name="Table4" variant="holdem" betting_structure="ante-1-2-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table4" variant="holdem" betting_structure="ante-.50-1_10-100_limit" seats="10" player_timeout="60" currency_serial="1" />
     <listen tcp="19480" />
 
     <refill serial="1" amount="1000" />
@@ -660,7 +660,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             table_packet = PacketPokerTable(
                 id = 1, seats  = 5,
                 name = "A Testing Cash Table", variant = "holdem",
-                betting_structure = '2-4-limit', player_timeout =  6,
+                betting_structure = '1-2_20-200_limit', player_timeout =  6,
                 currency_serial = 0
             )
             packets = avatar.handlePacket(table_packet)
@@ -825,7 +825,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.quit)
         return d
     # ------------------------------------------------------------------------
@@ -836,10 +836,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.quit)
         return d
     # ------------------------------------------------------------------------
@@ -878,7 +878,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.quit)
         return d
@@ -899,7 +899,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
         d.addCallback(self.createRankDBTable, 2, rank = 60, percentile = 80)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2, 60, 80)
         d.addCallback(self.quit)
         return d
@@ -927,7 +927,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.forceExplain, 0)
         d.addCallback(self.quit)
@@ -941,7 +941,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         def explainAgain((client, packet), id):
             avatar = self.service.avatars[id]
@@ -987,7 +987,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.quit)
@@ -1146,7 +1146,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
             d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId, 50, 30)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.autoBlindAnte, index, gameId)
@@ -1160,7 +1160,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
             d.addCallback(
-                self.joinTable, index, gameId, 'Table2', '2-4-limit',
+                self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit',
                 [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}]
             )
             d.addCallback(self.seatTable, index, gameId)
@@ -1223,7 +1223,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
             d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId, 50, 30)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.autoBlindAnte, index, gameId)
@@ -1238,7 +1238,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                            setTo = 'de_DE', expect = "de_DE")
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit',
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit',
                            [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}] )
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
@@ -1264,7 +1264,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -1574,7 +1574,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -1605,7 +1605,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 1, 'Table1', '100-200-no-limit')
+        d.addCallback(self.joinTable, 0, 1, 'Table1', '100-200_2000-20000_no-limit')
         d.addCallback(self.setMoneyForPlayer, 0, 1, 'min', 1)
         d.addCallback(self.seatTable, 0, 1)
         d.addCallback(self.setMoneyForPlayer, 0, 1, 'under_min', 1)
@@ -1619,7 +1619,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 1, 'Table1', '100-200-no-limit')
+        d.addCallback(self.joinTable, 0, 1, 'Table1', '100-200_2000-20000_no-limit')
         d.addCallback(self.setMoneyForPlayer, 0, 1, 'under_min', 1)        
         d.addCallback(self.seatTable, 0, 1)
         d.addCallbacks(lambda *a,**kw: self.fail('should have failed'), lambda *a,**kw: True)
@@ -1645,7 +1645,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -1662,7 +1662,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -1715,7 +1715,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
             d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId, 50, 30)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.autoBlindAnte, index, gameId)
@@ -1729,7 +1729,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTableAndCheckPokerSitAndAutoFoldAreSend, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTableAndCheckPokerSitAndAutoFoldAreSend, index, gameId, 'Table2', '1-2_20-200_limit')
             return d
         gameId = 2
         return defer.DeferredList([client1(gameId),client2(gameId)])
@@ -1758,7 +1758,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.autoBlindAnte, index, gameId)
@@ -1878,13 +1878,13 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     self.assertEquals(p.variant, "holdem")
                     if (p.id == 1):
                         self.assertEquals(p.name, "Table1")
-                        self.assertEquals(p.betting_structure, "100-200-no-limit")
+                        self.assertEquals(p.betting_structure, "100-200_2000-20000_no-limit")
                         self.assertEquals(p.seats, 10)
                         self.assertEquals(p.player_timeout, 60)
                         self.assertEquals(p.currency_serial, 1)
                     elif (p.id == 2):
                         self.assertEquals(p.name, "Table2")
-                        self.assertEquals(p.betting_structure, "2-4-limit")
+                        self.assertEquals(p.betting_structure, "1-2_20-200_limit")
                         self.assertEquals(p.player_timeout, 60)
                         self.assertEquals(p.muck_timeout, 5)
                         self.assertEquals(p.currency_serial, 1)
@@ -2243,7 +2243,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.autoBlindAnte, index, gameId)
@@ -2370,7 +2370,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -2412,7 +2412,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.sitTable, index, gameId)
@@ -2424,7 +2424,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.autoBlindAnte, index, gameId)
@@ -2469,7 +2469,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table4', 'ante-1-2-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table4', 'ante-.50-1_10-100_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.sitTable, index, gameId)
@@ -2481,7 +2481,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table4', 'ante-1-2-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table4', 'ante-.50-1_10-100_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.autoBlindAnte, index, gameId)
@@ -2526,7 +2526,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 4, 'Table4', 'ante-1-2-limit')
+        d.addCallback(self.joinTable, 0, 4, 'Table4', 'ante-.50-1_10-100_limit')
         d.addCallback(self.seatTable, 0, 4)
         d.addCallback(self.buyInTable, 0, 4, 1000)
         d.addCallback(self.sitTable, 0, 4)
@@ -2632,7 +2632,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.setupCallbackChain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.autoBlindAnte, index, gameId)
@@ -2676,7 +2676,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.badSeatTable, 0, 2)
         return d
     # ------------------------------------------------------------------------
@@ -2703,7 +2703,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTableNoRole, 0, 2)
         return d
     # ------------------------------------------------------------------------
@@ -2741,7 +2741,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.badBuyRebuyRequest, 0, 2)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -2770,7 +2770,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -2799,7 +2799,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -2876,7 +2876,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -2901,7 +2901,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -2930,7 +2930,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -2979,7 +2979,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTableForceFail, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTableForceFail, 0, 2, 'Table2', '1-2_20-200_limit')
         return d
     # ------------------------------------------------------------------------
     def handReplayWithoutTable(self, (client, packet), id ):
@@ -3015,7 +3015,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -3050,7 +3050,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnte, 0, 2)
@@ -3087,7 +3087,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         packets = avatar.handlePacket(PacketPokerTable(
             id = 1, seats  = 5,
             name = "A Testing Cash Table", variant = "holdem",
-            betting_structure = '2-4-limit', player_timeout =  6,
+            betting_structure = '1-2_20-200_limit', player_timeout =  6,
             currency_serial = 0
         ))
         found = False
@@ -3138,7 +3138,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
         d.addCallback(self.buyInTable, 0, 2, 1000)
         d.addCallback(self.autoBlindAnteForceTourney, 0, 2)
@@ -3200,7 +3200,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.setupCallbackChain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.sitTable, index, gameId)
@@ -3212,7 +3212,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.setupCallbackChain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.autoBlindAnte, index, gameId)
@@ -3235,7 +3235,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         dl = defer.DeferredList([client0(gameId), client1(gameId), client2(gameId)])
         dl.addCallback(fixIt)
         dl.addCallback(self.dealTable, gameId)
-        dl.addCallback(self.joinTableWhenHandRunning, 2, gameId, 'Table2', '2-4-limit')
+        dl.addCallback(self.joinTableWhenHandRunning, 2, gameId, 'Table2', '1-2_20-200_limit')
         return dl
     # ------------------------------------------------------------------------
     def tinyFunctions(self, (client, packet), id):
@@ -3384,7 +3384,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d1.addCallback(self.sendExplain)
         d1.addCallback(self.sendRolePlay)
         d1.addCallback(self.login, 0)
-        d1.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d1.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d1.addCallback(self.seatTable, 0, 2)
         d1.addCallback(self.getPlayerPlaces, 0, 1)
         d1.addCallback(self.getPlayerPlacesByName, 0, 'user0')
@@ -3536,7 +3536,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.setupCallbackChain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             return d
@@ -3627,7 +3627,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.setupCallbackChain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             return d
@@ -3718,7 +3718,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.setupCallbackChain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             return d
@@ -3827,7 +3827,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.setupCallbackChain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table2', '2-4-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             return d
@@ -3883,7 +3883,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         def handleDistributedPacket(x):
             avatar = self.service.avatars[0]
             self.service.packet2resthost = lambda packet: (('host', 11111, '/PATH'), 2)
@@ -3907,7 +3907,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = 0.1
         def handleDistributedPacket(x):
             avatar = self.service.avatars[0]
@@ -3940,7 +3940,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)                
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = 0.1
         def handleDistributedPacket(x):
             avatar = self.service.avatars[0]
@@ -3974,7 +3974,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.sendExplain)                
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = 0.1
         def handleDistributedPacket(x):
             avatar = self.service.avatars[0]
@@ -4008,7 +4008,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = 0.1
         def handleDistributedPacket(x):
             avatar = self.service.avatars[0]
@@ -4035,7 +4035,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         def handleDistributedPacket(x):
             avatar = self.service.avatars[0]
             self.service.packet2resthost = lambda packet: (None, None)
@@ -4049,7 +4049,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         def handleLongPoll(x):
             avatar = self.service.avatars[0]
             uid = 'ZUID'
@@ -4075,7 +4075,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         def handleLongPoll(x):
             avatar = self.service.avatars[0]
             uid = 'ZUID'
@@ -4100,7 +4100,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         def handleLongPoll(x):
             avatar = self.service.avatars[0]
             uid = 'ZUID'
@@ -4117,7 +4117,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         def handleLongPollReturn(x):
             avatar = self.service.avatars[0]
             d = avatar.handlePacketDefer(PacketPokerLongPoll())
@@ -4134,7 +4134,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         def handleLongPollReturn(x):
             avatar = self.service.avatars[0]
             avatar.handlePacketDefer(PacketPokerLongPollReturn())
@@ -4151,7 +4151,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         def handleLongPollReturn(x):
             avatar = self.service.avatars[0]
             avatar._packets_queue = ['foo']
@@ -4165,7 +4165,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d = self.client_factory[0].established_deferred
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 2, 'Table2', '2-4-limit')
+        d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         def handleLongPoll(x):
             avatar = self.service.avatars[0]
             avatar._packets_queue = ['foo']
@@ -4503,12 +4503,12 @@ settings_xml_table_picker_server = """<?xml version="1.0" encoding="UTF-8"?>
     <language value="en_US.UTF-8"/>
     <language value="de_DE.UTF-8"/>
 
-    <table name="NL HE 10-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-    <table name="NL HE 6-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="6" player_timeout="60" currency_serial="1" />
-    <table name="Limit HE 10-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="2" />
-    <table name="Limit HE 6-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="6" player_timeout="60" currency_serial="2" />
-    <table name="Stud 8-max 2/4" variant="7stud" betting_structure="2-4-limit" seats="8" player_timeout="60" currency_serial="2" />
-    <table name="Play Money NL HE 10-max 1/2" variant="holdem" betting_structure="1-2-no-limit" seats="10" player_timeout="60" currency_serial="0" />
+    <table name="NL HE 10-max 100/200" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="NL HE 6-max 100/200" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="6" player_timeout="60" currency_serial="1" />
+    <table name="Limit HE 10-max 2/4" variant="holdem" betting_structure="1-2_20-200_limit" seats="10" player_timeout="60" currency_serial="2" />
+    <table name="Limit HE 6-max 2/4" variant="holdem" betting_structure="1-2_20-200_limit" seats="6" player_timeout="60" currency_serial="2" />
+    <table name="Stud 8-max 2/4" variant="7stud" betting_structure="1-2_20-200_limit" seats="8" player_timeout="60" currency_serial="2" />
+    <table name="Play Money NL HE 10-max 1/2" variant="holdem" betting_structure="1-2_20-200_no-limit" seats="10" player_timeout="60" currency_serial="0" />
     <listen tcp="19480" />
 
     <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
@@ -4640,7 +4640,7 @@ class PokerAvatarTablePickerBaseClass(PokerAvatarTestCaseBaseClass):
                             self.assertEquals(ourStruct, structure)
                         else:
                             self.failUnless(
-                                ourStruct in [ '100-200-no-limit','2-4-limit' ],
+                                ourStruct in [ '100-200_2000-20000_no-limit','1-2_20-200_limit' ],
                                 "strange struct: \"" + ourStruct + "\""
                             )
                     self.failUnless(vv.game.max_players in [ 8, 10, 6 ])
@@ -4786,7 +4786,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         playerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
 
         playerDeferred.addCallback(self.tablePickerFails, playerNumber, 100, 0,
-                                    "holdem", "2-4-limit")
+                                    "holdem", "1-2_20-200_limit")
         return playerDeferred
     # ------------------------------------------------------------------------
     def test01_tablePicker_failure_by_variant(self):
@@ -4810,13 +4810,13 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
     def test03_tablePicker_onlyOnePossible(self):
 
         playerNumber = self.createClient()
-        dl = defer.DeferredList([self.startPlayerSeatedAndPlaying(True, 5, "Stud 8-max 2/4", "2-4-limit", "7stud", 8, 2),
+        dl = defer.DeferredList([self.startPlayerSeatedAndPlaying(True, 5, "Stud 8-max 2/4", "1-2_20-200_limit", "7stud", 8, 2),
             self.preparePlayerForTablePickerSend(playerNumber)])
         dl.addCallback(fixIt)
 
         dl.addCallback(self.setMoneyForPlayer, playerNumber, 2, "over_min_under_best", 5)
         dl.addCallback(self.tablePickerSucceeds, playerNumber, 1, 0,
-                                   "7stud", "2-4-limit", 5, "Stud 8-max 2/4",
+                                   "7stud", "1-2_20-200_limit", 5, "Stud 8-max 2/4",
                                    autoBlindAnte = True)
         def autodeal((client, packet), gameId):
             table = self.service.getTable(gameId)
@@ -4829,15 +4829,15 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         defs = []
         for idx in range(7):
             if idx < 3:
-                defs.append(self.startPlayerSeatedAndPlaying(idx, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1))
+                defs.append(self.startPlayerSeatedAndPlaying(idx, 1, "NL HE 10-max 100/200", "100-200_2000-20000_no-limit", "holdem", 10, 1))
             else:
-                defs.append(self.startPlayerSeatedAndPlaying(idx, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1))
+                defs.append(self.startPlayerSeatedAndPlaying(idx, 2, "NL HE 6-max 100/200", "100-200_2000-20000_no-limit", "holdem", 6, 1))
 
         playerNumber = self.createClient()
         pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
         pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
         pickerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 3, 0,
-            "holdem", "100-200-no-limit", 2, "NL HE 6-max 100/200")
+            "holdem", "100-200_2000-20000_no-limit", 2, "NL HE 6-max 100/200")
 
         defs.append(pickerDeferred)
         dl = defer.DeferredList(defs)
@@ -4859,11 +4859,11 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         defs = []
         for idx in range(13):
             if idx < 10:
-                d = self.startPlayerSeatedAndPlaying(idx, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1)
+                d = self.startPlayerSeatedAndPlaying(idx, 1, "NL HE 10-max 100/200", "100-200_2000-20000_no-limit", "holdem", 10, 1)
                 if idx == 9:
                     d.addCallback(self.sitOut, 9, 1)
             else:
-                d = self.startPlayerSeatedAndPlaying(idx, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
+                d = self.startPlayerSeatedAndPlaying(idx, 2, "NL HE 6-max 100/200", "100-200_2000-20000_no-limit", "holdem", 6, 1)
             defs.append(d)
 
 
@@ -4871,7 +4871,7 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
         pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
         pickerDeferred.addCallback(self.tablePickerSucceeds, playerNumber, 3, 0,
-                                   "holdem", "100-200-no-limit", 2, "NL HE 6-max 100/200")
+                                   "holdem", "100-200_2000-20000_no-limit", 2, "NL HE 6-max 100/200")
         defs.append(pickerDeferred)
         dl = defer.DeferredList(defs)
         return dl
@@ -4884,9 +4884,9 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         defs = []
         for idx in range(16):
             if idx < 10:
-                d = self.startPlayerSeatedAndPlaying(idx, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1)
+                d = self.startPlayerSeatedAndPlaying(idx, 1, "NL HE 10-max 100/200", "100-200_2000-20000_no-limit", "holdem", 10, 1)
             else:
-                d = self.startPlayerSeatedAndPlaying(idx, 2, "NL HE 6-max 100/200", "100-200-no-limit", "holdem", 6, 1)
+                d = self.startPlayerSeatedAndPlaying(idx, 2, "NL HE 6-max 100/200", "100-200_2000-20000_no-limit", "holdem", 6, 1)
             defs.append(d)
 
         dl = defer.DeferredList(defs)
@@ -4896,19 +4896,19 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         def check(result, pickerDeferred, playerNumber):
             pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
             pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 3, 0,
-                                       "holdem", "100-200-no-limit")
+                                       "holdem", "100-200_2000-20000_no-limit")
             return pickerDeferred
         dl.addCallback(check, pickerDeferred, playerNumber)
         return dl
     # ------------------------------------------------------------------------
 
     def test09_tablePicker_noTableDueToLackofFunds(self):
-        client1 = self.startPlayerSeatedAndPlaying(True, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1) # 0
+        client1 = self.startPlayerSeatedAndPlaying(True, 1, "NL HE 10-max 100/200", "100-200_2000-20000_no-limit", "holdem", 10, 1) # 0
         playerNumber = self.createClient()
         pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
         pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "under_min", 1)
         pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 1, 0,
-                                   "holdem", "100-200-no-limit")
+                                   "holdem", "100-200_2000-20000_no-limit")
         return defer.DeferredList([client1, pickerDeferred])
     # ------------------------------------------------------------------------
     def test10_tablePicker_sitOutCausesNoMatchesFound(self):
@@ -4916,17 +4916,17 @@ class PokerAvatarTablePickerTestCase(PokerAvatarTablePickerBaseClass):
         pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
         pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
         pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 1, 0,
-                                   "holdem", "100-200-no-limit")
+                                   "holdem", "100-200_2000-20000_no-limit")
         return pickerDeferred
     # ------------------------------------------------------------------------
     def test11_tablePicker_failureFromTableCannotAddPlayer(self):
-        client = self.startPlayerSeatedAndPlaying(True, 1, "NL HE 10-max 100/200", "100-200-no-limit", "holdem", 10, 1) # 0
+        client = self.startPlayerSeatedAndPlaying(True, 1, "NL HE 10-max 100/200", "100-200_2000-20000_no-limit", "holdem", 10, 1) # 0
         playerNumber = self.createClient()
         pickerDeferred = self.preparePlayerForTablePickerSend(playerNumber)
         pickerDeferred.addCallback(self.setMoneyForPlayer, playerNumber, 1, "over_best", 1)
         pickerDeferred.addCallback(self.dummyTableCanAddPlayer, 1)
         pickerDeferred.addCallback(self.tablePickerFails, playerNumber, 1, 0,
-                                   "holdem", "100-200-no-limit", 1)
+                                   "holdem", "100-200_2000-20000_no-limit", 1)
         pickerDeferred.addCallback(self.restoreTableCanAddPlayer, 1)
         return defer.DeferredList([client, pickerDeferred])
 ######################### Little Helper ######################################

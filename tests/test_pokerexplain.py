@@ -588,7 +588,7 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_TABLE, self.explain.forward_packets[0].type)
 
         self.assertTrue(self.explain.explain(PacketPokerTable(id = 1,
-                                                              betting_structure = '1-2-no-limit',
+                                                              betting_structure = '1-2_20-200_no-limit',
                                                               variant = 'holdem')))
         self.assertEqual(2, len(self.explain.forward_packets))
         self.assertEqual(PACKET_POKER_TABLE, self.explain.forward_packets[0].type)
@@ -596,11 +596,11 @@ class PokerExplainTestCase(unittest.TestCase):
 
     def test20_explain_poker_table_deleteGame(self):
         self.assertTrue(self.explain.explain(PacketPokerTable(id = 1,
-                                                              betting_structure = '1-2-no-limit',
+                                                              betting_structure = '1-2_20-200_no-limit',
                                                               variant = 'holdem')))
         game = self.explain.games.getGame(1)
         self.assertTrue(self.explain.explain(PacketPokerTable(id = 1,
-                                                              betting_structure = '1-2-no-limit',
+                                                              betting_structure = '1-2_20-200_no-limit',
                                                               variant = 'holdem')))
         self.assertNotEqual(game, self.explain.games.getGame(1))
 
@@ -1247,7 +1247,7 @@ class PokerExplainTestCase(unittest.TestCase):
     def test41_explain_state_flop_hand_strength(self):
         game_id = 1
         self.explain.explain(PacketPokerTable(id = game_id,
-                                              betting_structure = '1-2-no-limit',
+                                              betting_structure = '1-2_20-200_no-limit',
                                               variant = 'holdem'))
         def addPlayer(player_serial, seat):
             self.explain.explain(PacketPokerPlayerArrive(game_id = game_id,
@@ -1282,7 +1282,7 @@ class PokerExplainTestCase(unittest.TestCase):
     def test42_explain_state_flop_hand_strength_not_in_game(self):
         game_id = 1
         self.explain.explain(PacketPokerTable(id = game_id,
-                                              betting_structure = '1-2-no-limit',
+                                              betting_structure = '1-2_20-200_no-limit',
                                               variant = 'holdem'))
         def addPlayer(player_serial, seat):
             self.explain.explain(PacketPokerPlayerArrive(game_id = game_id,

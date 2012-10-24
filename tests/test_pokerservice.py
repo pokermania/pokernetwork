@@ -95,8 +95,8 @@ settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" remove_completed="1" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
   <listen tcp="19480" />
 
@@ -413,11 +413,11 @@ list_table_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" remove_completed="1" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="NL HE 10-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="NL HE 6-max 100/200" variant="holdem" betting_structure="100-200-no-limit" seats="6" player_timeout="60" currency_serial="2" />
-  <table name="Limit HE 10-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="10" player_timeout="60" currency_serial="2" />
-  <table name="Limit HE 6-max 2/4" variant="holdem" betting_structure="2-4-limit" seats="6" player_timeout="60" currency_serial="1" />
-  <table name="Stud 8-max 2/4" variant="7stud" betting_structure="2-4-limit" seats="8" player_timeout="60" currency_serial="2" />
+  <table name="NL HE 10-max 100/200" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="NL HE 6-max 100/200" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="6" player_timeout="60" currency_serial="2" />
+  <table name="Limit HE 10-max 2/4" variant="holdem" betting_structure="1-2_20-200_limit" seats="10" player_timeout="60" currency_serial="2" />
+  <table name="Limit HE 6-max 2/4" variant="holdem" betting_structure="1-2_20-200_limit" seats="6" player_timeout="60" currency_serial="1" />
+  <table name="Stud 8-max 2/4" variant="7stud" betting_structure="1-2_20-200_limit" seats="8" player_timeout="60" currency_serial="2" />
 
   <listen tcp="19480" />
 
@@ -508,41 +508,41 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         self.service.startService()
         tables = self.service.searchTables(1, 'fakevariant', 'fakebetting')
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(2, 'fakevariant', '2-4-limit')
+        tables = self.service.searchTables(2, 'fakevariant', '1-2_20-200_limit')
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(None, 'fakevariant', '2-4-limit')
+        tables = self.service.searchTables(None, 'fakevariant', '1-2_20-200_limit')
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(None, None, '2-4-limit')
+        tables = self.service.searchTables(None, None, '1-2_20-200_limit')
         self.assertEqual(3, len(tables))
-        tables = self.service.searchTables(None, None, '100-200-no-limit')
+        tables = self.service.searchTables(None, None, '100-200_2000-20000_no-limit')
         self.assertEqual(2, len(tables))
-        tables = self.service.searchTables(None, 'holdem', '100-200-no-limit')
+        tables = self.service.searchTables(None, 'holdem', '100-200_2000-20000_no-limit')
         self.assertEqual(2, len(tables))
-        tables = self.service.searchTables(None, 'holdem', '2-4-limit')
+        tables = self.service.searchTables(None, 'holdem', '1-2_20-200_limit')
         self.assertEqual(2, len(tables))
-        tables = self.service.searchTables(None, '7stud', '2-4-limit')
+        tables = self.service.searchTables(None, '7stud', '1-2_20-200_limit')
         self.assertEqual(1, len(tables))
-        tables = self.service.searchTables(None, '7stud', '100-200-no-limit')
+        tables = self.service.searchTables(None, '7stud', '100-200_2000-20000_no-limit')
         self.assertEqual(0, len(tables))
     def test08_currency_and_variant_and_bettingStructure_and_count_noOne(self):
         self.service.startService()
         tables = self.service.searchTables(1,'fakevariant', 'fakebetting', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(2, 'fakevariant', '2-4-limit', 2)
+        tables = self.service.searchTables(2, 'fakevariant', '1-2_20-200_limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(None, 'fakevariant', '2-4-limit', 2)
+        tables = self.service.searchTables(None, 'fakevariant', '1-2_20-200_limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(None, None, '2-4-limit', 2)
+        tables = self.service.searchTables(None, None, '1-2_20-200_limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(None, None, '100-200-no-limit', 2)
+        tables = self.service.searchTables(None, None, '100-200_2000-20000_no-limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(None, 'holdem', '100-200-no-limit', 2)
+        tables = self.service.searchTables(None, 'holdem', '100-200_2000-20000_no-limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(None, 'holdem', '2-4-limit', 2)
+        tables = self.service.searchTables(None, 'holdem', '1-2_20-200_limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(None, '7stud', '2-4-limit', 2)
+        tables = self.service.searchTables(None, '7stud', '1-2_20-200_limit', 2)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(None, '7stud', '100-200-no-limit', 2)
+        tables = self.service.searchTables(None, '7stud', '100-200_2000-20000_no-limit', 2)
         self.assertEqual(0, len(tables))
     def test09_currency_and_variant_and_bettingStructure_and_count_withSome(self):
         self.service.startService()
@@ -562,38 +562,38 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
 
         tables = self.service.searchTables(None, None, None, 0)
         self.assertEqual(5, len(tables))
-        tables = self.service.searchTables(None, None, '2-4-limit', 0)
+        tables = self.service.searchTables(None, None, '1-2_20-200_limit', 0)
         self.assertEqual(3, len(tables))
 
-        tables = self.service.searchTables(None, None, '2-4-limit', 1)
-        self.assertEqual(3, len(tables), "searchTables() should return 3 for 2-4-limit w/ <= 1 player")
+        tables = self.service.searchTables(None, None, '1-2_20-200_limit', 1)
+        self.assertEqual(3, len(tables), "searchTables() should return 3 for 1-2_20-200_limit w/ <= 1 player")
         tables = self.service.searchTables(None, None, None, 1)
         self.assertEqual(3, len(tables), "searchTables() query should return 3 for <= 1 player")
 
-        tables = self.service.searchTables(None, None, '2-4-limit', 2)
+        tables = self.service.searchTables(None, None, '1-2_20-200_limit', 2)
         self.assertEqual(2, len(tables))
         tables = self.service.searchTables(None, None, None, 2)
         self.assertEqual(2, len(tables))
 
         for ii in [ 3, 4, 5, 6 ]:
-            tables = self.service.searchTables(None, None, '2-4-limit', ii)
+            tables = self.service.searchTables(None, None, '1-2_20-200_limit', ii)
             self.assertEqual(0, len(tables))
             tables = self.service.searchTables(None, None, None, ii)
             self.assertEqual(0, len(tables))
 
         tables = self.service.searchTables(None, 'holdem', None, 0)
         self.assertEqual(4, len(tables))
-        tables = self.service.searchTables(None, 'holdem', '2-4-limit', 0)
+        tables = self.service.searchTables(None, 'holdem', '1-2_20-200_limit', 0)
         self.assertEqual(2, len(tables))
 
         for ii in [ 1, 2 ]:
-            tables = self.service.searchTables(None, 'holdem', '2-4-limit', ii)
-            self.assertEqual(2, len(tables), "holdem 2-4-limit <= %d players should be 2" % ii)
+            tables = self.service.searchTables(None, 'holdem', '1-2_20-200_limit', ii)
+            self.assertEqual(2, len(tables), "holdem 1-2_20-200_limit <= %d players should be 2" % ii)
             tables = self.service.searchTables(None, 'holdem', None, ii)
             self.assertEqual(2, len(tables), "holdem <= %d players should be 2" % ii)
 
         for ii in [ 3, 4, 5, 6 ]:
-            tables = self.service.searchTables(None, 'holdem', '2-4-limit', ii)
+            tables = self.service.searchTables(None, 'holdem', '1-2_20-200_limit', ii)
             self.assertEqual(0, len(tables))
             tables = self.service.searchTables(None, 'holdem', None, ii)
             self.assertEqual(0, len(tables))
@@ -602,35 +602,35 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         # add two players to each, checking that now a search for at least
         # two works.
 
-        for query in [ '\t\t100-200-no-limit\t0',  '\tholdem\t100-200-no-limit\t0']:
-            tables = self.service.searchTables(None, None, '100-200-no-limit', 0)
-            self.assertEqual(2, len(tables), "100-200-no-limit should be 2")
-            tables = self.service.searchTables(None, 'holdem', '100-200-no-limit', 0)
-            self.assertEqual(2, len(tables), "100-200-no-limit w/ holdem should be 2")
+        for query in [ '\t\t100-200_2000-20000_no-limit\t0',  '\tholdem\t100-200-no-limit\t0']:
+            tables = self.service.searchTables(None, None, '100-200_2000-20000_no-limit', 0)
+            self.assertEqual(2, len(tables), "100-200_2000-20000_no-limit should be 2")
+            tables = self.service.searchTables(None, 'holdem', '100-200_2000-20000_no-limit', 0)
+            self.assertEqual(2, len(tables), "100-200_2000-20000_no-limit w/ holdem should be 2")
 
         for ii in [ 1, 2, 3, 4, 5, 6]:
-            for query in [ '\t\t100-200-no-limit\t%d',  '\tholdem\t100-200-no-limit\t%d']:
-                tables = self.service.searchTables(None, None, '100-200-no-limit', ii)
+            for query in [ '\t\t100-200_2000-20000_no-limit\t%d',  '\tholdem\t100-200-no-limit\t%d']:
+                tables = self.service.searchTables(None, None, '100-200_2000-20000_no-limit', ii)
                 self.assertEqual(0, len(tables))
-                tables = self.service.searchTables(None, 'holdem', '100-200-no-limit', ii)
+                tables = self.service.searchTables(None, 'holdem', '100-200_2000-20000_no-limit', ii)
                 self.assertEqual(0, len(tables))
 
         db.db.query(insertSql % (3, nlHe100Currency1))
         db.db.query(insertSql % (2, nlHe100Currency2))
 
         for ii in [ 0, 1, 2 ]:
-            for query in  [ '\t\t100-200-no-limit\t%d', '\tholdem\t100-200-no-limit\t%d']:
+            for query in  [ '\t\t100-200_2000-20000_no-limit\t%d', '\tholdem\t100-200-no-limit\t%d']:
                 for variant in [ None, 'holdem' ]:
-                    tables = self.service.searchTables(None, variant, '100-200-no-limit', ii)
+                    tables = self.service.searchTables(None, variant, '100-200_2000-20000_no-limit', ii)
                     self.assertEqual(2, len(tables))
 
         for variant in [ None, 'holdem' ]:
-            tables = self.service.searchTables(None, variant, '100-200-no-limit', 3)
+            tables = self.service.searchTables(None, variant, '100-200_2000-20000_no-limit', 3)
             self.assertEqual(1, len(tables))
 
         for ii in [ 4, 5, 6 ]:
             for variant in [ None, 'holdem' ]:
-                tables = self.service.searchTables(None, variant, '100-200-no-limit', ii)
+                tables = self.service.searchTables(None, variant, '100-200_2000-20000_no-limit', ii)
                 self.assertEqual(0, len(tables))
 
         # Now we have a variety of holdem tables, so we can search for
@@ -651,10 +651,10 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
             self.assertEqual(0, len(tables))
 
         # Stud only has one player, check that, then add one and see result change.
-        tables = self.service.searchTables(None, '7stud', '2-4-limit', 2)
+        tables = self.service.searchTables(None, '7stud', '1-2_20-200_limit', 2)
         self.assertEqual(0, len(tables))
         db.db.query(insertSql % (2, stud24Currency2))
-        tables = self.service.searchTables(None, '7stud', '2-4-limit', 2)
+        tables = self.service.searchTables(None, '7stud', '1-2_20-200_limit', 2)
         self.assertEqual(1, len(tables))
 
         # Tests with currency serial tests in place
@@ -667,15 +667,15 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
             self.assertEqual(2, len(tables))
             tables = self.service.searchTables(1, 'holdem', None, ii)
             self.assertEqual(2, len(tables))
-            tables = self.service.searchTables(1, 'holdem', '100-200-no-limit', ii)
+            tables = self.service.searchTables(1, 'holdem', '100-200_2000-20000_no-limit', ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.searchTables(1, 'holdem', '2-4-limit', ii)
+            tables = self.service.searchTables(1, 'holdem', '1-2_20-200_limit', ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.searchTables(1, None, '2-4-limit', ii)
+            tables = self.service.searchTables(1, None, '1-2_20-200_limit', ii)
             self.assertEqual(1, len(tables))
             tables = self.service.searchTables(1, '7stud', None, ii)
             self.assertEqual(0, len(tables))
-            tables = self.service.searchTables(1, '7stud', '2-4-limit', ii)
+            tables = self.service.searchTables(1, '7stud', '1-2_20-200_limit', ii)
             self.assertEqual(0, len(tables))
 
         tables = self.service.searchTables(2, None, None, 0)
@@ -685,15 +685,15 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
             self.assertEqual(3, len(tables))
             tables = self.service.searchTables(2, 'holdem', None, ii)
             self.assertEqual(2, len(tables))
-            tables = self.service.searchTables(2, 'holdem', '100-200-no-limit', ii)
+            tables = self.service.searchTables(2, 'holdem', '100-200_2000-20000_no-limit', ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.searchTables(2, 'holdem', '2-4-limit', ii)
+            tables = self.service.searchTables(2, 'holdem', '1-2_20-200_limit', ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.searchTables(2, None, '2-4-limit', ii)
+            tables = self.service.searchTables(2, None, '1-2_20-200_limit', ii)
             self.assertEqual(2, len(tables))
             tables = self.service.searchTables(2, '7stud', None, ii)
             self.assertEqual(1, len(tables))
-            tables = self.service.searchTables(2, '7stud', '2-4-limit', ii)
+            tables = self.service.searchTables(2, '7stud', '1-2_20-200_limit', ii)
             self.assertEqual(1, len(tables))
 
         # The threes are different: all currency two queries with holdem
@@ -703,28 +703,28 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         self.assertEqual(0, len(tables))
         tables = self.service.searchTables(2, 'holdem', None, 3)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(2, 'holdem', '100-200-no-limit', 3)
+        tables = self.service.searchTables(2, 'holdem', '100-200_2000-20000_no-limit', 3)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(2, 'holdem', '2-4-limit', 3)
+        tables = self.service.searchTables(2, 'holdem', '1-2_20-200_limit', 3)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(2, None, '2-4-limit', 3)
+        tables = self.service.searchTables(2, None, '1-2_20-200_limit', 3)
         self.assertEqual(0, len(tables))
         tables = self.service.searchTables(1, '7stud', None, 3)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(1, '7stud', '2-4-limit', 3)
+        tables = self.service.searchTables(1, '7stud', '1-2_20-200_limit', 3)
         self.assertEqual(0, len(tables))
 
         tables = self.service.searchTables(1, None, None, 3)
         self.assertEqual(1, len(tables), "searchTables() query: yields %d not 1" % len(tables))
         tables = self.service.searchTables(1, 'holdem', None, 3)
         self.assertEqual(1, len(tables), "searchTables() query: yields %d not 1" % len(tables))
-        tables = self.service.searchTables(1, 'holdem', '100-200-no-limit', 3)
+        tables = self.service.searchTables(1, 'holdem', '100-200_2000-20000_no-limit', 3)
         self.assertEqual(1, len(tables), "searchTables() query: yields %d not 1" % len(tables))
 
         # The rest have zero
-        tables = self.service.searchTables(1, 'holdem', '2-4-limit', 3)
+        tables = self.service.searchTables(1, 'holdem', '1-2_20-200_limit', 3)
         self.assertEqual(0, len(tables))
-        tables = self.service.searchTables(1, None, '2-4-limit', 3)
+        tables = self.service.searchTables(1, None, '1-2_20-200_limit', 3)
         self.assertEqual(0, len(tables))
         tables = self.service.searchTables(1, '7stud', None, 3)
         self.assertEqual(0, len(tables))
@@ -733,7 +733,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         for ii in [ 4, 5, 6 ]:
             for currencySerial in [ 1, 2, None ]:
                 for variant in [ None, 'holdem', '7stud', '' ]:
-                    for betting in [ None, '', '2-4-limit', '100-200-no-limit' ]:
+                    for betting in [ None, '', '1-2_20-200_limit', '100-200_2000-20000_no-limit' ]:
                         tables = self.service.searchTables(currencySerial, variant, betting, ii)
                         self.assertEqual(0, len(tables))
         self.assertEquals(log_history.get_all(), [])
@@ -1080,8 +1080,8 @@ class ResthostTestCase(unittest.TestCase):
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
   <listen tcp="19480" />
 
@@ -1114,8 +1114,8 @@ class ResthostTestCase(unittest.TestCase):
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
   <listen tcp="19480" />
 
@@ -1147,8 +1147,8 @@ class ResthostTestCase(unittest.TestCase):
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
   <listen tcp="19480" />
 
@@ -1985,7 +1985,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             "description_long = 'no description long', "
             "description_short = 'no description short', "
             "variant = 'holdem', "
-            "betting_structure = '1-2-no-limit', "
+            "betting_structure = '1-2_20-200_no-limit', "
             "currency_serial = 1, "
             "schedule_serial = 1,"
             "start_time = %d" % (testclock._seconds_value + 120,))
@@ -5097,7 +5097,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockCursor(MockCursorBase):
             def statementActions(cursorSelf, sql, statement):
                 # (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips)
-                cursorSelf.row = ('[ ("foo", 3, 988, 1, 100, "he", "1-2-limit", [5, 6, 7], 8, {})]',)
+                cursorSelf.row = ('[ ("foo", 3, 988, 1, 100, "he", ".50-1_10-100_limit", [5, 6, 7], 8, {})]',)
                 cursorSelf.rowcount = 1
 
             def __init__(cursorSelf):
@@ -5138,7 +5138,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                     # (type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips)
                     cursorSelf.row = (
                         '[' + '\n' +
-                        '("foo", 3, 988, 1, 100, "he", "1-2-limit", [113, 222], 8, {}),' '\n' \
+                        '("foo", 3, 988, 1, 100, "he", ".50-1_10-100_limit", [113, 222], 8, {}),' '\n' \
                         '("round", "preflop", [], { 113 : PokerCards("AsAh"),' '\n' \
                         '222 : PokerCards("KsKd") }),' '\n' \
                         '("showdown", [], { 113 : PokerCards("AsAh"),' '\n' \
@@ -5160,7 +5160,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         log_history.reset()
 
         pack = self.service.getHandHistory(696, 222)
-        self.assertEquals(pack.history, "[('foo', 3, 988, 1, 100, 'he', '1-2-limit', [113, 222], 8, {}), ('round', 'preflop', [], {113: PokerCards(-1), 222: PokerCards([50])}), ('showdown', [], {113: PokerCards(-1), 222: PokerCards([50])}), ('neither', [], {113: PokerCards([51]), 222: PokerCards([50])})]")
+        self.assertEquals(pack.history, "[('foo', 3, 988, 1, 100, 'he', '.50-1_10-100_limit', [113, 222], 8, {}), ('round', 'preflop', [], {113: PokerCards(-1), 222: PokerCards([50])}), ('showdown', [], {113: PokerCards(-1), 222: PokerCards([50])}), ('neither', [], {113: PokerCards([51]), 222: PokerCards([50])})]")
         self.assertEquals(pack.serial2name, "{113: 'Doyle Brunson', 222: 'Stu Unger'}")
         self.assertEquals(pack.type, PACKET_POKER_HAND_HISTORY)
         self.assertEquals(pack.game_id, 988)
@@ -5182,7 +5182,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 
         log_history.reset()
 
-        pack = self.service.saveHand([("foo", 3, 991, 1, 100, "he", "1-2-limit", [113, 222], 8, {})], 991)
+        pack = self.service.saveHand([("foo", 3, 991, 1, 100, "he", ".50-1_10-100_limit", [113, 222], 8, {})], 991)
         msgs = log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find("saveHand: UPDATE hands SET description = ") == 0)
@@ -5203,7 +5203,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         log_history.reset()
 
         pack = self.service.saveHand([
-                ("foo", 3, 991, 1, 100, "he", "1-2-limit", [113, 222], 8, {})], 991)
+                ("foo", 3, 991, 1, 100, "he", ".50-1_10-100_limit", [113, 222], 8, {})], 991)
         msgs = log_history.get_all()
         self.assertEquals(len(msgs), 3)
         self.failUnless(msgs[0].find("saveHand: UPDATE hands SET description = ") == 0)
@@ -6083,7 +6083,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         table = self.service.createTable("bobby", {
             'seats' : 7, 'currency_serial' : 2663,
             'name': "This", 'variant' : 'omaha',
-            'betting_structure' : "2-4-limit" 
+            'betting_structure' : "1-2_20-200_limit" 
         })
         
         self.failIf(self.service.tables.has_key(1567), "Table Should not have been created, INSERT 0 rows!")

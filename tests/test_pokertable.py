@@ -549,7 +549,7 @@ class PokerTableTestCaseBase(unittest.TestCase):
         self.table = pokertable.PokerTable(self.service, table1ID, {
             'name': "table1",
             'variant': "holdem",
-            'betting_structure': "2-4-limit",
+            'betting_structure': "1-2_20-200_limit",
             'seats': 4,
             'player_timeout' : 6, 
             'muck_timeout' : 1,
@@ -559,7 +559,7 @@ class PokerTableTestCaseBase(unittest.TestCase):
         self.table2 = pokertable.PokerTable(self.service, table2ID, {
             'name': "table2",
             'variant': "holdem",
-            'betting_structure': "2-4-limit",
+            'betting_structure': "1-2_20-200_limit",
             'seats': 4,
             'player_timeout' : 6, 
             'muck_timeout' : 1,
@@ -568,7 +568,7 @@ class PokerTableTestCaseBase(unittest.TestCase):
         self.table3 = pokertable.PokerTable(self.service, table3ID, {
             'name': "table3",
             'variant': "holdem",
-            'betting_structure': "1-2-no-limit",
+            'betting_structure': "1-2_20-200_no-limit",
             'seats': 4,
             'player_timeout' : 6, 
             'muck_timeout' : 1,
@@ -577,7 +577,7 @@ class PokerTableTestCaseBase(unittest.TestCase):
         self.table9 = pokertable.PokerTable(self.service, table9ID, {
             'name': "table3",
             'variant': "holdem",
-            'betting_structure': "1-2-no-limit",
+            'betting_structure': "1-2_20-200_no-limit",
             'seats': 9,
             'player_timeout' : 6, 
             'muck_timeout' : 1,
@@ -856,7 +856,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         packetStr = "%s" % self.table.toPacket()
         idstr = 'id = %d' % self.table.game.id
         for str in [ idstr, 'name = table1', 'variant = holdem', \
-                     'betting_structure = 2-4-limit', 'seats = 4', \
+                     'betting_structure = 1-2_20-200_limit', 'seats = 4', \
                      'average_pot = 0', 'hands_per_hour = 0', \
                      'percent_flop = 0', 'players = 0', 'observers = 0', \
                      'waiting = 0', 'player_timeout = 6', 'muck_timeout = 1', \
@@ -1740,7 +1740,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.table = pokertable.PokerTable(self.service, table1ID, 
                                            { 'name': "table1",
                                              'variant': "holdem",
-                                             'betting_structure': "2-4-limit",
+                                             'betting_structure': "1-2_20-200_limit",
                                              'seats': 4,
                                              'player_timeout' : 6, 
                                              'muck_timeout' : 1,
@@ -1751,7 +1751,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.table2 = pokertable.PokerTable(self.service, table2ID, 
                                            { 'name': "table2",
                                              'variant': "holdem",
-                                             'betting_structure': "2-4-limit",
+                                             'betting_structure': "1-2_20-200_limit",
                                              'seats': 4,
                                              'player_timeout' : 6, 
                                              'muck_timeout' : 1,
@@ -1878,7 +1878,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         packetStr = "%s" % self.table.toPacket()
         idstr = 'id = %d' % self.table.game.id
         for str in [ idstr, 'name = table1', 'variant = holdem', \
-                     'betting_structure = 2-4-limit', 'seats = 4', \
+                     'betting_structure = 1-2_20-200_limit', 'seats = 4', \
                      'average_pot = 0', 'hands_per_hour = 0', \
                      'percent_flop = 0', 'players = 0', 'observers = 0', \
                      'waiting = 0', 'player_timeout = 6', 'muck_timeout = 1', \
@@ -2818,7 +2818,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
                     getattr(table.game, action)(serial)
                 table.update()
 
-        self.log_history.reset()
+        log_history.reset()
         table.scheduleAutoDeal()
         d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)
         d1.addCallback(firstGame)

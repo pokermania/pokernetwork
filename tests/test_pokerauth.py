@@ -64,8 +64,8 @@ settings_xml = """\
     command="%(mysql_command)s" />
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
   <listen tcp="19480" />
 
@@ -90,8 +90,8 @@ settings_alternate_xml = """\
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
     <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-    <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-    <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
     <listen tcp="19480" />
 
@@ -348,8 +348,8 @@ settings_mysql_xml = """\
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
     <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-    <table name="Table1" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
-    <table name="Table2" variant="holdem" betting_structure="100-200-no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
     <listen tcp="19480" />
 
