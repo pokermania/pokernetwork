@@ -91,8 +91,8 @@
   <table name="Eleven" variant="omaha8" betting_structure="10-20_200-2000_pot-limit" seats="10" player_timeout="60" currency_serial="1"/>
   <table name="Twelve" variant="omaha8" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1"/>
 
-  <table name="Thirty" variant="7stud" betting_structure="ante-5-10_100-1000_limit" seats="8" player_timeout="60" currency_serial="1"/>
-  <table name="Fourty" variant="7stud" betting_structure="ante-2.50-5_50-500_limit" seats="8" player_timeout="60" currency_serial="1"/>
+  <table name="Thirty" variant="7stud" betting_structure="10-20_100-2000000_ante-limit" seats="8" player_timeout="60" currency_serial="1"/>
+  <table name="Fourty" variant="7stud" betting_structure="5-10_50-1000000_ante-limit" seats="8" player_timeout="60" currency_serial="1"/>
 
   <table name="Lyearnys" variant="holdem" betting_structure=".02-.04_.40-4_no-limit" seats="10" player_timeout="60" currency_serial="1"/>
   <table name="Ingwskel" variant="holdem" betting_structure=".05-.10_1-10_no-limit" seats="10" player_timeout="60" currency_serial="1"/>
