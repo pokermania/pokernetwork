@@ -38,7 +38,7 @@ class PokerAuth:
     def __init__(self, db, settings):
         self.db = db
         self.type2auth = {}
-        self.auto_create_account = settings.headerGet("/server/@auto_create_account") != 'no'
+        self.auto_create_account = settings.headerGet("/server/@auto_create_account") == 'yes'
 
     def SetLevel(self, type, level):
         self.type2auth[type] = level
