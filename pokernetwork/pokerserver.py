@@ -56,7 +56,6 @@ from pokernetwork.pokermanhole import makeService as makeManholeService
 import reflogging
 from reflogging.handlers import GELFHandler, StreamHandler, ColorStreamHandler, SyslogHandler
 from reflogging._twisted import RefloggingObserver
-import logging
 
 from sys import stdout as orig_stdout, stderr as orig_stderr
 

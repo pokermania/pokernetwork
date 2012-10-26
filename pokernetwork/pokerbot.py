@@ -41,8 +41,11 @@ from random import randint
 from twisted.application import internet, service, app
 
 from twisted.python import log as twisted_log
-from reflogging import RootLogger
-from reflogging.handlers import SyslogHandler
+import reflogging
+from reflogging.handlers import GELFHandler, StreamHandler, ColorStreamHandler, SyslogHandler
+from reflogging._twisted import RefloggingObserver
+
+from sys import stdout as orig_stdout, stderr as orig_stderr
 
 if platform.system() != "Windows":
     if 'twisted.internet.reactor' not in sys.modules:
@@ -244,10 +247,51 @@ def makeService(configuration):
         if 'LOG_LEVEL' in os.environ \
         else settings.headerGetInt("/settings/@log_level")
         
-    root_logger = RootLogger()
-    handler = SyslogHandler('pokerbot', 0)
-    root_logger.add_handler(handler)
-    root_logger.set_level(log_level or 30)
+    #
+    # Setup Logging
+    #
+
+    root_logger = reflogging.RootLogger()
+    # accuire root log_level
+    log_level = settings.headerGetInt('/server/logging/@log_level') or 30
+    if 'LOG_LEVEL' in os.environ:
+        log_level = int(os.environ['LOG_LEVEL'])
+    if log_level not in (10, 20, 30, 40, 50):
+        raise ValueError(
+            "Unsupported log level %d. Supported log levels "
+            "are DEBUG(10), INFO(20), WARNING(30), ERROR(40), CRITICAL(50)." % (log_level,)
+        )
+    root_logger.set_level(log_level)
+    for node in settings.header.xpathEval('/settings/logging/*'):
+        _name = node.name
+        _log_level_node = node.xpathEval('@log_level')
+        _log_level = int(_log_level_node[0].content) if _log_level_node else 30
+        if _name in ('stream', 'colorstream'):
+            _output_node = node.xpathEval('@output')
+            _output = _output_node[0].content if _output_node else 'stdout'
+            if _output in ('stdout', '-'):
+                _output = orig_stdout
+            elif _output == 'stderr':
+                _output = orig_stderr
+            else:
+                if _output.startswith('-'):
+                    _output = open(_output[1:], 'w')
+                else:
+                    _output = open(_output, 'a')
+            if _name == 'stream':
+                _handler = StreamHandler(_output)
+            elif _name == 'colorstream':
+                _handler = ColorStreamHandler(_output)
+        if _name == 'gelf':
+            _host_node = node.xpathEval('@host')
+            _port_node = node.xpathEval('@port')
+            _host = _host_node[0].content if _host_node else 'localhost'
+            _port = _port_node[0].content if _port_node else 12201
+            _handler = GELFHandler(_host, _port)
+        if _name == 'syslog':
+            _handler = SyslogHandler('pokernetwork', 0)
+        _handler.set_level(_log_level)
+        root_logger.add_handler(_handler)
     
     PokerBotFactory.string_generator = StringGenerator(settings.headerGet("/settings/@name_prefix"))
     PokerBot.note_generator = NoteGenerator(settings.headerGet("/settings/currency"))
@@ -303,7 +347,7 @@ def makeService(configuration):
     return services
 
 def run():
-    twisted_log.startLogging(sys.stdout)
+    twisted_log.startLoggingWithObserver(RefloggingObserver())
     application = makeApplication(sys.argv[1:])
     app.startApplication(application, None)
     reactor.run()
