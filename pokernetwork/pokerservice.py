@@ -1152,7 +1152,8 @@ class PokerService(service.Service):
             table.sitOutPlayer(avatar, serial)
         if not now:
             if serial not in self.timer_remove_player:
-                self.timer_remove_player[serial] = reactor.callLater(20, self.tourneyRemovePlayer, tourney, serial)
+                delay = int(self.delays.get('tourney_kick', 20))
+                self.timer_remove_player[serial] = reactor.callLater(delay, self.tourneyRemovePlayer, tourney, serial)
         else:
             if serial in self.timer_remove_player:
                 if self.timer_remove_player[serial].active():
