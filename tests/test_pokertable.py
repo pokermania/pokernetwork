@@ -234,7 +234,7 @@ class MockService:
             return True
 
     def buyInPlayer(self, serial, game_id, currency_serial, amount):
-        if serial == 9 and amount != 1000 and amount != 100000000:
+        if serial == 9 and amount != 2000 and amount != 100000000:
             return 0
         else:
             return amount
@@ -1737,6 +1737,9 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         class Tournament:            
             name = 'My Old Sit and Go'
             serial = 2
+            def isRebuyAllowed(self, serial): 
+                return False
+            
         self.table = pokertable.PokerTable(self.service, table1ID, 
                                            { 'name': "table1",
                                              'variant': "holdem",
