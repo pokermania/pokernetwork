@@ -48,8 +48,7 @@ class PokerAuth:
 
     def auth(self, name, password):
         cursor = self.db.cursor()
-        cursor.execute("SELECT serial, password, privilege FROM users "
-                       "WHERE name = '%s'" % name)
+        cursor.execute("SELECT serial, password, privilege FROM users WHERE name = %s", name)
         numrows = int(cursor.rowcount)
         serial = 0
         privilege = User.REGULAR
