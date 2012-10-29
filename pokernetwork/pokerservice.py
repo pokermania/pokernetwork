@@ -1165,8 +1165,9 @@ class PokerService(service.Service):
         self.log.debug('remove now tourney(%d) serial(%d)', tourney.serial, serial)
         # the following line causes an IndexError if the player is not in any game. this is a good thing. 
         table = [t for t in self.tables.itervalues() if t.tourney is tourney and serial in t.game.serial2player][0]
-        cursor = self.db.cursor()
+        table.kickPlayer(serial)
         tourney.finallyRemovePlayer(serial)
+        cursor = self.db.cursor()
         try:
             prizes = tourney.prizes()
             rank = tourney.getRank(serial)
@@ -1185,7 +1186,6 @@ class PokerService(service.Service):
                 )
                 for avatar in avatars:
                     avatar.sendPacketVerbose(packet)
-            table.kickPlayer(serial)
             cursor.execute(
                 "UPDATE user2tourney " \
                 "SET rank = %s, table_serial = -1 " \
