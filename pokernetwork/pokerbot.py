@@ -313,17 +313,11 @@ def makeService(configuration):
     for table in settings.headerGetProperties("/settings/table"):
         table['tournament'] = False
         if 'count' in table:
-            for _i in range(0, int(table["count"])):
-                create_bot(settings = settings,
-                           join_info = table,
-                           serial = bot_serial.next())
+            for _i in xrange(0, int(table["count"])):
+                create_bot(settings=settings, join_info=table, serial=bot_serial.next())
         else:
             for bot in settings.headerGetProperties("/settings/table[@name=\"%s\"]/bot" % table['name']):
-                create_bot(settings = settings,
-                           join_info = table,
-                           serial = bot_serial.next(),
-                           name = bot['name'],
-                           password = bot['password'])
+                create_bot(settings=settings, join_info=table, serial=bot_serial.next(), name=bot['name'], password=bot['password'])
     for tournament in settings.headerGetProperties("/settings/tournament"):
         tournament['tournament'] = True
         if 'count' in tournament:
@@ -331,7 +325,7 @@ def makeService(configuration):
                 create_bot(settings=settings, join_info=tournament, serial=bot_serial.next())
         else:
             for bot in settings.headerGetProperties("/settings/tournament[@name=\"%s\"]/bot" % tournament['name']):
-                create_bot(settings=settings, join_info=table, serial=bot_serial.next(), name=bot['name'], password=bot['password'])
+                create_bot(settings=settings, join_info=tournament, serial=bot_serial.next(), name=bot['name'], password=bot['password'])
     return services
 
 def run():
