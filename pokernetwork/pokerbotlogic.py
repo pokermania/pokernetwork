@@ -44,10 +44,12 @@ LEVEL2ITERATIONS = {
     5: 200000
     }
 
-STATE_RUNNING = 0
+STATE_LOGIN = 0
 STATE_RECONNECTING = 1
 STATE_SEARCHING = 2
-STATE_BATCH = 3
+STATE_RUNNING = 3
+STATE_BATCH = 4
+
 
 #
 # If name generation is slow use /dev/urandom instead of
@@ -103,8 +105,9 @@ class PokerBot:
     
     def __init__(self, factory):
         self.factory = factory
-        self.state = STATE_RUNNING
+        self.state = STATE_LOGIN
         self.batch_end_action = None
+        self.seat = -1
 
     def lookForGame(self, protocol):
             join_info = self.factory.join_info
@@ -120,40 +123,20 @@ class PokerBot:
         protocol.sendPacket(PacketPokerSetRole(roles = PacketPokerRoles.PLAY))
         protocol.sendPacket(PacketLogin(name = user.name, password = user.password))
         protocol.sendPacket(PacketPokerTableSelect(string = "my"))
-        
-    def _handleConnection(self, protocol, packet):
-
+    
+    def _handleLogin(self, protocol, packet):
         if packet.type == PACKET_BOOTSTRAP:
             reactor.callLater(self.factory.serial * 0.1, self.bootstrap, protocol)
-            
-        elif packet.type == PACKET_POKER_BATCH_MODE:
-            self.state = STATE_BATCH
-            
-        elif packet.type == PACKET_SERIAL:
-            if self.factory.cash_in:
-                note = PokerBot.note_generator.getNote()
-                if self.factory.currency_id:
-                    note[0] += "?id=" + self.factory.currency_id
-                protocol.sendPacket(PacketPokerCashIn(
-                    serial=packet.serial,
-                    **dict(zip(('url', 'bserial', 'name', 'value'), note))
-                ))
-                
-        elif packet.type == PACKET_AUTH_OK:
+        if packet.type == PACKET_AUTH_OK:
             log.inform('bot credentials are ok for user %s', protocol.user.name)
             self.state = STATE_RECONNECTING
             
         elif packet.type == PACKET_AUTH_REFUSED:
             log.error('bot credentials are wrong for user %s', protocol.user.name)
             protocol.transport.loseConnection()
-            
-        elif packet.type == PACKET_POKER_STREAM_MODE:
-            self.state = STATE_RUNNING
-            if self.batch_end_action:
-                self.batch_end_action()
-                self.batch_end_action = None
-            
-        elif packet.type == PACKET_POKER_TABLE_LIST:
+
+    def _handleSearch(self, protocol, packet):
+        if packet.type == PACKET_POKER_TABLE_LIST:
             if self.state == STATE_SEARCHING:
                 found = False
                 table_info = self.factory.join_info
@@ -166,9 +149,10 @@ class PokerBot:
                             protocol.sendPacket(PacketPokerBuyIn(game_id = table.id, serial = protocol.getSerial()))
                             protocol.sendPacket(PacketPokerAutoBlindAnte(game_id = table.id, serial = protocol.getSerial()))
                             protocol.sendPacket(PacketPokerSit(game_id = table.id, serial = protocol.getSerial()))
+                        self.state = STATE_RUNNING
                         break
-
-                if not found:
+                # if we didn't break, we didn't find a table
+                else:
                     self.log.warn("Unable to find table %s", table_info['name'])
                     protocol.transport.loseConnection()
 
@@ -205,11 +189,6 @@ class PokerBot:
             else:
                 protocol.sendPacket(PacketPokerTourneyRegister(serial = protocol.getSerial(), tourney_serial = found))
             self.state = STATE_RUNNING
-            
-        elif packet.type == PACKET_POKER_SEAT:
-            if packet.seat == -1:
-                self.log.inform("Not allowed to get a seat, give up")
-                protocol.transport.loseConnection()
 
         elif packet.type == PACKET_POKER_ERROR or packet.type == PACKET_ERROR:
             giveup = True
@@ -224,13 +203,25 @@ class PokerBot:
                     self.factory.can_disconnect = False
                     reactor.callLater(60, lambda: self.lookForGame(protocol))
                     giveup = False
-            elif packet.other_type == PACKET_POKER_REBUY or packet.other_type == PACKET_POKER_BUY_IN:
-                self.factory.went_broke = True
             if giveup:
                 self.log.error("%s", packet)
-            if giveup:
                 protocol.transport.loseConnection()
             
+    def _handlePlay(self, protocol, packet):
+        if packet.type == PACKET_POKER_BATCH_MODE:
+            self.state = STATE_BATCH
+        elif packet.type == PACKET_POKER_STREAM_MODE:
+            self.state = STATE_RUNNING
+            if self.batch_end_action:
+                self.batch_end_action()
+                self.batch_end_action = None
+        elif packet.type == PACKET_POKER_SEAT:
+            if packet.seat == -1:
+                self.log.inform("Not allowed to get a seat, give up")
+                protocol.transport.loseConnection()
+            else:
+                self.seat = packet.seat
+        
         elif packet.type == PACKET_POKER_BLIND_REQUEST:
             if packet.serial == protocol.getSerial():
                 protocol.sendPacket(PacketPokerBlind(game_id = packet.game_id, serial = packet.serial))
@@ -262,6 +253,33 @@ class PokerBot:
         elif packet.type == PACKET_POKER_SELF_LOST_POSITION:
             if self.state == STATE_BATCH:
                 self.batch_end_action = None
+                
+        elif packet.type == PACKET_POKER_ERROR or packet.type == PACKET_ERROR:
+            if packet.other_type == PACKET_POKER_REBUY or packet.other_type == PACKET_POKER_BUY_IN:
+                self.factory.went_broke = True
+            self.log.error("%s", packet)
+            protocol.transport.loseConnection()
+    
+    def _handleConnection(self, protocol, packet):
+        if packet.type == PACKET_SERIAL:
+            if self.factory.cash_in:
+                note = PokerBot.note_generator.getNote()
+                if self.factory.currency_id:
+                    note[0] += "?id=" + self.factory.currency_id
+                protocol.sendPacket(PacketPokerCashIn(
+                    serial=packet.serial,
+                    **dict(zip(('url', 'bserial', 'name', 'value'), note))
+                ))
+
+
+
+        else:
+            if self.state == STATE_LOGIN:
+                self._handleLogin(protocol, packet)
+            elif self.state in (STATE_RECONNECTING, STATE_SEARCHING):
+                self._handleSearch(protocol, packet)
+            elif self.state in (STATE_RUNNING, STATE_BATCH):
+                self._handlePlay(protocol, packet)
                 
     def inPosition(self, protocol, game):
         if not game.isBlindAnteRound():

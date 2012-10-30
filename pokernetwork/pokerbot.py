@@ -97,10 +97,10 @@ class PokerBotFactory(PokerClientFactory):
         self.log = PokerBotFactory.log.get_instance(self, refs=[
             ("User", self, lambda factory: factory.serial if factory.serial else None)
         ])
+        self.serial = kwargs["serial"]
         PokerClientFactory.__init__(self, *args, **kwargs)
         self.protocol = PokerBotProtocol
         self.join_info = kwargs["join_info"]
-        self.serial = kwargs["serial"]
         settings = kwargs["settings"]
         self.level = settings.headerGetInt("/settings/@level")
         self.reconnect = settings.headerGet("/settings/@reconnect") == "yes"
@@ -243,16 +243,9 @@ def makeService(configuration):
     settings = pokernetworkconfig.Config([''])
     settings.load(configuration)
 
-    log_level = int(os.environ['LOG_LEVEL']) \
-        if 'LOG_LEVEL' in os.environ \
-        else settings.headerGetInt("/settings/@log_level")
-        
-    #
     # Setup Logging
-    #
-
     root_logger = reflogging.RootLogger()
-    # accuire root log_level
+    
     log_level = settings.headerGetInt('/server/logging/@log_level') or 30
     if 'LOG_LEVEL' in os.environ:
         log_level = int(os.environ['LOG_LEVEL'])
@@ -261,6 +254,7 @@ def makeService(configuration):
             "Unsupported log level %d. Supported log levels "
             "are DEBUG(10), INFO(20), WARNING(30), ERROR(40), CRITICAL(50)." % (log_level,)
         )
+        
     root_logger.set_level(log_level)
     for node in settings.header.xpathEval('/settings/logging/*'):
         _name = node.name
@@ -296,7 +290,7 @@ def makeService(configuration):
     PokerBotFactory.string_generator = StringGenerator(settings.headerGet("/settings/@name_prefix"))
     PokerBot.note_generator = NoteGenerator(settings.headerGet("/settings/currency"))
 
-    ( host, port ) = settings.headerGet("/settings/servers").split(':')
+    host, port = settings.headerGet("/settings/servers").split(':')
     port = int(port)
 
     services = Bots()
@@ -333,17 +327,11 @@ def makeService(configuration):
     for tournament in settings.headerGetProperties("/settings/tournament"):
         tournament['tournament'] = True
         if 'count' in tournament:
-            for i in range(0, int(tournament["count"])):
-                create_bot(settings = settings,
-                           join_info = tournament,
-                           serial = bot_serial.next())
+            for _i in xrange(0, int(tournament["count"])):
+                create_bot(settings=settings, join_info=tournament, serial=bot_serial.next())
         else:
             for bot in settings.headerGetProperties("/settings/tournament[@name=\"%s\"]/bot" % tournament['name']):
-                create_bot(settings = settings,
-                           join_info = table,
-                           serial = bot_serial.next(),
-                           name = bot['name'],
-                           password = bot['password'])
+                create_bot(settings=settings, join_info=table, serial=bot_serial.next(), name=bot['name'], password=bot['password'])
     return services
 
 def run():
