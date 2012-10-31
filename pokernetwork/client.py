@@ -116,7 +116,8 @@ class UGAMEClientProtocol(UGAMEProtocol):
         self.connection_lost_deferred = defer.Deferred()
 
 class UGAMEClientFactory(protocol.ClientFactory):
-
+    log = log.get_child('UGAMEClientFactory')
+    
     def __init__(self, *args, **kwargs):
         self.protocol = UGAMEClientProtocol
         self.protocol_instance = None

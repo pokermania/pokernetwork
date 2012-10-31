@@ -141,7 +141,7 @@ def get_auth_instance(db, memcache, settings):
                 get_instance = _import(script).get_auth_instance
                 log.debug("get_auth_instance: using custom implementation of get_auth_instance: %s", script)
                 _get_auth_instance = get_instance
-            except:
-                log.warn("get_auth_instance: falling back on pokerauth.get_auth_instance, script not found: '%s'", script)
+            except ImportError, e:
+                log.warn("get_auth_instance: falling back on pokerauth.get_auth_instance, script not found: '%s' (%s)", script, e)
             
     return apply(_get_auth_instance, [db, memcache, settings])

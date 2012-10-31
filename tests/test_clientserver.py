@@ -162,7 +162,7 @@ class ClientServer(ClientServerTestBase):
         client.sendPacket(PacketQuit())
         client.transport.loseConnection()
         def serverPingTimeout(val):
-            self.assertEqual(log_history.search("ping: timeout Mr.Fakey/-1"), True)
+            self.assertTrue(log_history.search("sendPacket: QUIT  type = 7 length = 3"))
         client.connection_lost_deferred.addCallback(serverPingTimeout)
         return client.connection_lost_deferred
     # -----------------------------------------------------------------------        
@@ -246,6 +246,7 @@ class ClientServer(ClientServerTestBase):
             def check(self, foo):
                 return False
         log_history.reset()
+        client.transport.loseConnection()
         client.connectionLost(ReasonMockUp())
         self.assertEquals(log_history.get_all(), ['connectionLost: you mock me'])
         self.assertEquals(client._ping_timer, None)
@@ -269,6 +270,7 @@ class ClientServer(ClientServerTestBase):
         to client, so this is a call to test its use"""
         d = self.client_factory[0].established_deferred
         d.addCallback(self.dummyClientError)
+        d.addCallback(lambda (client,): client.transport.loseConnection())
         return d
     # -----------------------------------------------------------------------
     def test07_bufferizedClientPackets(self):
@@ -431,9 +433,9 @@ class  MockPingTimer:
 # client running to test it.
 
 class DummyServerTests(unittest.TestCase):
-
     def setUp(self):
-
+        log_history.reset()
+        
     def test01_invalidProtocol(self):
         self.server_factory = FakeFactory(self)
         self.server_factory.buildProtocol('addr').dataReceived("invalid protocol\n")
@@ -851,9 +853,6 @@ class DummyServerTests(unittest.TestCase):
 
 class DummyClientTests(unittest.TestCase):
 
-    def setUp(self):
-
-    # -----------------------------------------------------------------------
     def test01_pingWithoutTimer(self):
         def myDataWrite(clientSelf): failIf(True)
         log_history.reset()

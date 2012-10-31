@@ -940,16 +940,6 @@ class PokerService(service.Service):
         self.cancelTimer(key)
         tourney.updateBreak()
         if tourney.state == TOURNAMENT_STATE_BREAK:
-            remaining = tourney.remainingBreakSeconds()
-            if remaining < 60:
-                remaining = "less than a minute"
-            elif remaining < 120:
-                remaining = "one minute"
-            else:
-                remaining = "%d minutes" % int(remaining / 60)
-            for game in tourney.games:
-                table = self.getTable(game.id)
-
             self.timer[key] = reactor.callLater(int(self.delays.get('breaks_check', 30)), self.tourneyBreakCheck, tourney)
 
     def tourneyDeal(self, tourney):
@@ -2101,20 +2091,21 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         try:
             cursor.execute("SELECT serial FROM tourneys WHERE state IN ('running', 'break', 'breakwait')")
-            for (tourney_serial,) in cursor.fetchall():
-                self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_CANCELED, param1 = tourney_serial)
-
-            cursor.execute(
-                "UPDATE tourneys AS t " \
-                    "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
-                    "LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial " \
-                "SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'aborted' " \
-                "WHERE " \
-                    "t.resthost_serial = %s AND " \
-                    "t.state IN ('running', 'break', 'breakwait')",
-                (self.resthost_serial,)
-            )
             if cursor.rowcount:
+                for (tourney_serial,) in cursor.fetchall():
+                    self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_CANCELED, param1 = tourney_serial)
+
+                cursor.execute(
+                    "UPDATE tourneys AS t " \
+                        "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
+                        "LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial " \
+                    "SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'aborted' " \
+                    "WHERE " \
+                        "t.resthost_serial = %s AND " \
+                        "t.state IN ('running', 'break', 'breakwait')",
+                    (self.resthost_serial,)
+                )
+                
                 self.log.debug("cleanupTourneys: %s", cursor._executed)
 
         finally:

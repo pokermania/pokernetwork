@@ -1472,8 +1472,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(msgs, ['Unable to find codeset string in language value: ', 'Unable to find locale string in language value: '])
     def test01_auth(self):
         self.service.startService()
-        ( status, message ) = self.service.auth(PacketLogin.type,("user1", "password1"),set(["role1"]))
-        (serial,name,privilege) = status
+        self.service.poker_auth.auto_create_account = True
+        status, message = self.service.auth(PacketLogin.type,("user1", "password1"), set(["role1"]))
+        serial, name, privilege = status
         self.assertEquals(None, message)
         self.assertEquals(4, serial)
         self.assertEquals("user1", name)
@@ -1481,8 +1482,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     def test01_auth_invalid_login(self):
         self.service.startService()
-        self.service.poker_auth.auto_create_account = False
-        ( status, message ) = self.service.auth(PacketLogin.type,("user1", "password1"), set(["role1"]))
+        status, message = self.service.auth(PacketLogin.type,("user1", "password1"), set(["role1"]))
         self.assertEquals("Invalid login or password", message)
         self.assertEquals(False, status)
 
@@ -1494,14 +1494,14 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
                 return "user1"
 
         self.service.startService()
-        ( (serial, name, privilege), message ) = self.service.auth(PacketLogin.type,("user1", "password1"), set(["role1"]))
+        self.service.poker_auth.auto_create_account = True
+        (serial, _name, _privilege), _message = self.service.auth(PacketLogin.type,("user1", "password1"), set(["role1"]))
         self.service.avatar_collection.add(serial, Client())
-        ( (serial, name, privilege), message ) = self.service.auth(PacketLogin.type,("user1", "password1"), set(["role1"]))
+        (serial, name, _privilege), message = self.service.auth(PacketLogin.type,("user1", "password1"), set(["role1"]))
         self.assertEquals(None, message)
         self.assertEquals("user1", name)
 
     def cashIn(self):
-
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount, points, rake) VALUES (%s, 1, 100, 0, 0)", (self.user1_serial,))
         cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount, points, rake) VALUES (%s, 1, 100, 0, 0)", (self.user2_serial,))
@@ -2217,15 +2217,16 @@ class RefillTestCase(unittest.TestCase):
     def test_refill(self):
         self.service.startService()
         refill = 10000
-        ( (serial, name, privilege), message ) = self.service.auth(PacketLogin.type,("user1", "password1"), "role1")
+        self.service.poker_auth.auto_create_account = True
+        (serial, _name, _privilege), _message = self.service.auth(PacketLogin.type,("user1", "password1"), "role1")
         self.assertEquals(0, self.service.autorefill(serial))
         table_money = 1000
         table_serial = 200
-        self.service.db.db.query("INSERT INTO user2table VALUES (" + str(serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
-        self.service.db.db.query("INSERT INTO pokertables (serial, name, currency_serial, tourney_serial) VALUES (" + str(table_serial) + ", 'foo', 1, 0)")
+        self.service.db.db.query("INSERT INTO user2table VALUES (%d, %d, %d, 0)" % (serial, table_serial, table_money))
+        self.service.db.db.query("INSERT INTO pokertables (serial, name, currency_serial, tourney_serial) VALUES (%d, 'foo', 1, 0)" % (table_serial,))
         money_left = 100
-        self.service.db.db.query("UPDATE user2money SET amount = " + str(money_left) + " WHERE user_serial = " + str(serial))
-        self.assertEquals(refill - table_money, self.service.autorefill(serial))
+        self.service.db.db.query("UPDATE user2money SET amount = %d WHERE user_serial = %d" % (money_left, serial))
+        self.assertEquals(refill-table_money, self.service.autorefill(serial))
 
 class TimerTestCase(unittest.TestCase):
 
@@ -2848,7 +2849,7 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
 
     def test05_broadcast_start(self):
         self.service.startService()
-        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        tourney_serial = self.service.tourneys_schedule.keys()[0]
         host,port = 'hostname',80
         self.service.db.db.query("INSERT INTO resthost (name, host, port) VALUES ('name', '%s', %s)" % ( host, port ))
         def getPage(url):
@@ -2858,7 +2859,7 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
 
     def test06_monitor(self):
         self.service.startService()
-        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
+        tourney_serial = self.service.tourneys_schedule.keys()[0]
         self.createUsers()
         table_serial = 606
         table_money = 140
@@ -2868,7 +2869,7 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         self.databaseEvent_called = False
         def databaseEvent(event = None, param1 = None, param2 = None, param3 = None):            
             self.databaseEvent_called = True
-            self.assertEqual(PacketPokerMonitorEvent.TOURNEY_START, event)
+            self.assertTrue(event in (PacketPokerMonitorEvent.TOURNEY_START, PacketPokerMonitorEvent.TOURNEY_CANCELED))
             self.assertEqual(tourney_serial, param1)
         self.service.databaseEvent = databaseEvent
         self.service.tourneyNewState(tourney, pokertournament.TOURNAMENT_STATE_REGISTERING, pokertournament.TOURNAMENT_STATE_RUNNING)
@@ -2887,11 +2888,13 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
     def test_insert_ok(self):
         self.service.startService()
         affiliate = 3
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'test08_1',
-                                                             password = 'PASSWORD',
-                                                             email = 'test08_1@HOME.COM',
-                                                             affiliate = affiliate,
-                                                             birthdate = '1980/01/01'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            name = 'test08_1',
+            password = 'PASSWORD',
+            email = 'test08_1@HOME.COM',
+            affiliate = affiliate,
+            birthdate = '1980/01/01'
+        ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
         self.assertEquals(affiliate, info.affiliate)
         packed = info.pack()
@@ -2901,75 +2904,95 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
 
     def test_update_ok(self):
         self.service.startService()
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
-                                                             password = 'password1',
-                                                             email = 'a@b.c',
-                                                             birthdate = '1980/01/01'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            name = 'user1',
+            password = 'password1',
+            email = 'a@b.c',
+            birthdate = '1980/01/01'
+        ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
         serial = info.serial
-        info = self.service.setAccount(PacketPokerSetAccount(serial = serial,
-                                                             name = 'user1',
-                                                             password = 'password2',
-                                                             email = 'a@b.c',
-                                                             birthdate = '1980/01/01'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            serial = serial,
+            name = 'user1',
+            password = 'password2',
+            email = 'a@b.c',
+            birthdate = '1980/01/01'
+        ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
 
     def test_setPersonalInfo_fail(self):
         self.service.startService()
         self.service.setPersonalInfo = lambda x: False
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'test08_1',
-                                                             password = 'PASSWORD',
-                                                             email = 'test08_1@HOME.COM',
-                                                             birthdate = '1980/01/01'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            name = 'test08_1',
+            password = 'PASSWORD',
+            email = 'test08_1@HOME.COM',
+            birthdate = '1980/01/01'
+        ))
         self.assertEquals(PACKET_ERROR, info.type)
         self.assertEquals("unable to set personal information", info.message)
         self.assertEquals(PacketPokerSetAccount.SERVER_ERROR, info.code)
 
     def test_name_already_exists(self):
         self.service.startService()
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
-                                                             password = 'password1',
-                                                             email = 'a@b.c',
-                                                             birthdate = '1980/01/01'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            name = 'user1',
+            password = 'password1',
+            email = 'a@b.c',
+            birthdate = '1980/01/01'
+        ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
         serial = info.serial
-        info = self.service.setAccount(PacketPokerSetAccount(serial = 10001,
-                                                             email = 'a@b.c',
-                                                             name = 'user1'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            serial = 10001,
+            email = 'a@b.c',
+            name = 'user1'
+        ))
         self.assertEquals(PACKET_ERROR, info.type)
         self.assertEquals(PacketPokerSetAccount.NAME_ALREADY_EXISTS, info.code)
 
     def test_email_already_exists(self):
         self.service.startService()
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
-                                                             password = 'password1',
-                                                             email = '1@b.c',
-                                                             birthdate = '1980/01/01'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            name = 'user1',
+            password = 'password1',
+            email = '1@b.c',
+            birthdate = '1980/01/01'
+        ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
         serial = info.serial
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'user2',
-                                                             password = 'password2',
-                                                             email = '2@b.c',
-                                                             birthdate = '1980/01/01'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            name = 'user2',
+            password = 'password2',
+            email = '2@b.c',
+            birthdate = '1980/01/01'
+        ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
-        info = self.service.setAccount(PacketPokerSetAccount(serial = serial,
-                                                             name = 'user1',
-                                                             email = '2@b.c'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            serial = serial,
+            name = 'user1',
+            email = '2@b.c'
+        ))
         self.assertEquals(PACKET_ERROR, info.type)
         self.assertEquals(PacketPokerSetAccount.EMAIL_ALREADY_EXISTS, info.code)
 
     def test_update_duplicate_serial(self):
         self.service.startService()
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
-                                                             password = 'password1',
-                                                             email = 'a@b.c',
-                                                             birthdate = '1980/01/01'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            name = 'user1',
+            password = 'password1',
+            email = 'a@b.c',
+            birthdate = '1980/01/01'
+        ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
         serial = info.serial
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'user2',
-                                                             password = 'password2',
-                                                             email = '2@b.c',
-                                                             birthdate = '1980/01/01'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            name = 'user2',
+            password = 'password2',
+            email = '2@b.c',
+            birthdate = '1980/01/01'
+        ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
         cursor = self.db.cursor()
         cursor.execute('ALTER TABLE users CHANGE COLUMN serial s1 INT UNSIGNED NOT NULL AUTO_INCREMENT')
@@ -2977,10 +3000,12 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
         cursor.execute('DROP INDEX name_idx ON users')
         cursor.execute('DROP INDEX email_idx ON users')
         cursor.execute('UPDATE users SET serial = %d' % serial)
-        info = self.service.setAccount(PacketPokerSetAccount(serial = serial,
-                                                             name = 'user1',
-                                                             password = 'password4',
-                                                             email = 'a@b.c'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            serial = serial,
+            name = 'user1',
+            password = 'password4',
+            email = 'a@b.c'
+        ))
         self.assertEquals(info.type, PACKET_ERROR)
         self.assertEquals(PacketPokerSetAccount.SERVER_ERROR, info.code)
 
@@ -2991,29 +3016,30 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
 
     def test_password_error(self):
         self.service.startService()
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'abcdef',
-                                                             password = ''))
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'abcdef', password = ''))
         self.assertEquals(PACKET_ERROR, info.type)
         self.assertEquals(PacketPokerSetAccount.PASSWORD_TOO_SHORT, info.code)
 
     def test_email_error(self):
         self.service.startService()
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'abcdef',
-                                                             password = 'ABCDEF',
-                                                             email = ''))
+        info = self.service.setAccount(PacketPokerSetAccount(name = 'abcdef', password = 'ABCDEF', email = ''))
         self.assertEquals(PACKET_ERROR, info.type)
         self.assertEquals(PacketPokerSetAccount.INVALID_EMAIL, info.code)
 
     def test_email_duplicate(self):
         self.service.startService()
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
-                                                             password = 'password1',
-                                                             email = 'a@b.c',
-                                                             birthdate = '1980/01/01'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            name = 'user1',
+            password = 'password1',
+            email = 'a@b.c',
+            birthdate = '1980/01/01'
+        ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
-        info = self.service.setAccount(PacketPokerSetAccount(name = 'user2',
-                                                             password = 'password2',
-                                                             email = 'a@b.c'))
+        info = self.service.setAccount(PacketPokerSetAccount(
+            name = 'user2',
+            password = 'password2',
+            email = 'a@b.c'
+        ))
         self.assertEquals(PACKET_ERROR, info.type)
         self.assertEquals(PacketPokerSetAccount.EMAIL_ALREADY_EXISTS, info.code)
 
@@ -3024,10 +3050,12 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
         cursor.close()
         raised = False
         try:
-            info = self.service.setAccount(PacketPokerSetAccount(name = 'user1',
-                                                                 password = 'password1',
-                                                                 email = 'a@b.c',
-                                                                 birthdate = '1980/01/01'))
+            info = self.service.setAccount(PacketPokerSetAccount(
+                name = 'user1',
+                password = 'password1',
+                email = 'a@b.c',
+                birthdate = '1980/01/01'
+            ))
         except IntegrityError:
             raised = True
         self.assertTrue(raised)
@@ -3921,8 +3949,6 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
         self.service.tourneyBreakResume(tourney)
         for ii in [ 1, 2 ]:
-            self.assertEqual(tables[ii].message, "Tournament resumes")
-            self.assertEqual(tables[ii].type, PacketPokerGameMessage)
             self.assertEquals(len(tables[ii].broadcastedPackets), 1)
             pp = tables[ii].broadcastedPackets[0]
             self.assertEquals(pp.game_id, ii)
@@ -3933,17 +3959,14 @@ class BreakTestCase(PokerServiceTestCaseBase):
         class MockGame:
             def __init__(self):
                 self.id = 1
-
         class Tournament:
             def __init__(self):
                 self.state = pokertournament.TOURNAMENT_STATE_RUNNING
                 self.remaining = 0
                 self.games = [ MockGame() ]
                 self.serial = 1
-
             def remainingBreakSeconds(self):
                 return self.remaining
-
             def updateBreak(self):
                 pass
 
@@ -3952,16 +3975,6 @@ class BreakTestCase(PokerServiceTestCaseBase):
         table.game = tourney.games[0]
         self.service.tables = { 1: table }
         self.service.tourneyBreakCheck(tourney)
-        self.failIf(table.message)
-        tourney.state = pokertournament.TOURNAMENT_STATE_BREAK
-        self.service.tourneyBreakCheck(tourney)
-        self.failUnless("less than a minute" in table.message)
-        tourney.remaining = 60
-        self.service.tourneyBreakCheck(tourney)
-        self.failUnless("one minute" in table.message)
-        tourney.remaining = 120
-        self.service.tourneyBreakCheck(tourney)
-        self.failUnless("2 minute" in table.message)
 ##############################################################################        
 class UpdatePlayerRakeTestCase(PokerServiceTestCaseBase):
 
@@ -5349,7 +5362,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                     "DELETE u2t FROM user2tourney AS u2t LEFT JOIN tourneys",
                     "REPLACE INTO route VALUES",
                     "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE",
-                    "DELETE FROM pokertables WHERE"
+                    "DELETE FROM pokertables WHERE",
+                    "SELECT serial FROM tourneys WHERE state IN"
                 ])
         class MockDBWithDifferentCursorMethod(MockDatabase):
             def cursor(dbSelf, dummy = None):

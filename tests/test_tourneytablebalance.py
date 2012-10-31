@@ -44,7 +44,7 @@ from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import reactor, defer
 
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 
 from pokerengine import pokertournament, pokergame
@@ -116,6 +116,7 @@ class ClientMockup:
         self.tables = {}
         self.joinedTables = []
         self.deferred = None
+        self._queue_packets = False
 
     def getPlayerInfo(self):
         class MockInfo:
@@ -130,7 +131,7 @@ class ClientMockup:
         if self.deferred and self.type == packet.type:
                 reactor.callLater(0, lambda: self.deferred.callback(packet))
         
-    def join(self, table):
+    def join(self, table, reason = ""):
         self.joinedTables.append(table)
         self.tables[table.game.id] = table
 
@@ -169,6 +170,7 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
     # ----------------------------------------------------------------
     def tearDown(self):
         self.db.close()
+        for t in self.service.tables.values(): t.destroy()
         d = self.service.stopService()
         d.addCallback(lambda x: self.destroyDb())
         return d
@@ -180,18 +182,13 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
             self.assertEqual(1, cursor.rowcount)
 
         self.user_serials = []
-        for ii in range(0,6): self.user_serials.append(None)
-        ( (self.user_serials[0], name, privilege), message ) = self.service.auth("user1", "password1", "role1")
-        ( (self.user_serials[1], name, privilege), message ) = self.service.auth("user2", "password2", "role1")
-        ( (self.user_serials[2], name, privilege), message ) = self.service.auth("user3", "password3", "role1")
-        ( (self.user_serials[3], name, privilege), message ) = self.service.auth("user4", "password4", "role1")
-        ( (self.user_serials[4], name, privilege), message ) = self.service.auth("user5", "password5", "role1")
-        ( (self.user_serials[5], name, privilege), message ) = self.service.auth("user6", "password6", "role1")
-
-#         for user_number in self.user_serials:
-#             if self.default_money > 0 and user_number == self.user3_serial:
-#                 cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (%d, 2, %d)" % ( user_number, self.default_money ) )
-#                 self.assertEqual(1, cursor.rowcount)
+        for _ii in range(0,6): self.user_serials.append(None)
+        (self.user_serials[0], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user1", "password1"), "role1")
+        (self.user_serials[1], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user2", "password2"), "role1")
+        (self.user_serials[2], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user3", "password3"), "role1")
+        (self.user_serials[3], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user4", "password4"), "role1")
+        (self.user_serials[4], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user5", "password5"), "role1")
+        (self.user_serials[5], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user6", "password6"), "role1")
 
         cursor.close()
     # ----------------------------------------------------------------
@@ -206,12 +203,11 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
 
         cursor = self.db.cursor()
-        cursor.execute("""
-INSERT INTO `tourneys_schedule` ( `name`, `description_short` , `description_long` , `players_quota` , `variant` , `betting_structure` , `seats_per_game` , `currency_serial` , `buy_in` , `rake` , `sit_n_go` , `start_time` , `register_time` , `respawn` , `respawn_interval`, `players_min`, `breaks_first` )
-VALUES ( 'Only6', 'Sit and Go 6 players and only 6 , Holdem', 'Sit and Go 6 players only', '6', 'holdem', 'level-15-30-no-limit', '5', 1, '0', '0', 'y', '0', '0', 'y', '0', '6', 1 );
-""")
+        cursor.execute(
+            "INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `start_time`, `register_time`, `respawn`, `respawn_interval`, `players_min`, `breaks_first`)" \
+            "VALUES ('Only6', 'Sit and Go 6 players and only 6, Holdem', 'Sit and Go 6 players only', '6', 'holdem', 'level-15-30-no-limit', '5', 1, '0', '0', 'y', '0', '0', 'y', '0', '6', 1 )"
+        )
         cursor.close()
-#INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`, `players_min`) VALUES ('Only6', 'Only 6  Freeroll', 'Only 6 No Limit Freeroll', '6', 'holdem', 'level-001', '5', 1, '0', '0', 'y', '60', '30', '1', '60', unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - INTERVAL 1 HOUR), 'n', '0', '6');
 
         self.service.startService()
         self.createUsers()
@@ -229,48 +225,24 @@ VALUES ( 'Only6', 'Sit and Go 6 players and only 6 , Holdem', 'Sit and Go 6 play
         for userSerial in self.user_serials:
             clients[userSerial] = ClientMockup(userSerial)
             self.service.avatar_collection.add(userSerial, clients[userSerial])
-            self.service.tourneyRegister(PacketPokerTourneyRegister(serial = userSerial,
-                                                                    game_id = tourneySerial))
+            self.service.tourneyRegister(PacketPokerTourneyRegister(serial=userSerial, tourney_serial=tourneySerial))
 
         tourneys =  self.service.tourneys.values()
 
-        (sixTourney,) = filter(lambda tourney: tourney.name == 'Only6', self.service.tourneys.values())
+        sixTourney = [t for t in self.service.tourneys.itervalues() if t.name=='Only6'][0]
         self.assertEquals(sixTourney.serial, tourneySerial)
-
 
         d = defer.Deferred()
         def checkTourney(status):
             self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, sixTourney.state)
-
             self.assertEquals(self.service.joined_count, 6)
-
             for game in sixTourney.games:
-                print game.__dict__
-                # Here is what exhibits the problem.  Some of the tables
-                # don't have more than 1 person at them!
-                self.failUnless(len(game.serial2player.keys()) >= 2)
-
-            for game in sixTourney.games:
-                # This code is needed to make sure the test doesn't
-                # timeout with a reactor error bedcause the players
-                # timeout.  There may be an easier way to do that....
-                if len(game.serial2player.keys()) > 1:
-                    table = self.service.getTable(game.id)
-                    in_position = game.getSerialInPosition()
-                    game.callNraise(in_position, game.maxBuyIn())
-                    in_position = game.getSerialInPosition()
-                    game.call(in_position)
-                    in_position = game.getSerialInPosition()
-                    game.call(in_position)
-                    in_position = game.getSerialInPosition()
-                    game.call(in_position)
-                    in_position = game.getSerialInPosition()
-                    game.call(in_position)
-                    table.update()
-
+                # tables should be equalized
+                self.assertTrue(len(game.serial2player.keys()) >= 2)
+            
         d.addCallback(checkTourney)
 
-        reactor.callLater(3, lambda: d.callback(True))
+        reactor.callLater(3, d.callback, True)
 
         return d
 # ----------------------------------------------------------------

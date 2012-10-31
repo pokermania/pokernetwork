@@ -32,7 +32,7 @@ from pokernetwork import pokerbot
 from twisted.internet import defer
 
 settings_xml_bots_generated = """<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker-bot.xsd" delays="false" wait="1" reconnect="yes" watch="no" level="1" cash_in="no" ping="10" verbose="0" no_display_packets="yes" rebuy="yes" name_prefix="BOT" poker_network_version="2.0.0">
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker-bot.xsd" delays="false" wait="1" reconnect="yes" reconnect_delay="0,0" watch="no" level="1" cash_in="no" ping="10" verbose="0" no_display_packets="yes" rebuy="yes" name_prefix="BOT" poker_network_version="2.0.0">
   <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="5" lag="15"/>
   <name>test</name>
   <passwd>test</passwd>
@@ -50,7 +50,7 @@ settings_xml_bots_generated = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 settings_xml_bots_named = """<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker-bot.xsd" delays="false" wait="1" reconnect="yes" watch="no" level="1" cash_in="no" ping="10" verbose="0" no_display_packets="yes" rebuy="yes" name_prefix="BOT" poker_network_version="2.0.0">
+<settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker-bot.xsd" delays="false" wait="1" reconnect="yes" reconnect_delay="0,0" watch="no" level="1" cash_in="no" ping="10" verbose="0" no_display_packets="yes" rebuy="yes" name_prefix="BOT" poker_network_version="2.0.0">
   <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="5" lag="15"/>
   <name>test</name>
   <passwd>test</passwd>

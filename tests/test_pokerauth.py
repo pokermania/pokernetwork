@@ -98,7 +98,7 @@ settings_alternate_xml = """\
     <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
     <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
     <users temporary="BOT.*"/>
-    <auth script="%(tests_path)s/test_pokerauth/pokerauth.py" />
+    <auth script="tests.test_pokerauth.pokerauth" />
 </server>
 """ % {
     'tests_path': TESTS_PATH,
@@ -208,7 +208,7 @@ class PokerAuthTestCase(unittest.TestCase):
         settings = pokernetworkconfig.Config([])
         settings.loadFromString(settings_alternate_xml)
         auth = pokerauth.get_auth_instance(db, None, settings)
-        self.failUnless(hasattr(auth, 'gotcha'))
+        self.assertTrue(auth.gotcha)
     # -----------------------------------------------------------------------------------------------------    
     def checkIfUserExistsInDB(self, name, selectString = "SELECT serial from users where name = '%s'"):
         cursor = self.db.cursor()
@@ -231,7 +231,7 @@ class PokerAuthTestCase(unittest.TestCase):
         Test Poker auth : Try basic auth with autocreate on"""
         db = self.db
         settings = pokernetworkconfig.Config([])
-        autocreate_xml = settings_xml.replace('<server auto_create_account="no" ', '<server ')
+        autocreate_xml = settings_xml.replace('<server auto_create_account="no" ', '<server auto_create_account="yes" ')
         settings.doc = libxml2.parseMemory(autocreate_xml, len(autocreate_xml))
         settings.header = settings.doc.xpathNewContext()
         auth = pokerauth.get_auth_instance(db, None, settings)
@@ -362,7 +362,7 @@ settings_mysql_xml = """\
         command="%(mysql_command)s" />
     <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
     <users temporary="BOT.*"/>
-    <auth script="%(tests_path)s/../pokernetwork/pokerauthmysql.py" host="%(dbhost)s" user="%(dbroot)s" password="%(dbroot_password)s" db="testpokerauthmysql" table="users"/>
+    <auth script="pokernetwork.pokerauthmysql" host="%(dbhost)s" user="%(dbroot)s" password="%(dbroot_password)s" db="testpokerauthmysql" table="users"/>
 </server>
 """ % {
     'dbhost': config.test.mysql.host,

@@ -72,7 +72,7 @@ class PokerNetworkGameClientTestCase(unittest.TestCase):
         self.assertEqual(self.game.getStaticPlayerList(), self.game.player_list)
         self.game.getPlayer(player_serial).sit_out = True
         self.game.setStaticPlayerList([200])
-        self.assertRaises(KeyError, self.game.buildPlayerList, True)
+        self.assertEqual(self.game.player_list, [200])
 
 # ----------------------------------------------------------------
 
