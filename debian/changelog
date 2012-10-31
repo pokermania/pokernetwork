@@ -1,3 +1,24 @@
+poker-network (2.2.3-2) pokermania; urgency=low
+
+  * 3947afa test fixing galore
+  * 68e499c add default log levels to .xml.in files, refs #7233
+  * d719511 pokerbot: small typo, bots can now play tournaments
+  * 83f7500 bot logic polishing (squash commit)
+  * 36f1976 added tourney_kick delay setting
+  * 8b3e15d fix for testUnequalTables, refs #6613
+  * 537af1e fix for test_pokertable
+  * 9700041 use correct sql escaping in pokerauthnopassword
+  * 4ecbcbf fixed logging of pokerbot
+  * 60459ce added support for rebuys during a tourney, refs #6613
+  * 36adb83 only create accounts if auto_create_account==yes
+  * 4ef77e0 fixed ante-limit betting structure refs
+  * 6fb08e5 betting structure names fixed
+  * e117ea0 fix sql statement
+  * d83b2a1 cancel event also for abortet tourneys
+  * 2841287 send PacketPokerAutoFold to player on reload if player.isAuto(), refs #6571
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Wed, 31 Oct 2012 18:20:00 +0200
+
 poker-network (2.2.3-1) pokermania; urgency=low
 
   * 4899145 rebuy history will be added even if the player is playing right now, fixes #7133
