@@ -491,8 +491,7 @@ class PokerTable:
                         self.seated2observer(avatar, serial)
 
     def cashGame_kickPlayerSittingOutTooLong(self, historyToSearch):
-        if self.tourney:
-            return
+        if self.tourney: return
         handIsFinished = False
         # Go through the history backwards, stopping at
         # self.history_index, since we expect finish to be at the end if
@@ -508,11 +507,9 @@ class PokerTable:
                     self.kickPlayer(player.serial)
 
     def tourneyEndTurn(self):
-        if not self.tourney:
-            return
+        if not self.tourney: return
         for event in self.game.historyGet()[self.history_index:]:
-            event_type = event[0]
-            if event_type == "end":
+            if event[0] == "end":
                 self.factory.tourneyEndTurn(self.tourney, self.game.id)
 
     def tourneyUpdateStats(self):

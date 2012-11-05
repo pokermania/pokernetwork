@@ -1131,9 +1131,10 @@ class PokerService(service.Service):
 
     def tourneyReenterGame(self, tourney_serial, serial):
         self.log.debug('tourneyReenterGame tourney_serial(%d) serial(%d)', tourney_serial, serial)
-        timer = self.timer_remove_player["%s_%s" %(tourney_serial,serial)]
+        timeout_key = "%s_%s" % (tourney_serial,serial)
+        timer = self.timer_remove_player[timeout_key]
         if timer.active(): timer.cancel()
-        del self.timer_remove_player[serial]
+        del self.timer_remove_player[timeout_key]
 
     def tourneyRemovePlayerLater(self, tourney, game_id, serial, now=False):
         table = self.getTable(game_id)
@@ -1159,7 +1160,7 @@ class PokerService(service.Service):
         table = [t for t in self.tables.itervalues() if t.tourney is tourney and serial in t.game.serial2player][0]
         table.kickPlayer(serial)
         tourney.finallyRemovePlayer(serial)
-        tourney.balanceGames()
+        
         cursor = self.db.cursor()
         try:
             prizes = tourney.prizes()
@@ -1194,6 +1195,7 @@ class PokerService(service.Service):
             cursor.close()
 
         self.tourneyEndTurn(tourney, table.game.id)
+        tourney.balanceGames()
 
     def tourneySatelliteLookup(self, tourney):
         if tourney.satellite_of == 0:
