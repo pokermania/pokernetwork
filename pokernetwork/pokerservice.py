@@ -1138,9 +1138,9 @@ class PokerService(service.Service):
     def tourneyRemovePlayerLater(self, tourney, game_id, serial, now=False):
         table = self.getTable(game_id)
         avatars = self.avatar_collection.get(serial)
+        timeout_key = "%s_%s" % (tourney.serial,serial)
         for avatar in avatars:
             table.sitOutPlayer(avatar, serial)
-        timeout_key = "%s_%s" % (tourney_serial,serial)
         if not now:
             if timeout_key not in self.timer_remove_player:
                 delay = int(self.delays.get('tourney_kick', 20))
