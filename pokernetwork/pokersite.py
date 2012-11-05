@@ -394,6 +394,7 @@ class PokerSite(server.Site):
 
     def __init__(self, settings, resource, **kwargs):
         server.Site.__init__(self, resource, **kwargs)
+        self.displayTracebacks = settings.headerGet("/server/@display_tracebacks") == "yes"
         cookieTimeout = settings.headerGetInt("/server/@cookie_timeout")
         if cookieTimeout > 0:
             self.cookieTimeout = cookieTimeout
