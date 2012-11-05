@@ -1,3 +1,12 @@
+poker-network (2.2.3-3) pokermania; urgency=low
+
+  * 669618c Fix that one player could attend multiple tourneys
+  * c8e1f3c tourney balance games fix
+  * 5af5e2a polishing
+  * f66eb94 display_tracebacks setting added, allows to display/hide tracebacks that are return on an error
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 05 Nov 2012 17:20:00 +0200
+
 poker-network (2.2.3-2) pokermania; urgency=low
 
   * 3947afa test fixing galore
