@@ -1129,9 +1129,9 @@ class PokerService(service.Service):
         finally:
             cursor.close()
 
-    def tourneyReenterGame(self, game_id, serial):
-        self.log.debug('tourneyReenterGame game_id(%d) serial(%d)', game_id, serial)
-        timer = self.timer_remove_player[serial]
+    def tourneyReenterGame(self, tourney_serial, serial):
+        self.log.debug('tourneyReenterGame tourney_serial(%d) serial(%d)', tourney_serial, serial)
+        timer = self.timer_remove_player["%s_%s" %(tourney_serial,serial)]
         if timer.active(): timer.cancel()
         del self.timer_remove_player[serial]
 
@@ -1140,15 +1140,16 @@ class PokerService(service.Service):
         avatars = self.avatar_collection.get(serial)
         for avatar in avatars:
             table.sitOutPlayer(avatar, serial)
+        timeout_key = "%s_%s" % (tourney_serial,serial)
         if not now:
-            if serial not in self.timer_remove_player:
+            if timeout_key not in self.timer_remove_player:
                 delay = int(self.delays.get('tourney_kick', 20))
-                self.timer_remove_player[serial] = reactor.callLater(delay, self.tourneyRemovePlayer, tourney, serial)
+                self.timer_remove_player[timeout_key] = reactor.callLater(delay, self.tourneyRemovePlayer, tourney, serial)
         else:
-            if serial in self.timer_remove_player:
-                if self.timer_remove_player[serial].active():
-                    self.timer_remove_player[serial].cancel()
-                del self.timer_remove_player[serial]
+            if timeout_key in self.timer_remove_player:
+                if self.timer_remove_player[timeout_key].active():
+                    self.timer_remove_player[timeout_key].cancel()
+                del self.timer_remove_player[timeout_key]
             self.tourneyRemovePlayer(tourney, serial)
 
 
