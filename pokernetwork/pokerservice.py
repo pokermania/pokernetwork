@@ -1275,8 +1275,7 @@ class PokerService(service.Service):
         cursor.close()
         self.updateTourneysSchedule()
         #
-        # There can be only one tourney for this tourney_schedule because they are in
-        # not respawned
+        # There can be only one tourney for this tourney_schedule because they are not respawning 
         tourney = self.schedule2tourneys[schedule_serial][0]
         register_packet = PacketPokerTourneyRegister(tourney_serial = tourney.serial)
         serial_failed = []

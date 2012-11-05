@@ -26,7 +26,7 @@ import base64
 from traceback import format_exc
 
 from twisted.web import server, resource, http
-from twisted.internet import defer
+from twisted.internet import defer, reactor
 
 from pokerpackets.packets import packets2maps
 
@@ -411,7 +411,7 @@ class PokerSite(server.Site):
         resthost = settings.headerGetProperties("/server/resthost")
         if resthost:
             resthost = resthost[0]
-            self.resthost = ( resthost['host'], int(resthost['port']), resthost['path'] )
+            self.resthost = (resthost['host'], int(resthost['port']), resthost['path'])
         else:
             self.resthost = None
 
@@ -425,9 +425,8 @@ class PokerSite(server.Site):
     # to disable logging.
     #
     def startFactory(self):
-#       FIXME !
-#        self.memcache = self.resource.service.memcache
-        from twisted.internet import reactor
+        # FIXME
+        # self.memcache = self.resource.service.memcache
         def loadLater(): 
             self.memcache = self.resource.service.memcache
         reactor.callLater(0,loadLater)
