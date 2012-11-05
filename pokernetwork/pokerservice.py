@@ -1158,6 +1158,7 @@ class PokerService(service.Service):
         table = [t for t in self.tables.itervalues() if t.tourney is tourney and serial in t.game.serial2player][0]
         table.kickPlayer(serial)
         tourney.finallyRemovePlayer(serial)
+        tourney.balanceGames()
         cursor = self.db.cursor()
         try:
             prizes = tourney.prizes()
