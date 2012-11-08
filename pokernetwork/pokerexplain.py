@@ -90,6 +90,7 @@ class PokerExplain:
     log = log.get_child('PokerExplain')
 
     def __init__(self, *args, **kwargs):
+        self.log = PokerExplain.get_instance(self)
         self.serial = 0
         self.no_display_packets = False
         self.pending_auth_request = False
@@ -192,12 +193,12 @@ class PokerExplain:
 
         forward_packets = self.forward_packets
         if not forward_packets:
-            self.log.warn("gameEvent: called outside _handleConnection for game %d, ignored", game_id)
+            self.log.inform("gameEvent: called outside _handleConnection for game %d, ignored", game_id)
             return False
 
         game = self.games.getGame(game_id)
         if not game:
-            self.log.warn("gameEvent: called for unknown game %d, ignored", game_id)
+            self.log.inform("gameEvent: called for unknown game %d, ignored", game_id)
             return False
 
         if game_type == "end_round":
