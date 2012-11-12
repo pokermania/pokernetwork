@@ -65,16 +65,9 @@ def makeService(configuration):
     if not settings.header:
         sys.exit(1)
 
-    serviceCollection = service.MultiService()
-    poker_service = PokerService(settings)
-    poker_service.setServiceParent(serviceCollection)
-
-    poker_factory = IPokerFactory(poker_service)
-
     #
     # Setup Logging
     #
-
     root_logger = reflogging.RootLogger()
     # accuire root log_level
     log_level = settings.headerGetInt('/server/logging/@log_level') or 30
@@ -116,6 +109,12 @@ def makeService(configuration):
             _handler = SyslogHandler('pokernetwork', 0)
         _handler.set_level(_log_level)
         root_logger.add_handler(_handler)
+
+    serviceCollection = service.MultiService()
+    poker_service = PokerService(settings)
+    poker_service.setServiceParent(serviceCollection)
+
+    poker_factory = IPokerFactory(poker_service)
 
     #
     # Poker protocol (with or without SSL)

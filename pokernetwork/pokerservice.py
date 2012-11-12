@@ -259,9 +259,16 @@ class PokerService(service.Service):
             self.tourney_select_info = module.Handle(self, s)
             getattr(self.tourney_select_info, '__call__')
 
-    def setupChatFilter(self,chat_filter_filepath):
-        regExp = "(%s)" % "|".join(i.strip() for i in open(chat_filter_filepath,'r'))
-        self.chat_filter = re.compile(regExp,re.IGNORECASE)
+    def setupChatFilter(self, chat_filter_filepath):
+        try:
+            regExp = "(%s)" % "|".join(i.strip() for i in open(chat_filter_filepath,'r'))
+            self.chat_filter = re.compile(regExp,re.IGNORECASE)
+        except IOError, e:
+            if e.errno == 2:
+                self.log.error('Chat filter file \'%s\' not found, filter replaced with dummy', chat_filter_filepath)
+                self.chat_filter = re.compile(r'^fuck')
+            else:
+                raise
         
     def startService(self):
         self.monitors = []
