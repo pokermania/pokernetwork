@@ -1,3 +1,20 @@
+poker-network (2.2.3-6) pokermania; urgency=low
+
+  * e2c4627 Don't broadcast PaketPokerRebuy, packetiszer does that
+  * 1b6ebad added ref to explain logging
+  * d5f1310 don't call tourneyEnd if the turn did not end
+  * bf07469 service.leavePlayer: money should not be given if currency_serial is 0, instead of ''
+  * 0a33610 service.tourneyRemovePlayerLater: only call table.sitOutPlayer on actually seated avatars
+  * 84c5619 give root_logger a name (network, bot)
+  * 4eb4671 fixed log_level for pokerbot
+  * d09d9af added temporary_serial{min,nax} to default config
+  * 4432446 cleaned up configs, chatfilter doesn't crash if file doesn't exits
+  * 9601f5f updated default server/bot config
+  * 84ce8f2 fixed typo in pokerexplain
+  * 0869bd8 updated some debug messages (which where warn, now infrom)
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 13 Nov 2012 17:15:00 +0200
+
 poker-network (2.2.3-5) pokermania; urgency=low
 
   * 98f6729 balanceGames after tourneyEndTurn in service.tourneyRemovePlayer
