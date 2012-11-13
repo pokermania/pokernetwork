@@ -90,7 +90,9 @@ class PokerExplain:
     log = log.get_child('PokerExplain')
 
     def __init__(self, *args, **kwargs):
-        self.log = PokerExplain.log.get_instance(self)
+        self.log = PokerExplain.log.get_instance(self, refs=[
+            ('Explain', self, lambda explain: explain.serial if explain.serial else None)
+        ])
         self.serial = 0
         self.no_display_packets = False
         self.pending_auth_request = False
