@@ -169,6 +169,6 @@
     command="@config.mysql.command@"/>
   <path>@config.pokerengine.paths.conf@ @config.pokernetwork.paths.conf@</path>
 
-  <users temporary="BOT[0-9]{3}"/>
+  <users temporary_serial_min="10" temporary_serial_max="1000" temporary="BOT[0-9]{3}"/>
 
 </server>
