@@ -1,3 +1,9 @@
+poker-network (2.2.3-7) pokermania; urgency=low
+
+  * 6766a5c set poker_network_version in configs back to 2.2.0
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 13 Nov 2012 17:45:00 +0200
+
 poker-network (2.2.3-6) pokermania; urgency=low
 
   * e2c4627 Don't broadcast PaketPokerRebuy, packetiszer does that
