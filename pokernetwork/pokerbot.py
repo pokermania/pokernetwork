@@ -246,7 +246,7 @@ def makeService(configuration):
     # Setup Logging
     root_logger = reflogging.RootLogger()
     
-    log_level = settings.headerGetInt('/server/logging/@log_level') or 30
+    log_level = settings.headerGetInt('/settings/logging/@log_level') or 30
     if 'LOG_LEVEL' in os.environ:
         log_level = int(os.environ['LOG_LEVEL'])
     if log_level not in (10, 20, 30, 40, 50):
