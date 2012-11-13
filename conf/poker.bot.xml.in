@@ -11,7 +11,7 @@
   no_display_packets="yes"
   rebuy="yes"
   name_prefix="BOT"
-  poker_network_version="@version@">
+  poker_network_version="2.2.0">
 
   <logging log_level="10">
     <colorstream log_level="30" output="stdout"/>

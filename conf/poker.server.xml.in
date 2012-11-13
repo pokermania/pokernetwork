@@ -23,7 +23,7 @@
   remove_completed="1"
   admin="false"
   display_tracebacks="yes"
-  poker_network_version="@version@">
+  poker_network_version="2.2.0">
 
 <!-- max_queued_client_packets defaults to 500 if you leave it out.
      max_missed_round defaults to 10 if you leave it out.
