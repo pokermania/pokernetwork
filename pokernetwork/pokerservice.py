@@ -29,7 +29,6 @@
 #  Cedric Pinson <cpinson@freesheep.org> (2004-2006)
 
 from os.path import exists
-from types import *
 import re
 import locale
 import gettext
@@ -964,9 +963,9 @@ class PokerService(service.Service):
                 table.broadcastMessage(PacketPokerGameMessage, "Tournament break will start when the other tables finish their hand")
 
     def tourneyBreakResume(self, tourney):
-        for gameId in map(lambda game: game.id, tourney.games):
-            table = self.getTable(gameId)
-            table.broadcast(PacketPokerTableTourneyBreakDone(game_id = gameId))
+        for game in tourney.games:
+            table = self.getTable(game.id)
+            table.broadcast(PacketPokerTableTourneyBreakDone(game_id=game.id))
 
     def tourneyEndTurn(self, tourney, game_id):
         tourney.endTurn(game_id)
@@ -1200,9 +1199,15 @@ class PokerService(service.Service):
             self.tourneySatelliteSelectPlayer(tourney, serial, rank)
         finally:
             cursor.close()
-
-        self.tourneyEndTurn(tourney, table.game.id)
-        tourney.balanceGames()
+        
+        #
+        # a player was removed - the tourney needs balancing.
+        # if the table is not moving forward (i.e. only one player is sit on the table),
+        # call the tourneyFinishHandler once more.
+        #
+        tourney.need_balance = True
+        if table.isStationary():
+            self.tourneyFinishHandler(tourney, table.game.id)
 
     def tourneySatelliteLookup(self, tourney):
         if tourney.satellite_of == 0:

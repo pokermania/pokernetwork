@@ -747,7 +747,10 @@ class PokerTable:
 
     def isRunning(self):
         return self.game.isRunning()
-
+    
+    def isStationary(self):
+        return self.game.isEndOrNull() and 'dealTimeout' not in self.timer_info
+    
     def seated2observer(self, avatar, serial):
         if avatar.getSerial() != serial:
             self.log.warn("pokertable.seated2observer: avatar.user.serial (%d) "
