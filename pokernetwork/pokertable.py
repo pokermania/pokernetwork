@@ -1178,11 +1178,6 @@ class PokerTable:
         if self.tourney:
             self.tourney.reenterGame(self.game.id, serial)
 
-        self.broadcast(PacketPokerRebuy(
-            game_id = self.game.id,
-            serial = serial,
-            amount = amount
-        ))
         return True
 
     def playerWarningTimer(self, serial):

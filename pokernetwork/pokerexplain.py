@@ -195,7 +195,7 @@ class PokerExplain:
 
         forward_packets = self.forward_packets
         if not forward_packets:
-            self.log.inform("gameEvent: called outside _handleConnection for game %d, ignored", game_id)
+            self.log.inform("gameEvent: called outside _handleConnection for game %d, type %s, ignored", game_id, game_type)
             return False
 
         game = self.games.getGame(game_id)
