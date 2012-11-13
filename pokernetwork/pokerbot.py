@@ -245,6 +245,7 @@ def makeService(configuration):
 
     # Setup Logging
     root_logger = reflogging.RootLogger()
+    root_logger.set_app_name('bot')
     
     log_level = settings.headerGetInt('/settings/logging/@log_level') or 30
     if 'LOG_LEVEL' in os.environ:

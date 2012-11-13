@@ -69,6 +69,7 @@ def makeService(configuration):
     # Setup Logging
     #
     root_logger = reflogging.RootLogger()
+    root_logger.set_app_name('network')
     # accuire root log_level
     log_level = settings.headerGetInt('/server/logging/@log_level') or 30
     if 'LOG_LEVEL' in os.environ:
