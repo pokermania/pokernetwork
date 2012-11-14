@@ -1,3 +1,9 @@
+poker-network (2.2.3-9) pokermania; urgency=low
+
+  * 9d8dbbb pokerconfigupgrade moved from sbin to bin
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 14 Nov 2012 18:04:00 +0200
+
 poker-network (2.2.3-8) pokermania; urgency=low
 
   * update build system
