@@ -6,19 +6,7 @@ X-Python-Version: >= 2.6, << 3.0
 Build-Depends:
     debhelper,
     python-all,
-    mysql-client,
-    python-mysqldb,
-    python-openssl,
-    python-simplejson,
-    python-soappy,
-    python-twisted (>= 10.1),
-    python-poker-engine (>= 1.5.2),
-    python-poker-packets (>= 2.2.0),
     python-poker-distutils (>= 0.1.0-3),
-    apg,
-    rsync,
-    python-reflogging,
-    python-memcache
 Standards-Version: 3.8.3
 Homepage: http://github.com/pokermania/poker-network
 
