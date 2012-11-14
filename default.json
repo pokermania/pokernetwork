@@ -1,5 +1,5 @@
 {
-    "pokerconfigupgrade": "/usr/sbin/pokerconfigupgrade",
+    "pokerconfigupgrade": "/usr/bin/pokerconfigupgrade",
     "pokernetwork": {
         "host": "localhost",
         "port": 19380,
