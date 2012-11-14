@@ -1,3 +1,9 @@
+poker-network (2.2.3-8) pokermania; urgency=low
+
+  * update build system
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 14 Nov 2012 17:53:00 +0200
+
 poker-network (2.2.3-7) pokermania; urgency=low
 
   * 6766a5c set poker_network_version in configs back to 2.2.0
