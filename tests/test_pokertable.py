@@ -835,33 +835,38 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     # -------------------------------------------------------------------
     def test10_info_and_chat(self):
         """Test player discussions and info"""
-        p = {}
-        for ii in [1, 2, 3, 4]:
-            p[ii] = self.createPlayer(ii)
-        d = self.table.getPlayerInfo(2)
-        self.failUnlessSubstring("Player2", d.name)
+        
+        def chatCatch(packet):
+            self.assertEqual(packet.serial, 1)
+            self.assertEqual(packet.message.strip(), "Hi, I am the One.")
+        
+        dl = []
+        for serial in [1, 2, 3, 4]:
+            p = self.createPlayer(serial)
+            x = p.waitFor(PACKET_POKER_CHAT)
+            x.addCallback(chatCatch)
+            dl.append(x)
+        
         self.table.chatPlayer(self.clients[1], 1, "Hi, I am the One.")
         self.assertEquals(1, self.service.chat_messages[0][0])
         self.assertEquals(table1ID, self.service.chat_messages[0][1])
         self.assertEquals("Hi, I am the One.", self.service.chat_messages[0][2])
-        x = p[ii].waitFor(PACKET_POKER_CHAT)
-        def chatCatch(packet):
-            self.assertEqual(serial, 1)
-            self.assertEqual(serial, "Hi, I am the One.")
-        x.callback(chatCatch)
-        return x
+        
+        return defer.DeferredList(dl)
     # -------------------------------------------------------------------
     def test11_packet(self):
         """Test toPacket"""
-        packetStr = "%s" % self.table.toPacket()
-        idstr = 'id = %d' % self.table.game.id
-        for str in [ idstr, 'name = table1', 'variant = holdem', \
-                     'betting_structure = 1-2_20-200_limit', 'seats = 4', \
-                     'average_pot = 0', 'hands_per_hour = 0', \
-                     'percent_flop = 0', 'players = 0', 'observers = 0', \
-                     'waiting = 0', 'player_timeout = 6', 'muck_timeout = 1', \
-                     'currency_serial = 0', 'skin = default' ]:
-            self.failUnlessSubstring(str, packetStr)
+        packet_string = "%s" % self.table.toPacket()
+        for sub_string in [
+            'id = %d' % self.table.game.id, 
+            'name = table1', 'variant = holdem',
+            'betting_structure = 1-2_20-200_limit', 'seats = 4',
+            'average_pot = 0', 'hands_per_hour = 0',
+            'percent_flop = 0', 'players = 0', 'observers = 0',
+            'waiting = 0', 'player_timeout = 6', 'muck_timeout = 1',
+            'currency_serial = 0', 'skin = default' 
+        ]:
+            self.failUnlessSubstring(sub_string, packet_string)
     # -------------------------------------------------------------------
     def test12_everyone_timeout(self):
         """Test if all players fall through timeout"""
@@ -1408,7 +1413,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
         self.table.destroy()
-         # Make sure we can't update once table is destroyed.
+        # Make sure we can't update once table is destroyed.
         self.assertEquals("not valid", self.table.update())
         return d
     # -------------------------------------------------------------------
@@ -1418,7 +1423,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.seated2observer(p1, 1)
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
         self.table.destroy()
-         # Make sure we can't update once table is destroyed.
+        # Make sure we can't update once table is destroyed.
         self.assertEquals("not valid", self.table.update())
         return d
     # -------------------------------------------------------------------
@@ -1878,16 +1883,18 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
     # -------------------------------------------------------------------
     def test11bis_packet_with_tourney_serial(self):
         """Test toPacket"""
-        packetStr = "%s" % self.table.toPacket()
-        idstr = 'id = %d' % self.table.game.id
-        for str in [ idstr, 'name = table1', 'variant = holdem', \
-                     'betting_structure = 1-2_20-200_limit', 'seats = 4', \
-                     'average_pot = 0', 'hands_per_hour = 0', \
-                     'percent_flop = 0', 'players = 0', 'observers = 0', \
-                     'waiting = 0', 'player_timeout = 6', 'muck_timeout = 1', \
-                     'currency_serial = 0', 'skin = default', \
-                     'tourney_serial = 2' ]:
-            self.failUnlessSubstring(str, packetStr)
+        packet_string = "%s" % self.table.toPacket()
+        for sub_string in [ 
+            'id = %d' % self.table.game.id, 
+            'name = table1', 'variant = holdem',
+            'betting_structure = 1-2_20-200_limit', 'seats = 4',
+            'average_pot = 0', 'hands_per_hour = 0',
+            'percent_flop = 0', 'players = 0', 'observers = 0',
+            'waiting = 0', 'player_timeout = 6', 'muck_timeout = 1',
+            'currency_serial = 0', 'skin = default',
+            'tourney_serial = 2'
+        ]:
+            self.failUnlessSubstring(sub_string, packet_string)
     # -------------------------------------------------------------------
     def test27_buyinFailures(self):
         """This test doesn't matter in this subclass"""
@@ -2246,7 +2253,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         ]
         cards_board = (28, 51, 41, 24, 45)
         for i in range(2):
-            for (player,card_strings) in cards_to_player:
+            for (_player,card_strings) in cards_to_player:
                 cards.append(card_strings[i])
         cards.extend(cards_board)
         cards.reverse()
@@ -2592,7 +2599,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
 #        build deck
         cards = []
         for i in range(2):
-            for (player,card_strings) in cards_to_player:
+            for (_player,card_strings) in cards_to_player:
                 cards.append(table.game.eval.string2card(card_strings[i]))
         cards.extend(table.game.eval.string2card(cards_board))
         
@@ -2711,7 +2718,6 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         
 #        deck info        
         cards_to_player = (
-            
             (31628, ('Kh', 'Jh')),
             (143489, ('9h', '2d')),
             (105400, ('5d', '9d')),
@@ -2721,7 +2727,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
 #        build deck
         cards = []
         for i in range(2):
-            for (player,card_strings) in cards_to_player:
+            for (_player,card_strings) in cards_to_player:
                 cards.append(table.game.eval.string2card(card_strings[i]))
         cards.extend(table.game.eval.string2card(cards_board))
         
@@ -2744,7 +2750,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
 
         s_all      = [145867, 31628, 143489, 105400, 145864,]
         s_sit      = [        31628, 143489, 105400,        ]
-        s_seats    = [     0,     1,      3,      4,      5,      6,     7,      8]
+        s_seats    = [     0,     1,      3,      4,      5,]
         money_list = [     0, 37854,  90856,  36500,      0,]
 
         od_order = s_all[:]
