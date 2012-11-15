@@ -2925,7 +2925,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
 def GetTestSuite():
     seed(time.time())
     loader = runner.TestLoader()
-    # loader.methodPrefix = "_test"
+    loader.methodPrefix = "_test"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarCollectionTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCase))
