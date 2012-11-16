@@ -253,10 +253,12 @@ class PokerExplain:
                 now = seconds()
                 timeout = timeout - ( now - when )
                 if timeout > 0:
-                    return ( PacketPokerTimeoutWarning(game_id = game.id,
-                                                       serial = self.getSerial(),
-                                                       timeout = int(timeout),
-                                                       when = int(now) ), )
+                    return (PacketPokerTimeoutWarning(
+                        game_id = game.id,
+                        serial = self.getSerial(),
+                        timeout = int(timeout),
+                        when = int(now) 
+                    ),)
         return ()
         
     def setPlayerTimeout(self, game, packet):
@@ -509,7 +511,6 @@ class PokerExplain:
                 forward_packets.append(PacketPokerPosition(game_id = game.id))
 
             elif packet.type == PACKET_POKER_REBUY:
-                forward_packets.remove(packet)
                 if game.rebuy(packet.serial, packet.amount):
                     #
                     # If the server says the player rebuys, assume he knows
@@ -523,6 +524,7 @@ class PokerExplain:
                     forward_packets.append(self.updatePlayerChips(game, player))
                     if self.what & PacketPokerExplain.CHIPSTACKS:
                         forward_packets.append(self.explainPlayerChips(game, player))
+                forward_packets.remove(packet)
 
             elif packet.type == PACKET_POKER_PLAYER_CHIPS:
                 player = game.getPlayer(packet.serial)
