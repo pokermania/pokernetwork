@@ -2918,6 +2918,113 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)
         d1.addCallback(firstGame)
         return d1
+    
+    def test60_minArgEmpty(self):
+        self.table = table = self.table9
+        game = table.game
+        self.service.has_ladder = False
+        table.factory.buyInPlayer = lambda *a,**kw: table.game.maxBuyIn()
+        
+        def addPlayerAndReorder(self, *a,**kw):
+            was_added = self.addPlayerOrig(*a,**kw)
+            if was_added:
+                self.serial2player = OrderedDict(sorted(self.serial2player.items(),key=lambda (k,v):od_order.index(k)))
+            return was_added
+        
+        game.addPlayerOrig = game.addPlayer
+        game.addPlayer = lambda *a,**kw: addPlayerAndReorder(game,*a,**kw) 
+        
+
+        clients_all = {}
+        clients = {}        
+        s_sit = [154625, 43850, 75617, 56120]
+        s_all = [43850, 155397, 154625, 75617, 56120, 29546, 155411]
+    
+        s_seats = [0,1,2,3,4,5,6,7,8]
+        od_order = [154625, 43850, 75617, 56120, 155397, 29546, 155411]
+        
+        '''
+        order:
+        43850 pays sb
+        154625 pays bb (causes problems in explain, they think 155411 is in pos)
+        155411 pays bb
+        154625 pays bb (again. causes error in game: cannot pay while in pre-flop)
+        
+        '''        
+        def joinAndSeat(serial,should_sit,pos,explain=True):
+            clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            if explain:
+                client.setExplain(PacketPokerExplain.REST)
+            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
+            table.game.noAutoBlindAnte(serial)
+            if should_sit:
+                clients[serial] = client
+                table.sitPlayer(client, serial)
+            table.update()
+
+        
+        for pos,serial in enumerate(s_all):
+            joinAndSeat(serial,serial in s_sit,s_seats[pos])
+
+        #
+        # setup game (forced_dealer does not work because of first_turn == False)
+        table.game.dealer_seat = 3
+        table.game.first_turn = False
+        #
+        # put missed_blind on None, if not all missed_blinds are reset
+        for serial in s_all:
+            table.game.serial2player[serial].missed_blind = None
+
+        for richer in (43850,75617,56120):
+            game.serial2player[richer].money *= 2
+            
+        def firstGame(packet):
+            #
+            # rebuy of 155411
+            table.rebuyPlayerRequest(clients_all[155411], 0)
+            table.sitPlayer(clients_all[155411], 155411)
+            clients[155411] = clients_all[155411]
+            table.update()
+            
+            game.blind(43850); table.update()
+            game.blind(154625); table.update()
+            game.blind(155411); table.update()
+            
+            # 155397 disconnects
+            table.disconnectPlayer(clients_all[155397], 155397)
+            
+            game.callNraise(154625, game.serial2player[154625].money)
+            # 155397 joins again
+            joinAndSeat(155397, False, 1)
+            
+            game.call(75617); table.update()
+            game.call(56120); table.update()
+            game.call(155411); table.update()
+            game.call(43850); table.update()
+            # round finished
+            game.check(43850); table.update()
+            game.check(75617); table.update()
+            game.check(56120); table.update()
+            # round finished
+            game.check(43850); table.update()
+            game.check(75617); table.update()
+            game.check(56120); table.update()
+            # round finished
+            game.check(43850); table.update()
+            game.check(75617); table.update()
+            game.check(56120); table.update()
+            # game finished. error is caused here.
+        
+        log_history.reset()
+        table.scheduleAutoDeal()
+        d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)
+        d1.addCallback(firstGame)
+        
+        return d1
+        
         
         
 # --------------------------------------------------------------------------------
