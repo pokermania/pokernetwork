@@ -96,6 +96,12 @@
      out, they all default to 0.
   -->
 
+  <badwordschatfilter file="/etc/poker-network/badwords.txt" />
+  
+<!-- the badwordschatfilter contains words used to filter 
+	 chat messages sent by users
+  -->
+
   <table name="One" variant="holdem" betting_structure="1-2_20-200_limit" seats="10" player_timeout="60" currency_serial="1" max_missed_round="2"/>
   <table name="Two" variant="holdem" betting_structure="5-10_100-1000_limit" seats="10" player_timeout="60" currency_serial="1"/>
   <table name="Three" variant="holdem" betting_structure="10-20_200-2000_pot-limit" seats="10" player_timeout="60" currency_serial="1"/>

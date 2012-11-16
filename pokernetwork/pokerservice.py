@@ -263,11 +263,7 @@ class PokerService(service.Service):
             regExp = "(%s)" % "|".join(i.strip() for i in open(chat_filter_filepath,'r'))
             self.chat_filter = re.compile(regExp,re.IGNORECASE)
         except IOError, e:
-            if e.errno == 2:
-                self.log.error('Chat filter file \'%s\' not found, filter replaced with dummy', chat_filter_filepath)
-                self.chat_filter = re.compile(r'^fuck')
-            else:
-                raise
+            self.log.error('Could not access \'%s\': %s. Chat messages will not be filtered.', chat_filter_filepath, e.strerror)
         
     def startService(self):
         self.monitors = []
