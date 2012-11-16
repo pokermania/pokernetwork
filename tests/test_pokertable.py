@@ -2943,14 +2943,6 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         s_seats = [0,1,2,3,4,5,6,7,8]
         od_order = [154625, 43850, 75617, 56120, 155397, 29546, 155411]
         
-        '''
-        order:
-        43850 pays sb
-        154625 pays bb (causes problems in explain, they think 155411 is in pos)
-        155411 pays bb
-        154625 pays bb (again. causes error in game: cannot pay while in pre-flop)
-        
-        '''        
         def joinAndSeat(serial,should_sit,pos,explain=True):
             clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
