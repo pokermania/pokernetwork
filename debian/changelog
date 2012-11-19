@@ -1,3 +1,13 @@
+poker-network (2.2.3-10) pokermania; urgency=low
+
+  * ec2513f added badwords to pokernetwork
+  * 7270427 added test60_minArgEmpty, refs #7394
+  * c2a4c3c explain: remove REBUY after causin game event
+  * 8b36ac5 reset position if player_list is recreated, refs #7368
+  * 511450f added test for playerListIndexAdd failure, refs #7368
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Mon, 19 Nov 2012 12:40:00 +0200
+
 poker-network (2.2.3-9) pokermania; urgency=low
 
   * 9d8dbbb pokerconfigupgrade moved from sbin to bin
