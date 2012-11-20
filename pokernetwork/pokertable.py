@@ -528,8 +528,8 @@ class PokerTable:
             for player in self.game.playersAll():
                 if player.getUserData()['ready'] == False:
                     for avatar in self.avatar_collection.get(player.serial):
-                        self.log.warn("Player %d marked as having a bugous "
-                            "PokerProcessingHand protocol",
+                        self.log.debug(
+                            "Player %d marked as having a bugous PokerProcessingHand protocol",
                             player.serial
                         )
                         avatar.bugous_processing_hand = True
