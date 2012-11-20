@@ -66,7 +66,6 @@ class PokerAvatar:
         self.warnedPacketExcess = False
         self.tourneys = []
         self.setExplain(0)
-        self.has_session = False
         self.bugous_processing_hand = False
         self.noqueuePackets()
         self._block_longpoll_deferred = False
@@ -153,8 +152,6 @@ class PokerAvatar:
         if PacketPokerRoles.PLAY in self.roles:
             self.service.avatar_collection.add(serial, self)
         self.log.debug("user %s/%d logged in", self.user.name, self.user.serial)
-        if self.protocol:
-            self.has_session = self.service.sessionStart(self.getSerial(), str(self.protocol.transport.client[0]))
             
         if self.explain:
             self.explain.handleSerial(PacketSerial(serial = serial))
@@ -204,8 +201,6 @@ class PokerAvatar:
         if self.user.serial:
             if PacketPokerRoles.PLAY in self.roles:
                 self.service.avatar_collection.remove(self.user.serial, self)
-            if self.has_session:
-                self.service.sessionEnd(self.getSerial())
             self.user.logout()
         
     def auth(self, packet):

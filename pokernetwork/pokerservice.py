@@ -606,30 +606,6 @@ class PokerService(service.Service):
             self.monitors.remove(avatar)
         avatar.connectionLost("disconnected")
 
-    def sessionStart(self, serial, ip):
-        self.log.debug("sessionStart(%d, %s)", serial, ip)
-        cursor = self.db.cursor()
-        sql = "REPLACE INTO session ( user_serial, started, ip ) VALUES ( %d, %d, '%s')" % ( serial, seconds(), ip )
-        cursor.execute(sql)
-        if not (1 <= cursor.rowcount <= 2):
-            self.log.error("modified %d rows (expected 1 or 2): %s", cursor.rowcount, cursor._executed)
-        cursor.close()
-        return True
-
-    def sessionEnd(self, serial):
-        self.log.debug("sessionEnd(%d)", serial)
-        cursor = self.db.cursor()
-        sql = "INSERT INTO session_history ( user_serial, started, ended, ip ) SELECT user_serial, started, %d, ip FROM session WHERE user_serial = %d" % ( seconds(), serial )
-        cursor.execute(sql)
-        if cursor.rowcount != 1:
-            self.log.error("a) modified %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
-        sql = "DELETE FROM session where user_serial = %d" % serial
-        cursor.execute(sql)
-        if cursor.rowcount != 1:
-            self.log.error("b) modified %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
-        cursor.close()
-        return True
-
     def auth(self, auth_type, auth_args, roles):
         ( info, reason ) = self.poker_auth.auth(auth_type,auth_args)
         if info:
