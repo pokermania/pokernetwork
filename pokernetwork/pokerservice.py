@@ -607,10 +607,10 @@ class PokerService(service.Service):
         avatar.connectionLost("disconnected")
 
     def auth(self, auth_type, auth_args, roles):
-        ( info, reason ) = self.poker_auth.auth(auth_type,auth_args)
+        info, reason = self.poker_auth.auth(auth_type,auth_args)
         if info:
             self.autorefill(info[0])
-        return ( info, reason )
+        return info, reason
 
     def autorefill(self, serial):
         if not self.refill:
@@ -2303,7 +2303,7 @@ class PokerService(service.Service):
         for row in cursor:
             if not row['in_game']: row['in_game'] = 0
             if not row['points']: row['points'] = 0
-            packet.money[row['currency_serial']] = ( row['amount'], row['in_game'], row['points'] )
+            packet.money[row['currency_serial']] = (row['amount'], row['in_game'], row['points'])
         self.log.debug("getUserInfo: %s", packet)
         return packet
 
