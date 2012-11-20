@@ -349,8 +349,8 @@ class PokerExplain:
                 forward_packets.append(PacketPokerPosition(game_id = game.id))
 
             elif packet.type == PACKET_POKER_PLAYER_ARRIVE:
-                if game.addPlayer(packet.serial, seat=packet.seat, name=packet.name):
-                    player = game.getPlayer(packet.serial)
+                player = game.addPlayer(packet.serial, seat=packet.seat, name=packet.name)
+                if player:
                     player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
                     player.name = packet.name
                     player.url = packet.url
