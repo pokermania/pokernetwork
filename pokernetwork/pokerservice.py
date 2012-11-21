@@ -1475,8 +1475,7 @@ class PokerService(service.Service):
                 code = PacketPokerTourneyRegister.DOES_NOT_EXIST,
                 message = "Tournament %d does not exist" % tourney_serial
             )
-            if not via_satellite:
-                self.log.error("%s", error)
+            self.log.error("%s", error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
             return False
@@ -1498,7 +1497,7 @@ class PokerService(service.Service):
                 code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
                 message = "Player %d already registered in tournament %d " % ( serial, tourney_serial )
             )
-            self.log.error("%s", error)
+            self.log.inform("%s", error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
             return False
@@ -1509,15 +1508,14 @@ class PokerService(service.Service):
                 code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
                 message = "Registration refused in tournament %d " % tourney_serial
             )
-            self.log.error("%s", error)
+            self.log.inform("%s", error)
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
             return False
 
         cursor = self.db.cursor()
-        #
+
         # Buy in
-        #
         currency_serial = tourney.currency_serial or 0
         withdraw = tourney.buy_in + tourney.rake
         if withdraw > 0:
@@ -1535,40 +1533,40 @@ class PokerService(service.Service):
                     code = PacketPokerTourneyRegister.NOT_ENOUGH_MONEY,
                     message = "Not enough money to enter the tournament %d" % tourney_serial
                 )
+                self.log.inform("%s", error)
                 for avatar in avatars:
                     avatar.sendPacketVerbose(error)
-                self.log.error("%s", error)
                 return False
             if cursor.rowcount != 1:
+                error = PacketError(
+                    other_type = PACKET_POKER_TOURNEY_REGISTER,
+                    code = PacketPokerTourneyRegister.SERVER_ERROR,
+                    message = "Server error"
+                )
                 self.log.error("modified %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
                 for avatar in avatars:
-                    avatar.sendPacketVerbose(PacketError(
-                        other_type = PACKET_POKER_TOURNEY_REGISTER,
-                        code = PacketPokerTourneyRegister.SERVER_ERROR,
-                        message = "Server error"
-                    ))
+                    avatar.sendPacketVerbose(error)
                 return False
         self.databaseEvent(event = PacketPokerMonitorEvent.REGISTER, param1 = serial, param2 = currency_serial, param3 = withdraw)
-        #
+
         # Register
-        #
         sql = "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (%s, %s, %s)"
         params = (serial, currency_serial, tourney_serial)
         cursor.execute(sql,params)
         self.log.debug("tourneyRegister: %s", cursor._executed)
         if cursor.rowcount != 1:
+            error = PacketError(
+                other_type = PACKET_POKER_TOURNEY_REGISTER,
+                code = PacketPokerTourneyRegister.SERVER_ERROR,
+                message = "Server error"
+            )
             self.log.error("insert %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
-            cursor.close()
             for avatar in avatars:
-                avatar.sendPacketVerbose(PacketError(
-                    other_type = PACKET_POKER_TOURNEY_REGISTER,
-                    code = PacketPokerTourneyRegister.SERVER_ERROR,
-                    message = "Server error"
-                ))
+                avatar.sendPacketVerbose(error)
             return False
         cursor.close()
 
-        # notify success
+        # Notify success
         for avatar in avatars:
             avatar.sendPacketVerbose(packet)
         tourney.register(serial,self.getName(serial))
