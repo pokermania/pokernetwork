@@ -27,7 +27,6 @@
 #  Bradley M. Kuhn <bkuhn@ebb.org> (2008-)
 #  Henry Precheur <henry@precheur.org> (2004)
 #
-import re
 
 from twisted.internet import reactor
 from twisted.python.runtime import seconds
