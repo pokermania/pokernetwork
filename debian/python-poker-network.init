@@ -48,7 +48,7 @@ botconfig=/etc/poker-network/poker.bot.xml
 server_additional_args=''
 bot_additional_args=''
 
-server_kill_timeout='120'
+server_kill_timeout='3600'
 bot_kill_timeout='30'
 
 # Include python-poker-network defaults if available
@@ -108,15 +108,13 @@ case "$1" in
 	echo ${name}
 	;;
   stop)
-	echo -n "Stopping poker server ..."
-	#no kill timeout since switch from HTTP to TCP (ticket 5495)
-	#start-stop-daemon --stop --quiet --retry=-2/${server_kill_timeout}/-15/20/forever/-9/2 --pidfile=${serverpidfile} || true
-	start-stop-daemon --stop --quiet --pidfile=${serverpidfile} || true
 	if $RUN_BOTS ; then
 		echo -n "Stopping poker bots ..."
 		start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
 		echo "done"
 	fi
+	echo -n "Stopping poker server (this could take a while)..."
+	start-stop-daemon --stop --quiet --retry=-2/${server_kill_timeout}/forever/-9/2 --pidfile=${serverpidfile} || true
 	echo " done."
 	;;
   status)
