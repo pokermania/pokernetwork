@@ -3460,7 +3460,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             avatars[ii].resetPacketsQueue()
             self.readyToPlay( (clients[ii], None), ii, gameId)
 
-#        self.timeout_policy = 'sitOut'
         table.autodeal = True
         self.dealTable((client, packet), gameId)
         def findBigBlind(id):

@@ -157,7 +157,6 @@ class PokerTable:
             "playerTimeoutTime": None,
             "muckTimeout": None,
         }
-        self.timeout_policy = "sitOut"
         self.previous_dealer = -1
         self.game_delay = {
             "start": 0,
@@ -170,8 +169,8 @@ class PokerTable:
 
     def _warnLock(self):
         self._lock_check_locked = True
-        game_id = str(self.game.id) if hasattr(self, 'game') else '?'
-        hand_serial = str(self.game.hand_serial) if hasattr(self, 'game') else '?'
+        game_id = self.game.id if hasattr(self, 'game') else '?'
+        hand_serial = self.game.hand_serial if hasattr(self, 'game') else '?'
         self.log.warn("Table is locked! game_id: %s, hand_serial: %s", game_id, hand_serial)
 
     def isLocked(self):
@@ -768,7 +767,11 @@ class PokerTable:
         if self.isSit(avatar):
             if self.isOpen():
                 self.game.sitOutNextTurn(serial)
-            self.game.autoPlayer(serial)
+                self.game.autoPlayer(serial)
+            else:
+                self.game.autoPlayerFoldNextTurn(serial)
+                self.game.autoPlayer(serial)
+                self.broadcast(PacketPokerAutoFold(serial = serial, game_id = self.game.id))
         self.update()
         if self.isSeated(avatar):
             #
@@ -1200,22 +1203,14 @@ class PokerTable:
     def playerTimeoutTimer(self, serial):
         self.log.debug("player %d times out" % serial)
         if self.game.isRunning() and serial == self.game.getSerialInPosition():
-            if self.timeout_policy == "sitOut":
+            if self.isOpen():
                 self.game.sitOutNextTurn(serial)
                 self.game.autoPlayer(serial)
-            elif self.timeout_policy == "fold":
+            else:
                 self.game.autoPlayerFoldNextTurn(serial)
                 self.game.autoPlayer(serial)
-                self.broadcast(PacketPokerAutoFold(
-                    game_id=self.game.id,
-                    serial=serial
-                ))
-            else:
-                self.log.error("unknown timeout_policy %s", self.timeout_policy)
-            self.broadcast(PacketPokerTimeoutNotice(
-                game_id=self.game.id,
-                serial=serial
-            ))
+                self.broadcast(PacketPokerAutoFold(serial = serial, game_id = self.game.id))
+            self.broadcast(PacketPokerTimeoutNotice(serial = serial, game_id = self.game.id))
             self.update()
         else:
             self.updatePlayerTimers()

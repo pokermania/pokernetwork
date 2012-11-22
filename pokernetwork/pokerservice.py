@@ -1068,7 +1068,6 @@ class PokerService(service.Service):
             'tourney': tourney
         })
         self.tourney_table_serial += 1
-        table.timeout_policy = "fold"
         table.autodeal = False
         return table.game
 

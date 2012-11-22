@@ -913,32 +913,25 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         player = self.createPlayer(1)
         player2 = self.createPlayer(2)
         # Sit out policy is the default
-        self.assertEqual(self.table.timeout_policy,  "sitOut")
-        self.table.timeout_policy =  "fold"
+        self.assertTrue(self.table.isOpen())
+        self.table.game.close()
 
         expectPlayerAutoFold = player2.waitFor(PACKET_POKER_AUTO_FOLD)
         def checkReturnPacket(packet):
             # Don't assert which serial we get here, as it could be from
             # either player
             self.assertEqual(packet.game_id, self.table1_value)
+            return packet
+        def openGameAgain(packet):
+            self.table.game.open()
         expectPlayerAutoFold.addCallback(checkReturnPacket)
-
+        expectPlayerAutoFold.addCallback(openGameAgain)
+        
         log_history.reset()
         self.table.update()
         self.assertEquals(log_history.get_all(), ['AutodealCheck scheduled in 0.000000 seconds'])
 
         return expectPlayerAutoFold
-    # -------------------------------------------------------------------
-    def test17_bogusTimeoutPolicy(self):
-        self.table.timeout_policy =  "muck"
-        player = self.createPlayer(1)
-        player2 = self.createPlayer(2)
-        self.table.update()
-        return player.waitFor(PACKET_POKER_TIMEOUT_NOTICE)
-    # -------------------------------------------------------------------
-    def test17a_resetTimeoutPolicy(self):
-        """Set timeout policy back to the default"""
-        self.table.timeout_policy = "sitOut"
     # -------------------------------------------------------------------
     def test18_handReplay(self):
         """Test replay of hand from pokertable"""
@@ -1224,9 +1217,9 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.assertEqual(players[ii].packets, [])
             self.assertEquals(self.table.factory.joined_count, ii)
         messages = log_history.get_all()
-        self.failUnlessSubstring('player 1 gets seat 1', messages[1])
-        self.failUnlessSubstring('player 2 gets seat 6', messages[3])
-        self.failUnlessSubstring('player 3 gets seat 3', messages[5])
+        self.failUnlessSubstring('player 1 gets seat 1', messages[2])
+        self.failUnlessSubstring('player 2 gets seat 6', messages[5])
+        self.failUnlessSubstring('player 3 gets seat 3', messages[8])
         log_history.reset()
 
         for ii in [ 4, 5, 6 ]:
@@ -1647,31 +1640,25 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         player = self.createPlayer(1)
         player2 = self.createPlayer(2)
         # Sit out policy is the default
-        self.assertEqual(self.table.timeout_policy,  "sitOut")
-        self.table.timeout_policy =  "fold"
+        self.assertTrue(self.table.isOpen())
+        self.table.game.close()
 
         expectPlayerAutoFold = player2.waitFor(PACKET_POKER_AUTO_FOLD)
         def checkReturnPacket(packet):
             # Don't assert which serial we get here, as it could be from
             # either player
             self.assertEqual(packet.game_id, self.table1_value)
+        def openGameAgain(packet):
+            self.table.game.open()
+            
         expectPlayerAutoFold.addCallback(checkReturnPacket)
+        expectPlayerAutoFold.addCallback(openGameAgain)
 
         self.table.cancelDealTimeout()
         self.table.beginTurn()
         self.table.update()
 
         return expectPlayerAutoFold
-    # -------------------------------------------------------------------
-    def test17_bogusTimeoutPolicy(self):
-        self.table.timeout_policy =  "muck"
-        player = self.createPlayer(1)
-        player2 = self.createPlayer(2)
-
-        self.table.cancelDealTimeout()
-        self.table.beginTurn()
-        self.table.update()
-        return player.waitFor(PACKET_POKER_TIMEOUT_NOTICE)
     # -------------------------------------------------------------------
     def test21_syncDatabase(self):
         """Test syncing the Database back to the MockService"""
@@ -1959,9 +1946,9 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
             self.assertEqual(players[ii].packets, [])
             self.assertEquals(self.table.factory.joined_count, ii)
         messages = log_history.get_all()
-        self.failUnlessSubstring('player 1 gets seat 1', messages[1])
-        self.failUnlessSubstring('player 2 gets seat 6', messages[3])
-        self.failUnlessSubstring('player 3 gets seat 3', messages[5])
+        self.failUnlessSubstring('player 1 gets seat 1', messages[2])
+        self.failUnlessSubstring('player 2 gets seat 6', messages[5])
+        self.failUnlessSubstring('player 3 gets seat 3', messages[8])
         log_history.reset()
         self.assertEquals(self.table.factory.joined_count, 3)
 
@@ -3024,7 +3011,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
 def GetTestSuite():
     seed(time.time())
     loader = runner.TestLoader()
-    loader.methodPrefix = "_test"
+    # loader.methodPrefix = "_test"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerAvatarCollectionTestCase))
     suite.addTest(loader.loadClass(PokerTableTestCase))

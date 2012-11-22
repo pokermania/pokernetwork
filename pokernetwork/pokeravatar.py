@@ -1501,7 +1501,7 @@ class PokerAvatar:
         # It does not harm to sit if already sit and it
         # resets the autoPlayer/wait_for flag.
         #
-        if game.sit(serial):
+        if game.sit(serial) or game.isSit(serial):
             packets = [
                 PacketPokerPlayerChips(
                     game_id = game.id,
