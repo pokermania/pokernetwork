@@ -41,7 +41,7 @@ import warnings
 import twisted.internet.base
 from twisted.internet import reactor
 
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 import libxml2
 import re
 

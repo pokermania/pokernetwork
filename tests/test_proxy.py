@@ -32,7 +32,7 @@ import twisted.internet.base
 
 from pokernetwork.proxy import ConnectProtocol, Client, Connector
 
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 # ----------------------------------------------------------------
 class MockTransport():

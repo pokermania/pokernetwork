@@ -38,7 +38,7 @@ class MyReactor(selectreactor.SelectReactor):
         selectreactor.SelectReactor.runUntilCurrent(self)
 from twisted.internet import defer, reactor
 import twisted.internet.base
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from twisted.web import client
 

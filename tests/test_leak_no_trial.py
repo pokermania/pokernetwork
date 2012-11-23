@@ -40,7 +40,7 @@ from twisted.application import internet
 from twisted.python import failure
 from twisted.python.runtime import seconds
 import twisted.internet.base
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from twisted.web import client, http
 

@@ -35,7 +35,7 @@ import simplejson as json
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import defer, reactor
 import twisted.internet.base
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from twisted.web import client
 

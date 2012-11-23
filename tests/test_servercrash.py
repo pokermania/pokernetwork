@@ -39,7 +39,7 @@ import libxml2
 from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from twisted.python.runtime import seconds
 

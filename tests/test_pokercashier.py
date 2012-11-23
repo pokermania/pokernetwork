@@ -43,7 +43,7 @@ from twisted.trial import unittest, runner, reporter
 import twisted.internet.base
 from twisted.internet import defer
 
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from pokernetwork import pokercashier, pokernetworkconfig
 from pokernetwork import currencyclient

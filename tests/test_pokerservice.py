@@ -54,7 +54,7 @@ import twisted.internet.base
 from twisted.internet import reactor, defer
 from twisted.python.runtime import seconds
 
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from log_history import log_history
 

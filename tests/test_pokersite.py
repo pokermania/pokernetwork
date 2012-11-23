@@ -32,7 +32,7 @@ import cgi
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import defer
 import twisted.internet.base
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from tests import testclock
 

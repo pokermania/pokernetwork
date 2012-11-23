@@ -48,7 +48,7 @@ except ImportError:
 from random import seed, randint
 import copy
 
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from pokernetwork.pokertable import PokerPredefinedDecks
 import reflogging

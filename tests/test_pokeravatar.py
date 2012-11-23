@@ -51,7 +51,7 @@ from pokerengine import pokertournament
 from tests import testclock
 import pprint
 
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig

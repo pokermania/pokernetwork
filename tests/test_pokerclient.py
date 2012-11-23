@@ -58,7 +58,7 @@ handler = TestLoggingHandler()
 logger.addHandler(handler)
 logger.setLevel(10)
 
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig

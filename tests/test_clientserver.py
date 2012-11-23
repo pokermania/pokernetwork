@@ -46,7 +46,7 @@ from twisted.application import service
 #
 
 import twisted.internet.base
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 import pokernetwork.server
 import pokernetwork.client

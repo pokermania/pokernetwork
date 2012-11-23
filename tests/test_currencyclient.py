@@ -44,7 +44,7 @@ import twisted.internet.base
 from twisted.internet import reactor
 from twisted.internet import defer
 
-twisted.internet.base.DelayedCall.debug = True
+twisted.internet.base.DelayedCall.debug = False
 
 from urlparse import urlparse
 
