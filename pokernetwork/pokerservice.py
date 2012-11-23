@@ -619,16 +619,18 @@ class PokerService(service.Service):
         if int(self.refill['serial']) in user_info.money:
             money = user_info.money[int(self.refill['serial'])]
             missing = int(self.refill['amount']) - ( int(money[0]) + int(money[1]) )
-            if missing > 0:
-                refill = int(money[0]) + missing
-            else:
-                refill = 0
+            refill = int(money[0]) + missing if missing > 0 else 0
         else:
             refill = int(self.refill['amount'])
         if refill > 0:
-            self.db.db.query("REPLACE INTO user2money (user_serial, currency_serial, amount) values (%d, %s, %s)" % ( serial, self.refill['serial'], refill))
+            cursor = self.db.cursor()
+            sql = \
+                "INSERT INTO user2money (user_serial, currency_serial, amount) " \
+                "VALUES (%s, %s, %s) " \
+                "ON DUPLICATE KEY UPDATE amount = %s"
+            cursor.execute(sql, (serial, self.refill['serial'], refill, refill))
+            cursor.close()
             self.databaseEvent(event = PacketPokerMonitorEvent.REFILL, param1 = serial, param2 = int(self.refill['serial']), param3 = refill)
-
         return refill
 
     def updateTourneysSchedule(self):
@@ -2644,8 +2646,8 @@ class PokerService(service.Service):
         status = True
         cursor = self.db.cursor()
         sql = "UPDATE user2money SET rake = rake + %s, points = points + %s WHERE user_serial = %s AND currency_serial = %s"
-        params = (amount,amount,serial,currency_serial)
-        cursor.execute(sql,params)
+        params = (amount, amount, serial, currency_serial)
+        cursor.execute(sql, params)
         self.log.debug("updatePlayerRake: %s", cursor._executed)
         if cursor.rowcount != 1:
             self.log.error("modified %d rows (expected 1): %s", cursor.rowcount, sql)
