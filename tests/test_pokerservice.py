@@ -1929,7 +1929,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.service.tables.values()[2].update() # two tables already in settings
             
             # reset the timer_remove_player to 0 so it gets called sooner
-            self.service.timer_remove_player[self.user1_serial].reset(0)
+            self.service.timer_remove_player['%d_%d' % (heads_up.serial, self.user1_serial)].reset(0)
             
             # return a deferred because we have to wait for the reset (among other things) 
             d_in = defer.Deferred()
@@ -4216,118 +4216,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         reactor.callLater(5, testDestroyCalled)
 
         return testDestroyCalledDefer
-    def test08_sessionStartSucceed(self):
-        acceptList = [ 'REPLACE INTO session' ]
-        acceptListRowCount = [1]
-        class MockCursor(MockCursorBase):
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, acceptList)
-            def statementActions(cursorSelf,sql,statement):
-                cursorSelf.statementActionsStatic(sql, statement, acceptList,acceptListRowCount)
-                
-        self.service = pokerservice.PokerService(self.settings)
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
 
-        log_history.reset()
-        self.failUnless(self.service.sessionStart(5, '192.168.0.1'))
-        self.assertEquals(log_history.get_all(), ["sessionStart(5, 192.168.0.1)"])
-        self.assertEquals(self.service.db.cursorValue.counts,{'REPLACE INTO session' : 1 })
-        self.service.db = oldDb
-    def test09_sessionStartFail(self):
-        acceptList = [ 'REPLACE INTO session' ]
-        acceptListRowCount = [0]
-        class MockCursor(MockCursorBase):
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, acceptList)
-            def statementActions(cursorSelf, sql, statement):
-                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
-                        
-        self.service = pokerservice.PokerService(self.settings)
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        log_history.reset()
-        self.failUnless(self.service.sessionStart(7, '192.168.0.2'))
-        msgs = log_history.get_all()
-        self.assertEquals(len(msgs), 2)
-        self.assertEquals(msgs[0], 'sessionStart(7, 192.168.0.2)')
-        self.assertEquals(msgs[1].find("modified 0 rows (expected 1 or 2): REPLACE INTO session ( user_serial, started, ip ) VALUES ( 7, "), 0)
-        self.failUnless(msgs[1].find(", '192.168.0.2')") > 0)
-
-        self.assertEquals(self.service.db.cursorValue.counts,{'REPLACE INTO session' : 1 })
-        self.service.db = oldDb
-    def test10_sessionEndSucceed(self):
-        acceptList = ['INSERT INTO session_history','DELETE FROM session']
-        acceptListRowCount = [1, 1]
-        class MockCursor(MockCursorBase):
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, acceptList)
-            def statementActions(cursorSelf, sql, statement):
-                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
-        
-        self.service = pokerservice.PokerService(self.settings)
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        log_history.reset()
-        self.failUnless(self.service.sessionEnd(9))
-        self.assertEquals(log_history.get_all(), ['sessionEnd(9)'])
-
-        self.assertEquals(self.service.db.cursorValue.counts,{
-            'INSERT INTO session_history' : 1,
-            'DELETE FROM session' : 1 
-        })
-        self.service.db = oldDb
-    def test11_sessionEndInsertFailsDeleteSucceeds(self):
-        acceptList = ['INSERT INTO session_history','DELETE FROM session']
-        acceptListRowCount = [3, 1]
-        class MockCursor(MockCursorBase):
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, acceptList)
-            def statementActions(cursorSelf, sql, statement):
-                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
-        
-        self.service = pokerservice.PokerService(self.settings)
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        log_history.reset()
-        self.failUnless(self.service.sessionEnd(9))
-        msgs = log_history.get_all()
-        self.assertEquals(len(msgs), 2)
-        self.assertEquals(msgs[0], 'sessionEnd(9)')
-        self.assertEquals(msgs[1].find('a) modified 3 rows (expected 1): INSERT INTO session_history'), 0)
-        self.assertEquals(self.service.db.cursorValue.counts, {
-            'INSERT INTO session_history' : 1,
-            'DELETE FROM session' : 1 
-        })
-        self.service.db = oldDb
-    def test12_sessionEndAllSqlFails(self):
-        acceptList = ['INSERT INTO session_history','DELETE FROM session']
-        acceptListRowCount = [0,0]
-        class MockCursor(MockCursorBase):
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, acceptList)
-            def statementActions(cursorSelf, sql, statement):
-                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
-        
-        self.service = pokerservice.PokerService(self.settings)
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        log_history.reset()
-        self.failUnless(self.service.sessionEnd(9))
-        msgs = log_history.get_all()
-        self.assertEquals(len(msgs), 3)
-        self.assertEquals(msgs[0], 'sessionEnd(9)')
-        self.assertEquals(msgs[1].find('a) modified 0 rows (expected 1): INSERT INTO session_history'), 0)
-        self.assertEquals(msgs[2].find('b) modified 0 rows (expected 1): DELETE FROM session'), 0)
-        self.assertEquals(self.service.db.cursorValue.counts,{ 
-            'INSERT INTO session_history' : 1,
-            'DELETE FROM session' : 1 
-        })
-        self.service.db = oldDb
     def test13_tourneyNewState_DBFail_forceTourneyDeal(self):
         self.callCount = 0
         def ok(tourney): self.callCount += 1
@@ -6751,7 +6640,7 @@ class LadderTestCase(PokerServiceTestCaseBase):
 
 def GetTestSuite():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test07_"
+    # loader.methodPrefix = "_test"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServiceTestCase))
     suite.addTest(loader.loadClass(RefillTestCase))
