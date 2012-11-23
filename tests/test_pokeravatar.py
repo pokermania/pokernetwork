@@ -102,7 +102,7 @@ settings_xml_server = """\
     <table name="Table2" variant="holdem" betting_structure="1-2_20-200_limit" seats="10" player_timeout="60" currency_serial="1" />
     <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10"
         player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
-    <table name="Table4" variant="holdem" betting_structure="ante-.50-1_10-100_limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table4" variant="holdem" betting_structure=".50-1_5-100000_ante-limit" seats="10" player_timeout="60" currency_serial="1" />
     <listen tcp="19480" />
 
     <refill serial="1" amount="1000" />
@@ -147,7 +147,6 @@ settings_xml_client = """\
   <vprogram>yes</vprogram>
   
   <path>%(engine_path)s/conf %(tests_path)s/conf</path>
-  <rsync path="/usr/bin/rsync" dir="." source="rsync.pok3d.com::pok3d/linux-gnu" target="/tmp/installed" upgrades="share/poker-network/upgrades"/>
   <data path="data" sounds="data/sounds"/>
   <handlist start="0" count="10"/>
 </settings>
@@ -2469,7 +2468,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table4', 'ante-.50-1_10-100_limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table4', '.50-1_5-100000_ante-limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.sitTable, index, gameId)
@@ -2481,7 +2480,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table4', 'ante-.50-1_10-100_limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table4', '.50-1_5-100000_ante-limit')
             d.addCallback(self.seatTable, index, gameId)
             d.addCallback(self.buyInTable, index, gameId, 1000)
             d.addCallback(self.autoBlindAnte, index, gameId)
@@ -2526,7 +2525,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 4, 'Table4', 'ante-.50-1_10-100_limit')
+        d.addCallback(self.joinTable, 0, 4, 'Table4', '.50-1_5-100000_ante-limit')
         d.addCallback(self.seatTable, 0, 4)
         d.addCallback(self.buyInTable, 0, 4, 1000)
         d.addCallback(self.sitTable, 0, 4)
