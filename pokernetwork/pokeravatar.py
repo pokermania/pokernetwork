@@ -900,7 +900,7 @@ class PokerAvatar:
                 if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.isPlaying(packet.serial):
                     game.fold(packet.serial)
                 else:
-                    self.log.inform("attempt to fold player %d by player %d, or player is not not playing", packet.serial, self.getSerial())
+                    self.log.inform("attempt to fold for player %d by player %d, or player is not not playing", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_CALL:
                 if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.isPlaying(packet.serial):
@@ -1134,98 +1134,12 @@ class PokerAvatar:
                 
     # -------------------------------------------------------------------------
     def performPacketPokerTablePicker(self, packet):
-        mySerial = self.getSerial()
-        if mySerial != packet.serial:
-            errMsg = "attempt to run table picker for player %d by player %d" % ( packet.serial, mySerial )
-            self.log.warn("%s", errMsg)
-            self.sendPacketVerbose(PacketPokerError(
-                code = PacketPokerTableJoin.GENERAL_FAILURE,
-                message = errMsg,
-                other_type = PACKET_POKER_TABLE_PICKER,
-                serial = mySerial,
-                game_id = 0
-            ))
-        else:
-            # Call autorefill() first before checking for a table,
-            # since the amount of money we have left will impact the
-            # table selection, and in a play-money scenario, we want
-            # to have whatever play-money we can get before picking.
-            self.service.autorefill(packet.serial)
-
-            table = self.service.getTableBestByCriteria(
-                mySerial,
-                min_players = packet.min_players, currency_serial = packet.currency_serial,
-                variant = packet.variant, betting_structure = packet.betting_structure
-            )
-
-            if not table:
-                # If we cannot find a table, tell user we were unable to
-                # find a table matching their criteria
-                self.sendPacketVerbose(PacketPokerError(
-                    code = PacketPokerTableJoin.GENERAL_FAILURE,
-                    message = "No table found matching given criteria",
-                    other_type = PACKET_POKER_TABLE_PICKER,
-                    serial = mySerial,
-                    game_id = 0
-                ))
-            elif not table.game.canAddPlayer(mySerial):
-                # If the table we found just can't take us, tell user we
-                # could not add them.
-                self.sendPacketVerbose(PacketPokerError(
-                    code = PacketPokerTableJoin.GENERAL_FAILURE,
-                    message = "Found matching table, but unable to join it.",
-                    other_type = PACKET_POKER_TABLE_PICKER,
-                    serial = mySerial,
-                    game_id = table.game.id
-                ))
-            else:
-                # Otherwise, we perform the sequence of operations
-                # that is defined by the semantics of this packet in
-                # pokerpacket.py.  Basically, we perform:
-                #   PacketTableJoin(), and if it succeeds,
-                #   PacketPokerSeat(), and if it succeeds,
-                #   We figure out our best buy-in choice, buyIn, then perform:
-                #   PacketPokerBuyIn(amount = buyIn), and if it succeeds, 
-                #   PacketPokerSit()
-                if self.performPacketPokerTableJoin(
-                    PacketPokerTableJoin(serial = mySerial,game_id = table.game.id), 
-                    table,
-                    deprecatedEmptyTableBehavior = False,
-                    reason = PacketPokerTable.REASON_TABLE_PICKER
-                ):
-
-                    # Giving no seat argument at all for the packet should cause
-                    # us to get any available seat.
-                    if self.performPacketPokerSeat(
-                        PacketPokerSeat(serial = mySerial, game_id = table.game.id),
-                        table, table.game
-                    ):
-
-                        # Next, determine if player can afford the "best"
-                        # buy in.  If the player can't, give them the
-                        # minimum buyin.
-
-                        buyIn = table.game.bestBuyIn()
-                        if self.service.getMoney(mySerial, table.currency_serial) < buyIn:
-                            buyIn = table.game.buyIn()
-                            # No need to check above if we have that,
-                            # since our answer on this table came from
-                            # self.service.getTableByBestCriteria(), which
-                            # promises us that we have at least minimum.
-                        if self.performPacketPokerBuyIn(
-                            PacketPokerBuyIn(
-                                serial = mySerial, amount = buyIn,
-                                game_id = table.game.id
-                            ), 
-                            table, table.game
-                        ):
-                            if packet.auto_blind_ante:
-                                table.autoBlindAnte(self, packet.serial, True)
-                            self.performPacketPokerSit(
-                                PacketPokerSit(serial = mySerial, game_id = table.game.id),
-                                table
-                            )
-                            table.update()
+        error = PacketError(
+            other_type = PACKET_POKER_TABLE_PICKER,
+            message = 'not available'
+        )
+        self.sendPacketVerbose(error)
+        return
 
     # -------------------------------------------------------------------------
     def setPlayerInfo(self, packet):

@@ -324,7 +324,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.registerHandler(what, name, fire)
         def unregister(arg):
             self.unregisterHandler(what, name, fire)
-            return  arg
+            return arg
         d.addCallback(unregister)
         return d
         
@@ -361,7 +361,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             values = self.factory.chips_values[self.factory.chips_values.index(game.unit):]
         else:
             values = []
-        chips_list = PokerChips(values, chips).tochips_list()
+        chips_list = PokerChips(values, chips).tolist()
         self.log.debug("normalizeChips: %s %s", chips_list, values)
         return chips_list
             
@@ -463,7 +463,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
             # will return us a PokerPlayerInfo for confirmation of the success.
             #
             if url_check != url or outfit_check != outfit:
-                self.crit("PACKET_POKER_PLAYER_INFO: may enter loop packet.url = %s\n"
+                self.log.crit("PACKET_POKER_PLAYER_INFO: may enter loop packet.url = %s\n"
                     " url = %s\n"
                     " url_check = %s\n"
                     "packet.outfit = %s\n"
