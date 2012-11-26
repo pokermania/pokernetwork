@@ -611,6 +611,35 @@ CREATE TABLE route (
   KEY (resthost_serial)
 ) ENGINE=MyISAM;
 
+DROP TABLE IF EXISTS `tableconfigs`;
+CREATE TABLE `tableconfigs` (
+  `serial` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  `seats` int(2) unsigned NOT NULL DEFAULT '9',
+  `variant` varchar(64) NOT NULL,
+  `betting_structure` varchar(64) NOT NULL,
+  `currency_serial` int unsigned NOT NULL,
+  `skin` varchar(64) NULL,
+  `player_timeout` int(11) unsigned DEFAULT '60' NULL,
+  `muck_timeout` int(11) unsigned DEFAULT '5' NULL,
+  PRIMARY KEY (`serial`)
+) ENGINE=MyISAM;
+
+DROP TABLE IF EXISTS `tables`;
+CREATE TABLE `tables` (
+  `serial` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `resthost_serial` int(11) unsigned NOT NULL,
+  `tableconfig_serial` int(11) unsigned NULL,
+  `tourney_serial` int(11) unsigned NULL,
+  `players` int(2) unsigned DEFAULT '0' NOT NULL,
+  `observers` int(11) unsigned DEFAULT '0' NOT NULL,
+  `waiting` int(4) DEFAULT '0' NOT NULL,
+  `average_pot` int(11) unsigned DEFAULT '0' NOT NULL,
+  `percent_flop` int(11) unsigned DEFAULT '0' NOT NULL,
+  `hands_per_hour` int(11) unsigned DEFAULT '0' NOT NULL,
+  PRIMARY KEY (`serial`)
+) ENGINE=MyISAM;
+
 -- CREATE TABLE lastpoll (
 --   session CHAR(32) NOT NULL,
 --   user_serial INT UNSIGNED NOT NULL,
