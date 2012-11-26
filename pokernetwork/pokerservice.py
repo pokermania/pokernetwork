@@ -347,6 +347,88 @@ class PokerService(service.Service):
             self._warnLock
         )
 
+        # TODO remove temporary fix below
+        # inserts all entrys in tables into pokertables, so msgpoker can show them
+        c = self.db.cursor()
+        try:
+            c.execute(
+                """ INSERT INTO pokertables
+                    (
+                        serial,
+                        resthost_serial,
+                        seats,
+                        player_timeout,
+                        muck_timeout,
+                        currency_serial,
+                        name,
+                        variant,
+                        betting_structure,
+                        skin
+                    )
+                    SELECT
+                        t.serial,
+                        t.resthost_serial,
+                        c.seats,
+                        c.player_timeout,
+                        c.muck_timeout,
+                        c.currency_serial,
+                        c.name,
+                        c.variant,
+                        c.betting_structure,
+                        c.skin
+                    FROM tables as t
+                    LEFT JOIN tableconfigs as c
+                        ON t.tableconfig_serial = c.serial;
+                """
+            )
+        finally:
+            c.close()
+
+    def loadTableConfig(self, serial):
+        c = self.db.cursor()
+        try:
+            c.execute(
+                """ SELECT
+                        c.name,
+                        c.seats,
+                        c.variant,
+                        c.betting_structure,
+                        c.currency_serial,
+                        c.skin,
+                        c.player_timeout,
+                        c.muck_timeout
+                    FROM tables as t
+                    LEFT JOIN tableconfigs as c
+                        ON t.tableconfig_serial = c.serial
+                    WHERE t.serial = %s
+                """,
+                serial
+            )
+            return dict(zip([
+                'name',
+                'seats',
+                'variant',
+                'betting_structure',
+                'currency_serial',
+                'skin',
+                'player_timeout',
+                'muck_timeout'
+            ], c.fetchone()))
+        finally:
+            c.close()
+
+    def despawnTable(self, serial):
+        # assert serial in self.tables, 'Table %d doesn\'t exist!' % serial
+        self.log.inform("despawning table %d", serial)
+        self.tables[serial].destroy()
+
+    def spawnTable(self, serial, **kw):
+        # assert serial not in self.tables, 'Table %d already exists' % serial
+        self.log.inform("spawning table %d", serial)
+        table = PokerTable(self, serial, kw)
+        self.tables[serial] = table
+        return table
+
     def stopServiceFinish(self):
         self.monitors = []
         if self.cashier: self.cashier.close()
@@ -2902,13 +2984,15 @@ class PokerService(service.Service):
     def deleteTable(self, table):
         self.log.debug("table %s/%d removed from server", table.game.name, table.game.id)
         del self.tables[table.game.id]
-        cursor = self.db.cursor()
-        sql = ( "DELETE FROM pokertables where serial = " + str(table.game.id) )
-        self.log.debug("deleteTable: %s", sql)
-        cursor.execute(sql)
-        if cursor.rowcount != 1:
-            self.log.error("deleted %d rows (expected 1): %s", cursor.rowcount, sql)
-        cursor.close()
+
+        # TODO remove this!.. pokertables entrys are not deleted anymore, and pokertable will get droped anyways.
+        # cursor = self.db.cursor()
+        # sql = ( "DELETE FROM pokertables where serial = " + str(table.game.id) )
+        # self.log.debug("deleteTable: %s", sql)
+        # cursor.execute(sql)
+        # if cursor.rowcount != 1:
+        #     self.log.error("deleted %d rows (expected 1): %s", cursor.rowcount, sql)
+        # cursor.close()
 
     def broadcast(self, packet):
         for avatar in self.avatars:

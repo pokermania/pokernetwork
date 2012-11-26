@@ -746,6 +746,12 @@ class PokerAvatar:
             return
 
         elif packet.type == PACKET_POKER_TABLE_JOIN:
+            if packet.game_id not in self.service.tables:
+                description = self.service.loadTableConfig(packet.game_id)
+                if description:
+                    self.service.spawnTable(packet.game_id, **description)
+                else:
+                    self.log.warn("trying accessing table that is not in database!")
             self.performPacketPokerTableJoin(packet)
             return
 
@@ -754,7 +760,7 @@ class PokerAvatar:
             return
 
         table = self.packet2table(packet)
-            
+
         if table:
             self.log.debug("packet for table %s", table.game.id)
             game = table.game

@@ -134,7 +134,7 @@ class PokerTable:
         self.game.forced_dealer_seat = int(description.get("forced_dealer_seat", -1))
         self.game.registerCallback(self._gameCallbackTourneyEndTurn)
         self.game.registerCallback(self._gameCallbackTourneyUpdateStats)
-        self.skin = description.get("skin", "default")
+        self.skin = description.get("skin") or "default"
         self.currency_serial = int(description.get("currency_serial", 0))
         self.playerTimeout = int(description.get("player_timeout", 60))
         self.muckTimeout = int(description.get("muck_timeout", 5))
@@ -1123,6 +1123,8 @@ class PokerTable:
         else:
             self.avatar_collection.remove(serial, avatar)
         del avatar.tables[self.game.id]
+        if not len(self.avatar_collection.values()) and not self.observers:
+            self.factory.despawnTable(self.game.id)
 
     def buyInPlayer(self, avatar, amount):
         if not self.isSeated(avatar):
