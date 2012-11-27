@@ -347,43 +347,6 @@ class PokerService(service.Service):
             self._warnLock
         )
 
-        # TODO remove temporary fix below
-        # inserts all entrys in tables into pokertables, so msgpoker can show them
-        c = self.db.cursor()
-        try:
-            c.execute(
-                """ INSERT INTO pokertables
-                    (
-                        serial,
-                        resthost_serial,
-                        seats,
-                        player_timeout,
-                        muck_timeout,
-                        currency_serial,
-                        name,
-                        variant,
-                        betting_structure,
-                        skin
-                    )
-                    SELECT
-                        t.serial,
-                        t.resthost_serial,
-                        c.seats,
-                        c.player_timeout,
-                        c.muck_timeout,
-                        c.currency_serial,
-                        c.name,
-                        c.variant,
-                        c.betting_structure,
-                        c.skin
-                    FROM tables as t
-                    LEFT JOIN tableconfigs as c
-                        ON t.tableconfig_serial = c.serial;
-                """
-            )
-        finally:
-            c.close()
-
     def loadTableConfig(self, serial):
         c = self.db.cursor()
         try:
@@ -1869,12 +1832,12 @@ class PokerService(service.Service):
 
     def statsTables(self):
         cursor = self.db.cursor()
-        cursor.execute("SELECT COUNT(*) FROM pokertables")
+        cursor.execute("SELECT COUNT(*) FROM tables")
         tables = cursor.fetchone()[0]
         cursor.execute("SELECT COUNT(*) FROM user2table")
         players = cursor.fetchone()[0]
         cursor.close()
-        return ( players, tables )
+        return (players, tables)
 
     def listTables(self, query_string, serial):
         """listTables() takes two arguments:
@@ -1946,18 +1909,120 @@ class PokerService(service.Service):
         #  a mess, yielding the refactoring out of listTables() into its
         #  helper function, searchTables() -- bkuhn, 2009-07-03
 
-        orderBy = " ORDER BY players desc, serial"
+        orderBy = " ORDER BY t.players desc, t.serial"
         
         criteria = query_string.split("\t")
         cursor = self.db.cursor(DictCursor)
         if query_string == '' or query_string == 'all':
-            cursor.execute("SELECT * FROM pokertables" + orderBy)
+            cursor.execute(
+                """ SELECT
+                        t.serial,
+                        t.resthost_serial,
+                        c.seats,
+                        t.average_pot,
+                        t.hands_per_hour,
+                        t.percent_flop,
+                        t.players,
+                        t.observers,
+                        t.waiting,
+                        c.player_timeout,
+                        c.muck_timeout,
+                        c.currency_serial,
+                        c.name,
+                        c.variant,
+                        c.betting_structure,
+                        c.skin,
+                        t.tourney_serial
+                    FROM tables AS t
+                    LEFT JOIN tableconfigs AS c
+                        ON c.serial = t.tableconfig_serial
+                """ + orderBy,
+                query_string
+            )
+
         elif query_string == 'my':
-            cursor.execute("SELECT pokertables.* FROM pokertables,user2table WHERE pokertables.serial = user2table.table_serial AND user2table.user_serial = %s" + orderBy, serial)
+            cursor.execute(
+                """ SELECT
+                        t.serial,
+                        t.resthost_serial,
+                        c.seats,
+                        t.average_pot,
+                        t.hands_per_hour,
+                        t.percent_flop,
+                        t.players,
+                        t.observers,
+                        t.waiting,
+                        c.player_timeout,
+                        c.muck_timeout,
+                        c.currency_serial,
+                        c.name,
+                        c.variant,
+                        c.betting_structure,
+                        c.skin,
+                        t.tourney_serial
+                    FROM user2table AS u2t
+                    LEFT JOIN tables AS t
+                        ON t.serial = u2t.table_serial
+                    LEFT JOIN tableconfigs AS c
+                        ON c.serial = t.tableconfig_serial
+                    WHERE u2t.user_serial = %s
+                """ + orderBy,
+                serial
+            )
         elif query_string == 'marked':
-            cursor.execute("SELECT pokertables.*, IF(user2table.user_serial IS NULL,0,1) player_seated FROM pokertables LEFT JOIN user2table on (pokertables.serial = user2table.table_serial AND user2table.user_serial = %s)" + orderBy, serial)
+            cursor.execute(
+                """ SELECT
+                        t.serial,
+                        t.resthost_serial,
+                        c.seats,
+                        t.average_pot,
+                        t.hands_per_hour,
+                        t.percent_flop,
+                        t.players,
+                        t.observers,
+                        t.waiting,
+                        c.player_timeout,
+                        c.muck_timeout,
+                        c.currency_serial,
+                        c.name,
+                        c.variant,
+                        c.betting_structure,
+                        c.skin,
+                        t.tourney_serial
+                    FROM tables AS t
+                    LEFT JOIN tableconfigs AS c
+                        ON c.serial = t.tableconfig_serial
+                    WHERE c.name =  %s
+                """,
+                query_string
+            )
         elif re.match("^[0-9]+$", query_string):
-            cursor.execute("SELECT * FROM pokertables WHERE currency_serial = %s" + orderBy, query_string)
+            cursor.execute(
+                """ SELECT
+                        t.serial,
+                        t.resthost_serial,
+                        c.seats,
+                        t.average_pot,
+                        t.hands_per_hour,
+                        t.percent_flop,
+                        t.players,
+                        t.observers,
+                        t.waiting,
+                        c.player_timeout,
+                        c.muck_timeout,
+                        c.currency_serial,
+                        c.name,
+                        c.variant,
+                        c.betting_structure,
+                        c.skin,
+                        t.tourney_serial
+                    FROM tables AS t
+                    LEFT JOIN tableconfigs AS c
+                        ON c.serial = t.tableconfig_serial
+                    WHERE c.currency_serial =  %s
+                """ + orderBy,
+                query_string
+            )
         elif len(criteria) > 1:
             # Next, unpack the various possibilities in the tab-separated
             # criteria, starting with everything set to None.  This is to
@@ -1987,7 +2052,32 @@ class PokerService(service.Service):
             cursor.close()
             return self.searchTables(whereValues['currency_serial'], whereValues['variant'], None, None)
         else:
-            cursor.execute("SELECT * FROM pokertables WHERE name = %s", query_string)
+            cursor.execute(
+                """ SELECT
+                        t.serial,
+                        t.resthost_serial,
+                        c.seats,
+                        t.average_pot,
+                        t.hands_per_hour,
+                        t.percent_flop,
+                        t.players,
+                        t.observers,
+                        t.waiting,
+                        c.player_timeout,
+                        c.muck_timeout,
+                        c.currency_serial,
+                        c.name,
+                        c.variant,
+                        c.betting_structure,
+                        c.skin,
+                        t.tourney_serial
+                    FROM tables AS t
+                    LEFT JOIN tableconfigs AS c
+                        ON c.serial = t.tableconfig_serial
+                    WHERE name =  %s
+                """,
+                query_string
+            )
 
         result = cursor.fetchall()
         cursor.close()
@@ -2014,12 +2104,34 @@ class PokerService(service.Service):
         on this, so don't change it.  The secondary sorting key is the
         ascending table serial.
         """
-        orderBy = " ORDER BY players desc, serial"
+        orderBy = " ORDER BY t.players desc, t.serial"
         whereValues = { 'currency_serial' : currency_serial, 'variant' : variant,
                         'betting_structure' : betting_structure, 'min_players' : min_players }
         cursor = self.db.cursor(DictCursor)
         # Now build the SQL statement we need.
-        sql = "SELECT * FROM pokertables"
+        sql = \
+        """ SELECT
+                t.serial,
+                t.resthost_serial,
+                c.seats,
+                t.average_pot,
+                t.hands_per_hour,
+                t.percent_flop,
+                t.players,
+                t.observers,
+                t.waiting,
+                c.player_timeout,
+                c.muck_timeout,
+                c.currency_serial,
+                c.name,
+                c.variant,
+                c.betting_structure,
+                c.skin,
+                t.tourney_serial
+            FROM tables AS t
+            LEFT JOIN tableconfigs AS c
+                ON c.serial = t.tableconfig_serial
+        """
         sqlQuestionMarkParameterList = []
         startLen = len(sql)
         for (kk, vv) in whereValues.iteritems():
@@ -2347,40 +2459,41 @@ class PokerService(service.Service):
         )
         
     def getUserInfo(self, serial):
-        cursor = self.db.cursor(DictCursor)
-
-        sql = "SELECT rating,affiliate,email,name FROM users WHERE serial = %s"
-        cursor.execute(sql,(serial,))
-        if cursor.rowcount != 1:
-            self.log.error("getUserInfo(%d) expected one row got %d", serial, cursor.rowcount)
-            return PacketPokerUserInfo(serial = serial)
-        row = cursor.fetchone()
-        if row['email'] == None: row['email'] = ""
-
-        packet = PacketPokerUserInfo(
-            serial = serial,
-            name = row['name'],
-            email = row['email'],
-            rating = row['rating'],
-            affiliate = row['affiliate']
-        )
-        sql = \
-            "SELECT user2money.currency_serial,user2money.amount,user2money.points,CAST(SUM(user2table.bet) + SUM(user2table.money) AS UNSIGNED) AS in_game " \
-            "FROM user2money " \
-            "LEFT JOIN (pokertables,user2table) ON ( " \
-                "user2table.user_serial = user2money.user_serial " \
-                "AND user2table.table_serial = pokertables.serial " \
-                "AND user2money.currency_serial = pokertables.currency_serial " \
-            ") " \
-            "WHERE user2money.user_serial = %s GROUP BY user2money.currency_serial"
-        cursor.execute(sql,(serial,))
-        self.log.debug("getUserInfo: %s", cursor._executed)
-        for row in cursor:
-            if not row['in_game']: row['in_game'] = 0
-            if not row['points']: row['points'] = 0
-            packet.money[row['currency_serial']] = (row['amount'], row['in_game'], row['points'])
-        self.log.debug("getUserInfo: %s", packet)
-        return packet
+        c = self.db.cursor()
+        try:
+            c.execute(" SELECT rating, affiliate, email, name FROM users WHERE serial = %s", (serial,))
+            if c.rowcount != 1:
+                self.log.error("getUserInfo(%d) expected one row got %d", serial, cursor.rowcount)
+                return PacketPokerUserInfo(serial = serial)
+            kw = {'serial': serial}
+            kw['rating'], kw['affiliate'], kw['email'], kw['name'] = c.fetchone()
+            if not kw['email']: kw['email'] = ''
+            packet = PacketPokerUserInfo(**kw)
+            c.execute(
+                """ SELECT
+                        u2m.currency_serial,
+                        u2m.amount,
+                        COALESCE(u2m.points, 0),
+                        COALESCE(u2t.money, 0) + COALESCE(u2t.bet, 0)
+                    FROM user2money AS u2m
+                    LEFT JOIN user2table AS u2t
+                        ON u2t.user_serial = u2m.user_serial
+                    LEFT JOIN tables AS t
+                        ON t.serial = u2t.table_serial
+                    LEFT JOIN tableconfigs AS c
+                        ON c.serial = t.tableconfig_serial
+                    WHERE
+                        u2m.user_serial = %s AND
+                        (u2t.table_serial IS NULL OR c.currency_serial = u2m.currency_serial)
+                """,
+                (serial,)
+            )
+            for row in c:
+                packet.money[row[0]] = row[1:]
+            self.log.debug("getUserInfo %s", packet)
+            return packet
+        finally:
+            c.close()
 
     def getPersonalInfo(self, serial):
         user_info = self.getUserInfo(serial)
@@ -2688,33 +2801,36 @@ class PokerService(service.Service):
         return money
 
     def leavePlayer(self, serial, table_id, currency_serial):
-        status = True
-        cursor = self.db.cursor()
-        if currency_serial != 0:
-            sql = \
-                "UPDATE user2money,user2table,pokertables " \
-                "SET user2money.amount = user2money.amount + user2table.money + user2table.bet " \
-                "WHERE user2money.user_serial = user2table.user_serial " \
-                "AND user2money.currency_serial = pokertables.currency_serial " \
-                "AND pokertables.serial = %s " \
-                "AND user2table.table_serial = %s " \
-                "AND user2table.user_serial = %s" 
-            params = (table_id,table_id,serial)
-            cursor.execute(sql,params)
-            self.log.debug("leavePlayer %s" % cursor._executed)
-            if cursor.rowcount > 1:
-                self.log.error("modified %d rows (expected 0 or 1): %s", cursor.rowcount, sql)
-                status = False
-        
-        sql = "DELETE FROM user2table WHERE user_serial = %s AND table_serial = %s"
-        cursor.execute(sql,(serial,table_id))
-        self.log.debug("leavePlayer %s", cursor._executed)
-        if cursor.rowcount != 1:
-            self.log.error("modified %d rows (expected 1): %s", cursor.rowcount, sql)
-            status = False
-        cursor.close()
-        self.databaseEvent(event = PacketPokerMonitorEvent.LEAVE, param1 = serial, param2 = table_id)
-        return status
+        c = self.db.cursor()
+        try:
+            if currency_serial:
+                c.execute(
+                    """ UPDATE user2money AS u2m
+                        LEFT JOIN user2table AS u2t
+                            ON u2t.user_serial = u2m.user_serial
+                        LEFT JOIN tables AS t
+                            ON t.serial = u2t.table_serial
+                        LEFT JOIN tableconfigs AS c
+                            ON c.serial = t.tableconfig_serial
+                        SET
+                            u2m.amount = u2m.amount + COALESCE(u2t.money, 0) + COALESCE(u2t.bet, 0),
+                            u2t.money = 0,
+                            u2t.bet = 0
+                        WHERE u2m.user_serial = %s AND t.serial = %s AND u2m.currency_serial = %s AND c.currency_serial = %s
+                    """,
+                    (serial, table_id, currency_serial, currency_serial)
+                )
+                if c.rowcount not in (0, 2):
+                    self.log.error("leavePlayer: modified %d rows (expected 0 or 2)\n%s", c.rowcount, c._executed)
+                    # TODO status False?
+            c.execute("DELETE FROM user2table WHERE user_serial = %s AND table_serial = %s", (serial , table_id))
+            if c.rowcount != 1:
+                self.log.error("leavePlayer: modified %d rows (expected 1)", c.rowcount, c._executed)
+                # TODO status False?
+            self.databaseEvent(event = PacketPokerMonitorEvent.LEAVE, param1=serial, param2=table_id)
+            # TODO return status? just used in tests
+        finally:
+            c.close()
 
     def updatePlayerRake(self, currency_serial, serial, amount):
         if amount == 0 or currency_serial == 0:
@@ -2768,21 +2884,31 @@ class PokerService(service.Service):
         return status
 
     def updateTableStats(self, game, observers, waiting):
-        cursor = self.db.cursor()
-        cursor.execute(
-            "UPDATE pokertables " \
-            "SET average_pot = %s, hands_per_hour = %s, percent_flop = %s, players = %s, observers = %s, waiting = %s " \
-            "WHERE serial = %s ", (
-                game.stats['average_pot'],
-                game.stats['hands_per_hour'],
-                game.stats['percent_flop'],
-                game.allCount(),
-                observers,
-                waiting,
-                game.id
+        c = self.db.cursor()
+        try:
+            c.execute(
+                """ UPDATE tables
+                    SET
+                        average_pot = %s,
+                        hands_per_hour = %s,
+                        percent_flop = %s,
+                        players = %s,
+                        observers = %s,
+                        waiting = %s
+                    WHERE serial = %s
+                """,
+                (
+                    game.stats['average_pot'],
+                    game.stats['hands_per_hour'],
+                    game.stats['percent_flop'],
+                    game.allCount(),
+                    observers,
+                    waiting,
+                    game.id
+                )
             )
-        )
-        cursor.close()
+        finally:
+            c.close()
 
     def destroyTable(self, table_id):
 
@@ -2800,6 +2926,7 @@ class PokerService(service.Service):
         cursor.execute("DELETE FROM user2table WHERE table_serial = %s", (table_id,))
         self.log.debug("destroy: %s", cursor._executed)
         cursor.execute("DELETE FROM route WHERE table_serial = %s", table_id)
+        cursor.close()
 
 #     def setRating(self, winners, serials):
 #         url = self.settings.headerGet("/server/@rating")
@@ -2951,48 +3078,34 @@ class PokerService(service.Service):
         return table
 
     def cleanupCrashedTables(self):
-        for description in self.settings.headerGetProperties("/server/table"):
-            self.cleanupCrashedTable("pokertables.name = %s" % self.db.literal(description['name']))
-        self.cleanupCrashedTable("pokertables.resthost_serial = %s" % self.db.literal(self.resthost_serial))
-
-    def cleanupCrashedTable(self, pokertables_where):
-        cursor = self.db.cursor()
-
-        sql = (
-            "SELECT user_serial,table_serial,currency_serial " \
-            "FROM pokertables,user2table " \
-            "WHERE user2table.table_serial = pokertables.serial " \
-            "AND " + pokertables_where
-        )
-        cursor.execute(sql)
-        
-        if cursor.rowcount > 0:
-            self.log.debug(
-                "cleanupCrashedTable found %d players on table %s",
-                cursor.rowcount,
-                pokertables_where
+        c = self.db.cursor()
+        try:
+            c.execute(
+                """ SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet
+                    FROM user2table AS u2t
+                    LEFT JOIN tables AS t
+                        ON t.serial = u2t.table_serial
+                    LEFT JOIN tableconfigs AS c
+                        ON c.serial = t.tableconfig_serial
+                    WHERE t.resthost_serial = %s AND c.currency_serial != 0;
+                """,
+                (self.resthost_serial,)
             )
-
-            for i in xrange(cursor.rowcount):
-                (user_serial, table_serial, currency_serial) = cursor.fetchone()
+            for table_serial, currency_serial, user_serial, money, bet in c:
+                self.log.warn(
+                    "cleanupCrashedTables: found zombie in user2table, table: %d, user: %d, currency: %d, money: %d, bet: %d",
+                    table_serial, user_serial, currency_serial, money, bet, refs=[
+                        ('Game', self, lambda x: table_serial),
+                        ('User', self, lambda x: user_serial)
+                    ]
+                )
                 self.leavePlayer(user_serial, table_serial, currency_serial)
-                
-        cursor.execute("DELETE FROM pokertables WHERE " + pokertables_where)
-
-        cursor.close()
+        finally:
+            c.close()
 
     def deleteTable(self, table):
         self.log.debug("table %s/%d removed from server", table.game.name, table.game.id)
         del self.tables[table.game.id]
-
-        # TODO remove this!.. pokertables entrys are not deleted anymore, and pokertable will get droped anyways.
-        # cursor = self.db.cursor()
-        # sql = ( "DELETE FROM pokertables where serial = " + str(table.game.id) )
-        # self.log.debug("deleteTable: %s", sql)
-        # cursor.execute(sql)
-        # if cursor.rowcount != 1:
-        #     self.log.error("deleted %d rows (expected 1): %s", cursor.rowcount, sql)
-        # cursor.close()
 
     def broadcast(self, packet):
         for avatar in self.avatars:

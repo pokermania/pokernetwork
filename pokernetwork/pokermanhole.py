@@ -29,17 +29,20 @@ def refund_kick(serial, service=None):
             service.leavePlayer(serial, blocking_table.game.id, 1)
         # refund players remaining in sql
         cursor.execute(
-            "UPDATE user2table AS u2t "
-            "JOIN pokertables AS t "
-                "ON t.serial = u2t.table_serial "
-            "JOIN user2money AS u2m "
-                "ON u2m.user_serial = u2t.user_serial "
-            "SET "
-                "u2m.amount = u2m.amount + u2t.money + u2t.bet, "
-                "u2t.money = 0, "
-                "u2t.bet = 0 "
-            "WHERE u2t.table_serial = %s AND t.currency_serial = 1",
-            (serial,)
+            """ UPDATE user2money AS u2m
+                LEFT JOIN user2table AS u2t
+                    ON u2t.user_serial = u2m.user_serial
+                LEFT JOIN tables AS t
+                    ON t.serial = u2t.table_serial
+                LEFT JOIN tableconfigs AS c
+                    ON c.serial = t.tableconfig_serial
+                SET
+                    u2m.amount = u2m.amount + COALESCE(u2t.money, 0) + COALESCE(u2t.bet, 0),
+                    u2t.money = 0,
+                    u2t.bet = 0
+                WHERE t.serial = %s AND u2m.currency_serial = 1 AND c.currency_serial = 1
+            """,
+            serial
         )
         # cleanup sql
         cursor.execute("DELETE FROM user2table WHERE table_serial = %s", (serial,))
