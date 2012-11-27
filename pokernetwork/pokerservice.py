@@ -321,8 +321,6 @@ class PokerService(service.Service):
             except locale.Error, le:
                 self.log.error('Unable to restore original locale: %s', le)
 
-        for description in self.settings.headerGetProperties("/server/table"):
-            self.createTable(0, description)
         self.cleanupTourneys()
         self.updateTourneysSchedule()
         self.messageCheck()
