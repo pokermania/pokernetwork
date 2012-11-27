@@ -1168,15 +1168,13 @@ class PokerTable:
             self.log.warn("player %d is broke and cannot rebuy", serial)
             return False
 
-        if self.tourney and not self.tourney.isRebuyAllowed(serial):
+        if self.tourney:
+            self.log.error("player %d cannot use PacketPokerRebuy to rebuy during tourney")
             return False
 
         if not self.game.rebuy(serial, amount):
             self.log.warn("player %d rebuy denied", serial)
             return False
-
-        if self.tourney:
-            self.tourney.reenterGame(self.game.id, serial)
 
         return True
 

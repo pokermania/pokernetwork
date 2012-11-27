@@ -813,6 +813,7 @@ class PokerService(service.Service):
         tourney.callback_remove_player = self.tourneyRemovePlayerLater
         tourney.callback_cancel = self.tourneyCancel
         tourney.callback_reenter_game = self.tourneyReenterGame
+        tourney.callback_rebuy = self.tourneyRebuy
         if schedule_serial not in self.schedule2tourneys:
             self.schedule2tourneys[schedule_serial] = []
         self.schedule2tourneys[schedule_serial].append(tourney)
@@ -1657,6 +1658,50 @@ class PokerService(service.Service):
                 self.log.debug("tourneyCancel: %s", packet)
             for avatar in avatars:
                 avatar.sendPacketVerbose(packet)
+
+
+    def tourneyRebuy(self, tourney, serial, game_id, amount):
+        """decrements the bank money of a player
+        amount is the number of chips which the player has to pay to get a new set of tourney chips
+
+        returns a tuple (error_flag, reason)
+        if error is False, the reason indicates the problem
+        """
+        amount = self.buyInPlayer(serial, game_id, currency_serial, amount)
+
+        if amount == 0:
+            self.log.warn("player %d  has not enough money, tourney rebuy denied", serial)
+            return (False, "money")
+
+        return (True, None)
+
+    def tourneyRebuyRequest(self, packet):
+        """handle the tourney rebuy request
+        exchange user chips to tourney chips if it is valid for the tourney
+        """
+        tourney = self.tourneys.get(packet.tourney_serial)
+        
+        if tourney is None:
+            self.log.warn("tourney_serial %d does not exist" % packet.tourney_serial)
+            return packet.OTHER_ERROR
+
+        success, reason = tourney.rebuy(packet)
+
+        if success:
+            self.broadcast(PacketPokerRebuy(
+                game_id = self.game.id,
+                serial = serial,
+                amount = amount
+            ))
+            return packet.OK
+        else:
+            return {
+                "user": packet.REBUY_LIMIT_EXEEDED,
+                "timeout":packet.REBUY_TIMEOUT_EXEEDED,
+                "money":packet.NOT_ENOUGH_MONEY,
+                "other": packet.OTHER_ERROR,
+            }.get(reason, packet.OTHER_ERROR)
+
 
     def getHandSerial(self):
         cursor = self.db.cursor()
