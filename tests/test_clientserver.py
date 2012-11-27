@@ -29,12 +29,15 @@
 
 import sys
 from os import path
+from pokernetwork.pokerservice import IPokerFactory
 
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
 sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from log_history import log_history
+
+from zope.interface import implements
 
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import protocol, reactor, defer
@@ -46,12 +49,15 @@ from twisted.application import service
 #
 
 import twisted.internet.base
+
 twisted.internet.base.DelayedCall.debug = False
 
 import pokernetwork.server
 import pokernetwork.client
-import pokernetwork.protocol
+
 from pokerpackets.packets import *
+
+from mock_transport import PairedDeferredTransport
 
 class FakeService(service.Service):
     def __init__(self):
@@ -75,7 +81,8 @@ class  FakeUser:
         self.serial = -1
 
 class FakeFactory(protocol.ServerFactory):
-
+    implements(IPokerFactory)
+    
     def __init__(self, testObject = None):
         self.tester = testObject
         self.service = FakeService()
@@ -116,10 +123,16 @@ class FakeFactory(protocol.ServerFactory):
         return self.instance
 
 class ClientServerTestBase(unittest.TestCase):
+    def setUpConnection(self, serial):
+        server_protocol = self.server_protocol[serial] = self.server_factory.buildProtocol(('127.0.0.1',0))
+        client_protocol = self.client_protocol[serial] = self.client_factory[serial].buildProtocol(('127.0.0.1',0))
+        server_transport = PairedDeferredTransport(protocol=server_protocol, foreignProtocol=client_protocol)
+        client_transport = PairedDeferredTransport(protocol=client_protocol, foreignProtocol=server_protocol)
+        server_protocol.makeConnection(server_transport)
+        client_protocol.makeConnection(client_transport)
+    
     def setUpServer(self):
         self.server_factory = FakeFactory(self)
-        self.p = reactor.listenTCP(0, self.server_factory, interface="127.0.0.1")
-        self.port = self.p.getHost().port
 
     def setUpClient(self, index):
         self.client_factory[index] = pokernetwork.client.UGAMEClientFactory()
@@ -129,12 +142,15 @@ class ClientServerTestBase(unittest.TestCase):
             return client
         d = self.client_factory[index].established_deferred
         d.addCallback(setUpProtocol)
+        return d
 
     def setUp(self):
         self.setUpServer()
         self.client_factory = [None, None]
+        self.client_protocol = [None, None]
+        self.server_protocol = [None, None]
         self.setUpClient(0)
-        reactor.connectTCP('127.0.0.1', self.port, self.client_factory[0])
+        self.setUpConnection(0)
 
     def cleanSessions(self, arg):
         #
@@ -150,9 +166,6 @@ class ClientServerTestBase(unittest.TestCase):
         return arg
     # -----------------------------------------------------------------------        
     def tearDown(self):
-        reactor.iterate()
-        reactor.iterate()
-        self.p.stopListening()
         return self.cleanSessions(None)
 
 class ClientServer(ClientServerTestBase):
@@ -321,8 +334,6 @@ class ClientServerBadClientProtocol(ClientServerTestBase):
                 return proto
 
         self.server_factory = BadVersionFakeFactory(self)
-        self.p = reactor.listenTCP(0, self.server_factory, interface="127.0.0.1")
-        self.port = self.p.getHost().port
     # -----------------------------------------------------------------------
     def test01_badClientProtocol(self):
         d = self.client_factory[0].established_deferred
@@ -343,8 +354,6 @@ class ClientServerQueuedServerPackets(ClientServerTestBase):
                 return proto
 
         self.server_factory = BufferedFakeFactory(self)
-        self.p = reactor.listenTCP(0, self.server_factory, interface="127.0.0.1")
-        self.port = self.p.getHost().port
     # -----------------------------------------------------------------------
     def getServerPacket(self, client):
         self.failUnless(log_history.search('protocol established'))
@@ -981,6 +990,7 @@ class DummyClientTests(unittest.TestCase):
 
 def GetTestSuite():
     loader = runner.TestLoader()
+    # loader.methodPrefix = "_test"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ClientServer))
     suite.addTest(loader.loadClass(ClientServerBadClientProtocol))

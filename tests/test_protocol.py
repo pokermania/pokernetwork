@@ -361,7 +361,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         endTime = time()
 
         self.assertEquals(callCount, 1)
-        self.failUnless(self.u._lag > startTime)
+        self.failUnless(self.u._lag >= startTime)
         self.failUnless(self.u._lag <= endTime)
 
         k = self.u._queues.keys()

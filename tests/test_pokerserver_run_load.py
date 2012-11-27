@@ -123,21 +123,23 @@ class PokerServerLoadingSSLTestCase(unittest.TestCase):
         for mod in ['OpenSSL', 'pokernetwork', 'pokerserver']:
             if sys.modules.has_key(mod): del sys.modules[mod]
 
-        realImporter = __builtins__.__import__
+        realImporter = __builtins__['__import__'] if type(__builtins__) is dict else __builtins__.__import__
 
         def failSSLImport(moduleName, *args, **kwargs):
             if moduleName == "OpenSSL":
                 raise ImportError("SSL was imported")
             else:
                 return realImporter(moduleName, *args, **kwargs)
-
-        __builtins__.__import__  = failSSLImport
+        
+        if type(__builtins__) is dict: __builtins__['__import__']  = failSSLImport
+        else: __builtins__.__import__  = failSSLImport
 
         from pokernetwork import pokerserver as ps
 
         self.failIf(ps.HAS_OPENSSL, "HAS_OPENSSL should be False when OpenSSL.SSL is not available")
 
-        __builtins__.__import__  = realImporter
+        if type(__builtins__) is dict: __builtins__['__import__']  = realImporter
+        else: __builtins__.__import__  = realImporter
 # ------------------------------------------------------------
 def GetTestSuite():
     # loader.methodPrefix = "_test"
