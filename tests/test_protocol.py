@@ -91,8 +91,8 @@ class QueueTestCase(unittest.TestCase):
         """Testing class Queue init"""
         
         queue = protocol.Queue()
-        assert queue.delay == 0 , "invalid delay (0 expected)"
-        assert len(queue.packets) == 0 , "list packets not empty"
+        self.assertTrue(queue.delay == 0 , "invalid delay (0 expected)")
+        self.assertTrue(len(queue.packets) == 0 , "list packets not empty")
 
 class UGAMEProtocolTestCase(unittest.TestCase):
     """Test case for class UGAMEProtocol"""
@@ -126,48 +126,46 @@ class UGAMEProtocolTestCase(unittest.TestCase):
     def testUGAMEProtocolInit(self):
         """Testing class UGAMEProtocol init"""
         
-        assert len(self.u._packet) == 0       , "list _packet not empty"
-        assert self.u._packet_len  == 0       , "invalid _packet_len  (0 expected)"
-        assert self.u._timer == None          , "invalid _timer (None expected)"
-        assert self.u._packet2id(1) == 0      , "function _packet2id invalid"
-        assert self.u._packet2front(2) == False , "function _packet2front invalid"
-        assert len(self.u._queues) == 0       , "dictionnary _queues not empty"
-        assert self.u._lagmax == 0            , "invalid _lagmax (0 expected)"
-        assert self.u._lag == 0               , "invalid _lag (0 expected)"
-        assert self.u._prefix == ""           , "invalid _prefix"
-        assert self.u._blocked == False       , "invalid _blocked (False expected)"
-        assert self.u.established == 0        , "invalid ugp.established (0 expected)"
-        assert self.u._protocol_ok == False   , "invalid _protocol_ok (False expected)"
-        assert self.u._poll == True                      , "invalid _poll (True expected)"
-        assert self.u._poll_frequency == 0.01    , "invalid _poll_frequency (0.01 expected)"
-        assert self.u._ping_delay == 5        , "invalid _ping_delay"
+        self.assertTrue(len(self.u._packet) == 0 , "list _packet not empty")
+        self.assertTrue(self.u._packet_len  == 0 , "invalid _packet_len (0 expected)")
+        self.assertTrue(self.u._timer == None , "invalid _timer (None expected)")
+        self.assertTrue(self.u._packet2id(1) == 0 , "function _packet2id invalid")
+        self.assertTrue(self.u._packet2front(2) == False , "function _packet2front invalid")
+        self.assertTrue(len(self.u._queues) == 0 , "dictionnary _queues not empty")
+        self.assertTrue(self.u._lagmax == 0 , "invalid _lagmax (0 expected)")
+        self.assertTrue(self.u._lag == 0 , "invalid _lag (0 expected)")
+        self.assertTrue(self.u._prefix == "" , "invalid _prefix")
+        self.assertTrue(self.u._blocked == False , "invalid _blocked (False expected)")
+        self.assertTrue(self.u.established == 0 , "invalid ugp.established (0 expected)")
+        self.assertTrue(self.u._protocol_ok == False , "invalid _protocol_ok (False expected)")
+        self.assertTrue(self.u._poll == True , "invalid _poll (True expected)")
+        self.assertTrue(self.u._poll_frequency == 0.01 , "invalid _poll_frequency (0.01 expected)")
+        self.assertTrue(self.u._ping_delay == 5 , "invalid _ping_delay")
 
     def testSetPingDelay(self):
-        """Testing setPingDelay"""        
+        """Testing setPingDelay""" 
 
         self.u.setPingDelay(10)
-        assert self.u._ping_delay == 10       , "_ping_delay is not set correctly"
+        self.assertTrue(self.u._ping_delay == 10 , "_ping_delay is not set correctly")
 
     def testGetPingDelay(self):
-        """Testing getPingDelay"""        
+        """Testing getPingDelay""" 
 
         self.u.setPingDelay(8)
-        assert self.u.getPingDelay() == 8     , "return value is not the one expected"
+        self.assertTrue(self.u.getPingDelay() == 8 , "return value is not the one expected")
 
     def testGetLag(self):
         """Testing getLag"""
-
-        assert self.u.getLag() == 0             , "return value is not the one expected"
+        self.assertTrue(self.u.getLag() == 0 , "return value is not the one expected")
 
     def testGetOrCreateQueue(self):
         """Testing getOrCreateQueue"""
         
-        assert self.u._queues.has_key(0) == False , "queues already containing Key '0'"
+        self.assertTrue(self.u._queues.has_key(0) == False , "queues already containing Key '0'")
         q1 = self.u.getOrCreateQueue(0)
-        assert self.u._queues.has_key(0) == True  , "getOrCreateQueue does not have created queues"
+        self.assertTrue(self.u._queues.has_key(0) == True , "getOrCreateQueue does not have created queues")
         q2 = self.u.getOrCreateQueue(0)
-
-        assert q1 == q2                           , "getOrCreateQueue overwrite queues"
+        self.assertTrue(q1 == q2 , "getOrCreateQueue overwrite queues")
 
     def testConnectionMade(self):
         """Testing connectionMade"""
@@ -176,8 +174,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
 
         def mockTestSendVersion(data):
             global writeCallCount
-            self.assertEquals(data, 'CGI %s.%s\n' % (protocol.PROTOCOL_MAJOR, 
-                                                     protocol.PROTOCOL_MINOR))
+            self.assertEquals(data, 'CGI %s.%s\n' % (protocol.PROTOCOL_MAJOR, protocol.PROTOCOL_MINOR))
             writeCallCount += 1
         self.u.transport.write = mockTestSendVersion
 
@@ -202,7 +199,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.assertEquals(self.u.established,0)
     
     def testHandleConnection(self):
-        """Testing _handleConnection"""        
+        """Testing _handleConnection""" 
         log_history.reset()
         # there is just a pass here in the implementation, there is really
         # nothing to be done to truly test it.
@@ -212,38 +209,35 @@ class UGAMEProtocolTestCase(unittest.TestCase):
     def testIgnoreIncomingData(self):
         """Testing ignoreIncomingData"""
         
-        self.u.ignoreIncomingData()           
+        self.u.ignoreIncomingData() 
         self.u._timer = FakeTimer()
         self.u.ignoreIncomingData()
-        assert self.u._timer._active == False
+        self.assertTrue(self.u._timer._active == False)
 
     def testHandleVersion(self):
         """Testing handleVersion"""
-
-        assert self.u._protocol_ok == False        , "_protocol_ok : False expected"
+        self.assertTrue(self.u._protocol_ok == False , "_protocol_ok : False expected")
         # Messages should be empty, protocol is not established
         log_history.reset()
         self.u._handleVersion()
         self.assertEquals(log_history.get_all(), [])
         
-        assert self.u._protocol_ok == False        ,"_protocol_ok change unexpected"
+        self.assertTrue(self.u._protocol_ok == False ,"_protocol_ok change unexpected")
         
         self.u._packet = list('\n')
         # Messages should be empty, protocol is not established
         log_history.reset()
         self.u._handleVersion()
         self.assertEquals(log_history.get_all(), [])
-        assert self.u.transport._loseConnection == True , "loseConnection not called"
-
-        self.u.transport = FakeTransport()      # transport re-init
+        self.assertTrue(self.u.transport._loseConnection == True , "loseConnection not called")
+        self.u.transport = FakeTransport() # transport re-init
         self.u._packet = list('CGI a.b\n')
         # Messages should be empty, protocol is not established
         log_history.reset()
         self.u._handleVersion()
         self.assertEquals(log_history.get_all(), [])
-        assert self.u.transport._loseConnection == True , "loseConnection not called"
-
-        self.u.transport = FakeTransport()      # transport re-init
+        self.assertTrue(self.u.transport._loseConnection == True , "loseConnection not called")
+        self.u.transport = FakeTransport() # transport re-init
         vers = Version(protocol_number)
         PROTOCOL_MAJOR = "%03d" % vers.major()
         PROTOCOL_MINOR = "%d%02d" % ( vers.medium(), vers.minor() )
@@ -251,8 +245,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         log_history.reset()
         self.u._handleVersion()
         self.assertEquals(log_history.get_all(), ["protocol established"])
-
-        assert self.u._protocol_ok == True ,  "_protocol_ok value unexpected"
+        self.assertTrue(self.u._protocol_ok == True , "_protocol_ok value unexpected")
 
     def testProtocolEstablished(self):
         pass
@@ -264,40 +257,40 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         """Testing hold"""
 
         self.u.hold(-2,0)
-        assert self.u._queues.has_key(0) == True  , "queue has not been created"
-        assert self.u._queues[0].delay == -2  , "delay wrongly set"
+        self.assertTrue(self.u._queues.has_key(0) == True , "queue has not been created")
+        self.assertTrue(self.u._queues[0].delay == -2 , "delay wrongly set")
 
         self.u.hold(-4)
-        assert self.u._queues[0]. delay == -4 , "delay wrongly  set"
+        self.assertTrue(self.u._queues[0]. delay == -4 , "delay wrongly set")
 
         self.u.hold(1)
-        assert self.u._queues[0].delay > 0 , "delay wrongly set"
+        self.assertTrue(self.u._queues[0].delay > 0 , "delay wrongly set")
 
     def testBlock(self):
         """Testing block"""
 
         self.u._blocked = False
         self.u.block()
-        assert self.u._blocked == True   ,   "block don't block..."
+        self.assertTrue(self.u._blocked == True , "block don't block...")
 
     def testUnblock(self):
         """Testing unblock"""
 
         self.u._blocked = True
         self.u.unblock()
-        assert self.u._blocked == False  ,   "unblock don't unblock..."
+        self.assertTrue(self.u._blocked == False , "unblock don't unblock...")
  
     def testDiscardPackets(self):
         """Testing discardPackets"""
         
         self.u._queues[0] = protocol.Queue()
         self.u.discardPackets(0)
-        assert not hasattr(self.u , '_queues[0]')  ,  "queue not deleted"
+        self.assertTrue(not hasattr(self.u , '_queues[0]') , "queue not deleted")
  
     def testCanHandlePacket(self):
         """Testing canHandlePackets"""
 
-        assert self.u.canHandlePacket('') == (True,0)
+        self.assertTrue(self.u.canHandlePacket('') == (True,0))
     
     def testProcessQueues(self):
         """Testing _proccessQueues"""
@@ -342,7 +335,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.u._blocked = True
         self.u._processQueues()
         k = self.u._queues.keys()
-        self.assertEquals(triggerTimerCallCount,  1)
+        self.assertEquals(triggerTimerCallCount, 1)
 
         k.sort()
         self.assertEquals(k, [ 0, 1, 2, 3 ])
@@ -378,7 +371,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         self.assertEquals(len(self.u._queues[1].packets), 0)
         self.assertEquals(len(self.u._queues[2].packets), 1)
         self.assertEquals(len(self.u._queues[3].packets), 1)
-        self.assertEquals(triggerTimerCallCount,  1)
+        self.assertEquals(triggerTimerCallCount, 1)
 
         self.assertEquals(len(log_history.get_all()), 2)
         self.assertEquals(log_history.get_all()[0], ' => queue 1 delay canceled because lag too high')
@@ -399,7 +392,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         """Testing triggerTimer when it already has an active timer
         """
         self.assertEquals(self.u._timer, None)
-        class  MockTimer:
+        class MockTimer:
             def __init__(self): self.myID = "MOCK"
             def active(self): return True
 
@@ -418,7 +411,7 @@ class UGAMEProtocolTestCase(unittest.TestCase):
         """Testing triggerTimer when timer exists, is inactive, but not polling
         """
         self.assertEquals(self.u._timer, None)
-        class  MockTimer:
+        class MockTimer:
             def __init__(self): self.myID = "MOCK2"
             def active(self): return False
 
@@ -481,13 +474,12 @@ class UGAMEProtocolTestCase(unittest.TestCase):
             
         self.u.triggerTimer = mockTriggerTimer
        
-        self.u._packet2front = lambda x:  x <= 0
-
-        self.u.pushPacket( FakePacket(1) );        
-        self.u.pushPacket( FakePacket(0) );        
+        self.u._packet2front = lambda x: x <= 0
+        self.u.pushPacket(FakePacket(1)) 
+        self.u.pushPacket(FakePacket(0)) 
         
-        assert len(self.u._queues[0].packets) == 2  , "packets not in list"
-        assert self.u._queues[0].packets[0].arg <  self.u._queues[0].packets[1].arg  , "packet not set in front of the queue"
+        self.assertTrue(len(self.u._queues[0].packets) == 2 , "packets not in list")
+        self.assertTrue(self.u._queues[0].packets[0].arg < self.u._queues[0].packets[1].arg , "packet not set in front of the queue")
         self.assertEquals(triggerTimerCallCount, 2)
 
     def testHandleData(self):
@@ -554,10 +546,9 @@ class UGAMEProtocolTestCase(unittest.TestCase):
 
         handledVersion = 0
         self.u.established = 1
-        self.u.dataReceived("packet_2  ")
-
-        self.assertEquals(self.u._packet, ['packet_1', 'packet_2  '])
-        self.assertEquals(self.u._packet_len, 18)
+        self.u.dataReceived("packet_2_long")
+        self.assertEquals(self.u._packet, ['packet_1', 'packet_2_long'])
+        self.assertEquals(self.u._packet_len, 21)
         self.failIf(handledVersion > 0)
         self.failUnless(handledData == 1)
         

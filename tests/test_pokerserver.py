@@ -38,6 +38,7 @@ from log_history import log_history
 
 import sqlmanager
 
+import twisted
 from twisted.trial import unittest, runner, reporter
 from pokernetwork.pokerserver import makeService, makeApplication
 from pokernetwork.pokerserver import run as pokerServerRun
@@ -49,6 +50,14 @@ from pokernetwork.pokerservice import PokerService, PokerRestTree, PokerFactoryF
 from pokernetwork.pokersite import PokerSite
 from pokernetwork.pokertable import PokerTable
 
+ssl_factory_str = "<<class 'twisted.internet.ssl.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on %d>"
+ssl_site_str = "<<class 'twisted.internet.ssl.Port'> of pokernetwork.pokersite.PokerSite on %d>"
+ssl_web_site_str = "<<class 'twisted.internet.ssl.Port'> of twisted.web.server.Site on %d>"
+ 
+if twisted.version.major >= 11:
+    ssl_factory_str = ssl_site_str = ssl_web_site_str = "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on %d>"
+
+    
 settings_xml_server_manhole = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
@@ -270,22 +279,16 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer):
                 self.failUnless(isinstance(service.args[1], PokerFactoryFromPokerService))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(
-                    service._port.__str__(),
-                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 3234>"
-                )
+                self.assertEquals(service._port.__str__(), ssl_factory_str % 3234)
                 self.assertEquals(service._port.port, 3234)
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertNotEquals(service._port.factory._contextFactory, None)
-                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
@@ -337,21 +340,16 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer):
                 self.failUnless(isinstance(service.args[1], TwistedSite))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(
-                    service._port.__str__(),
-                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 9356>"
-                )
+                self.assertTrue(service._port.__str__() in (ssl_site_str % 9356, ssl_web_site_str % 9356))                
                 self.assertEquals(service._port.port, 9356)
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
@@ -385,30 +383,23 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.failUnless(isinstance(service.tables[1], PokerTable))
                 self.failUnless(isinstance(service.tables[2], PokerTable))
             elif isinstance(service, TCPServer):
-                self.assertTrue(service._port.__str__().find(
-                    "<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on"
-                ) == 0)
+                self.assertTrue(0 == service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on"))
                 self.failUnless(service._port.port > 1024)
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer):
                 self.failUnless(isinstance(service.args[1], PokerSite))
                 self.failUnless(isinstance(service.args[1].resource, PokerRestTree))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(
-                    service._port.__str__(),
-                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 10234>"
-                )
+                self.assertTrue(service._port.__str__() in (ssl_site_str % 10234, ssl_web_site_str % 10234))
                 self.assertEquals(service._port.port, 10234)
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
@@ -437,7 +428,6 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, TCPServer):
                 count += 1
@@ -447,7 +437,6 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
@@ -477,7 +466,6 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, TCPServer):
                 count += 1
@@ -487,7 +475,6 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
@@ -531,7 +518,6 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, TCPServer) and service._port.port == 10143:
                 count += 1
@@ -548,45 +534,32 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 count += 1
                 self.failUnless(isinstance(service.args[1], PokerFactoryFromPokerService))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(
-                    service._port.__str__(),
-                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 9123>"
-                )
+                self.assertEquals(service._port.__str__(), ssl_factory_str % 9123)
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertNotEquals(service._port.factory._contextFactory, None)
-                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer) and service._port.port == 6675:
                 count += 1
                 self.failUnless(isinstance(service.args[1], TwistedSite))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(
-                    service._port.__str__(),
-                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 6675>"
-                )
+                self.assertTrue(service._port.__str__() in (ssl_site_str % 6675, ssl_web_site_str % 6675))
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             elif isinstance(service, SSLServer) and service._port.port == 7765:
                 count += 1
                 self.failUnless(isinstance(service.args[1], PokerSite))
                 self.failUnless(isinstance(service.args[1].resource, PokerRestTree))
                 self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertEquals(
-                    service._port.__str__(),
-                    "<<class 'twisted.internet.tcp.Port'> of twisted.protocols.tls.TLSMemoryBIOFactory on 7765>"
-                )
+                self.assertEquals(service._port.__str__(), ssl_site_str % 7765)
                 self.assertEquals(service._port.port, service._port._realPortNumber) 
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertEquals(service._port.factory._contextFactory, service.args[2])
                 self.failUnless(service.running)
             elif isinstance(service, TCPServer) and service._port.port == 5563:
                 count += 1
@@ -595,7 +568,6 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             elif isinstance(service, TCPServer) and service._port.port == 7658:
                 count += 1
@@ -604,7 +576,6 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.assertEquals(service._port.interface, '')
                 self.assertEquals(service._port.connected, 1)
                 self.assertNotEquals(service._port.socket, None)
-                self.assertFalse(hasattr(service._port.factory, '_contextFactory'))
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
