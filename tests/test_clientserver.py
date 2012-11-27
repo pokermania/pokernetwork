@@ -66,7 +66,7 @@ class FakeAvatar:
 
     def handlePacket(self, packet):
         if packet.type == PACKET_ERROR:
-            raise Exception, "EXCEPTION TEST"
+            raise Exception("EXCEPTION TEST")
         return []
 
 class  FakeUser:
@@ -329,8 +329,7 @@ class ClientServerBadClientProtocol(ClientServerTestBase):
         def findError(myFailure):
             from pokernetwork.protocol import PROTOCOL_MAJOR, PROTOCOL_MINOR
             msg = myFailure.getErrorMessage()
-            self.failIf(msg.find("'0.00\\n', '%s.%s')" 
-                                 % (PROTOCOL_MAJOR, PROTOCOL_MINOR )) < 0)
+            self.failIf(msg.find("'0.00\\n', '%s.%s')" % (PROTOCOL_MAJOR, PROTOCOL_MINOR )) < 0)
             self.failIf(msg.find("(<pokernetwork.client.UGAMEClientProtocol instance at") > 0)
         d.addErrback(findError)
         return d
@@ -787,7 +786,7 @@ class DummyServerTests(unittest.TestCase):
         pt.isActive = True
         server._ping_timer = pt
 
-        class  MockRaise:
+        class MockRaise(Exception):
             def __init__(raiseSelf, str):
                 raiseSelf.value = str
                 del server.exception

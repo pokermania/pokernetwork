@@ -32,6 +32,11 @@ sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 from config import config
 import sqlmanager
 
+# environ needed because makeService would overwrite the root_logger
+# setting if it was not set
+os.environ['LOG_LEVEL'] = '10'
+from log_history import log_history
+
 from twisted.internet import reactor, defer
 
 from cStringIO import StringIO
@@ -65,27 +70,14 @@ class PokerServerRunTestCase(unittest.TestCase):
     def setUp(self):
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
-        self.saveSysout = None
-        self.saveArgv = None
     # -------------------------------------------------------------------------
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
-        if self.saveSysout:
-            value = sys.stdout.getvalue()
-            if self.expectedOutput:
-                self.failUnless(value.find(self.expectedOutput) >= 0,
-                                "Unable to find " + self.expectedOutput + " in " + value)
-            sys.stdout = self.saveSysout
-        if self.saveArgv:
-            sys.argv = self.saveArgv
+        
     # -------------------------------------------------------------------------
     def holdStdout(self):
         self.saveSysout = sys.stdout
         sys.stdout = StringIO()
-    # -------------------------------------------------------------------------
-    def setArgv(self, newArgv):
-        self.saveArgv = sys.argv
-        sys.argv = newArgv
     # -------------------------------------------------------------------------
     def test01_validConfig_mockupStartApplication(self):
         """test01_validConfig_mockupStartApplication
@@ -98,9 +90,10 @@ class PokerServerRunTestCase(unittest.TestCase):
         from twisted.application import app
         configFile = os.path.join(self.tmpdir, "ourconfig.xml")
         configFH = open(configFile, "w")
-        configFH.write(settings_xml_server_open_options % { 'listen_options' : '', 
-                                                            'additional_path' : self.tmpdir})
-        self.setArgv([configFile])
+        configFH.write(settings_xml_server_open_options % { 
+            'listen_options': '', 
+            'additional_path': self.tmpdir
+        })
         configFH.close()
 
         def mockStartApplication(application, val):
@@ -119,7 +112,7 @@ class PokerServerRunTestCase(unittest.TestCase):
         defferedStillRunningMeansReactorNotStarted.addCallback(doCallback)
         
         reactor.callLater(1, lambda: defferedStillRunningMeansReactorNotStarted.callback("done"))
-        pokerServerRun()
+        pokerServerRun([configFile])
 # ------------------------------------------------------------    
 class PokerServerLoadingSSLTestCase(unittest.TestCase):
     # ----------------------------------------------------------------
@@ -147,14 +140,10 @@ class PokerServerLoadingSSLTestCase(unittest.TestCase):
         __builtins__.__import__  = realImporter
 # ------------------------------------------------------------
 def GetTestSuite():
+    # loader.methodPrefix = "_test"
     suite = unittest.TestSuite()
-    # Make sure you do the LoadingSSLTestCase FIRST.
     suite.addTest(unittest.makeSuite(PokerServerLoadingSSLTestCase))
     suite.addTest(unittest.makeSuite(PokerServerRunTestCase))
-
-    # Comment out above and use line below this when you wish to run just
-    # one test by itself (changing prefix as needed).
-#    suite.addTest(unittest.makeSuite(PokerGameHistoryTestCase, prefix = "test2"))
     return suite
 # -----------------------------------------------------------------------------
 def Run(verbose = 1):

@@ -22,15 +22,20 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 import sys, os, tempfile, shutil, exceptions, libxml2
-from cStringIO import StringIO
 from os import path
+from twisted.internet import defer
 
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
 sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
+
+# environ needed because makeService would overwrite the root_logger
+# setting if it was not set
+os.environ['LOG_LEVEL'] = '10'
 from log_history import log_history
+
 import sqlmanager
 
 from twisted.trial import unittest, runner, reporter
@@ -132,7 +137,7 @@ settings_xml_server_open_options = """<?xml version="1.0" encoding="UTF-8"?>
     root_user="%(dbroot)s" root_password="%(dbroot_password)s"
     schema="%(tests_path)s/../database/schema.sql"
     command="%(mysql_command)s" />
-  <path>%(engine_path)s/conf %(tests_path)s/conf</path>
+  <path>%(engine_path)s/conf %(tests_path)s/conf %%(additional_path)s</path>
   <users temporary="BOT.*"/>
 </server>
 """ % {
@@ -149,7 +154,7 @@ settings_xml_server_open_options = """<?xml version="1.0" encoding="UTF-8"?>
 
 # ----------------------------------------------------------------
 class PokerServerMakeServiceManholeTestCase(unittest.TestCase):
-    def destroyDb(self, *a):
+    def destroyDb(self):
         sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
@@ -157,20 +162,21 @@ class PokerServerMakeServiceManholeTestCase(unittest.TestCase):
         )
     # -------------------------------------------------------------------------
     def setUp(self):
+        log_history.reset()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         self.filename = os.path.join(self.tmpdir, "poker.server.xml")
         f = open(self.filename, "w")
         self.manhole_port = 33333
-        f.write(settings_xml_server_manhole % {'manhole_port' : self.manhole_port})
+        f.write(settings_xml_server_manhole % {'manhole_port': self.manhole_port})
         f.close()
-        argv =  [self.filename]
         self.service = makeService(self.filename)
         self.service.startService()
     # -------------------------------------------------------------------------
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
-        return self.service.stopService()
+        d = self.service.stopService()
+        return d
     # -------------------------------------------------------------------------
     def test01_manhole(self):
         self.assertEquals(self.service.namedServices.keys(), ['manhole'])
@@ -184,7 +190,7 @@ class PokerServerMakeServiceManholeTestCase(unittest.TestCase):
         self.failUnless(manhole.running)
 # ----------------------------------------------------------------
 class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
-    def destroyDb(self, *a):
+    def destroyDb(self):
         sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
@@ -192,6 +198,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         )
     # -------------------------------------------------------------------------
     def setUp(self):
+        log_history.reset()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         self.filename = os.path.join(self.tmpdir, "poker.server.xml")
@@ -202,10 +209,8 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
-        if hasattr(self, 'service'):
-            return self.service.stopService()
-        else:
-            return None
+        d = self.service.stopService() if hasattr(self, 'service') else defer.succeed(None) 
+        return d
     # -------------------------------------------------------------------------
     def createConfig(self, optionsDict):
         configFH = open(self.filename, "w")
@@ -241,7 +246,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         self.failUnless(caughtIt, "Should have caught an Exception")
     # -------------------------------------------------------------------------
     def test02_tcpSsl_hasSSL(self):
-        self.createConfig({'listen_options' : 'tcp_ssl="3234"', 'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options': 'tcp_ssl="3234"', 'additional_path': self.tmpdir})
         self.createPemFile()
 
         self.createService()
@@ -286,7 +291,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.fail("Unknown service found in multiservice list")
     # -------------------------------------------------------------------------
     def test03_tcpSsl_hasSSL_noPemFile(self):
-        self.createConfig({'listen_options' : 'tcp_ssl="3234"', 'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options': 'tcp_ssl="3234"', 'additional_path': self.tmpdir})
         caughtIt = False
         try:
             self.createService()
@@ -297,7 +302,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         self.failUnless(caughtIt, "Should have caught an Exception")
     # -------------------------------------------------------------------------
     def test04_httpSSL_hasSSL_noPemFile(self):
-        self.createConfig({'listen_options' : 'http_ssl="3234"', 'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options': 'http_ssl="3234"', 'additional_path': self.tmpdir})
         caughtIt = False
         try:
             self.createService()
@@ -308,7 +313,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         self.failUnless(caughtIt, "Should have caught an Exception")
     # -------------------------------------------------------------------------
     def test05_httpSSL_hasSSL(self):
-        self.createConfig({'listen_options' : 'http_ssl="9356"', 'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options': 'http_ssl="9356"', 'additional_path': self.tmpdir})
         self.createPemFile()
 
         self.createService()
@@ -352,7 +357,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.fail("Unknown service found in multiservice list")
     # -------------------------------------------------------------------------
     def test06_restSSL_hasSSL_noPemFile(self):
-        self.createConfig({'listen_options' : 'rest_ssl="10234"', 'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options': 'rest_ssl="10234"', 'additional_path': self.tmpdir})
         caughtIt = False
         try:
             self.createService()
@@ -363,7 +368,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         self.failUnless(caughtIt, "Should have caught an Exception")
     # -------------------------------------------------------------------------
     def test07_restSSL_hasSSL(self):
-        self.createConfig({'listen_options' : 'rest_ssl="10234"', 'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options': 'rest_ssl="10234"', 'additional_path': self.tmpdir})
         self.createPemFile()
 
         self.createService()
@@ -409,8 +414,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.fail("Unknown service found in multiservice list")
     # -------------------------------------------------------------------------
     def test08_plainREST(self):
-        self.createConfig({'listen_options' : 'rest="11944"',
-                          'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options': 'rest="11944"', 'additional_path': self.tmpdir})
         self.createService()
 
         # Only named service that we could possibly expect is manhole, and
@@ -450,7 +454,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         self.assertEquals(len(self.service.services), count)
     # -------------------------------------------------------------------------
     def test09_plainHTTP(self):
-        self.createConfig({'listen_options' : 'http="10235"', 'additional_path' : self.tmpdir})
+        self.createConfig({'listen_options': 'http="10235"', 'additional_path': self.tmpdir})
         self.createService()
 
         # Only named service that we could possibly expect is manhole, and
@@ -491,9 +495,10 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test10_everythingOn(self):
         #"19481"
-        self.createConfig({'listen_options' :
-        'http="7658" http_ssl="6675" rest="5563" rest_ssl="7765" tcp_ssl="9123" manhole="10143"',
-                          'additional_path' : self.tmpdir})
+        self.createConfig({
+            'listen_options':'http="7658" http_ssl="6675" rest="5563" rest_ssl="7765" tcp_ssl="9123" manhole="10143"',
+            'additional_path': self.tmpdir
+        })
         self.createPemFile()
         self.createService()
 
@@ -606,7 +611,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         self.assertEquals(len(self.service.services), count)
 # ----------------------------------------------------------------
 class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
-    def destroyDb(self, *a):
+    def destroyDb(self):
         sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
@@ -614,6 +619,7 @@ class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
         )
     # -------------------------------------------------------------------------
     def setUp(self):
+        log_history.reset()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
     # -------------------------------------------------------------------------
@@ -648,7 +654,7 @@ class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
     def test02_validConfig(self):
         configFile = os.path.join(self.tmpdir, "ourconfig.xml")
         configFH = open(configFile, "w")
-        configFH.write(settings_xml_server_open_options % { 'listen_options' : '', 'additional_path' : ''})
+        configFH.write(settings_xml_server_open_options % { 'listen_options': '', 'additional_path': ''})
         configFH.close()
         application =  makeApplication([configFile])
         from twisted.python.components import Componentized
@@ -656,7 +662,7 @@ class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
 # ----------------------------------------------------------------
 
 class PokerServerRunCoverageTestCase(unittest.TestCase):
-    def destroyDb(self, *a):
+    def destroyDb(self):
         sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
@@ -664,29 +670,20 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
         )
     # -------------------------------------------------------------------------
     def setUp(self):
+        log_history.reset()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
-        self.saveArgv = None
-        self.saveStdout, sys.stdout = sys.stdout, StringIO()
         
     # -------------------------------------------------------------------------
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
-        if self.saveArgv:
-            sys.argv = self.saveArgv
-        sys.stdout = self.saveStdout
         
-    # -------------------------------------------------------------------------
-    def setArgv(self, newArgv):
-        self.saveArgv = sys.argv
-        sys.argv = newArgv
     # -------------------------------------------------------------------------
     def test00_missingConfigFileGivenOnCLI(self):
         doesNotExistFile = os.path.join(self.tmpdir, "thisdoesnotexist.xml")
         caughtIt = False
         try:
-            sys.argv = [ doesNotExistFile ]
-            pokerServerRun()
+            pokerServerRun([doesNotExistFile])
             self.fail("previous line should have thrown exception")
         except exceptions.SystemExit, e:
             self.assertEquals(e.__str__(), "1")
@@ -696,27 +693,24 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
         
     def test01_missingConfigFileGivenOnCLI_forceReactorInstall(self):
         import platform
-        from twisted.internet import pollreactor
+        from twisted.internet import epollreactor
         doesNotExistFile = os.path.join(self.tmpdir, "thisdoesnotexist.xml")
         caughtIt = False
 
-        saveSystem = platform.system
+        saveSystem = None 
         if platform.system() == "Windows":
-            def fakeSystem():
-                return "NotWindowsButReallyIs"
-            platform.system = fakeSystem
+            def fakeSystem(): return "NotWindowsButReallyIs"
+            saveSystem, platform.system = platform.system, fakeSystem
 
-        reactorCalled = False
-        def reactorFake():
-            reactorCalled = True
-        saveReactor = pollreactor.install
-        pollreactor.install = reactorFake
+        reactorCalled = [False]
+        def reactorFake(): reactorCalled[0] = True
+        saveReactor, epollreactor.install = epollreactor.install, reactorFake
 
         reactorModulesSave = sys.modules['twisted.internet.reactor']
         del sys.modules['twisted.internet.reactor']
 
         try:
-            pokerServerRun()
+            pokerServerRun([doesNotExistFile])
             self.fail("previous line should have thrown exception")
         except exceptions.SystemExit, e:
             self.assertEquals(e.__str__(), "1")
@@ -725,22 +719,21 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
         
         self.assertTrue(log_history.search("installing epoll reactor"))
 
-        self.failIf(reactorCalled, "epoll reactor should have been installed")
+        self.failUnless(reactorCalled[0], "epoll reactor should have been installed")
 
-        if saveSystem:
-            platform.system = saveSystem
-        pollreactor.install = saveReactor
+        if saveSystem: platform.system = saveSystem
+        epollreactor.install = saveReactor
         sys.modules['twisted.internet.reactor'] = reactorModulesSave
 # ----------------------------------------------------------------
 
 def GetTestSuite():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test_trynow"
+    # loader.methodPrefix = "_test"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerServerMakeServiceManholeTestCase))
+    suite.addTest(loader.loadClass(PokerServerRunCoverageTestCase))
     suite.addTest(loader.loadClass(PokerServerMakeServiceCoverageTestCase))
     suite.addTest(loader.loadClass(PokerServerMakeApplicationCoverageTestCase))
-    suite.addTest(loader.loadClass(PokerServerRunCoverageTestCase))
     return suite
 
 def Run():

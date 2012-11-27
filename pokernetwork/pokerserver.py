@@ -182,7 +182,7 @@ def makeApplication(argv):
     poker_service.setServiceParent(serviceCollection)
     return application
 
-def run():
+def run(argv):
     twisted_log.startLoggingWithObserver(RefloggingObserver())
 
     if platform.system() != "Windows":
@@ -193,11 +193,11 @@ def run():
         else:
             log.debug("reactor already installed")
     from twisted.internet import reactor
-    application = makeApplication(sys.argv)
+    application = makeApplication(argv)
     app.startApplication(application, None)
     reactor.run()
 
 if __name__ == '__main__':
     # Does not need coverage since we call run directly in the tests.
-    run() # pragma: no cover
+    run(sys.argv) # pragma: no cover
     

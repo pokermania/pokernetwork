@@ -36,7 +36,7 @@ class PokerNetworkConfigTestCase(unittest.TestCase):
     
     #--------------------------------------------------------------
     def setUp(self):
-        self.Config = pokernetworkconfig.Config(['./conf'])
+        self.Config = pokernetworkconfig.Config([TESTS_PATH + '/conf'])
         shutil.copyfile(path.join(TESTS_PATH, 'conf/poker.server.xml.in'), path.join(TESTS_PATH, 'conf/poker.server.xml.tmp'))
     
     #--------------------------------------------------------------    
