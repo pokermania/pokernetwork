@@ -379,13 +379,11 @@ class PokerService(service.Service):
             c.close()
 
     def despawnTable(self, serial):
-        # assert serial in self.tables, 'Table %d doesn\'t exist!' % serial
-        self.log.inform("despawning table %d", serial)
+        self.log.inform("despawning table %d", serial, refs=[('Game', self, lambda x: serial)])
         self.tables[serial].destroy()
 
     def spawnTable(self, serial, **kw):
-        # assert serial not in self.tables, 'Table %d already exists' % serial
-        self.log.inform("spawning table %d", serial)
+        self.log.inform("spawning table %d", serial, refs=[('Game', self, lambda x: serial)])
         table = PokerTable(self, serial, kw)
         self.tables[serial] = table
         return table
