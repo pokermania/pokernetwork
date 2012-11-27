@@ -1220,7 +1220,7 @@ class PokerAvatar:
                 skin = table['skin'],
                 currency_serial = int(table['currency_serial']),
                 player_seated = int(table.get('player_seated',-1)),
-                tourney_serial = int(table['tourney_serial']),
+                tourney_serial = int(table['tourney_serial'] or 0),
                 reason = PacketPokerTable.REASON_TABLE_LIST,
             )            
             packets.append(packet)
