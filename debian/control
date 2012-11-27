@@ -35,6 +35,8 @@ Depends:
     rsync,
     python-crypto,
     python-reflogging
+Conflicts:
+    python-poker-additions (<= 2.2.3-7)
 Description: multiplayer poker server and client library
  The server deals the cards and checks the user actions using a poker
  game engine (poker-engine). It can handle all the poker variants
