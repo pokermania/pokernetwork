@@ -175,7 +175,7 @@ class PokerCashierTestCase(unittest.TestCase):
     # --------------------------------------------------------
     def tearDown(self):
         self.cashier.close()
-#        self.destroyDb()
+        self.destroyDb()
 
     # --------------------------------------------------------
     def test01_cashIn(self):
@@ -235,27 +235,33 @@ class PokerCashierTestCase(unittest.TestCase):
         self.url = 'http://fake'
 
         note1 = self.cashier.currency_client._buildNote(self.url, self.value)
-        packet1 = PacketPokerCashIn(serial = self.user1_serial,
-                                    url = note1[0],
-                                    bserial = note1[1],
-                                    name = note1[2],
-                                    value = note1[3])
+        packet1 = PacketPokerCashIn(
+            serial = self.user1_serial,
+            url = note1[0],
+            bserial = note1[1],
+            name = note1[2],
+            value = note1[3]
+        )
         d1 = self.cashier.cashIn(packet1)
 
         note2 = self.cashier.currency_client._buildNote(self.url, self.value)
-        packet2 = PacketPokerCashIn(serial = self.user2_serial,
-                                    url = note2[0],
-                                    bserial = note2[1],
-                                    name = note2[2],
-                                    value = note2[3])
+        packet2 = PacketPokerCashIn(
+            serial = self.user2_serial,
+            url = note2[0],
+            bserial = note2[1],
+            name = note2[2],
+            value = note2[3]
+        )
         d2 = self.cashier.cashIn(packet2)
 
         note3 = self.cashier.currency_client._buildNote(self.url, self.value)
-        packet3 = PacketPokerCashIn(serial = self.user3_serial,
-                                    url = note3[0],
-                                    bserial = note3[1],
-                                    name = note3[2],
-                                    value = note3[3])
+        packet3 = PacketPokerCashIn(
+            serial = self.user3_serial,
+            url = note3[0],
+            bserial = note3[1],
+            name = note3[2],
+            value = note3[3]
+        )
         d3 = self.cashier.cashIn(packet3)
 
         d = defer.DeferredList((d1, d2, d3), fireOnOneErrback = True)
@@ -311,10 +317,12 @@ class PokerCashierTestCase(unittest.TestCase):
         cursor.close()
 
     def cashOut(self, packet):
-        cashOut_packet = PacketPokerCashOut(serial = packet.serial,
-                                            url = packet.url,
-                                            value = 15,
-                                            application_data = 'appdata')
+        cashOut_packet = PacketPokerCashOut(
+            serial = packet.serial,
+            url = packet.url,
+            value = 15,
+            application_data = 'appdata'
+        )
         return self.cashier.cashOut(cashOut_packet)
     # --------------------------------------------------------
     def check03_cashOut(self, packet):
@@ -412,11 +420,13 @@ class PokerCashierTestCase(unittest.TestCase):
         dlist = []
         for serial in self.users_serial:
             note = self.cashier.currency_client._buildNote(self.url, self.value)
-            packet = PacketPokerCashIn(serial = serial,
-                                       url = note[0],
-                                       bserial = note[1],
-                                       name = note[2],
-                                       value = note[3])
+            packet = PacketPokerCashIn(
+                serial = serial,
+                url = note[0],
+                bserial = note[1],
+                name = note[2],
+                value = note[3]
+            )
             dlist.append(self.cashier.cashIn(packet))
 
         d = defer.DeferredList(dlist, fireOnOneErrback = True)
@@ -463,26 +473,24 @@ class PokerCashierTestCase(unittest.TestCase):
         pe = self.failUnlessRaises(PacketError, self.cashier.getCurrencySerial, 'http://fake')
         self.assertEquals(pe.type, PACKET_ERROR)
         self.assertEquals(pe.other_type, PACKET_POKER_CASH_IN)
-        self.assertEquals(pe.message, 
-                        'Invalid currency http://fake and user_create = no in settings.')
+        self.assertEquals(pe.message,  'Invalid currency http://fake and user_create = no in settings.')
         self.assertEquals(pe.code, PacketPokerCashIn.REFUSED)
-        self.assertEquals(log_history.get_all(),
-                          ["SELECT serial FROM currencies WHERE url = 'http://fake'"])
+        self.assertEquals(log_history.get_all(), ["SELECT serial FROM currencies WHERE url = 'http://fake'"])
     # --------------------------------------------------------
     def test08_forcecashInUpdateSafeFail(self):
         self.value = 100
         self.url = 'http://fake'
-        p = PacketPokerCashIn(serial = self.user_serial,
-                              url = self.url, currency_serial = 1L,
-                              bserial = 1, name = "%040d" % 1,
-                              value = self.value)
+        p = PacketPokerCashIn(
+            serial = self.user_serial,
+            url = self.url, currency_serial = 1L,
+            bserial = 1, name = "%040d" % 1,
+            value = self.value
+        )
         p.currency_serial = 1L
 
         gotError = False
         try:
-            self.cashier.cashInUpdateSafe("OK",
-                                      "0000000000000000000000000000000000000002",
-                                      p)
+            self.cashier.cashInUpdateSafe("OK", "0000000000000000000000000000000000000002", p)
         except PacketError, pe:
             gotError = True
             self.assertEquals(pe.code, PacketPokerCashIn.SAFE)
@@ -494,10 +502,12 @@ class PokerCashierTestCase(unittest.TestCase):
     def test09_forceCashInUpdateCounter(self):
         self.value = 100
         self.url = 'http://fake'
-        p = PacketPokerCashIn(serial = self.user_serial,
-                              url = self.url, currency_serial = 1L,
-                              bserial = 1, name = "%040d" % 1,
-                              value = self.value)
+        p = PacketPokerCashIn(
+            serial = self.user_serial,
+            url = self.url, currency_serial = 1L,
+            bserial = 1, name = "%040d" % 1,
+            value = self.value
+        )
         p.currency_serial = 1L
 
         cursor = self.db.cursor()
@@ -507,9 +517,9 @@ class PokerCashierTestCase(unittest.TestCase):
         gotError = False
         try:
             self.cashier.cashInUpdateCounter(
-                [['http://fake', 2, '0000000000000000000000000000000000000002', 100]],
-                p,
-                [('http://fake', 1, '0000000000000000000000000000000000000001', 100)])
+                [['http://fake', 2, '0000000000000000000000000000000000000002', 100]], p,
+                [('http://fake', 1, '0000000000000000000000000000000000000001', 100)]
+            )
 
         except Exception, e:
             self.assertEquals(e[0], 1146)
@@ -520,13 +530,15 @@ class PokerCashierTestCase(unittest.TestCase):
     def test10_foundCounterRowBreakingNote(self):
         self.value = 100
         self.url = 'http://fake'
-        p = PacketPokerCashIn(serial = self.user_serial,
-                              url = self.url, currency_serial = 1L,
-                              bserial = 1, name = "%040d" % 1,
-                              value = self.value)
+        p = PacketPokerCashIn(
+            serial = self.user_serial,
+            url = self.url, currency_serial = 1L,
+            bserial = 1, name = "%040d" % 1,
+            value = self.value
+        )
         p.currency_serial = 1L
         cursor = self.db.cursor()
-        cursor.execute("insert into counter(transaction_id, user_serial, currency_serial, serial, name, value) values('foo', %d, %d, %d, '%040d', %d)" % (self.user_serial, 1L, 1, 1, self.value))
+        cursor.execute("INSERT INTO counter(transaction_id, user_serial, currency_serial, serial, name, value) VALUES ('foo', %d, %d, %d, '%040d', %d)" % (self.user_serial, 1L, 1, 1, self.value))
         cursor.close()
         d = self.cashier.cashInValidateNote(1L, p)
         def check_validateNoteFailure(reason):
@@ -544,14 +556,16 @@ class PokerCashierTestCase(unittest.TestCase):
     def test11_duplicateSafeEntriesForCashInValidateNote(self):
         self.value = 100
         self.url = 'http://fake'
-        p = PacketPokerCashIn(serial = self.user_serial,
-                              url = self.url, currency_serial = 1L,
-                              bserial = 1, name = "%040d" % 1,
-                              value = self.value)
+        p = PacketPokerCashIn(
+            serial = self.user_serial,
+            url = self.url, currency_serial = 1L,
+            bserial = 1, name = "%040d" % 1,
+            value = self.value
+        )
         p.currency_serial = 1L
         cursor = self.db.cursor()
-        cursor.execute("insert into safe(currency_serial, serial, name, value) values(%d, %d, '%040d', %d)" % (1L, 1, 1, self.value))
-        cursor.execute("insert into safe(currency_serial, serial, name, value) values(%d, %d, '%040d', %d)" % (1L, 2, 1, self.value))
+        cursor.execute("INSERT INTO safe(currency_serial, serial, name, value) VALUES (%d, %d, '%040d', %d)" % (1L, 1, 1, self.value))
+        cursor.execute("INSERT INTO safe(currency_serial, serial, name, value) VALUES (%d, %d, '%040d', %d)" % (1L, 2, 1, self.value))
         cursor.close()
         gotError = False
         try:
@@ -587,11 +601,11 @@ class PokerCashierTestCase(unittest.TestCase):
         self.value = 100
         self.url = 'http://fake'
         cursor = self.db.cursor()
-        cursor.execute("insert into safe(currency_serial, serial, name, value) values(%d, %d, '%040d', %d)" % (1L, 1, 1, self.value))
+        cursor.execute("INSERT INTO safe(currency_serial, serial, name, value) VALUES (%d, %d, '%040d', %d)" % (1L, 1, 1, self.value))
 
-        cursor.execute("insert into counter(transaction_id, user_serial, currency_serial, serial, name, value, status) values(%d, %d, %d, %d, '%040d', %d, '%s')" % (2, 2, 1, 2L, 2, self.value, 'n'))
-        cursor.execute("insert into counter(transaction_id, user_serial, currency_serial, serial, name, value, status) values(%d, %d, %d, %d, '%040d', %d, '%s')" % (1, 1, 1, 1L, 1, self.value, 'c'))
-        cursor.execute("insert into currencies(url, serial) values('%s', %d)" % ('http://fake', 1))
+        cursor.execute("INSERT INTO counter(transaction_id, user_serial, currency_serial, serial, name, value, status) VALUES (%d, %d, %d, %d, '%040d', %d, '%s')" % (2, 2, 1, 2L, 2, self.value, 'n'))
+        cursor.execute("INSERT INTO counter(transaction_id, user_serial, currency_serial, serial, name, value, status) VALUES (%d, %d, %d, %d, '%040d', %d, '%s')" % (1, 1, 1, 1L, 1, self.value, 'c'))
+        cursor.execute("INSERT INTO currencies(url, serial) VALUES ('%s', %d)" % ('http://fake', 1))
         cursor.close()
         self.closuredCount = 0
         def dummyCashOutCollect(currency_serial, trans_id):
@@ -599,9 +613,11 @@ class PokerCashierTestCase(unittest.TestCase):
             if self.closuredCount == 1:
                 return None
             else:
-                return PacketPokerCashOut(serial = 5, url = 'http://fake',
-                                          bserial = 5, name = "5", value = 5,
-                                          application_data = "dummy")
+                return PacketPokerCashOut(
+                    serial = 5, url = 'http://fake',
+                    bserial = 5, name = "5", value = 5,
+                    application_data = "dummy"
+                )
         origCashOutCollect = self.cashier.cashOutCollect
         self.cashier.cashOutCollect = dummyCashOutCollect
 
@@ -613,10 +629,8 @@ class PokerCashierTestCase(unittest.TestCase):
             gotError = True
             self.assertEquals(pe.other_type, PACKET_POKER_CASH_OUT)
             self.assertEquals(pe.code, PacketPokerCashOut.SAFE)
-            self.assertEqual(pe.message.find("UPDATE user2money SET amount") >= 0,
-                             True)
-            self.assertEqual(pe.message.find("affected 0 records instead of 1") >= 0,
-                             True)
+            self.assertEqual(pe.message.find("UPDATE user2money SET amount") >= 0, True)
+            self.assertEqual(pe.message.find("affected 0 records instead of 1") >= 0, True)
         self.assertEquals(gotError, True)
         self.cashier.cashOutCollect = origCashOutCollect
         return True
@@ -1187,6 +1201,7 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
                     lockSelf.acquireCounts[name] = 1
                 return "ACQUIRED %s: %d" % (name, lockSelf.acquireCounts[name])
 
+        self.lock_original = pokercashier.PokerLock
         pokercashier.PokerLock = MockLock
         self.settings = pokernetworkconfig.Config([])
         self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
@@ -1194,7 +1209,7 @@ class PokerCashierLockUnlockTestCase(unittest.TestCase):
         self.cashier = pokercashier.PokerCashier(self.settings)
     # --------------------------------------------------------
     def tearDown(self):
-        pass
+        pokercashier.PokerLock = self.lock_original
     # --------------------------------------------------------
     def test01_unlockNonExistent(self):
         """test01_unlockNonExistent
@@ -1312,7 +1327,7 @@ def GetTestedModule():
 
 def GetTestSuite():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test11"
+    # loader.methodPrefix = "_test"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(PokerCashierTestCase))
     suite.addTest(loader.loadClass(PokerCashierFakeDBTestCase))
