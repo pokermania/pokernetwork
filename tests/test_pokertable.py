@@ -1421,7 +1421,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         return d
     # -------------------------------------------------------------------
     def test41_update_exception(self):
-        """Test if exception caught in update and hitory reduced"""
+        """Test if exception caught in update and history reduced"""
         self.table.history_index = -1
         def failure(history_tail):
             raise Exception("FAIL")
@@ -1431,7 +1431,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.table.update()
         except Exception, e:
             exception_occurred = True
-            self.assertEquals("FAIL", e.message)
+            self.assertEquals("FAIL", str(e))
         self.assertEquals(0, self.table.history_index)
         self.assertEquals(True, exception_occurred)
     # -------------------------------------------------------------------

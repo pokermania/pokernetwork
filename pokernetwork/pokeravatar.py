@@ -30,7 +30,6 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 
 from string import join
-import sets
 
 from twisted.internet import reactor, defer
 from traceback import format_exc
@@ -58,7 +57,7 @@ class PokerAvatar:
         ])
         self.protocol = None
         self.localeFunc = None
-        self.roles = sets.Set()
+        self.roles = set()
         self.service = service
         self.tables = {}
         self.user = User()
@@ -214,7 +213,7 @@ class PokerAvatar:
                 auth_args = (packet.name,packet.password)
             elif packet.type == PACKET_AUTH:
                 auth_args = (packet.auth,)
-            ( info, reason ) = self.service.auth(packet.type,auth_args,self.roles)
+            info, reason  = self.service.auth(packet.type, auth_args, self.roles)
             code = 0
         else:
             self.log.debug("auth: failure %s", status)

@@ -86,7 +86,7 @@ class CurrencyClientTestCase(unittest.TestCase):
         ( scheme, netloc, path, parameters, query, fragement ) = urlparse(url)
         cmd = "cat <<'EOF' | QUERY_STRING='%s' /usr/bin/env php" % (query,)
         cmd += """
-<?
+<?php
   ini_set('include_path', '%(tests_path)s/../pokerweb/pages:' . ini_get('include_path'));
   $GLOBALS['currency_db_base'] = 'currencytest';
   $GLOBALS['currency_db_host'] = '%(dbhost)s';

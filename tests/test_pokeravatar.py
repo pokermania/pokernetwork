@@ -1421,11 +1421,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 'output': "%sattempt to bring money%s" % (messageStart, forPlayerByPlayer),
                 'packet': PacketPokerBuyIn(serial=someoneElseSerial, amount=1000, game_id=gameId)
             },
-            'table_picker': {
-                'output': "%sattempt to run table picker%s" % (messageStart, forPlayerByPlayer),
-                'err_type': PACKET_POKER_ERROR,
-                'packet': PacketPokerTablePicker(serial=someoneElseSerial) 
-            },
             'rebuy': {
                 'output': "%sattempt to rebuy%s" % (messageStart, forPlayerByPlayer),
                 'packet': PacketPokerRebuy(serial=someoneElseSerial, amount=1000, game_id=gameId)

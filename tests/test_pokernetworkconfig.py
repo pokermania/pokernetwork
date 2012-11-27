@@ -36,40 +36,32 @@ class PokerNetworkConfigTestCase(unittest.TestCase):
     
     #--------------------------------------------------------------
     def setUp(self):
-        self.Config = pokernetworkconfig.Config(['.'])
-        shutil.copyfile(path.join(TESTS_PATH, 'conf/poker.server.xml.in'), 'poker.server.xml.in')
+        self.Config = pokernetworkconfig.Config(['./conf'])
+        shutil.copyfile(path.join(TESTS_PATH, 'conf/poker.server.xml.in'), path.join(TESTS_PATH, 'conf/poker.server.xml.tmp'))
     
     #--------------------------------------------------------------    
     def tearDown(self):
         del self.Config
-        os.remove('poker.server.xml.in')
+        os.remove(path.join(TESTS_PATH, 'conf/poker.server.xml.tmp'))
         
     #--------------------------------------------------------------    
     def test_loadFromString(self):
 
-        self.Config.loadFromString("""<?xml version="1.0" encoding="UTF-8"?>
-<server>
-</server>
-""")
-            
+        self.Config.loadFromString("""<?xml version="1.0" encoding="UTF-8"?><server></server>""")
         self.assertNotEqual(self.Config.header, None)
 
     #--------------------------------------------------------------    
     def test_load(self):
-        self.assertEqual(True, self.Config.load("poker.server.xml.in"))
+        self.assertEqual(True, self.Config.load("poker.server.xml.tmp"))
         pokernetworkconfig.Config.upgrades_repository = '@srcdir@'
-        self.assertEqual(True, self.Config.load("poker.server.xml.in"))
+        self.assertEqual(True, self.Config.load("poker.server.xml.tmp"))
         self.Config.checkVersion = lambda field, version, repository: False
-        self.assertEqual(False, self.Config.load("poker.server.xml.in"))
+        self.assertEqual(False, self.Config.load("poker.server.xml.tmp"))
         
     #--------------------------------------------------------------    
     def test_notify(self):
-        def f(config):
-            pass
-        self.Config.loadFromString("""<?xml version="1.0" encoding="UTF-8"?>
-<server name='value'>
-</server>
-""")
+        def f(config): pass
+        self.Config.loadFromString("""<?xml version="1.0" encoding="UTF-8"?><server name='value'></server>""")
         self.Config.notifyUpdates(f)
         self.Config.denotifyUpdates(f)
         self.Config.notifyUpdates(f)

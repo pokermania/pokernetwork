@@ -48,7 +48,7 @@ from pokerpackets.packets import Packet
 from pokerpackets.networkpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
-<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" auto_create_account="yes">
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
@@ -80,7 +80,7 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 }
 
 settings_xml_proxy = """<?xml version="1.0" encoding="UTF-8"?>
-<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
+<server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" auto_create_account="yes">
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <listen tcp="19480" />
@@ -157,10 +157,10 @@ class ProxyTestCase(unittest.TestCase):
         return d
     # --------------------------------------------------------------
     def tearDown(self):
-        d = defer.DeferredList((
+        d = defer.DeferredList([
             self.tearDownServer(),
             self.tearDownProxy()
-            ))
+        ])
         d.addCallback(self.destroyDb)
         d.addCallback(lambda x: reactor.disconnectAll())
         return d
@@ -280,7 +280,7 @@ class ProxyTestCase(unittest.TestCase):
             "start_time = %(stime)d, "
             "description_long = 'no description long', "
             "name = 'regularX', "
-            "variant = 'holem', "
+            "variant = 'holdem', "
             "betting_structure = '1-2_20-200_no-limit', "
             "currency_serial = 1" % {
                 'rh_serial': self.server_service.resthost_serial,
@@ -346,7 +346,7 @@ class ProxyTestCase(unittest.TestCase):
         def login(result):
             d3 = client.getPage(
                 "http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
-                postdata = '{"type":"PacketLogin","user":"user1","password":"password"}'
+                postdata = '{"type":"PacketLogin", "name":"user1", "password":"password1"}'
             )
             def checkLogin(result):
                 global serial
@@ -465,7 +465,7 @@ class ProxyFilterTestCase(unittest.TestCase):
 
 def GetTestSuite():
     loader = runner.TestLoader()
-#    loader.methodPrefix = "test06"
+    # loader.methodPrefix = "_test"
     suite = loader.suiteFactory()
     suite.addTest(loader.loadClass(ProxyTestCase))
     suite.addTest(loader.loadClass(ProxyFilterTestCase))
