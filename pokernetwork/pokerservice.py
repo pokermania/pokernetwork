@@ -388,6 +388,29 @@ class PokerService(service.Service):
         self.tables[serial] = table
         return table
 
+    def createTable(self, owner, description):
+        c = self.db.cursor()
+        try:
+            c.execute(
+                """ INSERT INTO tables
+                    SET
+                        resthost_serial = %s,
+                        tourney_serial = %s
+                """,
+                (
+                    self.resthost_serial,
+                    description.get('tourney_serial')
+                )
+            )
+            if c.rowcount != 1:
+                self.log.error("createTable: insert failed\n%s", c._executed)
+                return None
+            table = self.spawnTable(c.lastrowid, **description)
+            table = owner
+            return table
+        finally:
+            c.close()
+
     def stopServiceFinish(self):
         self.monitors = []
         if self.cashier: self.cashier.close()
@@ -3036,42 +3059,6 @@ class PokerService(service.Service):
                 break
 
         return bestTable
-
-    def createTable(self, owner, description):
-        tourney_serial = description['tourney'].serial if 'tourney' in description else 0
-
-        cursor = self.db.cursor()
-        sql = "INSERT INTO pokertables ( resthost_serial, seats, player_timeout, muck_timeout, currency_serial, name, variant, betting_structure, skin, tourney_serial ) VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, %s, %s )"
-        params = (
-            self.resthost_serial,
-            description['seats'],
-            description.get('player_timeout', 60),
-            description.get('muck_timeout', 5),
-            description['currency_serial'],
-            description['name'],
-            description['variant'],
-            description['betting_structure'],
-            description.get('skin', 'default'),
-            tourney_serial
-        )
-        cursor.execute(sql,params)
-        self.log.debug("createTable: %s", cursor._executed)
-        if cursor.rowcount != 1:
-            self.log.error("inserted %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
-            return None
-            
-        insert_id = cursor.lastrowid
-        cursor.execute("REPLACE INTO route VALUES (%s,%s,%s,%s)", ( insert_id, tourney_serial, int(seconds()), self.resthost_serial))
-        cursor.close()
-
-        table = PokerTable(self, insert_id, description)
-        table.owner = owner
-
-        self.tables[insert_id] = table
-
-        self.log.debug("table created : %s", table.game.name)
-
-        return table
 
     def cleanupCrashedTables(self):
         c = self.db.cursor()
