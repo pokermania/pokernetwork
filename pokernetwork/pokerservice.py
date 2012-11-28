@@ -1422,12 +1422,6 @@ class PokerService(service.Service):
                 code = PacketPokerGetTourneyPlayerStats.DOES_NOT_EXIST,
                 message = "Tournament %d does not exist" % tourney_serial
             )
-        elif user_serial not in tourney.players:
-            return PacketError(
-                other_type = PACKET_POKER_GET_TOURNEY_PLAYER_STATS,
-                code = PacketPokerGetTourneyPlayerStats.NOT_PARTICIPATING,
-                message = "User %d not participating in tourney %d." % (user_serial,tourney_serial)
-            )
         stats = tourney.stats(user_serial)
         return PacketPokerTourneyPlayerStats(**stats)
     
