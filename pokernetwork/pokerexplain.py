@@ -705,8 +705,10 @@ class PokerExplain:
     moveBet2Player = moveBet2Pot
         
     def updateBetLimit(self, game):
-        if ( self.getSerial() not in game.serialsPlaying() or
-             game.isBlindAnteRound() ):
+        if (
+            self.getSerial() not in game.serialsPlaying() or
+            game.isBlindAnteRound() 
+        ):
             return []
             
         packets = []

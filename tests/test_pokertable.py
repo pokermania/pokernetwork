@@ -3003,8 +3003,118 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         d1.addCallback(firstGame)
         
         return d1
+    
+    def test61_incongruentMoney(self):
+        self.table = table = self.table9
+        game = table.game
+        self.service.has_ladder = False
+        table.factory.buyInPlayer = lambda *a,**kw: table.game.maxBuyIn()
         
+        def addPlayerAndReorder(self, *a,**kw):
+            was_added = self.addPlayerOrig(*a,**kw)
+            if was_added:
+                self.serial2player = OrderedDict(sorted(self.serial2player.items(),key=lambda (k,v):od_order.index(k)))
+            return was_added
         
+        game.addPlayerOrig = game.addPlayer
+        game.addPlayer = lambda *a,**kw: addPlayerAndReorder(game,*a,**kw) 
+        
+        clients_all = {}
+        clients = {}
+                
+        s_sit = [82247, 58255, 117776, 55572, 105398]
+        s_all = [105398, 114305, 58255, 82247, 55572, 117776, 102475, 29047]
+        
+        s_seats = [0,1,2,3,4,5,6,7,8]
+        od_order = [82247, 58255, 117776, 55572, 105398, 114305, 102475, 29047]
+        
+        def joinAndSeat(serial, should_sit, pos, explain=True):
+            clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            if explain: client.setExplain(PacketPokerExplain.REST)
+            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
+            table.game.noAutoBlindAnte(serial)
+            if should_sit:
+                clients[serial] = client
+                table.sitPlayer(client, serial)
+            table.update()
+
+        def joinAgain(serial, pos, explain=True):
+            clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            if explain: client.setExplain(PacketPokerExplain.REST)
+            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
+            
+        for pos,serial in enumerate(s_all):
+            joinAndSeat(serial,serial in s_sit,s_seats[pos])
+
+        #
+        # setup game (forced_dealer does not work because of first_turn == False)
+        table.game.dealer_seat = 4
+        table.game.first_turn = False
+        #
+        # put missed_blind on None, if not all missed_blinds are reset
+        for serial in s_all:
+            table.game.serial2player[serial].missed_blind = None
+        
+        game.serial2player[82247].money *= 2
+        game.serial2player[29047].money *= 3
+        game.serial2player[114305].money *= 4
+        
+        table.game.serial2player[114305].missed_blind = 'big'
+        table.game.serial2player[102475].missed_blind = 'small'
+        table.game.serial2player[29047].missed_blind = 'small'
+                
+        def firstGame(packet):
+            # seated
+            # 
+            # 
+            # players 29047,114305 sit in again
+            table.seatPlayer(clients_all[29047], 29047, -1)
+            table.sitPlayer(clients_all[29047], 29047)
+            table.seatPlayer(clients_all[114305], 114305, -1)
+            table.sitPlayer(clients_all[114305], 114305)
+            
+            # blinds
+            game.blind(105398); table.update()
+            game.blind(58255); table.update()
+            game.blind(29047); table.update()
+            game.blind(114305); table.update()
+            log_history.reset()
+            
+            # player 102475 leaves
+            table.leavePlayer(clients_all[102475], 102475); table.update()
+            joinAndSeat(102475, True, -1); table.update()
+            
+            game.check(114305); table.update()
+            game.check(58255); table.update()
+            game.callNraise(82247, game.serial2player[82247].money); table.update()
+            game.fold(55572); table.update()
+            game.fold(117776); table.update()
+            game.call(29047); table.update()
+            game.fold(105398); table.update()
+            game.call(114305); table.update()
+            game.fold(58255); table.update()
+            
+            game.callNraise(29047, game.serial2player[29047].money); table.update()
+            game.call(114305); table.update()
+            game.fold(82247); table.update()
+            
+            for serial, client in clients_all.iteritems():
+                ex_money_map = client.explain.games.getGame(game.id).moneyMap()
+                self.assertEquals(game.moneyMap(), ex_money_map, 'moneyMap not equal for serial %d' % serial)
+            
+                    
+        log_history.reset()
+        table.scheduleAutoDeal()
+        d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)
+        d1.addCallback(firstGame)
+        
+        return d1
         
 # --------------------------------------------------------------------------------
 
