@@ -488,6 +488,14 @@ class PokerTable:
                     for avatar in self.avatar_collection.get(serial)[:]:
                         self.seated2observer(avatar, serial)
 
+            elif event_type == "finish":
+                # despawn this table if no avatars active
+                if not len(self.avatar_collection.values()) and not self.observers:
+                    self.factory.despawnTable(self.game.id)
+                else:
+                    self.log.crit("delayedActions: %d, %d", len(self.avatar_collection.values()), len(self.observers))
+
+
     def cashGame_kickPlayerSittingOutTooLong(self, historyToSearch):
         if self.tourney: return
         handIsFinished = False
@@ -1123,8 +1131,6 @@ class PokerTable:
         else:
             self.avatar_collection.remove(serial, avatar)
         del avatar.tables[self.game.id]
-        if not len(self.avatar_collection.values()) and not self.observers:
-            self.factory.despawnTable(self.game.id)
 
     def buyInPlayer(self, avatar, amount):
         if not self.isSeated(avatar):
