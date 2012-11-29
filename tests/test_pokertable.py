@@ -3115,7 +3115,83 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         d1.addCallback(firstGame)
         
         return d1
+    
+    def test62_doubleTheMoney(self):
+
+        self.table = table = self.table9
+        game = table.game
+        self.service.has_ladder = False
+        table.factory.buyInPlayer = lambda *a,**kw: table.game.buyIn()
         
+        def addPlayerAndReorder(self, *a,**kw):
+            was_added = self.addPlayerOrig(*a,**kw)
+            if was_added:
+                self.serial2player = OrderedDict(sorted(self.serial2player.items(),key=lambda (k,v):od_order.index(k)))
+            return was_added
+        
+        game.addPlayerOrig = game.addPlayer
+        game.addPlayer = lambda *a,**kw: addPlayerAndReorder(game,*a,**kw) 
+        
+        clients_all = {}
+        clients = {}
+        
+        s_sit = [158160, 11905, 155177, 65163, 60029, 30640, 79069]
+        s_all = [158428, 11905, 155177, 65163, 158160, 79069, 60029, 30640]
+        
+        s_seats = [0,1,2,3,4,5,6,7,8]
+        od_order = [158428, 11905, 155177, 65163, 158160, 79069, 60029, 30640]
+        
+        def joinAndSeat(serial, should_sit, pos, explain=True):
+            clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            if explain: client.setExplain(PacketPokerExplain.REST)
+            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
+            if table.seatPlayer(client, serial, pos):
+                self.assertTrue(table.buyInPlayer(client, game.maxBuyIn()))
+                table.game.noAutoBlindAnte(serial)
+                if should_sit:
+                    clients[serial] = client
+                    table.sitPlayer(client, serial)
+            table.update()
+            
+            
+        for pos,serial in enumerate(s_all):
+            joinAndSeat(serial,serial in s_sit,s_seats[pos])
+            
+        #
+        # setup game (forced_dealer does not work because of first_turn == False)
+        table.game.dealer_seat = 0
+        table.game.first_turn = False
+        #
+        # put missed_blind on None, if not all missed_blinds are reset
+        for serial in s_all:
+            table.game.serial2player[serial].missed_blind = None
+        
+        # player is broke
+        game.serial2player[158428].money = 0
+        
+        def firstGame(packet):
+            # player rebuys
+            table.rebuyPlayerRequest(clients_all[158428], game.buyIn()); table.update()
+            table.sitPlayer(clients_all[158428], 158428); table.update()
+            
+            # players join later
+            s_all.append(73780); od_order.append(73780)
+            joinAndSeat(73780, True, -1); self.assertFalse(game.serial2player[73780].sit_out_next_turn)
+            joinAndSeat(79069, False, -1)
+            
+            for serial, c in clients_all.iteritems():
+                self.assertEqual(
+                    c.explain.games.getGame(game.id).serial2player[158428].money, 
+                    game.serial2player[158428].money,
+                    'Explain %d has an inconsistent amount of money' % serial
+                )
+        
+        table.scheduleAutoDeal()
+        d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)
+        d1.addCallback(firstGame)
+        
+        return d1
 # --------------------------------------------------------------------------------
 
 def GetTestSuite():

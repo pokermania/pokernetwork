@@ -1324,7 +1324,7 @@ class PokerAvatar:
                     game_id = game.id,
                     serial = player.serial,
                     bet = nochips,
-                    money = player.money
+                    money = player.money - player.rebuy_given
                 ))
                 if game.isSit(player.serial):
                     self.sendPacketVerbose(PacketPokerSit(
