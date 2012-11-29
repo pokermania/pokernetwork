@@ -190,9 +190,6 @@ class PokerExplain:
         return packet
         
     def gameEvent(self, game_id, game_type, *args):
-        #FIXME! is this information needed?
-        #self.log.debug("gameEvent: game_id = %d, type = %s, args = %s", game_id, game_type, args)
-
         forward_packets = self.forward_packets
         if not forward_packets:
             self.log.inform("gameEvent: called outside _handleConnection for game %d, type %s, ignored", game_id, game_type)
@@ -275,9 +272,6 @@ class PokerExplain:
         player.getUserData()['timeout'] = None
     
     def explain(self, packet):
-        #FIXME! is this information needed?
-        #self.log.debug("%s", packet)
-        
         self.forward_packets = [ packet ]
         forward_packets = self.forward_packets
         
