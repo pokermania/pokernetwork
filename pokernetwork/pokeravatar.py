@@ -642,14 +642,13 @@ class PokerAvatar:
             if self.getSerial() == packet.serial:
                     error_code = self.service.tourneyRebuyRequest(packet)
                     if error_code != packet.OK:
-                        self.sendPacketVerbose(PacketPokerError(
-                            game_id = game.id,
+                        self.sendPacketVerbose(PacketError(
                             serial = packet.serial,
                             other_type = PACKET_POKER_TOURNEY_REBUY,
                             code = error_code
                         ))
-                else:
-                    self.log.inform("attempt to rebuy for player %d by player %d", packet.serial, self.getSerial())
+            else:
+                self.log.inform("attempt to rebuy for player %d by player %d", packet.serial, self.getSerial())
 
             
 

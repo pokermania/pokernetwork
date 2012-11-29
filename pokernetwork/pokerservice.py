@@ -1660,20 +1660,35 @@ class PokerService(service.Service):
                 avatar.sendPacketVerbose(packet)
 
 
-    def tourneyRebuy(self, tourney, serial, game_id, amount):
+    def tourneyRebuy(self, tournament, serial, table_id, player_chips, tourney_chips):
         """decrements the bank money of a player
         amount is the number of chips which the player has to pay to get a new set of tourney chips
 
         returns a tuple (error_flag, reason)
         if error is False, the reason indicates the problem
         """
-        amount = self.buyInPlayer(serial, game_id, currency_serial, amount)
+        cursor = self.db.cursor()
+        try:
+            currency_serial = tournament.prize_currency
+            cursor.execute(
+               "UPDATE user2money,user2table SET " \
+               "user2table.money = user2table.money + %s, " \
+               "user2money.amount = user2money.amount - %s " \
+               "WHERE user2money.user_serial = %s " \
+               "AND user2money.currency_serial = %s " \
+               "AND user2table.user_serial = %s " \
+               "AND user2table.table_serial = %s " \
+               "AND user2money.amount >= %s",
+               (tourney_chips, player_chips, serial, currency_serial, 
+                serial, table_id, player_chips)
+            )
 
-        if amount == 0:
-            self.log.warn("player %d  has not enough money, tourney rebuy denied", serial)
-            return (False, "money")
+            if cursor.rowcount != 2:
+                return 0
 
-        return (True, None)
+            return tourney_chips
+        finally:
+            cursor.close();
 
     def tourneyRebuyRequest(self, packet):
         """handle the tourney rebuy request
@@ -1685,21 +1700,22 @@ class PokerService(service.Service):
             self.log.warn("tourney_serial %d does not exist" % packet.tourney_serial)
             return packet.OTHER_ERROR
 
-        success, reason = tourney.rebuy(packet)
+        success, game_id, reason = tourney.rebuy(packet.serial)
 
         if success:
+            game = tourney.id2game[game_id]
             self.broadcast(PacketPokerRebuy(
-                game_id = self.game.id,
-                serial = serial,
-                amount = amount
+                game_id = game_id,
+                serial = packet.serial,
+                amount = game.buy_in
             ))
             return packet.OK
         else:
             return {
-                "user": packet.REBUY_LIMIT_EXEEDED,
-                "timeout":packet.REBUY_TIMEOUT_EXEEDED,
-                "money":packet.NOT_ENOUGH_MONEY,
-                "other": packet.OTHER_ERROR,
+                TOURNEY_REBUY_ERROR_USER: packet.REBUY_LIMIT_EXEEDED,
+                TOURNEY_REBUY_ERROR_TIMEOUT: packet.REBUY_TIMEOUT_EXEEDED,
+                TOURNEY_REBUY_ERROR_MONEY: packet.NOT_ENOUGH_MONEY,
+                TOURNEY_REBUY_ERROR_OTHER: packet.OTHER_ERROR,
             }.get(reason, packet.OTHER_ERROR)
 
 

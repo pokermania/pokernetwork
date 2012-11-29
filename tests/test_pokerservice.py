@@ -3282,6 +3282,105 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
         self.assertEqual(1, cursor.rowcount, 'user %d registered' % self.user1_serial)
         cursor.close()
 
+class TourneyRebuyTestCase(PokerServiceTestCaseBase):
+    def setUp(self, settingsFile=settings_xml):
+        PokerServiceTestCaseBase.setUp(self, settingsFile)
+        self.createTourneysSchedules()
+
+    class GameMock:
+        buy_in = 10;
+    class Tournament:
+        def __init__(self, serial, reason=""):
+            self.reason = reason
+            self.serial = serial
+            self.id2game = {13:TourneyRebuyTestCase.GameMock()}
+            self.prize_currency = 1
+
+        def rebuy(self, packet):
+            if self.reason:
+                return False, None, self.reason
+            else:
+                return True, 13, None
+
+    class ClientMockup:
+        def __init__(self, serial, testObject):
+            self.serial = serial
+#            self.tableJoined = None
+            self.packets = []
+            self.testObject = testObject
+            self.expectedReason = ""
+
+        def join(self, table, reason = ""):
+            self.tableJoined = table
+            self.assertEquals(self.execptedReason, reason)
+
+        def sendPacketVerbose(self, packet):
+            self.packets.append(packet)
+
+    def test_rebuy_request(self):
+        self.service.startService()
+        self.createUsers()
+        client1 = self.ClientMockup(self.user1_serial, self)
+        self.service.avatar_collection.add(self.user1_serial, client1)
+
+
+        bak = self.service.tourneys
+        self.serivce = {}
+        self.service.tourneys[1] = self.Tournament(serial=1, reason="")
+        self.service.tourneys[2] = self.Tournament(serial=2, reason=pokertournament.TOURNEY_REBUY_ERROR_USER)
+        self.service.tourneys[3] = self.Tournament(serial=3, reason=pokertournament.TOURNEY_REBUY_ERROR_TIMEOUT)
+        self.service.tourneys[4] = self.Tournament(serial=4, reason=pokertournament.TOURNEY_REBUY_ERROR_MONEY)
+        self.service.tourneys[5] = self.Tournament(serial=5, reason=pokertournament.TOURNEY_REBUY_ERROR_OTHER)
+
+        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=1)), PacketPokerTourneyRebuy.OK)
+        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=2)), PacketPokerTourneyRebuy.REBUY_LIMIT_EXEEDED)
+        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=3)), PacketPokerTourneyRebuy.REBUY_TIMEOUT_EXEEDED)
+        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=4)), PacketPokerTourneyRebuy.NOT_ENOUGH_MONEY)
+        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=5)), PacketPokerTourneyRebuy.OTHER_ERROR)
+
+
+    def test_rebuy(self):
+        self.service.startService()
+        cursor = self.service.db.cursor()
+        cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) values (1337807,1,400)")
+        cursor.execute("INSERT INTO user2table VALUES (1337807,2,10,0)")
+        tournament = self.Tournament(serial=1)
+
+        # The expected money is added on the table
+        self.assertEqual(self.service.tourneyRebuy(tournament, serial=1337807, table_id=2, player_chips=300, tourney_chips=700), 700)
+        cursor.execute("SELECT amount FROM user2money WHERE user_serial = 1337807")
+        self.assertEqual(cursor.fetchone()[0], 100)
+        cursor.execute("SELECT money FROM user2table WHERE user_serial = 1337807")
+        self.assertEqual(cursor.fetchone()[0], 710)
+
+        # the second run should fail because we have not enough money left.
+        self.assertEqual(self.service.tourneyRebuy(tournament, serial=1337807, table_id=2, player_chips=300, tourney_chips=700), 0)
+        cursor.execute("SELECT amount FROM user2money WHERE user_serial = 1337807")
+        self.assertEqual(cursor.fetchone()[0], 100)
+        cursor.execute("SELECT money FROM user2table WHERE user_serial = 1337807")
+        self.assertEqual(cursor.fetchone()[0], 710)
+
+        cursor.execute("DELETE FROM user2money WHERE user_serial = 1337807")
+        cursor.execute("DELETE FROM user2table WHERE user_serial = 1337807")
+        cursor.close()
+
+    def test_rebuy_fail(self):
+        self.service.startService()
+        cursor = self.service.db.cursor()
+
+        cursor.execute("DELETE FROM user2money WHERE user_serial = 1337807")
+        cursor.execute("INSERT INTO user2table VALUES (1337807,2,10,0)")
+
+        tournament = self.Tournament(serial=1)
+
+        self.assertEqual(self.service.tourneyRebuy(tournament, serial=1337807, table_id=2, player_chips=300, tourney_chips=700), 0)
+        cursor.execute("SELECT money FROM user2table WHERE user_serial = 1337807")
+        self.assertEqual(cursor.fetchone()[0], 10)
+        
+        cursor.execute("DELETE FROM user2table WHERE user_serial = 1337807")
+        cursor.close()
+        
+
 class TourneyFinishedTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
         PokerServiceTestCaseBase.setUp(self, settingsFile)
