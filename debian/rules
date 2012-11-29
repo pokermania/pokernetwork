@@ -13,5 +13,5 @@ build:
 %:
 	dh $@ --buildsystem=python_distutils --with=python2
 
-#override_dh_auto_test:
-#	python setup.py test -p
+override_dh_auto_test:
+	python setup.py test
