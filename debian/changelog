@@ -1,3 +1,20 @@
+poker-network (2.2.3-11) pokermania; urgency=low
+
+  * 53a93a3 double money test added and fixed, refs #7582
+  * b955fb0 added pokergame.moneyMapWithBets, adds bet and dead to dict, refs #7582
+  * 31e9b21 tourney stats are possible even if not participating, refs #7556
+  * a39a57f all tests are working properly
+  * d589b8d added conflicts for lower additions version because of badwords
+  * 439a2c4 refill does not delete rake and points, refs #7472
+  * 382479a consistent autoplayer behavior, refs #7503
+  * ab33c45 use start-stop-daemon with --retry again, needed for blocking stop
+  * 86262e9 tourney register user input is now .inform, refs #7471
+  * 7534dc8 bugous processing hand message changed to debug, refs #7470
+  * 282fce0 remove all database migrations prior to 2.0.0
+  * d047289 removed mysql session management, which wasn't used anyway, fixes #7473
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Thu, 29 Nov 2012 16:00:00 +0200
+
 poker-network (2.2.3-10) pokermania; urgency=low
 
   * ec2513f added badwords to pokernetwork
