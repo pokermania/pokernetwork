@@ -2482,7 +2482,7 @@ class PokerService(service.Service):
         try:
             c.execute(" SELECT rating, affiliate, email, name FROM users WHERE serial = %s", (serial,))
             if c.rowcount != 1:
-                self.log.error("getUserInfo(%d) expected one row got %d", serial, cursor.rowcount)
+                self.log.error("getUserInfo(%d) expected one row got %d", serial, c.rowcount)
                 return PacketPokerUserInfo(serial = serial)
             kw = {'serial': serial}
             kw['rating'], kw['affiliate'], kw['email'], kw['name'] = c.fetchone()
