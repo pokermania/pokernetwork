@@ -63,6 +63,8 @@ from MySQLdb.cursors import DictCursor
 
 from twisted.python import components
 
+from pokernetwork.sql import lex
+
 from pokerengine.pokertournament import *
 from pokerengine.pokercards import PokerCards
 from pokerengine import pokerprizes
@@ -348,7 +350,7 @@ class PokerService(service.Service):
     def loadTableConfig(self, serial):
         c = self.db.cursor()
         try:
-            c.execute(
+            c.execute(lex(
                 """ SELECT
                         c.name,
                         c.seats,
@@ -362,7 +364,7 @@ class PokerService(service.Service):
                     LEFT JOIN tableconfigs as c
                         ON t.tableconfig_serial = c.serial
                     WHERE t.serial = %s
-                """,
+                """),
                 serial
             )
             return dict(zip([
@@ -391,12 +393,12 @@ class PokerService(service.Service):
     def createTable(self, owner, description):
         c = self.db.cursor()
         try:
-            c.execute(
+            c.execute(lex(
                 """ INSERT INTO tables
                     SET
                         resthost_serial = %s,
                         tourney_serial = %s
-                """,
+                """),
                 (
                     self.resthost_serial,
                     description.get('tourney_serial')
@@ -2480,7 +2482,7 @@ class PokerService(service.Service):
     def getUserInfo(self, serial):
         c = self.db.cursor()
         try:
-            c.execute(" SELECT rating, affiliate, email, name FROM users WHERE serial = %s", (serial,))
+            c.execute("SELECT rating, affiliate, email, name FROM users WHERE serial = %s", (serial,))
             if c.rowcount != 1:
                 self.log.error("getUserInfo(%d) expected one row got %d", serial, c.rowcount)
                 return PacketPokerUserInfo(serial = serial)
@@ -2488,7 +2490,7 @@ class PokerService(service.Service):
             kw['rating'], kw['affiliate'], kw['email'], kw['name'] = c.fetchone()
             if not kw['email']: kw['email'] = ''
             packet = PacketPokerUserInfo(**kw)
-            c.execute(
+            c.execute(lex(
                 """ SELECT
                         u2m.currency_serial,
                         u2m.amount,
@@ -2504,7 +2506,7 @@ class PokerService(service.Service):
                     WHERE
                         u2m.user_serial = %s AND
                         (u2t.table_serial IS NULL OR c.currency_serial = u2m.currency_serial)
-                """,
+                """),
                 (serial,)
             )
             for row in c:
@@ -2823,7 +2825,7 @@ class PokerService(service.Service):
         c = self.db.cursor()
         try:
             if currency_serial:
-                c.execute(
+                c.execute(lex(
                     """ UPDATE user2money AS u2m
                         LEFT JOIN user2table AS u2t
                             ON u2t.user_serial = u2m.user_serial
@@ -2836,7 +2838,7 @@ class PokerService(service.Service):
                             u2t.money = 0,
                             u2t.bet = 0
                         WHERE u2m.user_serial = %s AND t.serial = %s AND u2m.currency_serial = %s AND c.currency_serial = %s
-                    """,
+                    """),
                     (serial, table_id, currency_serial, currency_serial)
                 )
                 if c.rowcount not in (0, 2):
@@ -2905,7 +2907,7 @@ class PokerService(service.Service):
     def updateTableStats(self, game, observers, waiting):
         c = self.db.cursor()
         try:
-            c.execute(
+            c.execute(lex(
                 """ UPDATE tables
                     SET
                         average_pot = %s,
@@ -2915,7 +2917,7 @@ class PokerService(service.Service):
                         observers = %s,
                         waiting = %s
                     WHERE serial = %s
-                """,
+                """),
                 (
                     game.stats['average_pot'],
                     game.stats['hands_per_hour'],
@@ -3063,7 +3065,7 @@ class PokerService(service.Service):
     def cleanupCrashedTables(self):
         c = self.db.cursor()
         try:
-            c.execute(
+            c.execute(lex(
                 """ SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet
                     FROM user2table AS u2t
                     LEFT JOIN tables AS t
@@ -3071,7 +3073,7 @@ class PokerService(service.Service):
                     LEFT JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
                     WHERE t.resthost_serial = %s AND c.currency_serial != 0;
-                """,
+                """),
                 (self.resthost_serial,)
             )
             for table_serial, currency_serial, user_serial, money, bet in c:
@@ -3083,11 +3085,11 @@ class PokerService(service.Service):
                     ]
                 )
                 self.leavePlayer(user_serial, table_serial, currency_serial)
-            c.execute(
+            c.execute(lex(
                 """ UPDATE tables
                     SET players = 0, observers = 0
                     WHERE resthost_serial = %s
-                """,
+                """),
                 (self.resthost_serial)
             )
         finally:
