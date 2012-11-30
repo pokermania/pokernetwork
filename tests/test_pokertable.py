@@ -1732,28 +1732,28 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
             def isRebuyAllowed(self, serial): 
                 return False
             
-        self.table = pokertable.PokerTable(self.service, table1ID, 
-                                           { 'name': "table1",
-                                             'variant': "holdem",
-                                             'betting_structure': "1-2_20-200_limit",
-                                             'seats': 4,
-                                             'player_timeout' : 6, 
-                                             'muck_timeout' : 1,
-                                             'transient' : True,
-                                             'tourney' : Tournament(),
-                                             'currency_serial': 0
-                                             })
-        self.table2 = pokertable.PokerTable(self.service, table2ID, 
-                                           { 'name': "table2",
-                                             'variant': "holdem",
-                                             'betting_structure': "1-2_20-200_limit",
-                                             'seats': 4,
-                                             'player_timeout' : 6, 
-                                             'muck_timeout' : 1,
-                                             'transient' : True,
-                                             'tourney' : Tournament(),
-                                             'currency_serial': 0
-                                             })
+        self.table = pokertable.PokerTable(self.service, table1ID, { 
+            'name': "table1",
+            'variant': "holdem",
+            'betting_structure': "1-2_20-200_limit",
+            'seats': 4,
+            'player_timeout' : 6, 
+            'muck_timeout' : 1,
+            'transient' : True,
+            'tourney' : Tournament(),
+            'currency_serial': 0
+        })
+        self.table2 = pokertable.PokerTable(self.service, table2ID, { 
+            'name': "table2",
+            'variant': "holdem",
+            'betting_structure': "1-2_20-200_limit",
+            'seats': 4,
+            'player_timeout' : 6, 
+            'muck_timeout' : 1,
+            'transient' : True,
+            'tourney' : Tournament(),
+            'currency_serial': 0
+        })
         self.service.table1 = self.table
         self.service.table2 = self.table2
         self.clients = {}
@@ -1846,29 +1846,14 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.assertEqual(None, self.table.muckDeny(player[5], 5))
         self.assertEqual(None, self.table.autoBlindAnte(player[5], 5, True))
 
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], \
-                                              self.table.game.maxBuyIn()))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], self.table.game.maxBuyIn()))
 
         # player2 tries to rebuy but is already at the max, and besides,
         # in transient mode, this doesn't work anyway
 
         self.assertEqual(False, self.table.rebuyPlayerRequest(player[2], 1))
     # -------------------------------------------------------------------
-    def test07_break_message(self):
-        """ Tournament break issue a message to all players """
-        class Tournament:
-            def __init__(self):
-                self.state = pokertournament.TOURNAMENT_STATE_BREAK_WAIT
-                
-        self.createPlayer(1)
-        self.createPlayer(2)
-        self.table.tourney = Tournament()
-        self.table.game.isTournament = lambda: True
-        self.table.scheduleAutoDeal()
-        self.failUnless(self.clients[1].lookForPacket(PACKET_POKER_GAME_MESSAGE))
-        self.failUnless(self.clients[2].lookForPacket(PACKET_POKER_GAME_MESSAGE))
-    # -------------------------------------------------------------------
-    def test11bis_packet_with_tourney_serial(self):
+    def test11_packet_with_tourney_serial(self):
         """Test toPacket"""
         packet_string = "%s" % self.table.toPacket()
         for sub_string in [ 
@@ -2044,8 +2029,7 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
         def checkJoin(table, reason):
             self.table_joined = table
         player.join = checkJoin
-        self.table.movePlayer(self.table.avatar_collection.get(1), 1, self.table2.game.id,
-                              reason = "MockMoveTest")
+        self.table.movePlayer(self.table.avatar_collection.get(1), 1, self.table2.game.id, reason="MockMoveTest")
         self.assertEquals(self.table_joined, self.table2)
         return expectPlayerDeferred
 
@@ -2056,9 +2040,6 @@ class PokerTableRejoinTestCase(PokerTableTestCaseBase):
         PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithLadder)
 
     def test49_playerRejoinCheckAutoFlag(self):
-        """
-        See https://gna.org/bugs/?14797
-        """
         player1 = self.createPlayer(1, clientClass=MockClientWithRealJoin)
         player1.service = self.service
         player2 = self.createPlayer(2)
