@@ -88,6 +88,9 @@ class PokerAvatarCollection:
     def itervalues(self):
         return self.serial2avatars.itervalues()
 
+    def isEmpty(self):
+        return bool(self.serial2avatars)
+
 
 class PokerPredefinedDecks:
 
@@ -490,10 +493,8 @@ class PokerTable:
 
             elif event_type == "finish":
                 # despawn this table if no avatars active
-                if not len(self.avatar_collection.values()) and not self.observers:
+                if self.avatar_collection.isEmpty() and not self.observers:
                     self.factory.despawnTable(self.game.id)
-                else:
-                    self.log.crit("delayedActions: %d, %d", len(self.avatar_collection.values()), len(self.observers))
 
 
     def cashGame_kickPlayerSittingOutTooLong(self, historyToSearch):
@@ -1131,6 +1132,9 @@ class PokerTable:
         else:
             self.avatar_collection.remove(serial, avatar)
         del avatar.tables[self.game.id]
+        # despawn table if game is not running and nobody is connected
+        if not self.isRunning() and self.avatar_collection.isEmpty() and not self.observers:
+            self.factory.despawnTable(self.game.id)
 
     def buyInPlayer(self, avatar, amount):
         if not self.isSeated(avatar):

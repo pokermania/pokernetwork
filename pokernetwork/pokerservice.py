@@ -406,7 +406,7 @@ class PokerService(service.Service):
                 self.log.error("createTable: insert failed\n%s", c._executed)
                 return None
             table = self.spawnTable(c.lastrowid, **description)
-            table = owner
+            table.owner = owner
             return table
         finally:
             c.close()
