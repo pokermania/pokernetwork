@@ -3083,6 +3083,13 @@ class PokerService(service.Service):
                     ]
                 )
                 self.leavePlayer(user_serial, table_serial, currency_serial)
+            c.execute(
+                """ UPDATE tables
+                    SET players = 0, observers = 0
+                    WHERE resthost_serial = %s
+                """,
+                (self.resthost_serial)
+            )
         finally:
             c.close()
 
