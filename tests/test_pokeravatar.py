@@ -194,7 +194,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
                 'dbname': config.test.mysql.database
             }
         else:
-            prefix = "%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -D %(dbname) -e '%%s'" % {
+            prefix = "%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -D %(dbname)s -e '%%s'" % {
                 'mysql_command': config.test.mysql.command,
                 'dbroot': config.test.mysql.root_user.name,
                 'dbhost': config.test.mysql.host,
