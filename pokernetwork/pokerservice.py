@@ -1957,8 +1957,7 @@ class PokerService(service.Service):
                     FROM tables AS t
                     LEFT JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
-                """ + orderBy,
-                query_string
+                """ + orderBy
             )
 
         elif query_string == 'my':
