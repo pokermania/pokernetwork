@@ -999,12 +999,7 @@ class PokerService(service.Service):
             table.scheduleAutoDeal()
 
     def tourneyBreakWait(self, tourney):
-        for game_id in map(lambda game: game.id, tourney.games):
-            table = self.getTable(game_id)
-            if table.game.isRunning():
-                table.broadcastMessage(PacketPokerGameMessage, "Tournament break at the end of the hand")
-            else:
-                table.broadcastMessage(PacketPokerGameMessage, "Tournament break will start when the other tables finish their hand")
+        return
 
     def tourneyBreakResume(self, tourney):
         for game in tourney.games:

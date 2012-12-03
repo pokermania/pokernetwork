@@ -3917,10 +3917,8 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tables = { 1: table }
         tourney.games[0].running = True
         self.service.tourneyBreakWait(tourney)
-        self.failUnless("at the end of the hand" in table.message)
         tourney.games[0].running = False
         self.service.tourneyBreakWait(tourney)
-        self.failUnless("finish their hand" in table.message)
 
     def test11_tourneyBreakResume(self):
         class MockTable(BreakTestCase.MockTable):

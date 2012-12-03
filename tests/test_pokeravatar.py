@@ -89,7 +89,6 @@ class PokerAvatarLocaleTestCase(unittest.TestCase):
         avatar.localeFunc = lambda x: x
         avatar.queuePackets()
         avatar.sendPacket(Packet())
-        self.assertEquals(None, avatar._avatarSavedUnder)
 
 settings_xml_server = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -2543,30 +2542,30 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         for packet in avatar.resetPacketsQueue():
             self.assertEquals(packet.game_id, gameId)
             if packet.type == PACKET_POKER_PLAYER_CHIPS:
-                 #expect 2
+                # expect 2
                 found += 1
             elif packet.type == PACKET_POKER_DEALER:
-                 #expect 1
+                # expect 1
                 found += 1
                 self.assertEquals(packet.previous_dealer, -1)
                 self.assertEquals(packet.dealer, 1)
             elif packet.type == PACKET_POKER_IN_GAME:
-                 #expect 1
+                # expect 1
                 found += 1
             elif packet.type == PACKET_POKER_POSITION:
                 # expect 4
                 found += 1
             elif packet.type == PACKET_POKER_BLIND:
-                 #expect 2 
+                # expect 2 
                 found += 1
             elif packet.type == PACKET_POKER_PLAYER_CARDS:
-                 #expect 2 
+                # expect 2 
                 found += 1
             elif packet.type == PACKET_POKER_STATE:
-                 #expect 1
+                # expect 1
                 found += 1
             elif packet.type == PACKET_POKER_START:
-                 #expect 1
+                # expect 1
                 found += 1
             else:
                 self.fail("Unexpected packet" + packet.__str__())

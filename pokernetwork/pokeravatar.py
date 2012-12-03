@@ -41,6 +41,7 @@ from pokernetwork.pokerrestclient import PokerRestClient
 from pokernetwork.pokerpacketizer import createCache, history2packets
 
 from pokerengine.pokertournament import TOURNAMENT_STATE_REGISTERING, TOURNAMENT_STATE_CANCELED, TOURNAMENT_STATE_RUNNING
+from pokerengine.pokergame import init_i18n as pokergame_init_i18n
 
 from pokernetwork import log as network_log
 log = network_log.get_child('pokeravatar')
@@ -116,8 +117,8 @@ class PokerAvatar:
     def setProtocol(self, protocol):
         self.protocol = protocol
 
-    def isAuthorized(self, type):
-        return self.user.hasPrivilege(self.service.poker_auth.GetLevel(type))
+    def isAuthorized(self, packet_type):
+        return self.user.hasPrivilege(self.service.poker_auth.GetLevel(packet_type))
 
     def relogin(self, serial):
         player_info = self.service.getPlayerInfo(serial)
@@ -286,46 +287,10 @@ class PokerAvatar:
         self._packets_queue = filter(lambda packet: not hasattr(packet, "game_id") or packet.game_id != game_id, self._packets_queue)
 
     def sendPacket(self, packet):
-        from pokerengine.pokergame import init_i18n as pokergame_init_i18n
-        # Note on special processing of locales on packet send:
-        #    Ideally, clients would do their own locale work.  However, in
-        #    particular when PokerExplain is in effect, some clients are
-        #    requiring explanation strings coming from the server about
-        #    what is happening in the game.  (Indeed, PokerExplain exists
-        #    for precisely that scenario.)  Therefore, every time we send a
-        #    packet via PokerAvatar, we need to make sure the local in
-        #    poker-engine's pokergame localization is set properly to the
-        #    localization requested by the client (iff. they have
-        #    requested one via PacketPokerSetLocale).  Note that because
-        #    global variables are effectively only file-wide, the _() that
-        #    we create here propagates only as wide as this file.  the
-        #    call to pokergame_init_i18n() is what actually changes the
-        #    _() defined in pokergame.py.
-        #
-        #    It is in some ways overkill to redefine our own _() here,
-        #    particularly because at the time of writing, we don't
-        #    actually have localization strings in the functions in this
-        #    file.  However, should we have them later, we'd obviously
-        #    want those strings to be localized for the client, at least
-        #    during packet sending.
-        #
-        #    Note that _ default value depends of locale installation
-        #    by pokerservice, as
-        #    http://docs.python.org/library/gettext.html point out,
-        #    gettext.install installs the function _() in Pythons
-        #    builtins namespace. Assigning it to self.localeFunc
-        #    convert it to a global that is file wise (as pointed
-        #    above).
-
-        global _
+        # switch the game to the avatar's locale temporarily
         if self.localeFunc:
-            # First, if our _() has never been defined, we simply set it to None
-            try:
-                self._avatarSavedUnder = _
-            except NameError:
-                self._avatarSavedUnder = None
-            _ = self.localeFunc
             pokergameSavedUnder = pokergame_init_i18n('', self.localeFunc)
+        # explain if needed
         if self.explain and not isinstance(packet, defer.Deferred) and packet.type != PACKET_ERROR:
             try:
                 self.explain.explain(packet)
@@ -334,31 +299,21 @@ class PokerAvatar:
                 explain_error_message = format_exc()
                 packets = [ PacketError(other_type=PACKET_NONE, message=explain_error_message) ]
                 self.log.warn('%s', explain_error_message)
-                
-                # disabling the explain instance that issued the exception, as it
-                # may be in an inconsistent state, and used before the avatar destruction
+                # if the explain instance caused an exception, that instance is destroyed
+                # along with the avatar, as it may have an inconsistent state
                 self.explain = None
                 self.service.forceAvatarDestroy(self)
         else:
-            packets = [ packet ]
+            packets = [packet]
         if self._queue_packets:
             self.extendPacketsQueue(packets)
         else:
             for packet in packets:
                 self.protocol.sendPacket(packet)
+        # switch the game's locale back
         if self.localeFunc:
-            _ = self._avatarSavedUnder
             pokergame_init_i18n('', pokergameSavedUnder)
 
-    # Below, we assign the method queueDeferred() is the same as
-    # sendPacket().  Be careful not to indent the line below; if you
-    # aren't paying attention, you might think it belongs inside the
-    # previous function.  It doesn't. ...  Ok, so I never got over the
-    # "whitespace indentation matters" thing in Python, and I get careless
-    # sometimes, then after I do I proceed to write warning comments that
-    # normal Python programmers probably don't need. :-p -- bkuhn
-    queueDeferred = sendPacket
-    
     def sendPacketVerbose(self, packet):
         if hasattr(packet, 'type') and packet.type != PACKET_PING:
             self.log.debug("sendPacket: %s", packet)
@@ -450,7 +405,7 @@ class PokerAvatar:
         # no game_id means the request must be delegated for tournament
         # registration or creation. Not for table interaction.
         #
-        ( host, port, path ) = resthost
+        host, port, path = resthost
         path += self.distributed_args
         self.log.debug("getOrCreateRestClient(%s, %d, %s, %s)", host, port, path, game_id)
         if game_id:
@@ -462,7 +417,6 @@ class PokerAvatar:
         return client
             
     def distributePacket(self, packet, data, resthost, game_id):
-        ( host, port, path ) = resthost
         client = self.getOrCreateRestClient(resthost, game_id)
         d = client.sendPacket(packet, data)
         d.addCallback(lambda packets: self.incomingDistributedPackets(packets, game_id))
@@ -638,7 +592,7 @@ class PokerAvatar:
 
         elif packet.type == PACKET_POKER_CASH_IN:
             if self.getSerial() == packet.serial:
-                self.queueDeferred(self.service.cashIn(packet))
+                self.sendPacket(self.service.cashIn(packet))
             else:
                 self.log.inform("attempt to cash in for user %d by user %d", packet.serial, self.getSerial())
                 self.sendPacketVerbose(PacketPokerError(serial = self.getSerial(), other_type = PACKET_POKER_CASH_IN))
@@ -1330,7 +1284,7 @@ class PokerAvatar:
                     game_id = game.id,
                     serial = player.serial,
                     bet = nochips,
-                    money = player.money
+                    money = player.money - player.rebuy_given
                 ))
                 if game.isSit(player.serial):
                     self.sendPacketVerbose(PacketPokerSit(
