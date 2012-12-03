@@ -771,7 +771,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEqual(None, self.table.autoBlindAnte(player[5], 5, True))
 
         self.assertEqual(True, self.table.rebuyPlayerRequest(player[5], \
-                                              self.table.game.maxBuyIn()))
+                                              self.table.game.buyIn()))
         # finally, player5 tries to join table 2, which isn't permitted since
         # we've set MockService.simultaneous to 1
         self.assertEqual(False, self.table2.joinPlayer(player[5], 5))

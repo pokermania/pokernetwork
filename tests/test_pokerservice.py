@@ -3300,7 +3300,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
             if self.reason:
                 return False, None, self.reason
             else:
-                return True, 13, None
+                return True, 1, None
 
     class ClientMockup:
         def __init__(self, serial, testObject):
