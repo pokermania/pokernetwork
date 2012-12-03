@@ -1,5 +1,5 @@
 /* auto generated with: */
-/*   mysqldump --no-data --skip-add-locks --skip-comments --skip-set-charset --skip-quote-names db_mig | sed -re 's;/\*!40101 SET character_set_client = @saved.*$;;' | grep -Ev '^/\*!' > schema.sql3 */
+/*   mysqldump --no-data --skip-add-locks --skip-comments --skip-set-charset --skip-quote-names db_mig | sed -re 's;/\*!40101 SET character_set_client = @saved.*$;;' | grep -Ev '^/\*!' | sed -re 's/AUTO_INCREMENT=[0-9]* //' */
 /* except for: */
 /*   INSERT INTO server (version) VALUES ("@version@");*/
 
@@ -69,7 +69,7 @@ CREATE TABLE hands (
   `name` varchar(32) DEFAULT NULL,
   description text NOT NULL,
   PRIMARY KEY (`serial`)
-) ENGINE=InnoDB AUTO_INCREMENT=2710 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS messages;
 CREATE TABLE messages (
@@ -118,7 +118,7 @@ CREATE TABLE pokertables (
   KEY pokertables_betting_structure (betting_structure),
   KEY pokertables_currency_serial (currency_serial),
   KEY resthost_serial (resthost_serial)
-) ENGINE=InnoDB AUTO_INCREMENT=1344 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS resthost;
 CREATE TABLE resthost (
@@ -129,7 +129,7 @@ CREATE TABLE resthost (
   path varchar(255) NOT NULL,
   state int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`serial`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS route;
 CREATE TABLE route (
@@ -157,6 +157,7 @@ DROP TABLE IF EXISTS server;
 CREATE TABLE `server` (
   version varchar(16) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 INSERT INTO server (version) VALUES ("@version@");
 
 DROP TABLE IF EXISTS tableconfigs;
@@ -171,7 +172,7 @@ CREATE TABLE tableconfigs (
   player_timeout int(11) unsigned DEFAULT '60',
   muck_timeout int(11) unsigned DEFAULT '5',
   PRIMARY KEY (`serial`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS tables;
 CREATE TABLE `tables` (
@@ -187,7 +188,7 @@ CREATE TABLE `tables` (
   percent_flop int(11) unsigned NOT NULL DEFAULT '0',
   hands_per_hour int(11) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`serial`)
-) ENGINE=InnoDB AUTO_INCREMENT=97 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS tourneys;
 CREATE TABLE tourneys (
@@ -331,7 +332,12 @@ CREATE TABLE users (
   PRIMARY KEY (`serial`),
   UNIQUE KEY email_idx (email),
   KEY name_idx (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=800 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+INSERT INTO users(created, name, password, privilege) VALUES
+  (UNIX_TIMESTAMP(), 'rake', '', 0),
+  (UNIX_TIMESTAMP(), 'admin', 'REPLACE', 2),
+  (UNIX_TIMESTAMP(), 'admin_web', 'REPLACE', 1);
 
 DROP TABLE IF EXISTS users_private;
 CREATE TABLE users_private (
