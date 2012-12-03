@@ -1668,6 +1668,7 @@ class PokerService(service.Service):
         if error is False, the reason indicates the problem
         """
         cursor = self.db.cursor()
+
         try:
             currency_serial = tournament.prize_currency or tournament.currency_serial
             cursor.execute(
@@ -1703,12 +1704,9 @@ class PokerService(service.Service):
         success, game_id, reason = tourney.rebuy(packet.serial)
 
         if success:
-            game = tourney.id2game[game_id]
-            self.broadcast(PacketPokerRebuy(
-                game_id = game_id,
-                serial = packet.serial,
-                amount = game.buy_in
-            ))
+            table = self.getTable(game_id)
+            table.tourneyRebuy(game_id=game_id, serial=packet.serial)
+            
             return packet.OK
         else:
             return {

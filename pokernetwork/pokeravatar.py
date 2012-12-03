@@ -984,7 +984,7 @@ class PokerAvatar:
                 if player and player.isAuto():
                     self.sendPacketVerbose(PacketPokerAutoFold(serial=packet.serial))
             if table.tourney:
-                self.sendPacketVerbose(PacketPokerTourney(rebuy_time_remaining=table.tourney.getRebuyTimeRemaining(), **table.tourney))
+                self.sendPacketVerbose(PacketPokerTourney(**table.tourney.forTourneyInfo()))
 
     # -------------------------------------------------------------------------
     def performPacketPokerSeat(self, packet, table, game):
