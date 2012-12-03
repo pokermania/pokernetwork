@@ -1217,7 +1217,7 @@ class PokerAvatar:
                 muck_timeout = int(table['muck_timeout']),
                 observers = int(table['observers']),
                 waiting = int(table['waiting']),
-                skin = table['skin'],
+                skin = table['skin'] or 'default',
                 currency_serial = int(table['currency_serial']),
                 player_seated = int(table.get('player_seated',-1)),
                 tourney_serial = int(table['tourney_serial'] or 0),
