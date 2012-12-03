@@ -51,9 +51,6 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" auto_create_account="yes">
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
-
   <listen tcp="19481" />
   <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
 
@@ -109,12 +106,25 @@ settings_xml_proxy = """<?xml version="1.0" encoding="UTF-8"?>
     'mysql_command': config.test.mysql.command
 }
 class ProxyTestCase(unittest.TestCase):
-    def destroyDb(self, *a):
-        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+    def setupDb(self):
+        sqlmanager.setup_db(
+            TESTS_PATH + "/../database/schema.sql", (
+                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
+                    ('Table1','100-200_2000-20000_no-limit'),
+                    ('Table2','100-200_2000-20000_no-limit'),
+                )),
+                ("INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)", (
+                    (1, 1),
+                    (1, 2),
+                )),
+            ),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
-            host=config.test.mysql.host
+            host=config.test.mysql.host,
+            port=config.test.mysql.port,
+            database=config.test.mysql.database
         )
+
     # --------------------------------------------------------------
     def initServer(self):
         settings = pokernetworkconfig.Config([])
@@ -122,6 +132,8 @@ class ProxyTestCase(unittest.TestCase):
         self.server_service = pokerservice.PokerService(settings)
         self.server_service.disconnectAll = lambda: True
         self.server_service.startService()
+        for i in (1,2):
+            self.server_service.spawnTable(i, **self.server_service.loadTableConfig(i))
         self.server_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.server_service))
         self.server_site.memcache = pokermemcache.MemcacheMockup.Client([])
         self.server_port = reactor.listenTCP(19481, self.server_site, interface="127.0.0.1")
@@ -132,6 +144,8 @@ class ProxyTestCase(unittest.TestCase):
         self.proxy_service = pokerservice.PokerService(settings)
         self.proxy_service.disconnectAll = lambda: True
         self.proxy_service.startService()
+        for i in (1,2):
+            self.proxy_service.spawnTable(i, **self.proxy_service.loadTableConfig(i))
         self.proxy_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.proxy_service))
         self.proxy_site.memcache = pokermemcache.MemcacheMockup.Client([])
         self.proxy_port = reactor.listenTCP(19480, self.proxy_site, interface="127.0.0.1")
@@ -140,7 +154,7 @@ class ProxyTestCase(unittest.TestCase):
         testclock._seconds_reset()
         pokermemcache.memcache = pokermemcache.MemcacheMockup
         pokermemcache.memcache_singleton = {}
-        self.destroyDb()
+        self.setupDb()
         self.initServer()
         self.initProxy()
     # --------------------------------------------------------------
@@ -161,7 +175,6 @@ class ProxyTestCase(unittest.TestCase):
             self.tearDownServer(),
             self.tearDownProxy()
         ])
-        d.addCallback(self.destroyDb)
         d.addCallback(lambda x: reactor.disconnectAll())
         return d
     # --------------------------------------------------------------

@@ -367,16 +367,20 @@ class PokerService(service.Service):
                 """),
                 serial
             )
-            return dict(zip([
-                'name',
-                'seats',
-                'variant',
-                'betting_structure',
-                'currency_serial',
-                'skin',
-                'player_timeout',
-                'muck_timeout'
-            ], c.fetchone()))
+            if c.rowcount == 1:
+                return dict(zip([
+                    'name',
+                    'seats',
+                    'variant',
+                    'betting_structure',
+                    'currency_serial',
+                    'skin',
+                    'player_timeout',
+                    'muck_timeout'
+                ], c.fetchone()))
+            else:
+                self.log.error("couldn't load talbe config %d", serial)
+                raise Exception("couldn't load talbe config %d" % (serial,))
         finally:
             c.close()
 
@@ -2539,25 +2543,48 @@ class PokerService(service.Service):
         packet.birthdate = str(packet.birthdate)
         return packet
 
-    def setPersonalInfo(self, personal_info):
-        cursor = self.db.cursor()
-        sql = \
-            "UPDATE users_private " \
-            "SET firstname = %s, lastname = %s, addr_street = %s, addr_street2 = %s, addr_zip = %s, " \
-                "addr_town = %s, addr_state = %s, addr_country = %s, phone = %s, gender = %s, birthdate = %s " \
-            "WHERE serial = %s"
-        params = (
-            personal_info.firstname, personal_info.lastname, personal_info.addr_street, personal_info.addr_street2, personal_info.addr_zip,
-            personal_info.addr_town, personal_info.addr_state, personal_info.addr_country, personal_info.phone, personal_info.gender, personal_info.birthdate,
-            personal_info.serial
-        )
-        cursor.execute(sql,params)
-        self.log.debug("setPersonalInfo: %s", cursor._executed)
-        if cursor.rowcount != 1 and cursor.rowcount != 0:
-            self.log.error("setPersonalInfo: modified %d rows (expected 1 or 0): %s", cursor.rowcount, sql)
-            return False
-        else:
+    def setPersonalInfo(self, info):
+        c = self.db.cursor()
+        try:
+            c.execute(lex(
+                """ UPDATE users_private
+                    SET
+                        firstname = %s,
+                        lastname = %s,
+                        addr_street = %s,
+                        addr_street2 = %s,
+                        addr_zip = %s,
+                        addr_town = %s,
+                        addr_state = %s,
+                        addr_country = %s,
+                        phone = %s,
+                        gender = %s,
+                        birthdate = %s
+                    WHERE
+                        serial = %s
+                """),
+                (
+                    info.firstname,
+                    info.lastname,
+                    info.addr_street,
+                    info.addr_street2,
+                    info.addr_zip,
+                    info.addr_town,
+                    info.addr_state,
+                    info.addr_country,
+                    info.phone,
+                    info.gender,
+                    info.birthdate or None,
+                    info.serial
+                )
+            )
+            self.log.debug("setPersonalInfo: %s", c._executed)
+            if c.rowcount != 1 and c.rowcount != 0:
+                self.log.error("setPersonalInfo: modified %d rows (expected 1 or 0): %s", c.rowcount, c._executed)
+                return False
             return True
+        finally:
+            c.close()
 
     def setAccount(self, packet):
         #
