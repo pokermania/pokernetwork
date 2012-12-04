@@ -2263,22 +2263,28 @@ class PokerService(service.Service):
         return ( result, game_id )
 
     def cleanUpTemporaryUsers(self):
-        cursor = self.db.cursor()
-        params = (self.temporary_serial_min,self.temporary_serial_max,self.temporary_users_pattern)
-        sql = "DELETE session_history FROM session_history, users WHERE session_history.user_serial = users.serial AND (users.serial BETWEEN %s AND %s OR users.name RLIKE %s)"
-        cursor.execute(sql,params)
-        sql = "DELETE session FROM session, users WHERE session.user_serial = users.serial AND (users.serial BETWEEN %s AND %s OR users.name RLIKE %s)"
-        cursor.execute(sql,params)
-        sql = "DELETE user2tourney FROM user2tourney, users WHERE (users.serial BETWEEN %s AND %s OR users.name RLIKE %s) AND users.serial = user2tourney.user_serial"
-        cursor.execute(sql,params)
-        sql = "DELETE FROM users WHERE serial BETWEEN %s AND %s OR name RLIKE %s"
-        cursor.execute(sql,params)
-
-        sql = "INSERT INTO session_history ( user_serial, started, ended, ip ) SELECT user_serial, started, %s, ip FROM session"
-        cursor.execute(sql,(seconds(),))
-        sql = "DELETE FROM session"
-        cursor.execute(sql)
-        cursor.close()
+        c = self.db.cursor()
+        try:
+            c.execute(lex(
+                """ DELETE user2tourney FROM user2tourney, users
+                    WHERE (users.serial BETWEEN %s AND %s OR users.name RLIKE %s) AND users.serial = user2tourney.user_serial
+                """),
+                (
+                    self.temporary_serial_min,
+                    self.temporary_serial_max,
+                    self.temporary_users_pattern
+                )
+            )
+            c.execute(
+                "DELETE FROM users WHERE serial BETWEEN %s AND %s OR name RLIKE %s",
+                (
+                    self.temporary_serial_min,
+                    self.temporary_serial_max,
+                    self.temporary_users_pattern
+                )
+            )
+        finally:
+            c.close()
 
     def abortRunningTourneys(self):
         cursor = self.db.cursor()
