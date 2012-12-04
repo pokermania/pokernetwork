@@ -95,9 +95,6 @@ settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" remove_completed="1" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
-
   <listen tcp="19480" />
 
   <language value="en_US.UTF-8"/>
@@ -218,6 +215,8 @@ class MockCursorBase:
             return "%f" % param
         elif type(param) in (int,long):
             return "%d" % param
+        elif param is None:
+            return "NULL"
         else:
             raise Exception("undefined type: %s" % param)
         
@@ -256,16 +255,36 @@ class MockDatabase:
 
 class PokerServiceTestCaseBase(unittest.TestCase):
 
-    def destroyDb(self, *a):
-        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+    def setupDb(self):
+        sqlmanager.setup_db(
+            TESTS_PATH + "/../database/schema.sql", (
+                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
+                    ('Table1','100-200_2000-20000_no-limit'),
+                    ('Table2','100-200_2000-20000_no-limit'),
+                )),
+                ("INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)", (
+                    (1, 1),
+                    (1, 2),
+                )),
+                ("INSERT INTO tourneys_schedule (name, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, start_time, register_time, respawn, respawn_interval) \
+                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (
+                    ("sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", 2, "holdem", "level-15-30-no-limit", 2, 1, 300000, 0, "y", 0, 0, "y", 0),
+                )),
+                ("INSERT INTO tourneys_schedule (name, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, breaks_interval, rebuy_delay, add_on, add_on_delay, start_time, register_time, respawn, respawn_interval, players_min) \
+                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - INTERVAL 1 HOUR), %s, %s, %s)", (
+                    ("regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", 1000, "holdem", "level-001", 10, 1, 0, 0, "n", 60, 30, 1, 60, "n", 0, 3),
+                ))
+            ),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
-            host=config.test.mysql.host
+            host=config.test.mysql.host,
+            port=config.test.mysql.port,
+            database=config.test.mysql.database
         )
 
     def setUp(self, settingsFile = settings_xml):
         testclock._seconds_reset()
-        self.destroyDb()
+        self.setupDb()
         self.settings = settings = pokernetworkconfig.Config([])
         settings.doc = libxml2.parseMemory(settingsFile, len(settingsFile))
         settings.header = settings.doc.xpathNewContext()
@@ -278,7 +297,6 @@ class PokerServiceTestCaseBase(unittest.TestCase):
     def tearDown(self):
         self.db.close()
         d = self.service.stopService()
-        d.addCallback(lambda x: self.destroyDb())
         return d
 
     def createUsers(self):
@@ -298,20 +316,6 @@ class PokerServiceTestCaseBase(unittest.TestCase):
 
         cursor.close()
     
-    def createTourneysSchedules(self):
-        cursor = self.db.cursor()
-        sql = '''
-            INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `start_time`, `register_time`, `respawn`, `respawn_interval`)
-            VALUES ('sitngo2', 'Sit and Go 2 players, Holdem', 'Sit and Go 2 players', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'y', '0', '0', 'y', '0')
-        '''
-        cursor.execute(sql)
-        sql = '''
-            INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`, `players_min`)
-            VALUES ('regular1', 'Holdem No Limit Freeroll', 'Holdem No Limit Freeroll', '1000', 'holdem', 'level-001', '10', 1, '0', '0', 'n', '60', '30', '1', '60', unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - INTERVAL 1 HOUR), 'n', '0', 3);
-        '''
-        cursor.execute(sql)
-        cursor.close()
-
 monitor_settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
@@ -413,12 +417,6 @@ list_table_xml = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" max_joined="1000" simultaneous="4" chat="yes" remove_completed="1" >
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="NL HE 10-max 100/200" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="NL HE 6-max 100/200" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="6" player_timeout="60" currency_serial="2" />
-  <table name="Limit HE 10-max 2/4" variant="holdem" betting_structure="1-2_20-200_limit" seats="10" player_timeout="60" currency_serial="2" />
-  <table name="Limit HE 6-max 2/4" variant="holdem" betting_structure="1-2_20-200_limit" seats="6" player_timeout="60" currency_serial="1" />
-  <table name="Stud 8-max 2/4" variant="7stud" betting_structure="1-2_20-200_limit" seats="8" player_timeout="60" currency_serial="2" />
-
   <listen tcp="19480" />
 
   <language value="en_US.UTF-8"/>
@@ -452,6 +450,35 @@ list_table_xml = """<?xml version="1.0" encoding="UTF-8"?>
 class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
     def setUp(self):
         PokerServiceTestCaseBase.setUp(self, settingsFile = list_table_xml)
+        self.service.startService()
+        c = self.service.db.cursor()
+        try:
+            c.executemany(
+                "INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, %s, %s, %s, %s)",
+                (
+                    ('NL HE 10-max 100/200', 'holdem', '100-200_2000-20000_no-limit', 10, 1),
+                    ('NL HE 6-max 100/200', 'holdem', '100-200_2000-20000_no-limit', 6, 2),
+                    ('Limit HE 10-max 2/4', 'holdem', '1-2_20-200_limit', 10, 2),
+                    ('Limit HE 6-max 2/4', 'holdem', '1-2_20-200_limit', 6, 1),
+                    ('Stud 8-max 2/4', '7stud', '1-2_20-200_limit', 8, 2),
+
+                )
+            )
+            c.executemany(
+                "INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)",
+                (
+                    (1, 3),
+                    (1, 4),
+                    (1, 5),
+                    (1, 6),
+                    (1, 7),
+                )
+            )
+        finally:
+            c.close()
+        for i in (3,4,5,6,7):
+            self.service.spawnTable(i, **self.service.loadTableConfig(i))
+
     def test01_my(self):
         self.service.startService()
         db = self.service.db
@@ -465,7 +492,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         tables = self.service.listTables('50', 0)
         self.assertEqual(0, len(tables))
         tables = self.service.listTables('1', 0)
-        self.assertEqual(2, len(tables))
+        self.assertEqual(4, len(tables))
         tables = self.service.listTables('2', 0)
         self.assertEqual(3, len(tables))
     def test03_currency_and_variant(self):
@@ -475,7 +502,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         tables = self.service.listTables('2\tfakevariant', 0)
         self.assertEqual(0, len(tables))
         tables = self.service.listTables('1\tholdem', 0)
-        self.assertEqual(2, len(tables))
+        self.assertEqual(4, len(tables))
         tables = self.service.listTables('2\tholdem', 0)
         self.assertEqual(2, len(tables))
         tables = self.service.listTables('1\t7stud', 0)
@@ -487,15 +514,15 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         tables = self.service.listTables('\tfakevariant', 0)
         self.assertEqual(0, len(tables))
         tables = self.service.listTables('\tholdem', 0)
-        self.assertEqual(4, len(tables))
+        self.assertEqual(6, len(tables))
         tables = self.service.listTables('\t7stud', 0)
         self.assertEqual(1, len(tables))
     def test05_all(self):
         self.service.startService()
         tables = self.service.listTables('', 0)
-        self.assertEqual(5, len(tables))
+        self.assertEqual(7, len(tables))
         tables = self.service.listTables('all', 0)
-        self.assertEqual(5, len(tables))
+        self.assertEqual(7, len(tables))
     def test06_name(self):
         self.service.startService()
         tables = self.service.listTables('fakename', 0)
@@ -515,9 +542,9 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         tables = self.service.searchTables(None, None, '1-2_20-200_limit')
         self.assertEqual(3, len(tables))
         tables = self.service.searchTables(None, None, '100-200_2000-20000_no-limit')
-        self.assertEqual(2, len(tables))
+        self.assertEqual(4, len(tables))
         tables = self.service.searchTables(None, 'holdem', '100-200_2000-20000_no-limit')
-        self.assertEqual(2, len(tables))
+        self.assertEqual(4, len(tables))
         tables = self.service.searchTables(None, 'holdem', '1-2_20-200_limit')
         self.assertEqual(2, len(tables))
         tables = self.service.searchTables(None, '7stud', '1-2_20-200_limit')
@@ -547,13 +574,13 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
     def test09_currency_and_variant_and_bettingStructure_and_count_withSome(self):
         self.service.startService()
         log_history.reset()
-        nlHe100Currency1 = 1
-        nlHe100Currency2 = 2
-        limitHE24Currency2 = 3
-        limitHE24Currency1 = 4
-        stud24Currency2 = 5
+        nlHe100Currency1 = 3
+        nlHe100Currency2 = 4
+        limitHE24Currency2 = 5
+        limitHE24Currency1 = 6
+        stud24Currency2 = 7
 
-        insertSql = "UPDATE pokertables SET players = %d WHERE serial = %d"
+        insertSql = "UPDATE tables SET players = %d WHERE serial = %d"
         db = self.service.db
 
         db.db.query(insertSql % (2, limitHE24Currency1))
@@ -561,7 +588,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         db.db.query(insertSql % (1, stud24Currency2))
 
         tables = self.service.searchTables(None, None, None, 0)
-        self.assertEqual(5, len(tables))
+        self.assertEqual(7, len(tables))
         tables = self.service.searchTables(None, None, '1-2_20-200_limit', 0)
         self.assertEqual(3, len(tables))
 
@@ -582,7 +609,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
             self.assertEqual(0, len(tables))
 
         tables = self.service.searchTables(None, 'holdem', None, 0)
-        self.assertEqual(4, len(tables))
+        self.assertEqual(6, len(tables))
         tables = self.service.searchTables(None, 'holdem', '1-2_20-200_limit', 0)
         self.assertEqual(2, len(tables))
 
@@ -604,9 +631,9 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
 
         for query in [ '\t\t100-200_2000-20000_no-limit\t0',  '\tholdem\t100-200-no-limit\t0']:
             tables = self.service.searchTables(None, None, '100-200_2000-20000_no-limit', 0)
-            self.assertEqual(2, len(tables), "100-200_2000-20000_no-limit should be 2")
+            self.assertEqual(4, len(tables), "100-200_2000-20000_no-limit should be 2")
             tables = self.service.searchTables(None, 'holdem', '100-200_2000-20000_no-limit', 0)
-            self.assertEqual(2, len(tables), "100-200_2000-20000_no-limit w/ holdem should be 2")
+            self.assertEqual(4, len(tables), "100-200_2000-20000_no-limit w/ holdem should be 2")
 
         for ii in [ 1, 2, 3, 4, 5, 6]:
             for query in [ '\t\t100-200_2000-20000_no-limit\t%d',  '\tholdem\t100-200-no-limit\t%d']:
@@ -618,11 +645,18 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         db.db.query(insertSql % (3, nlHe100Currency1))
         db.db.query(insertSql % (2, nlHe100Currency2))
 
-        for ii in [ 0, 1, 2 ]:
-            for query in  [ '\t\t100-200_2000-20000_no-limit\t%d', '\tholdem\t100-200-no-limit\t%d']:
-                for variant in [ None, 'holdem' ]:
-                    tables = self.service.searchTables(None, variant, '100-200_2000-20000_no-limit', ii)
-                    self.assertEqual(2, len(tables))
+        tables = self.service.searchTables(None, None, '100-200_2000-20000_no-limit', 0)
+        self.assertEqual(4, len(tables))
+        tables = self.service.searchTables(None, 'holdem', '100-200_2000-20000_no-limit', 0)
+        self.assertEqual(4, len(tables))
+        tables = self.service.searchTables(None, None, '100-200_2000-20000_no-limit', 1)
+        self.assertEqual(2, len(tables))
+        tables = self.service.searchTables(None, 'holdem', '100-200_2000-20000_no-limit', 1)
+        self.assertEqual(2, len(tables))
+        tables = self.service.searchTables(None, None, '100-200_2000-20000_no-limit', 2)
+        self.assertEqual(2, len(tables))
+        tables = self.service.searchTables(None, 'holdem', '100-200_2000-20000_no-limit', 2)
+        self.assertEqual(2, len(tables))
 
         for variant in [ None, 'holdem' ]:
             tables = self.service.searchTables(None, variant, '100-200_2000-20000_no-limit', 3)
@@ -640,7 +674,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
 
         for ii in [ 0, 1, 2 ]:
             tables = self.service.searchTables(None, 'holdem', None, ii)
-            self.assertEqual(4, len(tables),
+            self.assertEqual([6, 4, 4][ii], len(tables),
               "searchTables() query: holdem w/ players <= %d yields %d not 4" % (ii, len(tables)))
 
         tables = self.service.searchTables(None, 'holdem', None, 3)
@@ -660,15 +694,15 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         # Tests with currency serial tests in place
 
         tables = self.service.searchTables(1, None, None, 0)
-        self.assertEqual(2, len(tables), "search for currency_serial 1 yields %d not 4"
+        self.assertEqual(4, len(tables), "search for currency_serial 1 yields %d not 4"
                          % len(tables))
         for ii in [ 0, 1, 2 ]:
             tables = self.service.searchTables(1, None, None, ii)
-            self.assertEqual(2, len(tables))
+            self.assertEqual([4,2,2][ii], len(tables))
             tables = self.service.searchTables(1, 'holdem', None, ii)
-            self.assertEqual(2, len(tables))
+            self.assertEqual([4,2,2][ii], len(tables))
             tables = self.service.searchTables(1, 'holdem', '100-200_2000-20000_no-limit', ii)
-            self.assertEqual(1, len(tables))
+            self.assertEqual([3,1,1][ii], len(tables))
             tables = self.service.searchTables(1, 'holdem', '1-2_20-200_limit', ii)
             self.assertEqual(1, len(tables))
             tables = self.service.searchTables(1, None, '1-2_20-200_limit', ii)
@@ -742,7 +776,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
 
         log_history.reset()
         tables = self.service.listTables('\tholdem\t', 0)
-        self.assertEqual(4, len(tables))
+        self.assertEqual(6, len(tables))
         self.assertEquals(log_history.get_all(), ["Following listTables() criteria query_string has more parameters than expected, ignoring third one and beyond in: \tholdem\t"])
     def test11_currencySerialIsNotAnInteger(self):
         self.service.startService()
@@ -757,7 +791,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         log_history.reset()
         tables = self.service.listTables("all", 0)
         allSelectCount = len(tables)
-        self.assertEquals(allSelectCount, 5)
+        self.assertEquals(allSelectCount, 7)
         self.assertEquals(log_history.get_all(), [])
 
         log_history.reset()
@@ -768,20 +802,19 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         self.service.startService()
 
         log_history.reset()
-        tables = self.service.listTables("\tholdem'; DELETE from pokertables WHERE variant = 'holdem", 0)
+        tables = self.service.listTables("\tholdem'; DELETE from tables WHERE variant = 'holdem", 0)
         self.assertEqual(0, len(tables))
         self.assertEquals(log_history.get_all(), [])
 
         log_history.reset()
         tables = self.service.listTables("\tholdem", 0)
-        self.assertEqual(4, len(tables))
+        self.assertEqual(6, len(tables))
         self.assertEquals(log_history.get_all(), [])
 
 #####################################################################
 class TourneySelectTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
         PokerServiceTestCaseBase.setUp(self, settingsFile)
-        self.createTourneysSchedules()
         
     def test00_all(self):
         self.service.startService()
@@ -1211,7 +1244,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(queuedPacketMax, self.service.getClientQueuedPacketMax())
 
         startedOnlyVars = [ ('joined_count', 0),
-                            ('tables', 2), ('tourney_table_serial', 1),
+                            ('tables', 0), ('tourney_table_serial', 1),
                             ('shutting_down', False), ('avatars', []),
                             ('avatar_collection', PokerAvatarCollection()), ('simultaneous', 4),
                             ('monitors', []), ('gettextFuncs', 17) ]
@@ -1590,7 +1623,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals("", player_image2.image)
 
     def test13_checkTourneysSchedule_spawn_regular(self):
-        self.createTourneysSchedules()
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
         pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.5
 
@@ -1681,7 +1713,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         return d
     
     def test14_checkTourneysSchedule_cancel_regular(self):
-        self.createTourneysSchedules()
         pokerservice.DELETE_OLD_TOURNEYS_DELAY = 0
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
         pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
@@ -1732,7 +1763,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEqual(111, service.sng_timeout)
 
     def test14_checkTourneysSchedule_cancel_sitngo(self):
-        self.createTourneysSchedules()
         self.service.startService()
         self.service.sng_timeout = 0
         heads_up_before = [t for t in self.service.tourneys.values() if t.name=='sitngo2'][0]
@@ -1746,7 +1776,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEqual(heads_up_before.schedule_serial, heads_up_after2.schedule_serial)
 
     def test14_1_checkTourneysSchedule_cancel_sitngo_already_canceled(self):
-        self.createTourneysSchedules()
         self.service.startService()
         self.service.sng_timeout = 0
         (heads_up_before,) = filter(lambda tourney: tourney.name == 'sitngo2', self.service.tourneys.values())
@@ -1758,7 +1787,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
         pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
         
-        self.createTourneysSchedules()
         self.service.startService()
         self.createUsers()
 
@@ -1827,8 +1855,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     def runTourney_freeroll(self, has_bailor):
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
         pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
-        
-        self.createTourneysSchedules()
         
         #
         # A regular tournament starts registration now
@@ -1929,7 +1955,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals(self.service.joinedCountReachedMax(),val >= expectedMax)
         self.service.stopService()
     def test20_spawnTourneyCurrencySerialFromDateFormat(self):
-        self.createTourneysSchedules()
         cursor = self.db.cursor()
         currency_serial_from_date_format = '%Y%m'
         cursor.execute("UPDATE tourneys_schedule SET currency_serial_from_date_format = '%s' WHERE name = 'sitngo2'" % currency_serial_from_date_format)
@@ -1949,7 +1974,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         tourney = self.service.tourneys[tourney_serial]
         self.assertEqual(currency_serial_from_date, tourney.currency_serial)
     def test20_spawnTourneyPrizeCurrencyFromDateFormat(self):
-        self.createTourneysSchedules()
         cursor = self.db.cursor()
         prize_currency_from_date_format = '%W'
         cursor.execute("UPDATE tourneys_schedule SET prize_currency_from_date_format = '%s' WHERE name = 'sitngo2'" % prize_currency_from_date_format)
@@ -1971,13 +1995,11 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
     def test21_today(self):
         self.assertEqual(self.service.today(), date.today())
     def test22_spawnTourneyBadCurrencySerialFromDateFormat(self):
-        self.createTourneysSchedules()
         cursor = self.db.cursor()
         cursor.execute("UPDATE tourneys_schedule SET currency_serial_from_date_format = 'NaN666' WHERE name = 'sitngo2'")
         cursor.close()
         self.assertRaises(UserWarning, self.service.startService)
     def test22_spawnTourneyBadPrizeCurrencyFromDateFormat(self):
-        self.createTourneysSchedules()
         cursor = self.db.cursor()
         cursor.execute("UPDATE tourneys_schedule SET prize_currency_from_date_format = 'NaN666' WHERE name = 'sitngo2'")
         cursor.close()
@@ -2101,7 +2123,6 @@ class RefillTestCase(unittest.TestCase):
         table_money = 1000
         table_serial = 200
         self.service.db.db.query("INSERT INTO user2table VALUES (%d, %d, %d, 0)" % (serial, table_serial, table_money))
-        self.service.db.db.query("INSERT INTO pokertables (serial, name, currency_serial, tourney_serial) VALUES (%d, 'foo', 1, 0)" % (table_serial,))
         money_left = 100
         self.service.db.db.query("UPDATE user2money SET amount = %d WHERE user_serial = %d" % (money_left, serial))
         self.assertEquals(refill-table_money, self.service.autorefill(serial))
@@ -2289,7 +2310,6 @@ class TourneyCancelTestCase(PokerServiceTestCaseBase):
 class TourneyManagerTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
         PokerServiceTestCaseBase.setUp(self, settingsFile)
-        self.createTourneysSchedules()
         
     class ClientMockup:
         def __init__(self, serial, testObject):
@@ -2575,12 +2595,11 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
 class TourneyNotifyTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
         PokerServiceTestCaseBase.setUp(self, settingsFile)
-        self.createTourneysSchedules()
+
     def startTournament(self, table_serial, table_money):
         #
         # start tournament
         #
-        self.createTourneysSchedules()
         tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
         self.service.spawnTourney(schedule)
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial, tourney_serial = tourney_serial))
@@ -2984,7 +3003,6 @@ class ShutdownCheckTestCase(PokerServiceTestCaseBase):
 class TourneySatelliteTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
         PokerServiceTestCaseBase.setUp(self, settingsFile)
-        self.createTourneysSchedules()
         
     def test_lookup_nop(self):
         class Tournament:
@@ -3163,7 +3181,6 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
 class TourneyFinishedTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
         PokerServiceTestCaseBase.setUp(self, settingsFile)
-        self.createTourneysSchedules()
         
     class ClientMockup:
         def __init__(self, serial, testObject):
@@ -4216,8 +4233,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 cursorSelf.counts = {}
                 cursorSelf.acceptedStatements = [
                     "update user2tourney set",
-                    "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE",
-                    "DELETE FROM pokertables WHERE"
+                    "SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE",
+                    "DELETE FROM tables WHERE"
                 ]
                 cursorSelf.row = ()
                 for cntType in cursorSelf.acceptedStatements:
@@ -4282,8 +4299,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.tourneyGameFilled(MockTourney(), MockGame())
 
         self.assertEquals(self.service.db.cursorValue.counts, {
-            'DELETE FROM pokertables WHERE': 0,
-            'SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE': 0,
+            'DELETE FROM tables WHERE': 0,
+            'SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE': 0,
             'update user2tourney set': 1
         })
         self.assertEquals(self.service.tables[22].updateCount, 1)
@@ -4717,7 +4734,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 MockCursorBase.__init__(cursorSelf, self,
                                         [ "UPDATE user2money SET amount = amount",
                                        "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES",
-                                       "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE"])
+                                       "SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE"])
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -5060,14 +5077,14 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 # Make it always 1, so the update succeeds and insert fails
                 cursorSelf.rowcount = 1
 
-                if statement == "SELECT COUNT(*) FROM pokertables":
+                if statement == "SELECT COUNT(*) FROM tables":
                     cursorSelf.row = (1235,)
                 elif statement == "SELECT COUNT(*) FROM user2table":
                     cursorSelf.row = (7356,)
                 else:
                     self.failIf(1)
             def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, ["SELECT COUNT(*) FROM pokertables", "SELECT COUNT(*) FROM user2table"])
+                MockCursorBase.__init__(cursorSelf, self, ["SELECT COUNT(*) FROM tables", "SELECT COUNT(*) FROM user2table"])
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -5126,8 +5143,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                     "UPDATE tourneys AS t LEFT JOIN user2tourney AS u2t ON",
                     "DELETE u2t FROM user2tourney AS u2t LEFT JOIN tourneys",
                     "REPLACE INTO route VALUES",
-                    "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE",
-                    "DELETE FROM pokertables WHERE",
+                    "SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE",
+                    "DELETE FROM tables WHERE",
                     "SELECT serial FROM tourneys WHERE state IN"
                 ])
         class MockDBWithDifferentCursorMethod(MockDatabase):
@@ -5273,7 +5290,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 cursorSelf.row = []
                 self.failUnless(sql.find("serial = 765") > 0, "serial wrong")
             def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, ["SELECT rating,affiliate,email,name FROM users"])
+                MockCursorBase.__init__(cursorSelf, self, ["SELECT rating, affiliate, email, name FROM users"])
         class MockDBWithDifferentCursorMethod(MockDatabase):
             def cursor(dbSelf, dummy = None):
                 # Needed because getUserInfo() calls with argument "DictCursor"
@@ -5722,14 +5739,14 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(1500, self.service.movePlayer(9356, 1249, 6752))
 
     def test60_leavePlayer_updateRowCountTooHigh(self):
-        validStatements = ["UPDATE user2money,user2table,pokertables", "DELETE FROM user2table"]
+        validStatements = ["SELECT t.serial, c.currency_serial, u2t.user_serial", "UPDATE user2money,user2table,tables", "DELETE FROM user2table"]
         class MockCursor(MockCursorBase):
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, validStatements)
             def statementActions(cursorSelf, sql, statement):
                 if statement == "DELETE FROM user2table":
                     pass
-                elif statement == "UPDATE user2money,user2table,pokertables":
+                elif statement == "UPDATE user2money,user2table,tables":
                     self.failUnless(sql.find("tables.serial = 6543") > 0, "table_serial wrong")
                     self.failUnless(sql.find("table_serial = 6543") > 0, "table_serial wrong")
                     self.failUnless(sql.find("user_serial = 236") > 0, "user_serial wrong")
@@ -5760,8 +5777,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
             self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
         msgs = log_history.get_all()
         self.assertEquals(len(msgs), 4)
-        self.failUnless(msgs[0].find('leavePlayer UPDATE user2money,user2table,pokertables') == 0)
-        self.failUnless(msgs[1].find('modified 12 rows (expected 0 or 1): UPDATE user2money,user2table,pokertables') == 0)
+        self.failUnless(msgs[0].find('leavePlayer UPDATE user2money,user2table,tables') == 0)
+        self.failUnless(msgs[1].find('modified 12 rows (expected 0 or 1): UPDATE user2money,user2table,tables') == 0)
         self.failUnless(msgs[2].find('leavePlayer DELETE FROM user2table') == 0)
         self.failUnless(msgs[3].find('modified 0 rows (expected 1): DELETE FROM user2table') == 0)
 
@@ -5878,14 +5895,14 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         self.service.db = oldDb
     def test65_createTable_insertFailsProperly(self):
-        acceptList = ["INSERT INTO pokertables", 'REPLACE INTO route']
+        acceptList = ["SELECT t.serial, c.currency_serial, u2t.user_serial", "INSERT INTO tables", 'REPLACE INTO route']
         acceptListRowCount = [0,1]
         class MockCursor(MockCursorBase):
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, acceptList)
             def statementActions(cursorSelf, sql, statement):
                 MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
-                if statement == "INSERT INTO pokertables":
+                if statement == "INSERT INTO tables":
                     cursorSelf.lastrowid = 1567
 
         self.service = pokerservice.PokerService(self.settings)
@@ -5898,8 +5915,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         self.service.tables = {}
         table = self.service.createTable("bobby", {
-            'seats' : 7, 'currency_serial' : 2663,
-            'name': "This", 'variant' : 'omaha',
+            'seats' : 7,
+            'currency_serial' : 2663,
+            'name': "This",
+            'variant' : 'omaha',
             'betting_structure' : "1-2_20-200_limit" 
         })
         
@@ -5907,53 +5926,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(table, None)
         
         msgs = log_history.get_all()
-        self.failUnless(len(msgs) >= 2, "There should be at least two output messages")
-        self.failUnless(log_history.search('createTable: INSERT INTO pokertables'))
-        self.failUnless(log_history.search('inserted 0 rows (expected 1): INSERT INTO pokertables'))
+        self.failUnless(log_history.search('createTable: INSERT INTO tables'))
         
         self.service.db = oldDb
 
-    def test66_deleteTable_deleteRowsNot1(self):
-        validStatements = ["DELETE FROM pokertables"]
-        class MockCursor(MockCursorBase):
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, validStatements)
-            def statementActions(cursorSelf, sql, statement):
-                if statement == "DELETE FROM pokertables":
-                    cursorSelf.rowcount = 3
-                    cursorSelf.row = []
-                    self.failUnless(sql.find("serial = 7775") > 0, "serial value wrong")
-
-        self.service = pokerservice.PokerService(self.settings)
-
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        class MockGame():
-            def __init__(mgSelf):
-                mgSelf.id = 7775
-                mgSelf.name =  "Mocky"
-        game = MockGame()
-        self.service.tables = {7775: game}
-        class MockTable():
-            def __init__(mtSelf): mtSelf.game = game
-
-        log_history.reset()
-
-        table = self.service.deleteTable(MockTable())
-
-        self.assertEquals(self.service.tables, {})
-
-        for statement in validStatements:
-            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
-
-        msgs = log_history.get_all()
-        self.failUnless(len(msgs) == 3, "Expected excatly three messages")
-        self.assertEquals(msgs[0], 'table Mocky/7775 removed from server')
-        self.failUnless(msgs[1].find('deleteTable: DELETE FROM pokertables') == 0)
-        self.failUnless(msgs[2].find('deleted 3 rows (expected 1): DELETE FROM pokertables') == 0)
-
-        self.service.db = oldDb
     def test67_broadcast(self):
         """test67_broadcast
         Full Coverage for the PokerService broadcast method"""
@@ -6535,7 +6511,6 @@ def GetTestSuite():
     suite.addTest(loader.loadClass(UpdatePlayerRakeTestCase))
     suite.addTest(loader.loadClass(MonitorTestCase))
     suite.addTest(loader.loadClass(ListTablesSearchTablesTestCases))
-    suite.addTest(loader.loadClass(GetTableBestByCriteriaTestCase))
     suite.addTest(loader.loadClass(TourneySelectTestCase))
     suite.addTest(loader.loadClass(PlayerPlacesTestCase))
     suite.addTest(loader.loadClass(CleanUpTemporaryUsersTestCase))

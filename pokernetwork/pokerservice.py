@@ -3023,7 +3023,7 @@ class PokerService(service.Service):
                         ON t.serial = u2t.table_serial
                     LEFT JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
-                    WHERE t.resthost_serial = %s AND c.currency_serial != 0;
+                    WHERE t.resthost_serial = %s AND c.currency_serial != 0
                 """),
                 (self.resthost_serial,)
             )
