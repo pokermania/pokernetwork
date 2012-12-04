@@ -1,3 +1,11 @@
+poker-network (2.2.3-12) pokermania; urgency=low
+
+  * 6cc4dff removed tournament break messages, refs #2819
+  * 6380110 polishing, removed unneded global translate fn in pokeravatar
+  * eb879e1 reactivate testing when building a debian package
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 04 Dec 2012 11:00:00 +0200
+
 poker-network (2.2.3-11) pokermania; urgency=low
 
   * 53a93a3 double money test added and fixed, refs #7582
