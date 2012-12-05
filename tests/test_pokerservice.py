@@ -242,6 +242,11 @@ class MockCursorBase:
         return cursorSelf.rowcount
     def fetchone(cursorSelf): return cursorSelf.row
     def fetchall(cursorSelf): return [cursorSelf.row]
+    def __iter__(cursorSelf):
+        def i():
+            if False:
+                yield
+        return i()
 
 class MockDatabase:
     def __init__(dbSelf, cursorClass):
@@ -1438,11 +1443,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         #
         # Some money is on a table
         #
-        table_serial = self.service.tables.values()[0].game.id
+        table_serial = 1
         buy_in = 50
         currency_serial = 1
-        self.assertEquals(1, table_serial)
-        self.assertEquals(currency_serial, self.service.tables.values()[0].currency_serial)
         self.service.seatPlayer(self.user2_serial, table_serial, 0)
         self.service.buyInPlayer(self.user2_serial, table_serial, currency_serial, buy_in)
         info = self.service.getUserInfo(self.user2_serial)
@@ -1821,10 +1824,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.assertEquals(self.service.joined_count, 1)
             self.assertEquals(len(client1.packets), 14)
             for p in client1.packets:
-                self.assertEquals(p.game_id, self.service.tables.values()[2].game.id)
+                self.assertEquals(p.game_id, self.service.tables.values()[0].game.id)
             self.assertEquals(len(client1.tables), 1)
-            self.assertEquals(self.service.tables.values()[2].game.id in client1.tables, True)
-            self.assertEquals(client1.tables[self.service.tables.values()[2].game.id], self.service.tables.values()[2])
+            self.assertEquals(self.service.tables.values()[0].game.id in client1.tables, True)
+            self.assertEquals(client1.tables[self.service.tables.values()[0].game.id], self.service.tables.values()[0])
 
             self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, heads_up.state)
             game = heads_up.games[0]
@@ -1832,7 +1835,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             game.callNraise(in_position, game.maxBuyIn())
             in_position = game.getSerialInPosition()
             game.call(in_position)
-            self.service.tables.values()[2].update() # two tables already in settings
+            self.service.tables.values()[0].update() # two tables already in settings
             
             # reset the timer_remove_player to 0 so it gets called sooner
             self.service.timer_remove_player['%d_%d' % (heads_up.serial, self.user1_serial)].reset(0)
@@ -2048,7 +2051,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.service.refill = None
         self.createUsers()
-        table_serial = self.service.tables.values()[0].game.id
+        table_serial = 1
         currency_serial = 1
         self.service.seatPlayer(self.user1_serial, table_serial, 0)
         log_history.reset()
@@ -2072,11 +2075,21 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 ##############################################################################
 class RefillTestCase(unittest.TestCase):
 
-    def destroyDb(self, *a):
-        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+    def setupDb(self):
+        sqlmanager.setup_db(
+            TESTS_PATH + "/../database/schema.sql", (
+                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
+                    ('Table1','100-200_2000-20000_no-limit'),
+                )),
+                ("INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)", (
+                    (1, 1),
+                )),
+            ),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
-            host=config.test.mysql.host
+            host=config.test.mysql.host,
+            port=config.test.mysql.port,
+            database=config.test.mysql.database
         )
 
     def setUp(self):
@@ -2106,12 +2119,11 @@ class RefillTestCase(unittest.TestCase):
             'mysql_command': config.test.mysql.command
         }
         testclock._seconds_reset()
-        self.destroyDb()
+        self.setupDb()
         self.service = pokerservice.PokerService(settings_xml)
 
     def tearDown(self):
         d = self.service.stopService()
-        d.addCallback(lambda x: self.destroyDb())
         return d
 
     def test_refill(self):
@@ -2121,7 +2133,7 @@ class RefillTestCase(unittest.TestCase):
         (serial, _name, _privilege), _message = self.service.auth(PacketLogin.type,("user1", "password1"), "role1")
         self.assertEquals(0, self.service.autorefill(serial))
         table_money = 1000
-        table_serial = 200
+        table_serial = 1
         self.service.db.db.query("INSERT INTO user2table VALUES (%d, %d, %d, 0)" % (serial, table_serial, table_money))
         money_left = 100
         self.service.db.db.query("UPDATE user2money SET amount = %d WHERE user_serial = %d" % (money_left, serial))
@@ -5739,23 +5751,24 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(1500, self.service.movePlayer(9356, 1249, 6752))
 
     def test60_leavePlayer_updateRowCountTooHigh(self):
-        validStatements = ["SELECT t.serial, c.currency_serial, u2t.user_serial", "UPDATE user2money,user2table,tables", "DELETE FROM user2table"]
+        validStatements = [
+            "SELECT t.serial, c.currency_serial, u2t.user_serial",
+            "UPDATE user2money AS u2m LEFT JOIN user2table",
+            "DELETE FROM user2table",
+            "UPDATE tables SET players = 0, observers = 0",
+            "SELECT serial FROM tourneys WHERE state IN"
+        ]
         class MockCursor(MockCursorBase):
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, validStatements)
             def statementActions(cursorSelf, sql, statement):
                 if statement == "DELETE FROM user2table":
                     pass
-                elif statement == "UPDATE user2money,user2table,tables":
-                    self.failUnless(sql.find("tables.serial = 6543") > 0, "table_serial wrong")
-                    self.failUnless(sql.find("table_serial = 6543") > 0, "table_serial wrong")
-                    self.failUnless(sql.find("user_serial = 236") > 0, "user_serial wrong")
+                elif statement == "UPDATE user2money AS u2m LEFT JOIN user2table":
+                    self.failUnless(sql.find("t.serial = 6543") > 0, "table_serial wrong "+sql)
+                    self.failUnless(sql.find("user_serial = 236") > 0, "user_serial wrong "+sql)
                     cursorSelf.rowcount = 12
                     cursorSelf.row = []
-                elif statement == "UPDATE user2table":
-                    self.failUnless(sql.find("table_serial = 2249") > 0, "from_table_serial wrong")
-                    self.failUnless(sql.find("SET table_serial = 6752") > 0, "to_table_serial wrong")
-                    cursorSelf.rowcount = 3
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -5773,14 +5786,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         log_history.reset()
 
         self.failIf(self.service.leavePlayer(236, 6543, 8999))
-        for statement in validStatements:
-            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
         msgs = log_history.get_all()
-        self.assertEquals(len(msgs), 4)
-        self.failUnless(msgs[0].find('leavePlayer UPDATE user2money,user2table,tables') == 0)
-        self.failUnless(msgs[1].find('modified 12 rows (expected 0 or 1): UPDATE user2money,user2table,tables') == 0)
-        self.failUnless(msgs[2].find('leavePlayer DELETE FROM user2table') == 0)
-        self.failUnless(msgs[3].find('modified 0 rows (expected 1): DELETE FROM user2table') == 0)
+        self.assertEquals(len(msgs), 2)
+        self.failUnless(msgs[0].find('modified 12 rows (expected 0 or 2)') >= 0)
+        self.failUnless(msgs[1].find('modified 0 rows (expected 1)') >= 0)
 
         self.service.db = oldDb
         self.service.databaseEvent = saveDBEvent
@@ -5893,41 +5902,6 @@ class PokerServiceCoverageTests(unittest.TestCase):
             "Missing expected string in: " +  msgs[1]
         )
 
-        self.service.db = oldDb
-    def test65_createTable_insertFailsProperly(self):
-        acceptList = ["SELECT t.serial, c.currency_serial, u2t.user_serial", "INSERT INTO tables", 'REPLACE INTO route']
-        acceptListRowCount = [0,1]
-        class MockCursor(MockCursorBase):
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, acceptList)
-            def statementActions(cursorSelf, sql, statement):
-                MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
-                if statement == "INSERT INTO tables":
-                    cursorSelf.lastrowid = 1567
-
-        self.service = pokerservice.PokerService(self.settings)
-        self.service.dirs = [path.join(config.test.engine_path, 'conf')]
-
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        log_history.reset()
-
-        self.service.tables = {}
-        table = self.service.createTable("bobby", {
-            'seats' : 7,
-            'currency_serial' : 2663,
-            'name': "This",
-            'variant' : 'omaha',
-            'betting_structure' : "1-2_20-200_limit" 
-        })
-        
-        self.failIf(self.service.tables.has_key(1567), "Table Should not have been created, INSERT 0 rows!")
-        self.assertEquals(table, None)
-        
-        msgs = log_history.get_all()
-        self.failUnless(log_history.search('createTable: INSERT INTO tables'))
-        
         self.service.db = oldDb
 
     def test67_broadcast(self):

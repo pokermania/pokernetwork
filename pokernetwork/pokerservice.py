@@ -2211,7 +2211,7 @@ class PokerService(service.Service):
     def cleanupResthost(self):
         if self.resthost_serial:
             cursor = self.db.cursor()
-            cursor.execute("DELETE FROM route WHERE resthost_serial = %s", self.resthost_serial)
+            cursor.execute("DELETE FROM route WHERE resthost_serial = %s", (self.resthost_serial,))
             cursor.execute("UPDATE resthost SET state = %s WHERE serial = %s", (self.STATE_OFFLINE,self.resthost_serial))
             cursor.close()
 
@@ -2498,18 +2498,17 @@ class PokerService(service.Service):
                 """ SELECT
                         u2m.currency_serial,
                         u2m.amount,
-                        COALESCE(u2m.points, 0),
-                        COALESCE(u2t.money, 0) + COALESCE(u2t.bet, 0)
+                        COALESCE(u2t.money, 0) + COALESCE(u2t.bet, 0) AS in_game,
+                        u2m.points
                     FROM user2money AS u2m
-                    LEFT JOIN user2table AS u2t
-                        ON u2t.user_serial = u2m.user_serial
-                    LEFT JOIN tables AS t
-                        ON t.serial = u2t.table_serial
-                    LEFT JOIN tableconfigs AS c
-                        ON c.serial = t.tableconfig_serial
+                    LEFT JOIN (user2table u2t, tables t, tableconfigs c)
+                        ON
+                            u2t.user_serial = u2m.user_serial AND
+                            u2t.table_serial = t.serial AND
+                            t.tableconfig_serial = c.serial AND
+                            c.currency_serial = u2m.currency_serial
                     WHERE
-                        u2m.user_serial = %s AND
-                        (u2t.table_serial IS NULL OR c.currency_serial = u2m.currency_serial)
+                        u2m.user_serial = %s
                 """),
                 (serial,)
             )
@@ -2873,7 +2872,7 @@ class PokerService(service.Service):
                     # TODO status False?
             c.execute("DELETE FROM user2table WHERE user_serial = %s AND table_serial = %s", (serial , table_id))
             if c.rowcount != 1:
-                self.log.error("leavePlayer: modified %d rows (expected 1)", c.rowcount, c._executed)
+                self.log.error("leavePlayer: modified %d rows (expected 1)\n%s", c.rowcount, c._executed)
                 # TODO status False?
             self.databaseEvent(event = PacketPokerMonitorEvent.LEAVE, param1=serial, param2=table_id)
             # TODO return status? just used in tests
@@ -3041,7 +3040,7 @@ class PokerService(service.Service):
                     SET players = 0, observers = 0
                     WHERE resthost_serial = %s
                 """),
-                (self.resthost_serial)
+                (self.resthost_serial,)
             )
         finally:
             c.close()
