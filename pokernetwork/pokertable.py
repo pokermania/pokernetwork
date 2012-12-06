@@ -504,15 +504,6 @@ class PokerTable:
                 if player.getMissedRoundCount() >= self.max_missed_round:
                     self.kickPlayer(player.serial)
 
-    def tourneyRebuy(self, game_id, serial):
-        """broadcasts the rebuy packet to everyplayer on the table"""
-        assert self.game.id == game_id
-        self.broadcast(PacketPokerRebuy(
-            game_id = game_id,
-            serial = serial,
-            amount = self.game.buyIn()
-        ))
-
     def tourneyEndTurn(self):
         if not self.tourney: return
         for event in self.game.historyGet()[self.history_index:]:

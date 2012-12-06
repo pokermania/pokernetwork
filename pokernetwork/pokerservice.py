@@ -1704,9 +1704,6 @@ class PokerService(service.Service):
         success, game_id, reason = tourney.rebuy(packet.serial)
 
         if success:
-            table = self.getTable(game_id)
-            table.tourneyRebuy(game_id=game_id, serial=packet.serial)
-            
             return packet.OK
         else:
             return {
