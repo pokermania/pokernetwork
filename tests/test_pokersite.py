@@ -54,6 +54,7 @@ class PokerServiceMockup:
             self.avatar_collection = PokerAvatarCollection()
             self.dirs = []
             self.poker_auth = PokerAuthMockup()
+            self.memcache = None
 
       def getPlayerInfo(self, serial):
             packet = PacketPokerPlayerInfo(serial=serial)
@@ -93,6 +94,16 @@ class PokerServiceMockup:
       def packet2resthost(self, packet):
             return (None, None)
 
+      def auth(self, auth_type, args, explain):
+            if self.memcache:
+                  serial = self.memcache.get(args[0])
+                  if serial:
+                        return (serial, "hans", 0), None
+                  else:
+                        return False, "Error"
+            else:
+                  return (111,"hans", 0), None
+
 class HelpersTestCase(unittest.TestCase):
 
       def test_args2packets(self):
@@ -129,7 +140,7 @@ class PokerSiteBase(unittest.TestCase):
             pokermemcache.memcache_expiration_singleton.clear()
             self.service = PokerServiceMockup()
             self.site = pokersite.PokerSite(self.settings, pokersite.PokerResource(self.service))
-            self.site.memcache = pokermemcache.MemcacheMockup.Client([])
+            self.service.memcache = self.site.memcache = pokermemcache.MemcacheMockup.Client([])
 
       def tearDown(self):
             self.site.stopFactory()
@@ -394,7 +405,7 @@ class PokerImageUploadTestCase(unittest.TestCase):
             pokermemcache.memcache_expiration_singleton.clear()
             self.service = PokerServiceMockup()
             self.site = pokersite.PokerSite(self.settings, pokersite.PokerImageUpload(self.service))
-            self.site.memcache = pokermemcache.MemcacheMockup.Client([])
+            self.service.memcache = self.site.memcache = pokermemcache.MemcacheMockup.Client([])
             self.image_data = "image data"
             def parse_multipart_mockup(content, dict):
                   return {'filename':[self.image_data]}

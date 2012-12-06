@@ -414,6 +414,7 @@ class PokerSite(server.Site):
             self.resthost = (resthost['host'], int(resthost['port']), resthost['path'])
         else:
             self.resthost = None
+        self.service = resource.service
 
     def pipe(self, d, request, packet):
         if self.pipes:
@@ -473,8 +474,15 @@ class PokerSite(server.Site):
             raise Exception("uid is not str: '%s' %s" % (uid, type(uid)))
         if not isinstance(auth, str):
             raise Exception("auth is not str: '%s' %s" % (auth, type(auth)))
-        memcache_serial = self.memcache.get(auth)
-        if memcache_serial == None:
+
+        memcache_serial = None
+        info, reason = self.service.auth(PACKET_AUTH, (auth,), None)
+        if info:
+            memcache_serial, _name, _privilege = info
+        else:
+            self._log.error("inconsistent user credentials for user %s, %s", self.memcache.get(auth), reason)
+            
+        if memcache_serial is None:
             #
             # If the memcache session is gone, trash the current session
             # if it exists.
