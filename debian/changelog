@@ -1,6 +1,13 @@
+poker-network (2.2.3-14) pokermania; urgency=low
+
+  * bbfa459 another explain-money inconsistency fix. all tests working again
+  * fd01ca9 added rebuy test
+
+ -- Andor Goetzendorff <andor@pokermania.de>  Tue, 11 Dec 2012 13:00:00 +0200
+
 poker-network (2.2.3-13) pokermania; urgency=low
 
- * 539fefd user cannot join/observe a poker table when there is no entry in the users table
+  * 539fefd user cannot join/observe a poker table when there is no entry in the users table
 
  -- Andor Goetzendorff <andor@pokermania.de>  Mon, 10 Dec 2012 13:00:00 +0200
 
