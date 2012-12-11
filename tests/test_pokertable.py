@@ -2557,7 +2557,9 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         self.table = table = self.table9
         game = table.game
         self.service.has_ladder = False
-        table.factory.buyInPlayer = lambda *a,**kw: table.game.maxBuyIn()
+        def buyInPlayerMuck(_serial, _table_id, _currency_serial, amount): 
+            return amount
+        table.factory.buyInPlayer = buyInPlayerMuck
         
 #        deck info        
         cards_to_player = (
@@ -2651,7 +2653,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
                     serial = predicted_serial
                     client = clients_all[serial]
                     clients[serial] = client
-                    table.rebuyPlayerRequest(client, 0)
+                    table.rebuyPlayerRequest(client, game.maxBuyIn())
                     table.sitPlayer(client, serial)
                     #table.sitPlayer(client, serial)
                 table.update()
