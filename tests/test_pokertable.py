@@ -502,7 +502,10 @@ class MockClientWithExplain(MockClientWithRealJoin):
             self.explain.explain(packet)
             packets = self.explain.forward_packets
         return MockClientWithRealJoin.sendPacket(self,packet)
-        
+    
+    def setMoney(self, table, amount):
+        return PokerAvatar.setMoney(self, table, amount)
+    
 # --------------------------------------------------------------------------------
 class PokerAvatarCollectionTestCase(unittest.TestCase):
 
@@ -2085,7 +2088,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             client.setExplain(PacketPokerExplain.ALL)
-            self.assertEqual(True, self.table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
+            self.assertEqual(True, self.table.joinPlayer(client, serial, reason="MockCreatePlayerJoin"))
             self.assertEqual(True, self.table.seatPlayer(client, serial, -1))
             self.assertEqual(True, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
             self.table.sitPlayer(client, serial)
@@ -2098,20 +2101,19 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         
         def payBlinds(packet):
             self.table.game.blind(2,1000)
+            self.table.update()
             self.table.game.blind(1,1000)
+            self.table.update()
             
             # game is finished by now in the PokerGameServer, but
             # the changes are not propageted to the PokerGameClients until 
             # we update the table
-            self.table.update()
+            self.assertTrue(self.table.game.isEndOrNull())
             
-        d1 = clients[1].waitFor(PACKET_POKER_BLIND_REQUEST)
-        d2 = clients[1].waitFor(PACKET_POKER_WIN)
+        d = clients[1].waitFor(PACKET_POKER_BLIND_REQUEST)
+        d.addCallback(payBlinds)
         
-        d1.addCallback(payBlinds)
-        d1.chainDeferred(d2)
-        
-        return d1
+        return d
     
     def test51_blindAnteState(self):
         table = self.table3
@@ -3051,6 +3053,10 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         game.serial2player[29047].money *= 3
         game.serial2player[114305].money *= 4
         
+        for player_serial, player in game.serial2player.iteritems():
+            for c in clients_all.itervalues():
+                c.explain.games.getGame(game.id).serial2player[player_serial].money = player.money
+            
         table.game.serial2player[114305].missed_blind = 'big'
         table.game.serial2player[102475].missed_blind = 'small'
         table.game.serial2player[29047].missed_blind = 'small'
@@ -3155,7 +3161,9 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         
         # player is broke
         game.serial2player[158428].money = 0
-        
+        for c in clients_all.itervalues():
+            c.explain.games.getGame(game.id).serial2player[158428].money = 0
+            
         def firstGame(packet):
             # player rebuys
             table.rebuyPlayerRequest(clients_all[158428], game.buyIn()); table.update()
@@ -3400,12 +3408,9 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             
             game.call(160381); table.update()
             game.call(160038); table.update()
-
+            
             joinAndSeat(154625, True, -1)
             
-            game.fold(160227); table.update()
-            game.callNraise(160038, 0); table.update()
-            game.fold(160381); table.update()
             checkExplainMoney()
             
         d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)

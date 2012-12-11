@@ -1369,19 +1369,10 @@ class PokerAvatar:
         # resets the autoPlayer/wait_for flag.
         #
         if game.sit(serial) or game.isSit(serial):
-            packets = [
-                PacketPokerPlayerChips(
-                    game_id = game.id,
-                    serial = serial,
-                    bet = game.getPlayer(serial).bet,
-                    money = game.getPlayer(serial).money
-                ),
-                PacketPokerSit(
-                    game_id = game.id,
-                    serial = serial
-                )
-            ]
-            table.broadcast(packets)
+            table.broadcast(PacketPokerSit(
+                game_id = game.id,
+                serial = serial
+            ))
 
     def sitOutPlayer(self, table, serial):
         game = table.game
@@ -1423,8 +1414,8 @@ class PokerAvatar:
                 game_id = game.id,
                 serial = self.getSerial(),
                 bet = nochips,
-                money = player.money)
-            )
+                money = player.money
+            ))
             return True
         else:
             return False
