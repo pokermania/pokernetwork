@@ -480,7 +480,11 @@ class PokerSite(server.Site):
         if info:
             memcache_serial, _name, _privilege = info
         else:
-            self._log.error("inconsistent user credentials for user %s, %s", self.memcache.get(auth), reason)
+            mauth = self.memcache.get(auth)
+            if mauth:
+                self._log.error("inconsistent user credentials for user %s, %s", mauth, reason, refs=[
+                    ('User', mauth, lambda x: x)
+                ])
             
         if memcache_serial is None:
             #
