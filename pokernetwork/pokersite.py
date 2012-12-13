@@ -475,14 +475,18 @@ class PokerSite(server.Site):
         if not isinstance(auth, str):
             raise Exception("auth is not str: '%s' %s" % (auth, type(auth)))
 
-        from pokerpackets.packets import PACKET_AUTH
+        memcache_serial = None
         info, reason = self.service.auth(PACKET_AUTH, (auth,), None)
         if info:
-            memcache_serial, name, privilege = info
+            memcache_serial, _name, _privilege = info
         else:
-            self._log.error("incnosistent user credentials for user %s, %s", self.memcache.get(auth), reason)
-            memcache_serial = None
-        if memcache_serial == None:
+            mauth = self.memcache.get(auth)
+            if mauth:
+                self._log.error("inconsistent user credentials for user %s, %s", mauth, reason, refs=[
+                    ('User', mauth, lambda x: x)
+                ])
+            
+        if memcache_serial is None:
             #
             # If the memcache session is gone, trash the current session
             # if it exists.
