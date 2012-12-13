@@ -91,35 +91,6 @@ CREATE TABLE monitor (
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS pokertables;
-CREATE TABLE pokertables (
-  `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  resthost_serial int(10) unsigned NOT NULL DEFAULT '0',
-  seats tinyint(4) DEFAULT '10',
-  average_pot int(10) unsigned DEFAULT '0',
-  hands_per_hour int(10) unsigned DEFAULT '0',
-  percent_flop tinyint(4) DEFAULT '0',
-  players tinyint(4) DEFAULT '0',
-  observers int(10) unsigned DEFAULT '0',
-  waiting tinyint(4) DEFAULT '0',
-  player_timeout int(10) unsigned DEFAULT '60',
-  muck_timeout int(10) unsigned DEFAULT '5',
-  currency_serial int(11) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  variant varchar(255) NOT NULL,
-  betting_structure varchar(255) NOT NULL,
-  skin varchar(255) NOT NULL DEFAULT 'default',
-  tourney_serial int(10) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY (`serial`),
-  UNIQUE KEY `name` (`name`),
-  KEY pokertables_name (`name`),
-  KEY pokertables_variant (variant),
-  KEY pokertables_players (players),
-  KEY pokertables_betting_structure (betting_structure),
-  KEY pokertables_currency_serial (currency_serial),
-  KEY resthost_serial (resthost_serial)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 DROP TABLE IF EXISTS resthost;
 CREATE TABLE resthost (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,

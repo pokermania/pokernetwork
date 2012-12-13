@@ -22,13 +22,13 @@ def query(_query, _args=None, user=None, password=None, host=None, port=3306, da
         db.close()
 
 def setup_db(schema, _querys=[], user=None, password=None, host=None, port=3306, database=None):
-    db = _my.connect(user='hannes', passwd='', host=host, port=port)
+    db = _my.connect(user=user, passwd=password, host=host, port=port)
     try:
         db.query("DROP DATABASE IF EXISTS `%s`" % (database,))
         db.query("CREATE DATABASE `%s`" % (database,))
     finally:
         db.close()
-    db = _my.connect(user='hannes', passwd='', host=host, port=port, db=database)
+    db = _my.connect(user=user, passwd=password, host=host, port=port, db=database)
     try:
         db.autocommit(True)
 
