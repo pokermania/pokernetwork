@@ -1,344 +1,657 @@
 /* auto generated with: */
-/*   mysqldump --no-data --skip-add-locks --skip-comments --skip-set-charset --skip-quote-names db_mig | sed -re 's;/\*!40101 SET character_set_client = @saved.*$;;' | grep -Ev '^/\*!' | sed -re 's/AUTO_INCREMENT=[0-9]* //' */
+/*   mysqldump --no-data --skip-add-locks --skip-comments --skip-set-charset pokernetwork | sed -re 's;/\*!40101 SET character_set_client = @saved.*$;;' | grep -Ev '^/\*!' | sed -re 's/AUTO_INCREMENT=[0-9]* //' */
 /* except for: */
 /*   INSERT INTO server (version) VALUES ("@version@");*/
 
-DROP TABLE IF EXISTS affiliates;
-CREATE TABLE affiliates (
+DROP TABLE IF EXISTS `affiliates`;
+CREATE TABLE `affiliates` (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  modified timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  created int(10) unsigned NOT NULL,
-  users_count int(10) unsigned NOT NULL DEFAULT '0',
-  users_rake int(10) unsigned NOT NULL DEFAULT '0',
-  users_points int(10) unsigned NOT NULL DEFAULT '0',
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created` int(10) unsigned NOT NULL,
+  `users_count` int(10) unsigned NOT NULL DEFAULT '0',
+  `users_rake` int(10) unsigned NOT NULL DEFAULT '0',
+  `users_points` int(10) unsigned NOT NULL DEFAULT '0',
   `share` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'percentage of the rake assigned to the affiliate',
-  companyname varchar(255) NOT NULL DEFAULT '',
-  firstname varchar(255) NOT NULL DEFAULT '',
-  lastname varchar(255) NOT NULL DEFAULT '',
-  addr_street varchar(255) NOT NULL DEFAULT '',
-  addr_street2 varchar(255) NOT NULL DEFAULT '',
-  addr_zip varchar(64) NOT NULL DEFAULT '',
-  addr_town varchar(64) NOT NULL DEFAULT '',
-  addr_state varchar(128) NOT NULL DEFAULT '',
-  addr_country varchar(64) NOT NULL DEFAULT '',
-  phone varchar(64) NOT NULL DEFAULT '',
-  url text NOT NULL,
-  notes text NOT NULL,
+  `companyname` varchar(255) NOT NULL DEFAULT '',
+  `firstname` varchar(255) NOT NULL DEFAULT '',
+  `lastname` varchar(255) NOT NULL DEFAULT '',
+  `addr_street` varchar(255) NOT NULL DEFAULT '',
+  `addr_street2` varchar(255) NOT NULL DEFAULT '',
+  `addr_zip` varchar(64) NOT NULL DEFAULT '',
+  `addr_town` varchar(64) NOT NULL DEFAULT '',
+  `addr_state` varchar(128) NOT NULL DEFAULT '',
+  `addr_country` varchar(64) NOT NULL DEFAULT '',
+  `phone` varchar(64) NOT NULL DEFAULT '',
+  `url` text NOT NULL,
+  `notes` text NOT NULL,
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Affiliate description';
 
-DROP TABLE IF EXISTS chat_messages;
-CREATE TABLE chat_messages (
+DROP TABLE IF EXISTS `chat_messages`;
+CREATE TABLE `chat_messages` (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  player_serial int(10) unsigned NOT NULL,
-  game_id int(10) unsigned NOT NULL,
-  message text NOT NULL,
+  `player_serial` int(10) unsigned NOT NULL,
+  `game_id` int(10) unsigned NOT NULL,
+  `message` text NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS counter;
-CREATE TABLE counter (
-  transaction_id char(40) NOT NULL,
-  user_serial int(11) NOT NULL,
-  currency_serial int(11) NOT NULL,
+DROP TABLE IF EXISTS `counter`;
+CREATE TABLE `counter` (
+  `transaction_id` char(40) NOT NULL,
+  `user_serial` int(11) NOT NULL,
+  `currency_serial` int(11) NOT NULL,
   `serial` int(11) NOT NULL,
   `name` char(40) NOT NULL,
   `value` bigint(20) NOT NULL,
   `status` char(1) NOT NULL DEFAULT 'y',
-  application_data varchar(255) NOT NULL DEFAULT '',
-  PRIMARY KEY (currency_serial,`name`,`serial`)
+  `application_data` varchar(255) NOT NULL DEFAULT '',
+  PRIMARY KEY (`currency_serial`,`name`,`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS currencies;
-CREATE TABLE currencies (
+DROP TABLE IF EXISTS `currencies`;
+CREATE TABLE `currencies` (
   `serial` int(11) NOT NULL AUTO_INCREMENT,
-  url varchar(255) NOT NULL,
-  symbol varchar(8) NOT NULL DEFAULT '',
+  `url` varchar(255) NOT NULL,
+  `symbol` varchar(8) NOT NULL DEFAULT '',
   `name` varchar(32) NOT NULL DEFAULT '',
-  cash_out int(11) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`serial`,url),
+  `cash_out` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`serial`,`url`),
   UNIQUE KEY `serial` (`serial`),
-  UNIQUE KEY url (url)
+  UNIQUE KEY `url` (`url`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS hands;
-CREATE TABLE hands (
+DROP TABLE IF EXISTS `hands`;
+CREATE TABLE `hands` (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `name` varchar(32) DEFAULT NULL,
-  description text NOT NULL,
+  `description` text NOT NULL,
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS messages;
-CREATE TABLE messages (
+DROP TABLE IF EXISTS `messages`;
+CREATE TABLE `messages` (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  send_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  message text NOT NULL,
-  sent char(1) NOT NULL DEFAULT 'n',
-  PRIMARY KEY (`serial`,send_date,sent)
+  `send_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `message` text NOT NULL,
+  `sent` char(1) NOT NULL DEFAULT 'n',
+  PRIMARY KEY (`serial`,`send_date`,`sent`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS monitor;
-CREATE TABLE monitor (
+DROP TABLE IF EXISTS `migrations`;
+CREATE TABLE `migrations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `version` varchar(20) NOT NULL DEFAULT '0',
+  `label` varchar(255) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `sql_up` longtext,
+  `sql_down` longtext,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `monitor`;
+CREATE TABLE `monitor` (
   `serial` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `event` tinyint(4) NOT NULL,
-  param1 bigint(20) NOT NULL,
-  param2 bigint(20) NOT NULL,
-  param3 bigint(20) NOT NULL,
+  `param1` bigint(20) NOT NULL,
+  `param2` bigint(20) NOT NULL,
+  `param3` bigint(20) NOT NULL,
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS resthost;
-CREATE TABLE resthost (
+DROP TABLE IF EXISTS `pokertables`;
+CREATE TABLE `pokertables` (
+  `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `resthost_serial` int(10) unsigned NOT NULL DEFAULT '0',
+  `seats` tinyint(4) DEFAULT '10',
+  `average_pot` int(10) unsigned DEFAULT '0',
+  `hands_per_hour` int(10) unsigned DEFAULT '0',
+  `percent_flop` tinyint(4) DEFAULT '0',
+  `players` tinyint(4) DEFAULT '0',
+  `observers` int(10) unsigned DEFAULT '0',
+  `waiting` tinyint(4) DEFAULT '0',
+  `player_timeout` int(10) unsigned DEFAULT '60',
+  `muck_timeout` int(10) unsigned DEFAULT '5',
+  `currency_serial` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `variant` varchar(255) NOT NULL,
+  `betting_structure` varchar(255) NOT NULL,
+  `skin` varchar(255) NOT NULL DEFAULT 'intl',
+  `tourney_serial` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`serial`),
+  UNIQUE KEY `name` (`name`),
+  KEY `pokertables_name` (`name`),
+  KEY `pokertables_variant` (`variant`),
+  KEY `pokertables_players` (`players`),
+  KEY `pokertables_betting_structure` (`betting_structure`),
+  KEY `pokertables_currency_serial` (`currency_serial`),
+  KEY `resthost_serial` (`resthost_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `resthost`;
+CREATE TABLE `resthost` (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
   `host` varchar(255) NOT NULL,
   `port` int(10) unsigned NOT NULL,
-  path varchar(255) NOT NULL,
-  state int(10) unsigned NOT NULL DEFAULT '0',
+  `path` varchar(255) NOT NULL,
+  `state` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS route;
-CREATE TABLE route (
-  table_serial int(10) unsigned NOT NULL,
-  tourney_serial int(10) unsigned NOT NULL,
-  modified int(10) unsigned NOT NULL,
-  resthost_serial int(10) unsigned NOT NULL,
-  PRIMARY KEY (table_serial,tourney_serial),
-  KEY table_serial (table_serial),
-  KEY tourney_serial (tourney_serial),
-  KEY modified (modified),
-  KEY resthost_serial (resthost_serial)
+DROP TABLE IF EXISTS `reward_bad_beat_full_house`;
+CREATE TABLE `reward_bad_beat_full_house` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS safe;
-CREATE TABLE safe (
-  currency_serial int(11) NOT NULL,
+DROP TABLE IF EXISTS `reward_bad_beat_quads`;
+CREATE TABLE `reward_bad_beat_quads` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_big_bang_25000`;
+CREATE TABLE `reward_big_bang_25000` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_big_bang_5000`;
+CREATE TABLE `reward_big_bang_5000` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_big_chick`;
+CREATE TABLE `reward_big_chick` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_big_slick`;
+CREATE TABLE `reward_big_slick` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_blind_hen`;
+CREATE TABLE `reward_blind_hen` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_broadway`;
+CREATE TABLE `reward_broadway` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_bullets`;
+CREATE TABLE `reward_bullets` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_cowboys`;
+CREATE TABLE `reward_cowboys` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_donald_trump`;
+CREATE TABLE `reward_donald_trump` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  `reward_state` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_final_table`;
+CREATE TABLE `reward_final_table` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_fish_hooks`;
+CREATE TABLE `reward_fish_hooks` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_flush`;
+CREATE TABLE `reward_flush` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_full_house`;
+CREATE TABLE `reward_full_house` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_its_taking_part_that_counts`;
+CREATE TABLE `reward_its_taking_part_that_counts` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_jailhouse_rock`;
+CREATE TABLE `reward_jailhouse_rock` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_kamikaze`;
+CREATE TABLE `reward_kamikaze` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_marathon`;
+CREATE TABLE `reward_marathon` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  `started` int(11) NOT NULL DEFAULT '0',
+  `ended` int(11) DEFAULT NULL,
+  PRIMARY KEY (`user_serial`,`times_earned`,`started`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_milestone`;
+CREATE TABLE `reward_milestone` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  `step_counter` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_newcomer`;
+CREATE TABLE `reward_newcomer` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_no_risk_no_fun`;
+CREATE TABLE `reward_no_risk_no_fun` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_on_a_rush`;
+CREATE TABLE `reward_on_a_rush` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  `step_counter` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_road_testing`;
+CREATE TABLE `reward_road_testing` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_royal_family`;
+CREATE TABLE `reward_royal_family` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_straight_flush`;
+CREATE TABLE `reward_straight_flush` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_the_millionaires_club`;
+CREATE TABLE `reward_the_millionaires_club` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_tournament_expert`;
+CREATE TABLE `reward_tournament_expert` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  `step_counter` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_tournament_pro`;
+CREATE TABLE `reward_tournament_pro` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_trips`;
+CREATE TABLE `reward_trips` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `reward_valentines_day`;
+CREATE TABLE `reward_valentines_day` (
+  `user_serial` int(11) NOT NULL,
+  `times_earned` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `route`;
+CREATE TABLE `route` (
+  `table_serial` int(10) unsigned NOT NULL,
+  `tourney_serial` int(10) unsigned NOT NULL,
+  `modified` int(10) unsigned NOT NULL,
+  `resthost_serial` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`table_serial`,`tourney_serial`),
+  KEY `table_serial` (`table_serial`),
+  KEY `tourney_serial` (`tourney_serial`),
+  KEY `modified` (`modified`),
+  KEY `resthost_serial` (`resthost_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `safe`;
+CREATE TABLE `safe` (
+  `currency_serial` int(11) NOT NULL,
   `serial` int(11) NOT NULL,
   `name` char(40) NOT NULL,
   `value` bigint(20) NOT NULL,
-  PRIMARY KEY (currency_serial,`serial`,`value`)
+  PRIMARY KEY (`currency_serial`,`serial`,`value`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS server;
+DROP TABLE IF EXISTS `server`;
 CREATE TABLE `server` (
-  version varchar(16) NOT NULL
+  `version` varchar(16) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO server (version) VALUES ("@version@");
 
-DROP TABLE IF EXISTS tableconfigs;
-CREATE TABLE tableconfigs (
+DROP TABLE IF EXISTS `session`;
+CREATE TABLE `session` (
+  `user_serial` int(11) NOT NULL,
+  `started` int(11) NOT NULL DEFAULT '0',
+  `ended` int(11) NOT NULL DEFAULT '0',
+  `ip` varchar(16) NOT NULL,
+  PRIMARY KEY (`user_serial`,`ip`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `session_history`;
+CREATE TABLE `session_history` (
+  `user_serial` int(11) NOT NULL,
+  `started` int(11) NOT NULL DEFAULT '0',
+  `ended` int(11) NOT NULL DEFAULT '0',
+  `ip` varchar(16) NOT NULL,
+  KEY `session_history_serial` (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `tableconfigs`;
+CREATE TABLE `tableconfigs` (
   `serial` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(64) NOT NULL,
-  seats int(2) unsigned NOT NULL DEFAULT '9',
-  variant varchar(64) NOT NULL,
-  betting_structure varchar(64) NOT NULL,
-  currency_serial int(10) unsigned NOT NULL,
-  skin varchar(64) DEFAULT NULL,
-  player_timeout int(11) unsigned DEFAULT '60',
-  muck_timeout int(11) unsigned DEFAULT '5',
+  `seats` int(2) unsigned NOT NULL DEFAULT '9',
+  `variant` varchar(64) NOT NULL,
+  `betting_structure` varchar(64) NOT NULL,
+  `currency_serial` int(10) unsigned NOT NULL,
+  `skin` varchar(64) DEFAULT NULL,
+  `player_timeout` int(11) unsigned DEFAULT '60',
+  `muck_timeout` int(11) unsigned DEFAULT '5',
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS tables;
+DROP TABLE IF EXISTS `tables`;
 CREATE TABLE `tables` (
   `serial` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  resthost_serial int(11) unsigned NOT NULL,
-  tableconfig_serial int(11) unsigned DEFAULT NULL,
-  tourney_serial int(11) unsigned DEFAULT NULL,
-  enlist tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Thought to be used in public game list, to differ public/non-public games',
-  players int(2) unsigned NOT NULL DEFAULT '0',
-  observers int(11) unsigned NOT NULL DEFAULT '0',
-  waiting int(4) NOT NULL DEFAULT '0',
-  average_pot int(11) unsigned NOT NULL DEFAULT '0',
-  percent_flop int(11) unsigned NOT NULL DEFAULT '0',
-  hands_per_hour int(11) unsigned NOT NULL DEFAULT '0',
+  `resthost_serial` int(11) unsigned NOT NULL,
+  `tableconfig_serial` int(11) unsigned DEFAULT NULL,
+  `tourney_serial` int(11) unsigned DEFAULT NULL,
+  `enlist` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'Thought to be used in public game list, to differ public/non-public games',
+  `players` int(2) unsigned NOT NULL DEFAULT '0',
+  `observers` int(11) unsigned NOT NULL DEFAULT '0',
+  `waiting` int(4) NOT NULL DEFAULT '0',
+  `average_pot` int(11) unsigned NOT NULL DEFAULT '0',
+  `percent_flop` int(11) unsigned NOT NULL DEFAULT '0',
+  `hands_per_hour` int(11) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS tourneys;
-CREATE TABLE tourneys (
+DROP TABLE IF EXISTS `test`;
+CREATE TABLE `test` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `test2`;
+CREATE TABLE `test2` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `tourneys`;
+CREATE TABLE `tourneys` (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  resthost_serial int(10) unsigned NOT NULL DEFAULT '0',
+  `resthost_serial` int(10) unsigned NOT NULL DEFAULT '0',
   `name` varchar(200) NOT NULL,
-  description_short varchar(64) NOT NULL,
-  description_long text NOT NULL,
-  players_quota int(11) NOT NULL DEFAULT '10',
-  players_min int(11) NOT NULL DEFAULT '2',
-  variant varchar(32) NOT NULL,
-  betting_structure varchar(32) NOT NULL,
-  skin varchar(255) NOT NULL DEFAULT 'default',
-  seats_per_game int(11) NOT NULL DEFAULT '10',
-  player_timeout int(11) NOT NULL DEFAULT '60',
-  currency_serial int(11) NOT NULL,
-  prize_currency int(10) unsigned NOT NULL DEFAULT '0',
-  prize_min int(11) NOT NULL DEFAULT '0',
-  bailor_serial int(11) NOT NULL DEFAULT '0',
-  buy_in int(11) NOT NULL DEFAULT '0',
-  rake int(11) NOT NULL DEFAULT '0',
-  sit_n_go char(1) NOT NULL DEFAULT 'y',
-  breaks_first int(11) NOT NULL DEFAULT '7200',
-  breaks_interval int(11) NOT NULL DEFAULT '3600',
-  breaks_duration int(11) NOT NULL DEFAULT '300',
-  rebuy_delay int(11) NOT NULL DEFAULT '0',
-  add_on int(11) NOT NULL DEFAULT '0',
-  add_on_delay int(11) NOT NULL DEFAULT '60',
-  start_time int(11) NOT NULL DEFAULT '0',
-  satellite_of int(10) unsigned NOT NULL DEFAULT '0',
-  via_satellite tinyint(4) NOT NULL DEFAULT '0',
-  satellite_player_count int(10) unsigned NOT NULL DEFAULT '0',
-  finish_time int(11) NOT NULL DEFAULT '0',
-  state varchar(16) NOT NULL DEFAULT 'registering',
-  schedule_serial int(11) NOT NULL,
-  add_on_count int(11) NOT NULL DEFAULT '0',
-  rebuy_count int(11) NOT NULL DEFAULT '0',
+  `description_short` varchar(64) NOT NULL,
+  `description_long` text NOT NULL,
+  `players_quota` int(11) NOT NULL DEFAULT '10',
+  `players_min` int(11) NOT NULL DEFAULT '2',
+  `variant` varchar(32) NOT NULL,
+  `betting_structure` varchar(32) NOT NULL,
+  `skin` varchar(255) NOT NULL DEFAULT 'default',
+  `seats_per_game` int(11) NOT NULL DEFAULT '10',
+  `player_timeout` int(11) NOT NULL DEFAULT '60',
+  `currency_serial` int(11) NOT NULL,
+  `prize_currency` int(10) unsigned NOT NULL DEFAULT '0',
+  `prize_min` int(11) NOT NULL DEFAULT '0',
+  `bailor_serial` int(11) NOT NULL DEFAULT '0',
+  `buy_in` int(11) NOT NULL DEFAULT '0',
+  `rake` int(11) NOT NULL DEFAULT '0',
+  `sit_n_go` char(1) NOT NULL DEFAULT 'y',
+  `breaks_first` int(11) NOT NULL DEFAULT '7200',
+  `breaks_interval` int(11) NOT NULL DEFAULT '3600',
+  `breaks_duration` int(11) NOT NULL DEFAULT '300',
+  `rebuy_delay` int(11) NOT NULL DEFAULT '0',
+  `add_on` int(11) NOT NULL DEFAULT '0',
+  `add_on_delay` int(11) NOT NULL DEFAULT '60',
+  `start_time` int(11) NOT NULL DEFAULT '0',
+  `satellite_of` int(10) unsigned NOT NULL DEFAULT '0',
+  `via_satellite` tinyint(4) NOT NULL DEFAULT '0',
+  `satellite_player_count` int(10) unsigned NOT NULL DEFAULT '0',
+  `finish_time` int(11) NOT NULL DEFAULT '0',
+  `state` varchar(16) NOT NULL DEFAULT 'registering',
+  `schedule_serial` int(11) NOT NULL,
+  `add_on_count` int(11) NOT NULL DEFAULT '0',
+  `rebuy_count` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`serial`),
-  KEY tourneys_start_time_index (start_time),
-  KEY state (state,finish_time)
+  KEY `tourneys_start_time_index` (`start_time`),
+  KEY `state` (`state`,`finish_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS tourneys_schedule;
-CREATE TABLE tourneys_schedule (
+DROP TABLE IF EXISTS `tourneys_schedule`;
+CREATE TABLE `tourneys_schedule` (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  resthost_serial int(10) unsigned NOT NULL DEFAULT '0',
+  `resthost_serial` int(10) unsigned NOT NULL DEFAULT '0',
   `name` varchar(200) NOT NULL,
-  description_short varchar(64) NOT NULL DEFAULT '' COMMENT 'Description that will be shown in tournament lists',
-  description_long text COMMENT 'Description that will be shown on a detailed page about the tournament.',
-  players_quota int(11) NOT NULL DEFAULT '10' COMMENT 'The maximum number of players allowed to register in the tournament',
-  players_min int(11) NOT NULL DEFAULT '2' COMMENT 'The minimum number of players to start the tournament. If the number of registered players in the tournament is less than this limit, the tournament is canceled.',
-  variant varchar(32) NOT NULL COMMENT 'Poker variant (holdem, omaha, omaha8, 7stud)',
-  betting_structure varchar(32) NOT NULL COMMENT 'Betting structure (level-001, level-10-15-pot-limit, level-10-20_200-2000_no-limit, level-15-30-no-limit, level-1-2_20-200_limit)',
-  skin varchar(255) NOT NULL DEFAULT 'default' COMMENT 'The skin of the tourneys_schedule, used then for the tourney and its tables',
-  seats_per_game int(11) NOT NULL DEFAULT '10' COMMENT 'Number of seats, in the range 2 and 10 included.',
-  player_timeout int(11) NOT NULL DEFAULT '60' COMMENT 'Maximum number of seconds before a player times out when in position.',
-  currency_serial int(11) NOT NULL COMMENT 'Serial of the currency required to pay the buyin.',
-  prize_currency int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'Serial of the currency in which the prizes will be payed (same as currency_serial if zero)',
-  prize_min int(11) NOT NULL DEFAULT '0' COMMENT 'Minimum prize pool in cents.',
-  bailor_serial int(11) NOT NULL DEFAULT '0' COMMENT 'Serial number of the player (serial field of the users table) who guarantees the minimum prize set in the prize_min field if the total buyin payed by the players is not enough.',
-  buy_in int(11) NOT NULL DEFAULT '0' COMMENT 'Tournament buyin in cent.',
-  rake int(11) NOT NULL DEFAULT '0' COMMENT 'Tournament rake in cent.',
-  sit_n_go char(1) NOT NULL DEFAULT 'y' COMMENT 'y for sit&go tournament, n for regular tournament',
-  breaks_first int(11) NOT NULL DEFAULT '7200' COMMENT 'Number of seconds for the first breaks.',
-  breaks_interval int(11) NOT NULL DEFAULT '3600' COMMENT 'Number of seconds between breaks after the first break.',
-  breaks_duration int(11) NOT NULL DEFAULT '300' COMMENT 'Number of seconds of each break.',
-  rebuy_delay int(11) NOT NULL DEFAULT '0',
-  add_on int(11) NOT NULL DEFAULT '0',
-  add_on_delay int(11) NOT NULL DEFAULT '60',
-  start_time int(11) NOT NULL DEFAULT '0' COMMENT 'Unix timestamp of the tournament start.',
-  register_time int(11) NOT NULL DEFAULT '0' COMMENT 'Unix timestamp of the registration start.',
-  active char(1) NOT NULL DEFAULT 'y' COMMENT 'n : the tournament is ignored by the server, y : the tournament is considered by the server.',
-  respawn char(1) NOT NULL DEFAULT 'n' COMMENT 'y : the tournament restarts when complete, n : the tournament does not restart when complete.',
-  respawn_interval int(11) NOT NULL DEFAULT '0',
-  currency_serial_from_date_format varchar(16) DEFAULT NULL COMMENT 'Format string to override the currency_serial field from \n%d  Day of the month as a decimal number [01,31].\n%H  Hour (24-hour clock) as a decimal number [00,23].\n%I  Hour (12-hour clock) as a decimal number [01,12].\n%j  Day of the year as a decimal number [001,366].\n%m  Month as a decimal number [01,12].\n%M  Minute as a decimal number [00,59].\n%S  Second as a decimal number [00,61\n%U  Week number of the year (Sunday as the first day of the week) as a decimal number [00,53]. All days in a new year preceding the first Sunday are considered to be in week 0\n%w  Weekday as a decimal number [0(Sunday),6].\n%W  Week number of the year (Monday as the first day of the week) as a decimal number [00,53]. All days in a new year preceding the first Monday are considered to be in week 0\n%y  Year without century as a decimal number [00,99].\n%Y  Year with century as a decimal number.\nThe string can only contain the placeholders documented \nExample: ''%Y%m''',
-  prize_currency_from_date_format varchar(16) DEFAULT NULL COMMENT 'Format string to override the prize_currency field from date. The semantics is the same as currency_serial_from_date_format.',
-  satellite_of int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'If 0 the tournament is not a satellite, if > 0 the tournament is a satellite and satellite_player_count is taken into account. The value is a reference to the serial field of the tourneys_schedule table. ',
-  via_satellite tinyint(4) NOT NULL DEFAULT '0' COMMENT 'If 1 the users cannot register to the tournament unless they participated in a satellite. See the TourneyRegister packet for more information. If 0 the users can register if they pay the buyin.',
-  satellite_player_count int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'The number of tournament winners that will be registered to the satellite_of tournament. The winners that are already registered to satellite_of are ignored. If satellite_player_count is 10 and 2 of the top 10 are already registered, the remaining 2 will be drawn from the top 12 winners.',
+  `description_short` varchar(64) NOT NULL DEFAULT '' COMMENT 'Description that will be shown in tournament lists',
+  `description_long` text COMMENT 'Description that will be shown on a detailed page about the tournament.',
+  `players_quota` int(11) NOT NULL DEFAULT '10' COMMENT 'The maximum number of players allowed to register in the tournament',
+  `players_min` int(11) NOT NULL DEFAULT '2' COMMENT 'The minimum number of players to start the tournament. If the number of registered players in the tournament is less than this limit, the tournament is canceled.',
+  `variant` varchar(32) NOT NULL COMMENT 'Poker variant (holdem, omaha, omaha8, 7stud)',
+  `betting_structure` varchar(32) NOT NULL COMMENT 'Betting structure (level-001, level-10-15-pot-limit, level-10-20_200-2000_no-limit, level-15-30-no-limit, level-1-2_20-200_limit)',
+  `skin` varchar(255) NOT NULL DEFAULT 'default' COMMENT 'The skin of the tourneys_schedule, used then for the tourney and its tables',
+  `seats_per_game` int(11) NOT NULL DEFAULT '10' COMMENT 'Number of seats, in the range 2 and 10 included.',
+  `player_timeout` int(11) NOT NULL DEFAULT '60' COMMENT 'Maximum number of seconds before a player times out when in position.',
+  `currency_serial` int(11) NOT NULL COMMENT 'Serial of the currency required to pay the buyin.',
+  `prize_currency` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'Serial of the currency in which the prizes will be payed (same as currency_serial if zero)',
+  `prize_min` int(11) NOT NULL DEFAULT '0' COMMENT 'Minimum prize pool in cents.',
+  `bailor_serial` int(11) NOT NULL DEFAULT '0' COMMENT 'Serial number of the player (serial field of the users table) who guarantees the minimum prize set in the prize_min field if the total buyin payed by the players is not enough.',
+  `buy_in` int(11) NOT NULL DEFAULT '0' COMMENT 'Tournament buyin in cent.',
+  `rake` int(11) NOT NULL DEFAULT '0' COMMENT 'Tournament rake in cent.',
+  `sit_n_go` char(1) NOT NULL DEFAULT 'y' COMMENT 'y for sit&go tournament, n for regular tournament',
+  `breaks_first` int(11) NOT NULL DEFAULT '7200' COMMENT 'Number of seconds for the first breaks.',
+  `breaks_interval` int(11) NOT NULL DEFAULT '3600' COMMENT 'Number of seconds between breaks after the first break.',
+  `breaks_duration` int(11) NOT NULL DEFAULT '300' COMMENT 'Number of seconds of each break.',
+  `rebuy_delay` int(11) NOT NULL DEFAULT '0',
+  `add_on` int(11) NOT NULL DEFAULT '0',
+  `add_on_delay` int(11) NOT NULL DEFAULT '60',
+  `start_time` int(11) NOT NULL DEFAULT '0' COMMENT 'Unix timestamp of the tournament start.',
+  `register_time` int(11) NOT NULL DEFAULT '0' COMMENT 'Unix timestamp of the registration start.',
+  `active` char(1) NOT NULL DEFAULT 'y' COMMENT 'n : the tournament is ignored by the server, y : the tournament is considered by the server.',
+  `respawn` char(1) NOT NULL DEFAULT 'n' COMMENT 'y : the tournament restarts when complete, n : the tournament does not restart when complete.',
+  `respawn_interval` int(11) NOT NULL DEFAULT '0',
+  `currency_serial_from_date_format` varchar(16) DEFAULT NULL COMMENT 'Format string to override the currency_serial field from \n%d  Day of the month as a decimal number [01,31].\n%H  Hour (24-hour clock) as a decimal number [00,23].\n%I  Hour (12-hour clock) as a decimal number [01,12].\n%j  Day of the year as a decimal number',
+  `prize_currency_from_date_format` varchar(16) DEFAULT NULL COMMENT 'Format string to override the prize_currency field from date. The semantics is the same as currency_serial_from_date_format.',
+  `satellite_of` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'If 0 the tournament is not a satellite, if > 0 the tournament is a satellite and satellite_player_count is taken into account. The value is a reference to the serial field of the tourneys_schedule table. ',
+  `via_satellite` tinyint(4) NOT NULL DEFAULT '0' COMMENT 'If 1 the users cannot register to the tournament unless they participated in a satellite. See the TourneyRegister packet for more information. If 0 the users can register if they pay the buyin.',
+  `satellite_player_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'The number of tournament winners that will be registered to the satellite_of tournament. The winners that are already registered to satellite_of are ignored. If satellite_player_count is 10 and 2 of the top 10 are already registered, the remaining 2 will ',
   PRIMARY KEY (`serial`),
-  KEY tourneys_schedule_active_index (active),
-  KEY tourneys_schedule_register_time_index (register_time)
+  KEY `tourneys_schedule_active_index` (`active`),
+  KEY `tourneys_schedule_register_time_index` (`register_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS user2hand;
-CREATE TABLE user2hand (
-  user_serial int(11) NOT NULL,
-  hand_serial int(11) NOT NULL,
-  PRIMARY KEY (user_serial,hand_serial)
+DROP TABLE IF EXISTS `tourneys_schedule_type`;
+CREATE TABLE `tourneys_schedule_type` (
+  `tourneys_schedule_id` int(11) NOT NULL COMMENT 'references pokernetwork table',
+  `type` int(11) NOT NULL,
+  PRIMARY KEY (`tourneys_schedule_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS user2money;
-CREATE TABLE user2money (
-  user_serial int(10) unsigned NOT NULL,
-  currency_serial int(10) unsigned NOT NULL,
-  amount bigint(20) NOT NULL,
-  rake bigint(20) NOT NULL DEFAULT '0',
-  points bigint(20) NOT NULL DEFAULT '0',
-  PRIMARY KEY (user_serial,currency_serial)
+DROP TABLE IF EXISTS `user2hand`;
+CREATE TABLE `user2hand` (
+  `user_serial` int(11) NOT NULL,
+  `hand_serial` int(11) NOT NULL,
+  PRIMARY KEY (`user_serial`,`hand_serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS user2table;
-CREATE TABLE user2table (
-  user_serial int(10) unsigned NOT NULL,
-  table_serial int(10) unsigned NOT NULL,
-  money bigint(20) NOT NULL DEFAULT '0',
-  bet bigint(20) NOT NULL DEFAULT '0',
-  PRIMARY KEY (user_serial,table_serial)
+DROP TABLE IF EXISTS `user2money`;
+CREATE TABLE `user2money` (
+  `user_serial` int(10) unsigned NOT NULL,
+  `currency_serial` int(10) unsigned NOT NULL,
+  `amount` bigint(20) NOT NULL,
+  `rake` bigint(20) NOT NULL DEFAULT '0',
+  `points` bigint(20) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`user_serial`,`currency_serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS user2tourney;
-CREATE TABLE user2tourney (
-  user_serial int(11) NOT NULL,
-  currency_serial int(10) unsigned NOT NULL,
-  tourney_serial int(11) NOT NULL,
-  table_serial int(11) DEFAULT NULL,
-  rank int(11) NOT NULL DEFAULT '-1',
-  PRIMARY KEY (user_serial,tourney_serial),
-  KEY user_serial (user_serial,currency_serial,tourney_serial),
-  KEY rank (rank),
-  KEY tourney_serial (tourney_serial)
+DROP TABLE IF EXISTS `user2table`;
+CREATE TABLE `user2table` (
+  `user_serial` int(10) unsigned NOT NULL,
+  `table_serial` int(10) unsigned NOT NULL,
+  `money` bigint(20) NOT NULL DEFAULT '0',
+  `bet` bigint(20) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`user_serial`,`table_serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS users;
-CREATE TABLE users (
+DROP TABLE IF EXISTS `user2tourney`;
+CREATE TABLE `user2tourney` (
+  `user_serial` int(11) NOT NULL,
+  `currency_serial` int(10) unsigned NOT NULL,
+  `tourney_serial` int(11) NOT NULL,
+  `table_serial` int(11) DEFAULT NULL,
+  `rank` int(11) NOT NULL DEFAULT '-1',
+  PRIMARY KEY (`user_serial`,`tourney_serial`),
+  KEY `user_serial` (`user_serial`,`currency_serial`,`tourney_serial`),
+  KEY `rank` (`rank`),
+  KEY `tourney_serial` (`tourney_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `user_stats`;
+CREATE TABLE `user_stats` (
+  `user_serial` int(11) NOT NULL,
+  `hand_played` int(11) NOT NULL DEFAULT '0',
+  `hand_won` int(11) NOT NULL DEFAULT '0',
+  `hand_best_value` int(11) NOT NULL DEFAULT '0',
+  `hand_best` varchar(255) NOT NULL DEFAULT '',
+  `biggest_pot` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `highest_money` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `tourney_top_9` int(11) NOT NULL DEFAULT '0',
+  `tourney_win` int(11) NOT NULL DEFAULT '0',
+  `tourney_enter` int(11) NOT NULL DEFAULT '0',
+  `win_all_in` int(11) NOT NULL DEFAULT '0',
+  `win_row_last` int(11) NOT NULL DEFAULT '0',
+  `win_row` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`user_serial`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `users`;
+CREATE TABLE `users` (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  created int(10) unsigned NOT NULL COMMENT 'number of seconds since 1970, argument to from_unixtime()',
+  `created` int(10) unsigned NOT NULL COMMENT 'number of seconds since 1970, argument to from_unixtime()',
   `name` varchar(64) NOT NULL COMMENT 'user name matching the regexp ^[a-zA-Z][a-zA-Z0-9_]{5,50}$',
-  email varchar(128) DEFAULT NULL COMMENT 'optional email address matching the regexp .*.@.*..*$',
-  affiliate int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'serial of the users record to which this user is affiliated',
-  skin_url varchar(255) NOT NULL DEFAULT '' COMMENT 'client interpreted URL from which the player avatar can be downloaded',
-  skin_outfit text COMMENT 'client interpreted textual description of the player aspect',
-  skin_image text COMMENT 'base64 encoded player picture of type skin_image_type',
-  skin_image_type varchar(32) DEFAULT 'image/png' COMMENT 'the type of the base64 encoded skin_image field content',
+  `email` varchar(128) DEFAULT NULL COMMENT 'optional email address matching the regexp .*.@.*..*$',
+  `affiliate` int(10) unsigned NOT NULL DEFAULT '0' COMMENT 'serial of the users record to which this user is affiliated',
+  `skin_url` varchar(255) NOT NULL DEFAULT '' COMMENT 'client interpreted URL from which the player avatar can be downloaded',
+  `skin_outfit` text COMMENT 'client interpreted textual description of the player aspect',
+  `skin_image` text COMMENT 'base64 encoded player picture of type skin_image_type',
+  `skin_image_type` varchar(32) DEFAULT 'image/png' COMMENT 'the type of the base64 encoded skin_image field content',
   `password` varchar(32) NOT NULL COMMENT 'clear text password matching the regexp ^[a-zA-Z0-9]{5,15}$',
-  privilege int(11) NOT NULL DEFAULT '1' COMMENT '1 is a regular player, 0 is an observer and cannot play, 2 is admin',
-  locale varchar(32) NOT NULL DEFAULT 'en_US' COMMENT 'locale',
-  rating int(11) NOT NULL DEFAULT '1000',
-  future_rating float NOT NULL DEFAULT '1000',
-  games_count int(11) NOT NULL DEFAULT '0',
+  `privilege` int(11) NOT NULL DEFAULT '1' COMMENT '1 is a regular player, 0 is an observer and cannot play, 2 is admin',
+  `locale` varchar(32) NOT NULL DEFAULT 'en_US' COMMENT 'locale',
+  `rating` int(11) NOT NULL DEFAULT '1000',
+  `future_rating` float NOT NULL DEFAULT '1000',
+  `games_count` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`serial`),
-  UNIQUE KEY email_idx (email),
-  KEY name_idx (`name`)
+  UNIQUE KEY `email_idx` (`email`),
+  KEY `name_idx` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-INSERT INTO users(created, name, password, privilege) VALUES
-  (UNIX_TIMESTAMP(), 'rake', '', 0),
-  (UNIX_TIMESTAMP(), 'admin', 'REPLACE', 2),
-  (UNIX_TIMESTAMP(), 'admin_web', 'REPLACE', 1);
-
-DROP TABLE IF EXISTS users_private;
-CREATE TABLE users_private (
+DROP TABLE IF EXISTS `users_private`;
+CREATE TABLE `users_private` (
   `serial` int(10) unsigned NOT NULL,
-  firstname varchar(255) NOT NULL DEFAULT '',
-  lastname varchar(255) NOT NULL DEFAULT '',
-  addr_street varchar(255) NOT NULL DEFAULT '',
-  addr_street2 varchar(255) NOT NULL DEFAULT '',
-  addr_zip varchar(64) NOT NULL DEFAULT '',
-  addr_town varchar(64) NOT NULL DEFAULT '',
-  addr_state varchar(128) NOT NULL DEFAULT '',
-  addr_country varchar(64) NOT NULL DEFAULT '',
-  phone varchar(64) NOT NULL DEFAULT '',
-  gender char(1) NOT NULL DEFAULT '',
-  birthdate date DEFAULT NULL,
-  verified char(1) NOT NULL DEFAULT 'n',
-  verified_time int(11) NOT NULL DEFAULT '0',
+  `firstname` varchar(255) NOT NULL DEFAULT '',
+  `lastname` varchar(255) NOT NULL DEFAULT '',
+  `addr_street` varchar(255) NOT NULL DEFAULT '',
+  `addr_street2` varchar(255) NOT NULL DEFAULT '',
+  `addr_zip` varchar(64) NOT NULL DEFAULT '',
+  `addr_town` varchar(64) NOT NULL DEFAULT '',
+  `addr_state` varchar(128) NOT NULL DEFAULT '',
+  `addr_country` varchar(64) NOT NULL DEFAULT '',
+  `phone` varchar(64) NOT NULL DEFAULT '',
+  `gender` char(1) NOT NULL DEFAULT '',
+  `birthdate` date DEFAULT NULL,
+  `verified` char(1) NOT NULL DEFAULT 'n',
+  `verified_time` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS users_transactions;
-CREATE TABLE users_transactions (
-  from_serial int(10) unsigned NOT NULL,
-  to_serial int(10) unsigned NOT NULL,
-  modified timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  amount int(11) NOT NULL DEFAULT '0',
-  currency_serial int(11) NOT NULL,
+DROP TABLE IF EXISTS `users_transactions`;
+CREATE TABLE `users_transactions` (
+  `from_serial` int(10) unsigned NOT NULL,
+  `to_serial` int(10) unsigned NOT NULL,
+  `modified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `amount` int(11) NOT NULL DEFAULT '0',
+  `currency_serial` int(11) NOT NULL,
   `status` char(1) NOT NULL DEFAULT 'n',
-  notes text NOT NULL,
-  KEY from_serial (from_serial,to_serial)
+  `notes` text NOT NULL,
+  KEY `from_serial` (`from_serial`,`to_serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
