@@ -1664,7 +1664,7 @@ class PokerService(service.Service):
         """decrements the bank money of a player
         amount is the number of chips which the player has to pay to get a new set of tourney chips
 
-        returns a tuple (error_flag, reason)
+        returns the amount of tourney chips that the player should get additionally on the table
         if error is False, the reason indicates the problem
         """
         cursor = self.db.cursor()
@@ -1695,6 +1695,7 @@ class PokerService(service.Service):
         """handle the tourney rebuy request
         exchange user chips to tourney chips if it is valid for the tourney
         """
+        # see pokeravater for the explanation why a packet given as a parameter
         tourney = self.tourneys.get(packet.tourney_serial)
         
         if tourney is None:

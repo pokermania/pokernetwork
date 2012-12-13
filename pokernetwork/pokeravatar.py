@@ -640,13 +640,16 @@ class PokerAvatar:
         
         elif packet.type == PACKET_POKER_TOURNEY_REBUY:
             if self.getSerial() == packet.serial:
-                    error_code = self.service.tourneyRebuyRequest(packet)
-                    if error_code != packet.OK:
-                        self.sendPacketVerbose(PacketError(
-                            serial = packet.serial,
-                            other_type = PACKET_POKER_TOURNEY_REBUY,
-                            code = error_code
-                        ))
+                # the packet is directly passed to the service, so that the service could 
+                # return the correct error codes. Otherwise the we would need to import 
+                # pokerservice to know all the reasons for the failure. 
+                error_code = self.service.tourneyRebuyRequest(packet)
+                if error_code != packet.OK:
+                    self.sendPacketVerbose(PacketError(
+                        serial = packet.serial,
+                        other_type = PACKET_POKER_TOURNEY_REBUY,
+                        code = error_code
+                    ))
             else:
                 self.log.inform("attempt to rebuy for player %d by player %d", packet.serial, self.getSerial())
 
@@ -984,7 +987,7 @@ class PokerAvatar:
                 if player and player.isAuto():
                     self.sendPacketVerbose(PacketPokerAutoFold(serial=packet.serial))
             if table.tourney:
-                self.sendPacketVerbose(PacketPokerTourney(**table.tourney.forTourneyInfo()))
+                self.sendPacketVerbose(PacketPokerTourney(**dict(table.tourney.__dict__.items() + [('rebuy_time_remaining', table.tourney.getRebuyTimeRemaining())])))
 
     # -------------------------------------------------------------------------
     def performPacketPokerSeat(self, packet, table, game):
