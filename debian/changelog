@@ -1,4 +1,4 @@
-poker-network (2.2.3-15) pokermania; urgency=low
+poker-network (2.3.0-1) pokermania; urgency=low
 
   * 03e820e enable rebuys during tournies, refs #6613
   * dd56ca9 only log inconsistent user credentials if there is a memcache auth
