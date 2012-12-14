@@ -779,7 +779,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEqual(None, self.table.autoBlindAnte(player[5], 5, True))
 
         self.assertEqual(True, self.table.rebuyPlayerRequest(player[5], \
-                                              self.table.game.maxBuyIn()))
+                                              self.table.game.buyIn()))
         # finally, player5 tries to join table 2, which isn't permitted since
         # we've set MockService.simultaneous to 1
         self.assertEqual(False, self.table2.joinPlayer(player[5], 5))
@@ -2613,8 +2613,8 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             self.assertTrue(table.seatPlayer(client, serial, pos))
             money = table.game.maxBuyIn() if serial != 84761 else 0
             table.game.noAutoBlindAnte(serial)
+            self.assertTrue(table.buyInPlayer(client, money))
             if should_sit:
-                self.assertTrue(table.buyInPlayer(client, money))
                 clients[serial] = client
                 table.sitPlayer(client, serial)
 

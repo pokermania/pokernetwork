@@ -883,6 +883,7 @@ class PokerService(service.Service):
         tourney.callback_remove_player = self.tourneyRemovePlayerLater
         tourney.callback_cancel = self.tourneyCancel
         tourney.callback_reenter_game = self.tourneyReenterGame
+        tourney.callback_rebuy = self.tourneyRebuy
         if schedule_serial not in self.schedule2tourneys:
             self.schedule2tourneys[schedule_serial] = []
         self.schedule2tourneys[schedule_serial].append(tourney)
@@ -1727,6 +1728,62 @@ class PokerService(service.Service):
                 self.log.debug("tourneyCancel: %s", packet)
             for avatar in avatars:
                 avatar.sendPacketVerbose(packet)
+
+
+    def tourneyRebuy(self, tournament, serial, table_id, player_chips, tourney_chips):
+        """decrements the bank money of a player
+        amount is the number of chips which the player has to pay to get a new set of tourney chips
+
+        returns the amount of tourney chips that the player should get additionally on the table
+        if error is False, the reason indicates the problem
+        """
+        cursor = self.db.cursor()
+
+        try:
+            currency_serial = tournament.prize_currency or tournament.currency_serial
+            cursor.execute(
+               "UPDATE user2money,user2table SET " \
+               "user2table.money = user2table.money + %s, " \
+               "user2money.amount = user2money.amount - %s " \
+               "WHERE user2money.user_serial = %s " \
+               "AND user2money.currency_serial = %s " \
+               "AND user2table.user_serial = %s " \
+               "AND user2table.table_serial = %s " \
+               "AND user2money.amount >= %s",
+               (tourney_chips, player_chips, serial, currency_serial, 
+                serial, table_id, player_chips)
+            )
+
+            if cursor.rowcount != 2:
+                return 0
+
+            return tourney_chips
+        finally:
+            cursor.close();
+
+    def tourneyRebuyRequest(self, packet):
+        """handle the tourney rebuy request
+        exchange user chips to tourney chips if it is valid for the tourney
+        """
+        # see pokeravater for the explanation why a packet given as a parameter
+        tourney = self.tourneys.get(packet.tourney_serial)
+        
+        if tourney is None:
+            self.log.warn("tourney_serial %d does not exist" % packet.tourney_serial)
+            return packet.OTHER_ERROR
+
+        success, game_id, reason = tourney.rebuy(packet.serial)
+
+        if success:
+            return packet.OK
+        else:
+            return {
+                TOURNEY_REBUY_ERROR_USER: packet.REBUY_LIMIT_EXEEDED,
+                TOURNEY_REBUY_ERROR_TIMEOUT: packet.REBUY_TIMEOUT_EXEEDED,
+                TOURNEY_REBUY_ERROR_MONEY: packet.NOT_ENOUGH_MONEY,
+                TOURNEY_REBUY_ERROR_OTHER: packet.OTHER_ERROR,
+            }.get(reason, packet.OTHER_ERROR)
+
 
     def getHandSerial(self):
         cursor = self.db.cursor()

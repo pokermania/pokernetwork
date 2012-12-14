@@ -206,7 +206,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
                 pass
         def dummyConnect(host, port, user, passwd, db='mysql', reconnect=1):
             parameters = self.settings.headerGetProperties("/server/database")[0]
-            if user == parameters['user']:
+            if user == parameters['user'] and user != 'root':
                 raise Exception("SqlError")
             else:
                 return DummyMySQL()
