@@ -2613,8 +2613,8 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             self.assertTrue(table.seatPlayer(client, serial, pos))
             money = table.game.maxBuyIn() if serial != 84761 else 0
             table.game.noAutoBlindAnte(serial)
+            self.assertTrue(table.buyInPlayer(client, money))
             if should_sit:
-                self.assertTrue(table.buyInPlayer(client, money))
                 clients[serial] = client
                 table.sitPlayer(client, serial)
 
