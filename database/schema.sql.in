@@ -442,6 +442,18 @@ CREATE TABLE `tables` (
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `test`;
+CREATE TABLE `test` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+DROP TABLE IF EXISTS `test2`;
+CREATE TABLE `test2` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 DROP TABLE IF EXISTS `tourneys`;
 CREATE TABLE `tourneys` (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -523,6 +535,13 @@ CREATE TABLE `tourneys_schedule` (
   PRIMARY KEY (`serial`),
   KEY `tourneys_schedule_active_index` (`active`),
   KEY `tourneys_schedule_register_time_index` (`register_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `tourneys_schedule_type`;
+CREATE TABLE `tourneys_schedule_type` (
+  `tourneys_schedule_id` int(11) NOT NULL COMMENT 'references pokernetwork table',
+  `type` int(11) NOT NULL,
+  PRIMARY KEY (`tourneys_schedule_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `user2hand`;
