@@ -397,7 +397,6 @@ class PokerAuthMysqlTestCase(PokerAuthTestCase):
             user = self.parameters["user"],
             passwd = self.parameters["password"]
         )
-        self.db.autocommit(True)
         self.db.query("CREATE DATABASE %s" % self.parameters["db"])
         self.db.query("USE %s" % self.parameters["db"])
         self.db.query("CREATE TABLE %s (username varchar(20), password varchar(20), privilege int)" % self.parameters["table"])
