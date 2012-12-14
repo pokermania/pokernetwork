@@ -45,7 +45,11 @@ def setup_db(schema, _querys=[], user=None, password=None, host=None, port=3306,
         try:
             for q, a in _querys:
                 if type(a) in (list, tuple) and len(a) > 0:
-                    c.executemany(q, a)
+                    for args in a:
+                        try:
+                            c.execute(q, args)
+                        except:
+                            print q,"\n    ", args
                 else:
                     c.execute(q)
         finally:
