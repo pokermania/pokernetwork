@@ -127,9 +127,10 @@ class PokerBot:
     def _handleLogin(self, protocol, packet):
         if packet.type == PACKET_BOOTSTRAP:
             reactor.callLater(self.factory.serial * 0.1, self.bootstrap, protocol)
-        elif packet.type == PACKET_AUTH_OK:
+        if packet.type == PACKET_AUTH_OK:
             log.inform('bot credentials are ok for user %s', protocol.user.name)
             self.state = STATE_RECONNECTING
+            
         elif packet.type == PACKET_AUTH_REFUSED:
             log.error('bot credentials are wrong for user %s', protocol.user.name)
             protocol.transport.loseConnection()

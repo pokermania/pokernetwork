@@ -51,6 +51,9 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" auto_create_account="yes">
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
+  <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+
   <listen tcp="19481" />
   <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
 
@@ -106,38 +109,23 @@ settings_xml_proxy = """<?xml version="1.0" encoding="UTF-8"?>
     'mysql_command': config.test.mysql.command
 }
 class ProxyTestCase(unittest.TestCase):
-    def setupDb(self):
-        sqlmanager.setup_db(
-            TESTS_PATH + "/../database/schema.sql", (
-                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
-                    ('Table1','100-200_2000-20000_no-limit'),
-                    ('Table2','100-200_2000-20000_no-limit'),
-                )),
-                ("INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)", (
-                    (1, 1),
-                    (1, 2),
-                )),
-            ),
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
-            host=config.test.mysql.host,
-            port=config.test.mysql.port,
-            database=config.test.mysql.database
+            host=config.test.mysql.host
         )
-
-
+    # --------------------------------------------------------------
     def initServer(self):
         settings = pokernetworkconfig.Config([])
         settings.loadFromString(settings_xml_server)
         self.server_service = pokerservice.PokerService(settings)
         self.server_service.disconnectAll = lambda: True
         self.server_service.startService()
-        for i in (1,2):
-            self.server_service.spawnTable(i, **self.server_service.loadTableConfig(i))
         self.server_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.server_service))
         self.server_site.memcache = pokermemcache.MemcacheMockup.Client([])
         self.server_port = reactor.listenTCP(19481, self.server_site, interface="127.0.0.1")
-
+    # --------------------------------------------------------------
     def initProxy(self):
         settings = pokernetworkconfig.Config([])
         settings.loadFromString(settings_xml_proxy)
@@ -147,35 +135,36 @@ class ProxyTestCase(unittest.TestCase):
         self.proxy_site = pokersite.PokerSite(settings, pokerservice.PokerRestTree(self.proxy_service))
         self.proxy_site.memcache = pokermemcache.MemcacheMockup.Client([])
         self.proxy_port = reactor.listenTCP(19480, self.proxy_site, interface="127.0.0.1")
-
+    # --------------------------------------------------------------
     def setUp(self):
         testclock._seconds_reset()
         pokermemcache.memcache = pokermemcache.MemcacheMockup
         pokermemcache.memcache_singleton = {}
-        self.setupDb()
+        self.destroyDb()
         self.initServer()
         self.initProxy()
-
+    # --------------------------------------------------------------
     def tearDownServer(self):
         self.server_site.stopFactory()
         d = self.server_service.stopService()
         d.addCallback(lambda x: self.server_port.stopListening())
         return d
-
+    # --------------------------------------------------------------
     def tearDownProxy(self):
         self.proxy_site.stopFactory()
         d = self.proxy_service.stopService()
         d.addCallback(lambda x: self.proxy_port.stopListening())
         return d
-
+    # --------------------------------------------------------------
     def tearDown(self):
         d = defer.DeferredList([
             self.tearDownServer(),
             self.tearDownProxy()
         ])
+        d.addCallback(self.destroyDb)
         d.addCallback(lambda x: reactor.disconnectAll())
         return d
-
+    # --------------------------------------------------------------
     def test01_ping_proxy(self):
         """Ping to the proxy."""
         d = client.getPage("http://127.0.0.1:19480/POKER_REST", postdata='{"type": "PacketPing"}')
@@ -183,7 +172,7 @@ class ProxyTestCase(unittest.TestCase):
             self.assertEqual('[]', str(result))
         d.addCallback(checkPing)
         return d
-
+    # --------------------------------------------------------------
     def test02_ping_server(self):
         """Ping to the server."""
         d = client.getPage("http://127.0.0.1:19481/POKER_REST", postdata='{"type": "PacketPing"}')
@@ -191,7 +180,7 @@ class ProxyTestCase(unittest.TestCase):
             self.assertEqual('[]', str(result))
         d.addCallback(checkPing)
         return d
-
+    # --------------------------------------------------------------
     def test03_listTables(self):
         """
         Select all tables. The list obtained from the proxy contains the tables
@@ -208,7 +197,7 @@ class ProxyTestCase(unittest.TestCase):
             self.assertEqual('Table1', tables[0]['name'])
         d.addCallback(checkTables)
         return d
-
+    # --------------------------------------------------------------
     def test04_tableJoin(self):
         """Join a table thru a proxy."""
         d = client.getPage(
@@ -221,7 +210,7 @@ class ProxyTestCase(unittest.TestCase):
             self.assertEqual('Table1', packets[0]['name'])
         d.addCallback(checkTable)
         return d
-
+    # --------------------------------------------------------------
     def test05_connectionrefused(self):
         """Create a route that leads to a non-existent server."""
         db = self.proxy_service.db
@@ -235,7 +224,7 @@ class ProxyTestCase(unittest.TestCase):
             self.assertSubstring('Connection was refused by other side', result.value.response)
         d.addBoth(checkTable)
         return d
-
+    # --------------------------------------------------------------
     def test06_tableSeat_auth(self):
         """
         Join a table thru a proxy, using an authenticated session
@@ -245,24 +234,37 @@ class ProxyTestCase(unittest.TestCase):
         self.proxy_site.memcache.set('auth', str(serial))
         
         # player can seat regardless of his balance in db
-        self.proxy_service.seatPlayer = lambda *a, **kw: True
-
+        self.server_service.seatPlayer = lambda *a, **kw: True
+        
+        #
+        # Join table
+        #
+        d = client.getPage(
+            "http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+            postdata='{"type":"PacketPokerTableJoin","game_id":1,"serial":%d}' % serial
+        )
         def checkTable(result):
             packets = Packet.JSON.decode(result)
             self.assertEqual('PacketPokerTable', packets[0]['type'])
             self.assertEqual('Table1', packets[0]['name'])
-
-        def checkArrive(result):
-            self.assertSubstring('PlayerArrive', result)
-
-        d = defer.succeed(None)
-        d.addCallback(lambda x: client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth", postdata='{"type":"PacketPokerTableJoin","game_id":1,"serial":%d}' % (serial,)))
+            return result
         d.addCallback(checkTable)
-        d.addCallback(lambda x: client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth", postdata='{"type":"PacketPokerSeat","game_id":1,"serial":%d}' % (serial,)))
-        d.addCallback(checkArrive)
+        #
+        # Get a seat
+        #
+        def seat(result):
+            d1 = client.getPage(
+                "http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+                postdata = '{"type":"PacketPokerSeat","game_id":1,"serial":%d}' % serial
+            )
+            def checkSeat(result):
+                self.assertSubstring('PlayerArrive', result)
+                return True
+            d1.addCallback(checkSeat)
+            return d1
+        d.addCallback(seat)
         return d
-
-
+    # --------------------------------------------------------------
     def test07_tourneyRegister(self):
         """
         Register to a tourney thru a proxy, using an authenticated session
@@ -312,44 +314,65 @@ class ProxyTestCase(unittest.TestCase):
             return result
         d.addCallback(checkTable)
         return d
-
+    # --------------------------------------------------------------
     def test08_tableSeat_relogin(self):
         """
         Join a table thru a proxy, using an anonymous session that becomes an
         authenticated session
         """
-
-        self.proxy_service.spawnTable(1, **self.proxy_service.loadTableConfig(1))
-
-        serial = 0
         
         self.proxy_site.memcache.set('auth', '0')
         
         # player can seat regardless of his balance in db
-        self.proxy_service.seatPlayer = lambda *a, **kw: True
-
+        self.server_service.seatPlayer = lambda *a, **kw: True
+        
+        #
+        # Join table
+        #
+        d = client.getPage(
+            "http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+            postdata='{"type":"PacketPokerTableJoin","game_id":1}'
+        )
         def checkTable(result):
             packets = Packet.JSON.decode(result)
             self.assertEqual('PacketPokerTable', packets[0]['type'])
             self.assertEqual('Table1', packets[0]['name'])
-
-        def checkLogin(result):
-            global serial
-            packets = Packet.JSON.decode(result)
-            serial = packets[1]['serial']
-
-        def checkSeat(result):
-            self.assertSubstring('PlayerArrive', result)
-
-        d = defer.succeed(None)
-        d.addCallback(lambda x: client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth", postdata='{"type":"PacketPokerTableJoin","game_id":1}'))
+            return result
+        
         d.addCallback(checkTable)
-        d.addCallback(lambda x: client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth", postdata='{"type":"PacketLogin","name":"user1","password":"password1"}'))
-        d.addCallback(checkLogin)
-        d.addCallback(lambda x: client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth", postdata='{"type":"PacketPokerSeat","game_id":1,"serial":%d}' % (serial,)))
-        d.addCallback(checkSeat)
+        #
+        # Login
+        #
+        def login(result):
+            d3 = client.getPage(
+                "http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+                postdata = '{"type":"PacketLogin", "name":"user1", "password":"password1"}'
+            )
+            def checkLogin(result):
+                global serial
+                packets = Packet.JSON.decode(result)
+                serial = packets[1]['serial']
+                return True
+            d3.addCallback(checkLogin)
+            return d3
+        d.addCallback(login)
+        #
+        # Get a seat
+        #
+        def seat(result):
+            global serial
+            d1 = client.getPage(
+                "http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth",
+                postdata='{"type":"PacketPokerSeat","game_id":1,"serial":%d}' % serial
+            )
+            def checkSeat(result):
+                self.assertSubstring('PlayerArrive', result)
+                return True
+            d1.addCallback(checkSeat)
+            return d1
+        d.addCallback(seat)
         return d
-
+    # --------------------------------------------------------------
     def test09_pokerPoll(self):
         d = client.getPage(
             "http://127.0.0.1:19480/POKER_REST",
@@ -360,7 +383,7 @@ class ProxyTestCase(unittest.TestCase):
             self.assertEqual(0, len(packets))
         d.addCallback(checkTable)
         return d
-
+    # --------------------------------------------------------------
     def test10_error500(self):
         def error500(game_id):
             raise UserWarning, "%d fail" % game_id
@@ -376,7 +399,7 @@ class ProxyTestCase(unittest.TestCase):
         return d
 ################################################################################
 class ProxyFilterTestCase(unittest.TestCase):
-
+    # --------------------------------------------------------------
     def test01_rest_filter_finished_request(self):
         """proxyfilter.rest_filter should ignore finished request"""
         class Transport:
@@ -405,7 +428,7 @@ class ProxyFilterTestCase(unittest.TestCase):
         r.finish()
         r.noLongerQueued()
         proxyfilter.rest_filter(Site(), r, Packet())
-
+    # --------------------------------------------------------------
     def test02_forceInitCoverHeaderReplace(self):
         from pokernetwork.proxyfilter import ProxyClient
 
@@ -418,7 +441,7 @@ class ProxyFilterTestCase(unittest.TestCase):
         self.assertEquals(pc.headers, {'cookie' : 'ThisWillStay',
                              'connection' : 'close'})
         self.assertEquals(pc.data, "DATA")
-
+    # --------------------------------------------------------------
     def test03_checkbadReason(self):
         class MockReason():
             def check(mrS, reason): return False

@@ -147,26 +147,6 @@ class SessionProxyFilterTestCase(unittest.TestCase):
             password=config.test.mysql.root_user.password,
             host=config.test.mysql.host
         )
-
-    def setupDb(self):
-        sqlmanager.setup_db(
-            TESTS_PATH + "/../database/schema.sql", (
-                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
-                    ('Table1','100-200_2000-20000_no-limit'),
-                    ('Table2','100-200_2000-20000_no-limit'),
-                )),
-                ("INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)", (
-                    (1, 1),
-                    (1, 2),
-                )),
-            ),
-            user=config.test.mysql.root_user.name,
-            password=config.test.mysql.root_user.password,
-            host=config.test.mysql.host,
-            port=config.test.mysql.port,
-            database=config.test.mysql.database
-        )
-
     # --------------------------------------------------------------
     def initServer(self):
         settings = pokernetworkconfig.Config([])
@@ -204,7 +184,7 @@ class SessionProxyFilterTestCase(unittest.TestCase):
         pokermemcache.memcache_singleton = {}
         pokermemcache.memcache_singleton_expiration = {}
         pokermemcache.memcache_singleton_log = []
-        self.setupDb()
+        self.destroyDb()
         self.initServer()
         self.initExplain()
         self.initProxy()        

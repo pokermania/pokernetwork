@@ -161,10 +161,18 @@ settings_xml_server_open_options = """<?xml version="1.0" encoding="UTF-8"?>
     'mysql_command': config.test.mysql.command
 }
 
-
+# ----------------------------------------------------------------
 class PokerServerMakeServiceManholeTestCase(unittest.TestCase):
+    def destroyDb(self):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
+    # -------------------------------------------------------------------------
     def setUp(self):
         log_history.reset()
+        self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         self.filename = os.path.join(self.tmpdir, "poker.server.xml")
         f = open(self.filename, "w")
@@ -173,12 +181,12 @@ class PokerServerMakeServiceManholeTestCase(unittest.TestCase):
         f.close()
         self.service = makeService(self.filename)
         self.service.startService()
-
+    # -------------------------------------------------------------------------
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
         d = self.service.stopService()
         return d
-
+    # -------------------------------------------------------------------------
     def test01_manhole(self):
         self.assertEquals(self.service.namedServices.keys(), ['manhole'])
         manhole = self.service.getServiceNamed('manhole')
@@ -189,53 +197,41 @@ class PokerServerMakeServiceManholeTestCase(unittest.TestCase):
         self.assertEquals(manhole._port.connected, 1)
         self.assertEquals(manhole.parent, self.service)
         self.failUnless(manhole.running)
-
+# ----------------------------------------------------------------
 class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
-    def setupDb(self):
-        sqlmanager.setup_db(
-            TESTS_PATH + "/../database/schema.sql", (
-                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
-                    ('Table1','100-200_2000-20000_no-limit'),
-                    ('Table2','100-200_2000-20000_no-limit'),
-                )),
-                ("INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)", (
-                    (1, 1),
-                    (1, 2),
-                )),
-            ),
+    def destroyDb(self):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
-            host=config.test.mysql.host,
-            port=config.test.mysql.port,
-            database=config.test.mysql.database
+            host=config.test.mysql.host
         )
-
+    # -------------------------------------------------------------------------
     def setUp(self):
         log_history.reset()
-        self.setupDb()
+        self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         self.filename = os.path.join(self.tmpdir, "poker.server.xml")
-
+    # -------------------------------------------------------------------------
     def createService(self):
         self.service = makeService(self.filename)
         self.service.startService()
-
+    # -------------------------------------------------------------------------
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
         d = self.service.stopService() if hasattr(self, 'service') else defer.succeed(None) 
         return d
-
+    # -------------------------------------------------------------------------
     def createConfig(self, optionsDict):
         configFH = open(self.filename, "w")
         configFH.write(settings_xml_server_open_options % optionsDict)
         configFH.close()
-
+    # -------------------------------------------------------------------------
     def createPemFile(self):
         pemFile = os.path.join(self.tmpdir, "poker.pem")
         pemFH = open(pemFile, "w")
         pemFH.write(snake_oil_cert)
         pemFH.close()
-
+    # -------------------------------------------------------------------------
     def test00_missingSettingsFile(self):
         caughtIt = False
         try:
@@ -245,8 +241,8 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             self.assertEquals(e.__str__(), "1")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
-
-    def xtest01_emptySettingsFile(self):
+    # -------------------------------------------------------------------------
+    def test01_emptySettingsFile(self):
         f = open(self.filename, "w")
         f.close()
         caughtIt = False
@@ -257,7 +253,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             self.assertEquals(e.__str__(),'xmlParseFile() failed')
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
-
+    # -------------------------------------------------------------------------
     def test02_tcpSsl_hasSSL(self):
         self.createConfig({'listen_options': 'tcp_ssl="3234"', 'additional_path': self.tmpdir})
         self.createPemFile()
@@ -272,10 +268,9 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         for service in self.service.services:
             self.assertEquals(service.parent, self.service)
             if isinstance(service, PokerService):
-                # self.assertEquals(len(service.tables.keys()), 2)
-                # self.failUnless(isinstance(service.tables[1], PokerTable))
-                # self.failUnless(isinstance(service.tables[2], PokerTable))
-                pass
+                self.assertEquals(len(service.tables.keys()), 2)
+                self.failUnless(isinstance(service.tables[1], PokerTable))
+                self.failUnless(isinstance(service.tables[2], PokerTable))
             elif isinstance(service, TCPServer):
                 self.failUnless(service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on") == 0)
                 self.failUnless(service._port.port > 1024)
@@ -297,7 +292,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
-
+    # -------------------------------------------------------------------------
     def test03_tcpSsl_hasSSL_noPemFile(self):
         self.createConfig({'listen_options': 'tcp_ssl="3234"', 'additional_path': self.tmpdir})
         caughtIt = False
@@ -308,7 +303,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             self.assertEquals(str(ee),"no poker.pem found in the setting's server path")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
-
+    # -------------------------------------------------------------------------
     def test04_httpSSL_hasSSL_noPemFile(self):
         self.createConfig({'listen_options': 'http_ssl="3234"', 'additional_path': self.tmpdir})
         caughtIt = False
@@ -319,7 +314,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             self.assertEquals(str(ee), "no poker.pem found in the setting's server path")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
-
+    # -------------------------------------------------------------------------
     def test05_httpSSL_hasSSL(self):
         self.createConfig({'listen_options': 'http_ssl="9356"', 'additional_path': self.tmpdir})
         self.createPemFile()
@@ -334,10 +329,9 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         for service in self.service.services:
             self.assertEquals(service.parent, self.service)
             if isinstance(service, PokerService):
-                # self.assertEquals(len(service.tables.keys()), 2)
-                # self.failUnless(isinstance(service.tables[1], PokerTable))
-                # self.failUnless(isinstance(service.tables[2], PokerTable))
-                pass
+                self.assertEquals(len(service.tables.keys()), 2)
+                self.failUnless(isinstance(service.tables[1], PokerTable))
+                self.failUnless(isinstance(service.tables[2], PokerTable))
             elif isinstance(service, TCPServer):
                 self.failUnless(service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on") == 0)
                 self.failUnless(service._port.port > 1024)
@@ -359,7 +353,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
-
+    # -------------------------------------------------------------------------
     def test06_restSSL_hasSSL_noPemFile(self):
         self.createConfig({'listen_options': 'rest_ssl="10234"', 'additional_path': self.tmpdir})
         caughtIt = False
@@ -370,7 +364,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             self.assertEquals(str(ee),"no poker.pem found in the setting's server path")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
-
+    # -------------------------------------------------------------------------
     def test07_restSSL_hasSSL(self):
         self.createConfig({'listen_options': 'rest_ssl="10234"', 'additional_path': self.tmpdir})
         self.createPemFile()
@@ -385,10 +379,9 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         for service in self.service.services:
             self.assertEquals(service.parent, self.service)
             if isinstance(service, PokerService):
-                # self.assertEquals(len(service.tables.keys()), 2)
-                # self.failUnless(isinstance(service.tables[1], PokerTable))
-                # self.failUnless(isinstance(service.tables[2], PokerTable))
-                pass
+                self.assertEquals(len(service.tables.keys()), 2)
+                self.failUnless(isinstance(service.tables[1], PokerTable))
+                self.failUnless(isinstance(service.tables[2], PokerTable))
             elif isinstance(service, TCPServer):
                 self.assertTrue(0 == service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on"))
                 self.failUnless(service._port.port > 1024)
@@ -410,7 +403,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.failUnless(service.running)
             else:
                 self.fail("Unknown service found in multiservice list")
-
+    # -------------------------------------------------------------------------
     def test08_plainREST(self):
         self.createConfig({'listen_options': 'rest="11944"', 'additional_path': self.tmpdir})
         self.createService()
@@ -425,10 +418,9 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             self.assertEquals(service.parent, self.service)
             if isinstance(service, PokerService):
                 count += 1
-                # self.assertEquals(len(service.tables.keys()), 2)
-                # self.failUnless(isinstance(service.tables[1], PokerTable))
-                # self.failUnless(isinstance(service.tables[2], PokerTable))
-                pass
+                self.assertEquals(len(service.tables.keys()), 2)
+                self.failUnless(isinstance(service.tables[1], PokerTable))
+                self.failUnless(isinstance(service.tables[2], PokerTable))
             elif isinstance(service, TCPServer) and service._port.port == 11944:
                 count += 1
                 self.failUnless(service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokersite.PokerSite on 11944>") == 0)
@@ -449,7 +441,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             else:
                 self.fail("Unknown service found in multiservice list")
         self.assertEquals(len(self.service.services), count)
-
+    # -------------------------------------------------------------------------
     def test09_plainHTTP(self):
         self.createConfig({'listen_options': 'http="10235"', 'additional_path': self.tmpdir})
         self.createService()
@@ -464,10 +456,9 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             self.assertEquals(service.parent, self.service)
             if isinstance(service, PokerService):
                 count += 1
-                # self.assertEquals(len(service.tables.keys()), 2)
-                # self.failUnless(isinstance(service.tables[1], PokerTable))
-                # self.failUnless(isinstance(service.tables[2], PokerTable))
-                pass
+                self.assertEquals(len(service.tables.keys()), 2)
+                self.failUnless(isinstance(service.tables[1], PokerTable))
+                self.failUnless(isinstance(service.tables[2], PokerTable))
             elif isinstance(service, TCPServer) and service._port.port == 10235:
                 count += 1
                 self.failUnless(service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of twisted.web.server.Site on 10235>") == 0)
@@ -488,7 +479,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             else:
                 self.fail("Unknown service found in multiservice list")
         self.assertEquals(len(self.service.services), count)
-
+    # -------------------------------------------------------------------------
     def test10_everythingOn(self):
         #"19481"
         self.createConfig({
@@ -517,10 +508,9 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             self.assertEquals(service.parent, self.service)
             if isinstance(service, PokerService):
                 count += 1
-                # self.assertEquals(len(service.tables.keys()), 2)
-                # self.failUnless(isinstance(service.tables[1], PokerTable))
-                # self.failUnless(isinstance(service.tables[2], PokerTable))
-                pass
+                self.assertEquals(len(service.tables.keys()), 2)
+                self.failUnless(isinstance(service.tables[1], PokerTable))
+                self.failUnless(isinstance(service.tables[2], PokerTable))
             elif isinstance(service, TCPServer) and service._port.port == 19481:
                 count += 1
                 self.failUnless(service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on 19481") == 0)
@@ -590,16 +580,23 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             else:
                 self.fail("Unknown service found in multiservice list")
         self.assertEquals(len(self.service.services), count)
-
+# ----------------------------------------------------------------
 class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
-
+    def destroyDb(self):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host
+        )
+    # -------------------------------------------------------------------------
     def setUp(self):
         log_history.reset()
+        self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
-
+    # -------------------------------------------------------------------------
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
-
+    # -------------------------------------------------------------------------
     def test00_missingConfigFileGivenOnCLI(self):
         doesNotExistFile = os.path.join(self.tmpdir, "thisdoesnotexist.xml")
         caughtIt = False
@@ -610,7 +607,7 @@ class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
             self.assertEquals(e.__str__(), "1")
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
-
+    # -------------------------------------------------------------------------
     def test01_missingConfigFileGivenOnCLI_sysVersionDitched(self):
         doesNotExistFile = os.path.join(self.tmpdir, "doesnotexists.xml")
         saveSysVersion = sys.version
@@ -624,7 +621,7 @@ class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
         sys.version = saveSysVersion
-
+    # -------------------------------------------------------------------------
     def test02_validConfig(self):
         configFile = os.path.join(self.tmpdir, "ourconfig.xml")
         configFH = open(configFile, "w")
@@ -633,7 +630,7 @@ class PokerServerMakeApplicationCoverageTestCase(unittest.TestCase):
         application =  makeApplication([configFile])
         from twisted.python.components import Componentized
         self.failUnless(isinstance(application, Componentized))
-
+# ----------------------------------------------------------------
 
 class PokerServerRunCoverageTestCase(unittest.TestCase):
     def destroyDb(self):
@@ -642,17 +639,17 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
             password=config.test.mysql.root_user.password,
             host=config.test.mysql.host
         )
-
+    # -------------------------------------------------------------------------
     def setUp(self):
         log_history.reset()
         self.destroyDb()
         self.tmpdir = tempfile.mkdtemp()
         
-
+    # -------------------------------------------------------------------------
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
         
-
+    # -------------------------------------------------------------------------
     def test00_missingConfigFileGivenOnCLI(self):
         doesNotExistFile = os.path.join(self.tmpdir, "thisdoesnotexist.xml")
         caughtIt = False
@@ -698,7 +695,7 @@ class PokerServerRunCoverageTestCase(unittest.TestCase):
         if saveSystem: platform.system = saveSystem
         epollreactor.install = saveReactor
         sys.modules['twisted.internet.reactor'] = reactorModulesSave
-
+# ----------------------------------------------------------------
 
 def GetTestSuite():
     loader = runner.TestLoader()

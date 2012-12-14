@@ -717,12 +717,6 @@ class PokerAvatar:
             return
 
         elif packet.type == PACKET_POKER_TABLE_JOIN:
-            if packet.game_id not in self.service.tables:
-                description = self.service.loadTableConfig(packet.game_id)
-                if description:
-                    self.service.spawnTable(packet.game_id, **description)
-                else:
-                    self.log.warn("trying accessing table that is not in database!")
             self.performPacketPokerTableJoin(packet)
             return
 
@@ -731,7 +725,7 @@ class PokerAvatar:
             return
 
         table = self.packet2table(packet)
-
+            
         if table:
             self.log.debug("packet for table %s", table.game.id)
             game = table.game
@@ -1190,10 +1184,10 @@ class PokerAvatar:
                 muck_timeout = int(table['muck_timeout']),
                 observers = int(table['observers']),
                 waiting = int(table['waiting']),
-                skin = table['skin'] or 'default',
+                skin = table['skin'],
                 currency_serial = int(table['currency_serial']),
                 player_seated = int(table.get('player_seated',-1)),
-                tourney_serial = int(table['tourney_serial'] or 0),
+                tourney_serial = int(table['tourney_serial']),
                 reason = PacketPokerTable.REASON_TABLE_LIST,
             )            
             packets.append(packet)

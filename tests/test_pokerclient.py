@@ -66,8 +66,6 @@ from pokerpackets.clientpackets import *
 
 from mock_transport import PairedDeferredTransport
 
-import sqlmanager
-
 class ConstantDeckShuffler:
     def shuffle(self, what):
         what[:] = [40, 13, 32, 9, 19, 31, 15, 14, 50, 34, 20, 6, 43, 44, 28, 29, 48, 3, 21, 45, 23, 37, 35, 11, 5, 22, 24, 30, 27, 39, 46, 33, 0, 8, 1, 42, 36, 16, 49, 2, 10, 26, 4, 18, 7, 41, 47, 17]
@@ -81,10 +79,13 @@ class ConstantPlayerShuffler:
 
 pokertournament.shuffler = ConstantPlayerShuffler()
 
-settings_xml_server = """\
-<?xml version="1.0" encoding="UTF-8"?>
+settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" auto_create_account="yes" >
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
+
+  <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
+  <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10" player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
 
   <listen tcp="19480" />
 
@@ -110,8 +111,7 @@ settings_xml_server = """\
     'mysql_command': config.test.mysql.command
 }
 
-settings_xml_client = """\
-<?xml version="1.0" encoding="UTF-8"?>
+settings_xml_client = """<?xml version="1.0" encoding="UTF-8"?>
 <settings display2d="yes" display3d="no" ping="15000" verbose="6" delays="true" tcptimeout="2000" upgrades="no">
    <delays blind_ante_position="0" position="0" begin_round="0" end_round="0" end_round_last="0" showdown="0" lag="60"/> 
   <screen fullscreen="no" width="1024" height="768"/>
@@ -133,8 +133,15 @@ settings_xml_client = """\
   <handlist start="0" count="10"/>
 </settings>
 """ % {
+    'dbhost': config.test.mysql.host,
+    'dbname': config.test.mysql.database,
+    'dbuser': config.test.mysql.user.name,
+    'dbuser_password': config.test.mysql.user.password,
+    'dbroot': config.test.mysql.root_user.name,
+    'dbroot_password': config.test.mysql.root_user.password,
     'tests_path': TESTS_PATH,
-    'engine_path': config.test.engine_path
+    'engine_path': config.test.engine_path,
+    'mysql_command': config.test.mysql.command
 }
 
 TABLE1 = 1
@@ -145,36 +152,51 @@ class PokerClientTestCase(unittest.TestCase):
 
     timeout = 500
     
-    def setupDb(self):
-        sqlmanager.setup_db(
-            TESTS_PATH + "/../database/schema.sql", (
-                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
-                    ('Table1','100-200_2000-20000_no-limit'),
-                    ('Table2','100-200_2000-20000_no-limit'),
-                )),
-                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial, player_timeout, muck_timeout) VALUES (%s, 'holdem', %s, 10, 1, %s, %s)", (
-                    ('Table3','test18pokerclient', 600, 600), #player timeout 600, muck timeout 600
-                )),
-                ("INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)", (
-                    (1, 1),
-                    (1, 2),
-                    (1, 3),
-                )),
-                ("INSERT INTO tourneys_schedule (name, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, start_time, register_time, respawn, respawn_interval) \
-                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", (
-                    ("sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", 2, "holdem", "level-15-30-no-limit", 2, 1, 300000, 0, "y", 0, 0, "y", 0),
-                )),
-                ("INSERT INTO tourneys_schedule (name, description_short, description_long, players_quota, variant, betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, breaks_interval, rebuy_delay, add_on, add_on_delay, start_time, register_time, respawn, respawn_interval, players_min) \
-                  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - INTERVAL 1 HOUR), %s, %s, %s)", (
-                    ("regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", 1000, "holdem", "level-001", 10, 1, 0, 0, "n", 60, 30, 1, 60, "n", 0, 3),
-                ))
-            ),
-            user=config.test.mysql.root_user.name,
-            password=config.test.mysql.root_user.password,
-            host=config.test.mysql.host,
-            port=config.test.mysql.port,
-            database=config.test.mysql.database
+    def destroyDb(self):
+        if len(config.test.mysql.root_user.password) > 0:
+            os.system("%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
+        else:
+            os.system("%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -e 'DROP DATABASE IF EXISTS %(dbname)s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            })
+
+    def createTourneysSchedules(self):
+        stmts = []
+        stmts.append(
+            'INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `start_time`, `register_time`, `respawn`, `respawn_interval`) ' \
+            'VALUES ("sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", "2", "holdem", "level-15-30-no-limit", "2", 1, "300000", "0", "y", "0", "0", "y", "0");'
         )
+        stmts.append(
+            'INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, `rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`, `players_min`) ' \
+            'VALUES ("regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", "1000", "holdem", "level-001", "10", 1, "0", "0", "n", "60", "30", "1", "60", unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - INTERVAL 1 HOUR), "n", "0", 3);'
+        )
+        
+        if len(config.test.mysql.root_user.password) > 0:
+            prefix = "%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -D '%(dbname)s' -e '%%s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            }
+        else:
+            prefix = "%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -D '%(dbname)s' -e '%%s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            }
+        for stmt in stmts:
+            os.system(prefix % stmt)
 
     def setUpConnection(self, serial):
         server_protocol = self.server_protocol[serial] = self.server_factory.buildProtocol(('127.0.0.1',0))
@@ -192,6 +214,7 @@ class PokerClientTestCase(unittest.TestCase):
         #
         self.service = pokerservice.PokerService(settings)
         self.service.startService()
+        self.createTourneysSchedules()
         self.service.updateTourneysSchedule()
         self.server_factory = pokerservice.IPokerFactory(self.service)
 
@@ -214,7 +237,7 @@ class PokerClientTestCase(unittest.TestCase):
     def setUp(self):
         log_history.reset()
         testclock._seconds_reset()
-        self.setupDb()
+        self.destroyDb()
         self.setUpServer()
         self.client_factory = [None, None]
         self.client_protocol = [None, None]
@@ -250,6 +273,7 @@ class PokerClientTestCase(unittest.TestCase):
 
     def tearDown(self):
         d = self.service.stopService()
+        d.addCallback(lambda x: self.destroyDb())
         d.addCallback(self.cleanSessions)
         return d
 
@@ -404,7 +428,7 @@ class PokerClientTestCase(unittest.TestCase):
     def test04_playHand(self):
         """ test04_playHand """
         d = [None, None]
-        for index in (0, 1):
+        for index in (0,1):
             d[index] = self.client_factory[index].established_deferred or defer.succeed(self.client_protocol[index])
             d[index].addCallback(self.login, index)
             d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000))
@@ -908,18 +932,11 @@ class PokerClientTestCase(unittest.TestCase):
             ))
             return client.packetDeferred(True, expect)
 
-
-        def setupForcedDealerSeat(result):
-            self.service.tables[TABLE3].game.forced_dealer_seat = 0
-            return result
-
         d = [None, None]
         for index in (0,1):
             d[index] = self.client_factory[index].established_deferred or defer.succeed(self.client_protocol[index])
             d[index].addCallback(self.login, index)
             d[index].addCallback(lambda (client, packet): self.cashIn(client, "ONE", 200000))
-            if index == 0:
-                d[index].addCallback(setupForcedDealerSeat)
             d[index].addCallback(self.sit, TABLE3, index, pokergame.AUTO_MUCK_NEVER)
             if index == 0: # serial 4
                 d[index].addCallback(call, PACKET_POKER_MUCK_REQUEST)

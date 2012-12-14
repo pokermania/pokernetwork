@@ -160,44 +160,48 @@ settings_xml_client = """\
 class PokerAvatarTestCaseBaseClass(unittest.TestCase):
     timeout = 500
 
-    def setupDb(self):
-        sqlmanager.setup_db(
-
-            TESTS_PATH + "/../database/schema.sql", (
-                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
-                    ('Table1','100-200_2000-20000_no-limit'),
-                    ('Table2','1-2_20-200_limit'),
-                )),
-                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial, player_timeout, muck_timeout) VALUES (%s, 'holdem', %s, 10, 1, %s, %s)", (
-                    ('Table3','test18pokerclient', 600, 600), #player timeout 600, muck timeout 600
-                )),
-                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
-                    ('Table4', '.50-1_5-100000_ante-limit'),
-                )),
-                ("INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)", (
-                    (1, 1),
-                    (1, 2),
-                    (1, 3),
-                    (1, 4),
-                )),
-                ('INSERT INTO tourneys_schedule (name, description_short, description_long, players_quota, variant, ' \
-                'betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, start_time, ' \
-                'register_time, respawn, respawn_interval) ' \
-                'VALUES ("sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", "2", "holdem", "level-15-30-no-limit", ' \
-                '"2", 1, "300000", "0", "y", "0", "0", "y", "0");',None),
-                ('INSERT INTO tourneys_schedule (name, description_short, description_long, players_quota, variant, ' \
-                'betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, breaks_interval, ' \
-                'rebuy_delay, add_on, add_on_delay, start_time, register_time, respawn, respawn_interval, players_min) ' \
-                'VALUES ("regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", "1000", "holdem", "level-001", "10", ' \
-                '1, "0", "0", "n", "60", "30", "1", "60", unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - ' \
-                'INTERVAL 1 HOUR), "n", "0", 3);', None),
-            ),
+    def destroyDb(self, *a):
+        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
-            host=config.test.mysql.host,
-            port=config.test.mysql.port,
-            database=config.test.mysql.database
+            host=config.test.mysql.host
         )
+
+    def createTourneysSchedules(self):
+        stmts = []
+        stmts.append(
+            'INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, ' \
+                '`betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `start_time`, ' \
+                '`register_time`, `respawn`, `respawn_interval`) ' \
+                'VALUES ("sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", "2", "holdem", "level-15-30-no-limit", ' \
+                '"2", 1, "300000", "0", "y", "0", "0", "y", "0");'
+        )
+        stmts.append(
+            'INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, ' \
+                '`betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `breaks_interval`, ' \
+                '`rebuy_delay`, `add_on`, `add_on_delay`, `start_time`, `register_time`, `respawn`, `respawn_interval`, `players_min`) ' \
+                'VALUES ("regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", "1000", "holdem", "level-001", "10", ' \
+                '1, "0", "0", "n", "60", "30", "1", "60", unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - ' \
+                'INTERVAL 1 HOUR), "n", "0", 3);'
+        )
+        
+        if len(config.test.mysql.root_user.password) > 0:
+            prefix = "%(mysql_command)s -u %(dbroot)s --password='%(dbroot_password)s' -h '%(dbhost)s' -D %(dbname)s -e '%%s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbroot_password': config.test.mysql.root_user.password,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            }
+        else:
+            prefix = "%(mysql_command)s -u %(dbroot)s -h '%(dbhost)s' -D %(dbname)s -e '%%s'" % {
+                'mysql_command': config.test.mysql.command,
+                'dbroot': config.test.mysql.root_user.name,
+                'dbhost': config.test.mysql.host,
+                'dbname': config.test.mysql.database
+            }
+        for stmt in stmts:
+            os.system(prefix % stmt)
 
     def setUpConnection(self, serial):
         server_protocol = self.server_protocol[serial] = self.server_factory.buildProtocol(('127.0.0.1',0))
@@ -215,8 +219,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         #
         self.service = pokerservice.PokerService(settings)
         self.service.startService()
-        for i in (1,2,3,4):
-            self.service.spawnTable(i, **self.service.loadTableConfig(i))
+        self.createTourneysSchedules()
         self.service.updateTourneysSchedule()
         self.server_factory = pokerservice.IPokerFactory(self.service)
     # ------------------------------------------------------
@@ -244,7 +247,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         self.avatarLocales[0] = "default"
         self.avatarLocales[1] = "default"
 
-        self.setupDb()
+        self.destroyDb()
         self.setUpServer()
         self.client_factory = []
         self.client_protocol = []
@@ -282,6 +285,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
     # -------------------------------------------------------------------------
     def tearDown(self):
         d = self.service.stopService()
+        d.addCallback(self.destroyDb)
         d.addCallback(self.cleanSessions)
         return d
     # -------------------------------------------------------------------------

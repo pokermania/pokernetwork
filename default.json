@@ -46,9 +46,5 @@
                 "password": "123"
             }
         }
-    },
-    "resthost": {
-        "host": "localhost",
-        "port": 19384
     }
 }
