@@ -32,9 +32,11 @@ def setup_db(schema, _querys=[], user=None, password=None, host=None, port=3306,
     try:
         db.autocommit(True)
 
-        os.system("mysql -u '%s' -p'%s' '%s' < %s" % (
+        os.system("mysql -u '%s'%s%s%s '%s' < %s" % (
             user,
-            password,
+            " -p'%s'" % password if password else '',
+            " -h '%s'" % host if host else '',
+            " -P %s" % port if port else '',
             database,
             schema
         ))
