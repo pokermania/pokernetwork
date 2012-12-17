@@ -25,7 +25,6 @@ from os import path
 
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
-sys.path.insert(1, path.join(TESTS_PATH, "../../common"))
 
 from config import config
 import sqlmanager
