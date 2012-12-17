@@ -22,7 +22,7 @@ TAGS
 .settings
 
 # created by distutils
-*/build
+/build
 
 # created by dpkg-buildpackage
 /*/debian/files
