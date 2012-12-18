@@ -1331,11 +1331,13 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(queuedPacketMax, self.service.client_queued_packet_max)
         self.assertEquals(queuedPacketMax, self.service.getClientQueuedPacketMax())
 
-        startedOnlyVars = [ ('joined_count', 0),
-                            ('tables', 2), ('tourney_table_serial', 1),
-                            ('shutting_down', False), ('avatars', []),
-                            ('avatar_collection', PokerAvatarCollection()), ('simultaneous', 4),
-                            ('monitors', []), ('gettextFuncs', 17) ]
+        startedOnlyVars = [ 
+            ('joined_count', 0),
+            ('tables', 2), ('tourney_table_serial', 1),
+            ('shutting_down', False), ('avatars', []),
+            ('avatar_collection', PokerAvatarCollection()), ('simultaneous', 4),
+            ('monitors', []), ('gettextFuncs', 17)
+        ]
         for (instanceVar, val) in startedOnlyVars:
             self.assertEquals(instanceVar in self.service.__dict__, False)
 
@@ -1363,11 +1365,11 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         # test that we want to assume they weren't given in the settings
         # file and therefore service.delays() should not have them as keys.
 
-        for str in ('extra_wait_tourney_break', 'extra_wait_tourney_start', 'extra_wait_tourney_finish'):
+        for delay_str in ('extra_wait_tourney_break', 'extra_wait_tourney_start', 'extra_wait_tourney_finish'):
             if delaysValue < 0:
-                self.assertEquals(str in self.service.delays, False)
+                self.assertEquals(delay_str in self.service.delays, False)
             else:
-                self.assertEquals(int(self.service.delays[str]), delaysValue)
+                self.assertEquals(int(self.service.delays[delay_str]), delaysValue)
 
     def test00_01_configValues(self):
         self.configValues(settings_xml, 1000)
@@ -1875,6 +1877,83 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         heads_up_before.changeState = lambda x: self.assertFalse(True)
         self.service.checkTourneysSchedule()
 
+    def test14_2_checkTourneysSchedule_recreate_tourney(self):
+        class LockCheckMuck(object):
+            def __init__(*a,**kw): pass
+            def start(*a,**kw): pass
+            def stop(*a,**kw): pass
+
+        pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 100
+        pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = check_delay = 10
+        
+        # start the service
+        self.createTourneysSchedules()
+        self.service.startService()
+        self.createUsers()
+        
+        # while the service is running, add new tourneys
+        cursor = self.db.cursor()
+        sql = '''
+            INSERT INTO `tourneys` (`serial`, `resthost_serial`, `name`, `description_short`, `description_long`, `players_quota`, `players_min`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `start_time`, `state`, `schedule_serial`)
+            VALUES 
+                ('100', '0', 'sitngo2_moved', 'Sit and Go 2 players, Moved', '', '2', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'y', %s, 'moved', '200'),
+                ('101', '0', 'sitngo2_registering', 'Sit and Go 2 players, Registering', '', '2', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'y', %s, 'registering', '201'),
+                ('102', '0', 'regular_moved', 'Regular 2 players, Registering', '', '2', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'n', %s, 'moved', '202'),
+                ('103', '0', 'regular_registering', 'Regular 2 players, Registering', '', '2', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'n', %s, 'registering', '203')
+        '''
+        sql_users = '''
+            INSERT INTO `user2tourney` (`user_serial`, `currency_serial`, `tourney_serial`) 
+            VALUES 
+                ('4','1','100'), 
+                ('5','1','101'), 
+                ('4','1','102'), ('5','1','102'), 
+                ('4','1','103'), ('5','1','103')
+        '''
+        # tourney should be spawned even if it started in the past!
+        now = seconds()
+        cursor.execute(sql, [now-check_delay]*4)
+        cursor.execute(sql_users)
+        cursor.close()
+        # call checkTourneysSchedule
+        self.service.checkTourneysSchedule()
+        
+        # sng should now be in the list, even if it would have started slightly in the past
+        self.assertTrue(100 in self.service.tourneys)
+        self.assertEquals([4], sorted(self.service.tourneys[100].players))
+        
+        # sng which is still in registering but is in the past should not be in the list
+        self.assertFalse(101 in self.service.tourneys)
+        
+        # regular should now be in the list, even if it would have started slightly in the past
+        self.assertTrue(102 in self.service.tourneys)
+        self.assertEquals([4,5], sorted(self.service.tourneys[102].players))
+        
+        # regular which is still in registering but is in the past should not be in the list
+        self.assertFalse(103 in self.service.tourneys)
+
+        d = defer.Deferred()
+        def endTourney(status):
+            """finish the tourney"""
+            game = self.service.tourneys[102].games[0]
+            in_position = game.getSerialInPosition()
+            game.callNraise(in_position, game.maxBuyIn())
+            in_position = game.getSerialInPosition()
+            game.call(in_position)
+
+            for table in self.service.tables.values():
+                table.update()
+            for timer in self.service.timer_remove_player.values():
+                timer.reset(0)
+            d_in = defer.Deferred()
+            reactor.callLater(0, d_in.callback, True)
+            return d_in 
+
+
+        d.addCallback(endTourney)
+        reactor.callLater(3, d.callback, True)
+        return d
+
+    
     def test15_runTourney(self):
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
         pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
@@ -2535,21 +2614,21 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.failUnless(packet.message.find("%d" % tourney_serial) >= 0)
         self.assertEquals(packet.code, PacketPokerGetTourneyManager.DOES_NOT_EXIST)
     def test05_moreThanOneTourneyRow(self):
-        validStatements = ["SELECT user_serial, table_serial, rank FROM user2tourney WHERE tourney_serial =",
-                           'SELECT user_serial, name FROM user2tourney, users WHERE user2tourney.tourney_serial',
-                           "SELECT * FROM tourneys WHERE serial = "
-                           ]
+        validStatements = [
+           "SELECT user_serial, table_serial, rank FROM user2tourney WHERE tourney_serial =",
+           'SELECT user_serial, name FROM user2tourney, users WHERE user2tourney.tourney_serial',
+           "SELECT * FROM tourneys WHERE serial = "
+        ]
         class MockCursor(MockCursorBase):
             def fetchall(mcSelf): return mcSelf.rows
             def statementActions(cursorSelf, sql, statement):
                 if statement == "SELECT * FROM tourneys WHERE serial = ":
                     cursorSelf.rowcount = 6
                     cursorSelf.rows = []
-                    cursorSelf.row = {'sit_n_go' : 'n', 'buy_in' : 0, 'prize_min' : 0,
-                                      }
+                    cursorSelf.row = {'sit_n_go': 'n', 'buy_in': 0, 'prize_min': 0}
                 else:
                     cursorSelf.rowcount = 0
-                    cursorSelf.rows = [ ]
+                    cursorSelf.rows = []
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, validStatements)
         class MockDBWithDifferentCursorMethod(MockDatabase):
@@ -2715,7 +2794,7 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         self.assertEqual({'4' : {
             'rank': -1,
             'table_serial': table_serial,
-            'name' : 'user1',
+            'name': 'user1',
             'money': table_money
         }}, packet.user2properties)
 
@@ -3650,49 +3729,102 @@ class BreakTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
         PokerServiceTestCaseBase.setUp(self, settingsFile)
         self.service.shutdownGames = lambda *a,**kw: None
+        
+        class MockCursor(MockCursorBase):
+            def statementActions(cursorSelf, sql, statement):
+                if statement == 'SELECT resthost_serial FROM tourneys':
+                    cursorSelf.rowcount = 1
+                    cursorSelf.row = ['0']
+                elif statement == 'SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table':
+                    cursorSelf.rowcount = 0
+                else:
+                    cursorSelf.rowcount = 1
+            def __init__(cursorSelf):
+                MockCursorBase.__init__(cursorSelf, self, [
+                    'UPDATE tourneys SET state',
+                    'SELECT resthost_serial FROM tourneys'
+                ])
+        self.MockCursor = MockCursor
+        
     class MockTable:
         def __init__(self):
             self.message = None
             self.type = None
             self.destroyCalled = 0
 
-        def broadcastMessage(self, type, message):
-            self.type = type
+        def broadcastMessage(self, message_type, message):
+            self.type = message_type
             self.message = message
 
         def scheduleAutoDeal(self):
             self.autodeal = 1
 
-    class Database:
-        class Cursor:
-            def execute(self, sql):
-                self.sql = sql
-                self.rowcount = 1
-
-            def close(self):
-                pass
-
-        def cursor(self):
-            self._cursor = BreakTestCase.Database.Cursor()
-            return self._cursor
-
-        def close(self):
-            pass
-
-        def literal(self, args):
-            pass
-
-        class InternalDatabase:
-            def query(self, args):
-                pass
-        db = InternalDatabase()
-
     class Tournament:
         def __init__(self):
             self.serial = 1
+            self.schedule_serial = 1
             self.start_time = 1
             self.sit_n_go = 'n'
             self.id2game = {}
+    
+    
+    def test01_0_tourneyIsRelevant(self):
+        self.service.startService()
+        cursor = self.service.db.cursor()
+
+        def insert_tourney(tourney_serial, resthost_serial):
+            cursor.execute("INSERT INTO tourneys " \
+                "(serial, resthost_serial, state, name, description_short, description_long, variant, currency_serial, schedule_serial, betting_structure) VALUES " \
+                "(%s, %s, 'registering', 'foo', 'bar', 'king', 'holdem', 0, 1, 'pauz')", 
+                (tourney_serial, resthost_serial))
+        MockupTourney = type("MockupTourney",(object,),{"serial":0})
+        
+        insert_tourney(1,0)
+        tourney_1 = MockupTourney(); tourney_1.serial = 1
+        self.assertTrue(self.service.tourneyIsRelevant(tourney_1))
+        
+        insert_tourney(2,1)
+        tourney_2 = MockupTourney(); tourney_2.serial = 2
+        self.assertFalse(self.service.tourneyIsRelevant(tourney_2))
+        
+        tourney_3 = MockupTourney(); tourney_3.serial = 3
+        self.assertFalse(self.service.tourneyIsRelevant(tourney_3))
+        
+    def test01_1_tourneyIsRelevant(self):
+        self.createTourneysSchedules()
+        self.service.startService()
+        
+        # augment tourneyIsRelevant to remember on which tourneys it was called
+        tourney_serials = self.service.tourneys.keys()
+        tourney_is_relevant_results = {}
+        def tourneyIsRelevantLogging(tourney):
+            ret = self.service.tourneyIsRelevant(tourney)
+            tourney_is_relevant_results[tourney.serial] = ret
+            return ret
+        self.service.tourneyIsRelevant = tourneyIsRelevantLogging
+        
+        # assert that the tourneys are indeed there
+        self.assertEqual(len(self.service.tourneys), 2)
+        
+        # update their resthost serials
+        cursor = self.service.db.cursor()
+        cursor.execute("UPDATE tourneys SET resthost_serial = %s", (self.service.resthost_serial+1))
+        
+        # start/cancel tourneys by changing their start time
+        for tourney in self.service.tourneys.itervalues(): tourney.start_time = seconds()
+        self.service.checkTourneysSchedule()
+        
+        # tourneys should not have been modified
+        cursor.execute("SELECT count(*) FROM tourneys WHERE state='registering'")
+        self.assertEquals(cursor.fetchone()[0], 2)
+        cursor.close()
+        
+        # tourneys should not have been relevant
+        self.assertEquals(tourney_is_relevant_results, dict((t_serial, False) for t_serial in tourney_serials))
+
+        # all tourneys should be gone
+        self.assertEqual(len(self.service.tourneys), 0)
+
     def test01_tourneyNewState_simpleTransitions(self):
         def ok(tourney):
             self.callCount += 1
@@ -3702,7 +3834,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         saveDb = self.service.db
         self.callCount = 0
 
-        self.service.db = BreakTestCase.Database()
+        self.service.db = MockDatabase(self.MockCursor)
         self.service.tourneyBreakCheck = notok
         self.service.tourneyDeal = notok
         self.service.tourneyBreakWait = notok
@@ -3710,8 +3842,11 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.tourneyDestroyGame = notok
 
         self.service.tourneyBreakWait = ok
-        self.service.tourneyNewState(BreakTestCase.Tournament(),
-             pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK_WAIT)
+        self.service.tourneyNewState(
+            BreakTestCase.Tournament(), 
+            pokertournament.TOURNAMENT_STATE_RUNNING, 
+            pokertournament.TOURNAMENT_STATE_BREAK_WAIT
+        )
         self.assertEquals(self.callCount, 1)
         self.service.tourneyBreakWait = notok
         self.callCount = 0
@@ -3723,13 +3858,13 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         saveDb = self.service.db
 
-        # First, Setup functions that should not be caled and force them
+        # First, set up functions that should not be called and force them
         # to fail
 
         def notok(tourney):
             self.failIf(1)
 
-        self.service.db = BreakTestCase.Database()
+        self.service.db = MockDatabase(self.MockCursor)
         self.service.tourneyBreakCheck = notok
         self.service.tourneyDeal = notok
         self.service.tourneyBreakWait = notok
@@ -3779,13 +3914,13 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         saveDb = self.service.db
 
-        # First, Setup functions that should not be caled and force them
+        # First, set up functions that should not be called and force them
         # to fail
 
         def notok(tourney):
             self.failIf(1)
 
-        self.service.db = BreakTestCase.Database()
+        self.service.db = MockDatabase(self.MockCursor)
         self.service.tourneyBreakCheck = notok
         self.service.tourneyDeal = notok
         self.service.tourneyBreakWait = notok
@@ -3821,6 +3956,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
     def test05_tourneyNewState_tourneyStart_withWait(self):
         self.service.delays['extra_wait_tourney_start'] = "40"
         return self.tourneyNewState_tourneyStart(40, 45)
+    
     def tourneyFinish(self, waitMin, waitMax):
         """Helper function for testing tourney Finish callback.
         The wait for the action must be between waitMin and waitMax"""
@@ -3858,7 +3994,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         def notok(tourney):
             self.failIf(1)
 
-        self.service.db = BreakTestCase.Database()
+        self.service.db = MockDatabase(self.MockCursor)
         self.service.tourneyBreakCheck = notok
         self.service.tourneyDeal = notok
         self.service.tourneyBreakWait = notok
@@ -3877,6 +4013,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
     def test07_tourneyFinish_withWait(self):
         self.service.delays['extra_wait_tourney_finish'] = "40"
         return self.tourneyFinish(40, 45)
+    
     def test08_tourneyNewState_tourneyBreak(self):
         """test08_tourneyNewState_tourneyBreak
 
@@ -3894,37 +4031,40 @@ class BreakTestCase(PokerServiceTestCaseBase):
         # computed correctly and the packets are sent to the tables as
         # needed.
 
+        tables = {}
         class MockTable(BreakTestCase.MockTable):
             def __init__(self):
                 self.broadcastedPackets = []
                 BreakTestCase.MockTable.__init__(self)
-
             def broadcast(self, packet):
                 self.broadcastedPackets.append(packet)
-        tables = {}
+                
         tables[1] = MockTable()
         tables[2] = MockTable()
+        
         class MockGame:
             def __init__(self, newId=0):
                 self.id = newId
             def getTable(gameId):
                 if gameId == 1: return tables[1]
-                elif  gameId == 2: return tables[2]
+                elif gameId == 2: return tables[2]
                 else: self.failIf(True)
+                
 
         breaks_duration = 120
         class Tournament(BreakTestCase.Tournament):
             def __init__(self, remainingSeconds = None):
+                BreakTestCase.Tournament.__init__(self)
                 self.remaining_secs = remainingSeconds
                 self.breaks_duration = breaks_duration
                 self.games = [ MockGame(1), MockGame(2) ]
-                BreakTestCase.Tournament.__init__(self)
+                self.id2game = dict((g.id,g) for g in self.games)
 
             def remainingBreakSeconds(self):
                 return self.remaining_secs
 
-        self.service.db = BreakTestCase.Database()
-        self.service.tables = { 1 : tables[1], 2 : tables[2] }
+        self.service.db = MockDatabase(self.MockCursor)
+        self.service.tables = {1: tables[1], 2: tables[2]}
         self.service.tourneyBreakCheck = ok
 
         self.service.tourneyDeal = notok
@@ -3944,7 +4084,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         now = pokerservice.seconds()
         self.service.tourneyNewState(Tournament(), pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK)
         self.assertEquals(self.callCount, 1)
-        for ii in [ 1, 2 ]:
+        for ii in [1,2]:
             self.assertEquals(len(tables[ii].broadcastedPackets), 1)
             pp = tables[ii].broadcastedPackets[0]
             self.assertEquals(pp.game_id, ii)
@@ -3953,7 +4093,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
         # Reset for next test below
         self.callCount = 0
-        for ii in [ 1, 2 ]: tables[ii].broadcastedPackets = []
+        for ii in [1,2]: tables[ii].broadcastedPackets = []
 
         # Second test here: see what happens when
         # tourney.remainingBreakSeconds() can return an actual integer
@@ -3963,10 +4103,13 @@ class BreakTestCase(PokerServiceTestCaseBase):
 
         now = pokerservice.seconds()
         remainingSeconds = 111
-        self.service.tourneyNewState(Tournament(remainingSeconds = remainingSeconds),
-                                     pokertournament.TOURNAMENT_STATE_RUNNING, pokertournament.TOURNAMENT_STATE_BREAK)
+        self.service.tourneyNewState(
+            Tournament(remainingSeconds = remainingSeconds),
+            pokertournament.TOURNAMENT_STATE_RUNNING, 
+            pokertournament.TOURNAMENT_STATE_BREAK
+        )
         self.assertEquals(self.callCount, 1)
-        for ii in [ 1, 2 ]:
+        for ii in [1,2]:
             self.assertEquals(len(tables[ii].broadcastedPackets), 1)
             pp = tables[ii].broadcastedPackets[0]
             self.assertEquals(pp.game_id, ii)
@@ -5375,7 +5518,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = log_history.get_all()
         self.assertEquals(len(msgs), 6)
         self.assertEquals(msgs[0].find("cleanupTourneys: "), 0)
-        self.assertEquals(msgs[1].find("cleanupTourneys: "), 0)
+        self.assertEquals(msgs[1].find("restoreTourneys: "), 0)
 
         self.service.db = oldDb
     def test41_getMoney_bigRowCount(self):
@@ -5474,8 +5617,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         log_history.reset()
 
         packet = self.service.getPlayerInfo(235)
-        self.assertEquals(log_history.get_all(),
-                          ['getPlayerInfo(235) expected one row got 3'])
+        self.assertEquals(log_history.get_all(), ['getPlayerInfo(235) expected one row got 3'])
         self.assertEquals(packet.serial, 235)
         self.assertEquals(packet.name, "anonymous")
         self.assertEquals(packet.url, "")
@@ -5525,12 +5667,14 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 MockCursorBase.__init__(cursorSelf, self, ["UPDATE users_private SET "])
         class MockPlayerInfo():
             def __init__(mpSelf):
-                mpSelf.__dict__ = { 'serial' : 1854,
-                                    'firstname' : '', 'lastname' : '', 'addr_street' : '',
-                                    'addr_street2' : '', 'addr_zip' : '',
-                                    'addr_town' : '', 'addr_state' : '', 
-                                    'addr_country' : '', 'phone' : '',
-                                    'gender' : '', 'birthdate' : '' }
+                mpSelf.__dict__ = {
+                    'serial': 1854,
+                    'firstname': '', 'lastname': '', 'addr_street': '',
+                    'addr_street2': '', 'addr_zip': '',
+                    'addr_town': '', 'addr_state': '', 
+                    'addr_country': '', 'phone': '',
+                    'gender': '', 'birthdate': ''
+                }
 
         self.service = pokerservice.PokerService(self.settings)
 

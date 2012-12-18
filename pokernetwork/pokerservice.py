@@ -642,9 +642,9 @@ class PokerService(service.Service):
                 "WHERE resthost_serial = %s " \
                 "AND active = 'y' " \
                 "AND (respawn = 'y' OR register_time < %s)"
-            params = (self.resthost_serial,seconds())
-            cursor.execute(sql,params)
-            self.tourneys_schedule = dict((schedule['serial'],schedule) for schedule in cursor.fetchall())
+            params = (self.resthost_serial, seconds())
+            cursor.execute(sql, params)
+            self.tourneys_schedule = dict((schedule['serial'], schedule) for schedule in cursor.fetchall())
             self.checkTourneysSchedule()
             self.cancelTimer('updateTourney')
             self.timer['updateTourney'] = reactor.callLater(UPDATE_TOURNEYS_SCHEDULE_DELAY, self.updateTourneysSchedule)
@@ -671,10 +671,15 @@ class PokerService(service.Service):
             ):
                 self.spawnTourney(schedule)
         #
+        # Restore tournaments
+        #
+        self.restoreTourneys()
+        
+        #
         # One time tournaments
         #
         one_time = []
-        for schedule in filter(lambda schedule: schedule['respawn'] == 'n' and int(schedule['register_time']) < now,self.tourneys_schedule.values()):
+        for schedule in filter(lambda schedule: schedule['respawn'] == 'n' and int(schedule['register_time']) < now, self.tourneys_schedule.values()):
             one_time.append(schedule)
             del self.tourneys_schedule[schedule['serial']]
         for schedule in one_time:
@@ -712,7 +717,7 @@ class PokerService(service.Service):
         #
         # Forget about old tournaments
         #
-        for tourney in filter(lambda tourney: tourney.state in ( TOURNAMENT_STATE_COMPLETE,  TOURNAMENT_STATE_CANCELED ), self.tourneys.values()):
+        for tourney in filter(lambda tourney: tourney.state in (TOURNAMENT_STATE_COMPLETE, TOURNAMENT_STATE_CANCELED), self.tourneys.values()):
             if now - tourney.finish_time > DELETE_OLD_TOURNEYS_DELAY:
                 self.deleteTourney(tourney)
                 self.tourneyDeleteRoute(tourney)
@@ -838,8 +843,7 @@ class PokerService(service.Service):
     def isLocked(self):
         return self._lock_check_locked
 
-    def tourneyNewState(self, tourney, old_state, new_state):
-        # Lock Check
+    def tourneySetUpLockCheck(self, tourney, old_state, new_state):
         if self._lock_check_running:
             if new_state == TOURNAMENT_STATE_RUNNING:
                 self._lock_check_running.start(tourney.serial)
@@ -850,23 +854,44 @@ class PokerService(service.Service):
                 self._lock_check_break.start(tourney.serial)
             elif new_state == TOURNAMENT_STATE_BREAK:
                 self._lock_check_break.stop(tourney.serial)
-
-        cursor = self.db.cursor()
+    
+    def tourneyIsRelevant(self, tourney):
+        try:
+            cursor = self.db.cursor()
+            sql = "SELECT resthost_serial FROM tourneys WHERE serial = %s"
+            params = (tourney.serial,)
+            cursor.execute(sql, params)
+            resthost_serial_db = int(cursor.fetchone()[0])
+            return resthost_serial_db == self.resthost_serial
+        except:
+            return False
+        finally:
+            cursor.close()
+        
+    def tourneyNewState(self, tourney, old_state, new_state):
+        
+        # if the tourney is not relevant for this resthost anymore, delete it
+        if old_state == TOURNAMENT_STATE_REGISTERING and not self.tourneyIsRelevant(tourney):
+            self.deleteTourney(tourney)
+            return
+        #
+        # set up lock check
+        self.tourneySetUpLockCheck(tourney, old_state, new_state)
+        
         updates = []
-
         updates.append("state = %s" % self.db.literal(new_state))
         if old_state != TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
             updates.append("start_time = %s" % self.db.literal(tourney.start_time))
 
-        sql = "UPDATE tourneys SET %s WHERE serial = %s" % (
-            ", ".join(updates),
-            self.db.literal(tourney.serial)
-        )
+        params = (", ".join(updates), self.db.literal(tourney.serial)) 
+        sql = "UPDATE tourneys SET %s WHERE serial = %s" % params
         self.log.debug("tourneyNewState: %s", sql)
+        cursor = self.db.cursor()
         cursor.execute(sql)
         if cursor.rowcount != 1:
             self.log.error("modified %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
         cursor.close()
+        
         if new_state == TOURNAMENT_STATE_BREAK:
             # When we are entering BREAK state for the first time, which
             # should only occur here in the state change operation, we
@@ -876,14 +901,11 @@ class PokerService(service.Service):
             # finishes.  Note that tourneyBreakCheck() also sends a
             # PacketPokerGameMessage() with the time remaining, too.
             secsLeft = tourney.remainingBreakSeconds()
-            if secsLeft == None:
-                # eek, should I really be digging down into tourney's
-                # member variables in this next assignment?
-                secsLeft = tourney.breaks_duration
-            resumeTime = seconds() + secsLeft
-            for gameId in map(lambda game: game.id, tourney.games):
-                table = self.getTable(gameId)
-                table.broadcast(PacketPokerTableTourneyBreakBegin(game_id = gameId, resume_time = resumeTime))
+            if secsLeft is None: secsLeft = tourney.breaks_duration
+            resume_time = seconds() + secsLeft
+            for game_id in tourney.id2game.iterkeys():
+                table = self.getTable(game_id)
+                table.broadcast(PacketPokerTableTourneyBreakBegin(game_id = game_id, resume_time = resume_time))
             self.tourneyBreakCheck(tourney)
         elif old_state == TOURNAMENT_STATE_BREAK and new_state == TOURNAMENT_STATE_RUNNING:
             wait = int(self.delays.get('extra_wait_tourney_break', 0))
@@ -910,7 +932,7 @@ class PokerService(service.Service):
             self.tourneyDeal(tourney)
         elif new_state == TOURNAMENT_STATE_BREAK_WAIT:
             self.tourneyBreakWait(tourney)
-    
+        
     def tourneyStartingMessage(self,tourney,remaining):
         for game_id in tourney.id2game.keys():
             table = self.getTable(game_id)
@@ -2143,11 +2165,57 @@ class PokerService(service.Service):
         finally:
             cursor.close()
 
+    def restoreTourneys(self):
+        now = seconds()
+        restored_info = []
+        try:
+            cursor = self.db.cursor(DictCursor)
+            tourney_serials_sql = "AND serial NOT IN (%s)" % \
+                ",".join(self.db.literal(t) for t in self.tourneys.keys()) \
+                if self.tourneys else ""
+            sql = \
+                "SELECT * FROM tourneys " \
+                "WHERE resthost_serial = %s " \
+                "AND (" \
+                    "(state = 'registering' AND start_time >= %s) OR " \
+                    "(state = 'moved' AND start_time >= %s)" \
+                ") " \
+                + tourney_serials_sql
+            params = (self.resthost_serial, now, now-2*CHECK_TOURNEYS_SCHEDULE_DELAY)
+            cursor.execute(sql, params)
+            self.log.debug("restoreTourneys: %s", cursor._executed)
+            for row in cursor.fetchall():
+                restored_info.append((row['serial'], row['schedule_serial']))
+                
+                tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'], row['prize_currency'])
+                tourney.state = row['state']
+                cursor.execute(
+                    "SELECT u.serial, u.name FROM users AS u " \
+                    "JOIN user2tourney AS u2t " \
+                    "ON u.serial = u2t.user_serial AND u2t.tourney_serial = %s",
+                    (row['serial'],)
+                )
+                self.log.debug("restoreTourneys: %s", cursor._executed)
+                for user in cursor.fetchall():
+                    tourney.register(user['serial'],user['name'])
+                cursor.execute(
+                    "REPLACE INTO route VALUES (0, %s, %s, %s)",
+                    (row['serial'], now, self.resthost_serial)
+                )
+                tourney.state = TOURNAMENT_STATE_ANNOUNCED
+                tourney.updateRegistering()
+                tourney.updateRunning()
+        finally:
+            cursor.close()
+            
+        return restored_info
+        
     def cleanupTourneys(self):
         self.tourneys = {}
         self.schedule2tourneys = {}
         self.tourneys_schedule = {}
         cursor = self.db.cursor(DictCursor)
+        now = seconds()
         try:
             # abort still running tourneys and refund buyin
             self.abortRunningTourneys()
@@ -2159,54 +2227,33 @@ class PokerService(service.Service):
                 "AND ( " \
                     "(t.sit_n_go = 'y' AND t.state IN ('aborted', 'registering')) " \
                     "OR (t.state = 'registering' AND t.start_time < %s) " \
+                    "OR (t.state = 'moved' AND t.start_time < %s) " \
                 ")"
-            _seconds = seconds()
+            params = (self.resthost_serial, now, now-2*CHECK_TOURNEYS_SCHEDULE_DELAY)
             cursor.execute(
                 "UPDATE tourneys AS t " \
                     "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
                     "LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial " \
                 "SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'aborted' " \
                 + where,
-                (self.resthost_serial, _seconds)
+                params
             )
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: rows: %d, sql: %s", cursor.rowcount, cursor._executed)
             cursor.execute(
                 "DELETE u2t FROM user2tourney AS u2t LEFT JOIN tourneys AS t ON t.serial = u2t.tourney_serial " + where,
-                (self.resthost_serial, _seconds)
+                params
             )
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: %s", cursor._executed)
             cursor.execute("DELETE t FROM tourneys AS t " + where,
-                (self.resthost_serial, _seconds)
+                params
             )
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: %s", cursor._executed)
             
             # restore registering tourneys
-            cursor.execute(
-                "SELECT * FROM tourneys " \
-                "WHERE resthost_serial = %s " \
-                "AND state = 'registering' " \
-                "AND start_time >= %s",
-                (self.resthost_serial, _seconds)
-            )
-            self.log.debug("cleanupTourneys: %s", cursor._executed)
-            for row in cursor.fetchall():
-                tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'], row['prize_currency'])
-                cursor.execute(
-                    "SELECT u.serial, u.name FROM users AS u " \
-                    "JOIN user2tourney AS u2t " \
-                    "ON (u.serial=u2t.user_serial AND u2t.tourney_serial=%s)",
-                    (row['serial'],)
-                )
-                self.log.debug("cleanupTourneys: %s", cursor._executed)
-                for user in cursor.fetchall():
-                    tourney.register(user['serial'],user['name'])
-                cursor.execute(
-                    "REPLACE INTO route VALUES (0, %s, %s, %s)",
-                    (row['serial'], _seconds, self.resthost_serial)
-                )
+            self.restoreTourneys()
         finally:
             cursor.close()
 
