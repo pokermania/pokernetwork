@@ -24,6 +24,8 @@ from os import path
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
+from config import config
+
 from twisted.trial import unittest, runner, reporter
 
 from tests import testclock
@@ -71,7 +73,7 @@ class PokerExplainTestCase(unittest.TestCase):
 
     def setUp(self):
         self.explain = PokerExplain()
-        self.explain.games.dirs = [path.join(TESTS_PATH, '../../poker-engine/conf')]
+        self.explain.games.dirs = [path.join(config.test.engine_path,'conf')]
 
     def test01_utilities(self):
         game_id = 1

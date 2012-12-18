@@ -171,16 +171,14 @@ class PokerDatabaseTestCase(unittest.TestCase):
                 db = 'mysql'
             )
             try:
-                pass
-                #db.query("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'" % parameters['user'])
-                #db.query("drop user '%s'" % parameters['user'])
+                db.query("REVOKE ALL PRIVILEGES, GRANT OPTION FROM '%s'" % parameters['user'])
+                db.query("drop user '%s'" % parameters['user'])
             except:
-                pass
                 db.query("delete from user where user = '%s'" % parameters['user'])
 
             db.query("FLUSH PRIVILEGES")
             db.close()
-        except Exception, e:
+        except Exception:
             assert("Unable to delete the user, " + parameters["user"] + "; some tests will fail incorrectly.")
         try: del self.db
         except: pass
@@ -195,7 +193,6 @@ class PokerDatabaseTestCase(unittest.TestCase):
         self.assertEquals(self.db.getVersion(), self.pokerdbVersion)
     # ----------------------------------------------------------------------------
     def test02_dbVersionTooOld(self):
-        import MySQLdb
         class DummyMySQL:
             def get_server_info(self):
                 return "3.2.5"
@@ -248,8 +245,8 @@ class PokerDatabaseTestCase(unittest.TestCase):
             self.db = pokerdatabase.PokerDatabase(self.settings)
             assert False, "Root user information was missing so this line should not be reached."
         except MySQLdb.OperationalError, oe: # handle trouble
-            self.assertEquals(oe.args[1], "Unknown database 'pokernetworktest'")
-            self.assertEquals(oe.args[0], 1049)
+            self.assertEquals(oe.args[1], "Access denied for user 'pokernetwork'@'localhost' (using password: YES)")
+            self.assertEquals(oe.args[0], 1045)
     # ----------------------------------------------------------------------------
     def test06_databaseAlreadyExists(self):
         """Test for when the database already exists"""
@@ -271,8 +268,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
         from pokernetwork.pokerdatabase import ExceptionUpgradeFailed
 
         settings = pokernetworkconfig.Config([])
-        settings.doc = libxml2.parseMemory(settings_xml,
-                                           len(settings_xml))
+        settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
         settings.header = settings.doc.xpathNewContext()
         self.settings = settings
         parameters = settings.headerGetProperties("/server/database")[0]
@@ -280,8 +276,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
         self.db = pokerdatabase.PokerDatabase(self.settings)
 
         self.db.db.query("DROP TABLE IF EXISTS server;")
-        self.db.db.query("""CREATE TABLE server (version VARCHAR(16) NOT NULL)
-                            ENGINE=InnoDB CHARSET=utf8;""")
+        self.db.db.query("""CREATE TABLE server (version VARCHAR(16) NOT NULL) ENGINE=InnoDB CHARSET=utf8;""")
         self.db.db.query("""INSERT INTO server (version) VALUES ("1.1.0");""")
         self.db.db.query("""INSERT INTO server (version) VALUES ("1.2.0");""")
         try:

@@ -5307,7 +5307,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 cursorSelf.row = []
                     # Second time method does select, we just want 0 rows returned.
                 #elif statement == "UPDATE user2money,user2tourney SET amount = amount":
-                if statement == cursorSelf.acceptedStatements[0]:
+                if statement in (cursorSelf.acceptedStatements[0], cursorSelf.acceptedStatements[9]):
                     cursorSelf.rowcount = 1
                     pass
                 elif statement == cursorSelf.acceptedStatements[1]:
@@ -5315,6 +5315,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                         cursorSelf.row = {
                             'buy_in': 100,
                             'rake': 0,
+                            'state': 'registering',
                             'currency_serial': 168,
                             'serial': 732,
                             'schedule_serial': 7,
@@ -5348,7 +5349,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                     "REPLACE INTO route VALUES",
                     "SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table WHERE",
                     "DELETE FROM pokertables WHERE",
-                    "SELECT serial FROM tourneys WHERE state IN"
+                    "SELECT serial FROM tourneys WHERE state IN",
+                    "UPDATE tourneys SET state"
                 ])
         class MockDBWithDifferentCursorMethod(MockDatabase):
             def cursor(dbSelf, dummy = None):
@@ -5365,13 +5367,13 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         self.service.cleanupTourneys()
 
-        # Make sure the right number of SQL statements got executed; the loop should
-        # have only went once
+        # Make sure the right number of SQL statements got executed; 
+        # the loop should have been called only once
         self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[1]], 1)
         self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[2]], 1)
 
         msgs = log_history.get_all()
-        self.assertEquals(len(msgs), 4)
+        self.assertEquals(len(msgs), 6)
         self.assertEquals(msgs[0].find("cleanupTourneys: "), 0)
         self.assertEquals(msgs[1].find("cleanupTourneys: "), 0)
 
