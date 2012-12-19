@@ -459,7 +459,7 @@ class PokerTable:
                 'call', 'check', 'fold',
                 'raise', 'canceled', 'position',
                 'blind', 'ante', 'player_list',
-                'rake', 'end', 'sitOut',
+                'rake', 'end', 'sit', 'sitOut',
             ):
                 new_history.append(event)
                 
