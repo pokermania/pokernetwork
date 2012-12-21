@@ -7,7 +7,7 @@
   <delays position="0" begin_round="0" end_round="0" end_round_last="0" showdown="5" lag="15" />
   <name>test</name>
   <passwd>test</passwd>
-  <servers>@config.pokernetwork.host@:@config.pokernetwork.port@</servers>
+  <servers>@config.pokernetwork.rest.host@:@config.pokernetwork.listen.tcp@</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
   <path>@config.pokerengine.paths.data@</path> 

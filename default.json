@@ -1,8 +1,19 @@
 {
     "pokerconfigupgrade": "/usr/bin/pokerconfigupgrade",
     "pokernetwork": {
-        "host": "localhost",
-        "port": 19380,
+        "listen": {
+            "tcp": 19380,
+            "tcp_ssl": 19381,
+            "http": 19382,
+            "http_ssl": 19383,
+            "rest": 19384,
+            "rest_ssl": 19385
+        },
+        "rest": {
+            "host": "localhost",
+            "port": 19384,
+            "path": "/POKER_REST"
+        },
         "paths": {
             "src": "/usr/share/pyshared/pokernetwork",
             "conf": "/etc/poker-network",
