@@ -73,16 +73,6 @@ create table user2table (
 	primary key (user_serial,table_serial)
 );
 
-drop table if exists pokertables;
-
-create table pokertables (
-	serial int unsigned not null auto_increment,
-	name varchar(32),
-  custom_money char default 'n',
-
-	primary key (serial)
-);
-
 drop table if exists hands;
 
 create table hands (

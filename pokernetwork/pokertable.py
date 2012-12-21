@@ -88,6 +88,9 @@ class PokerAvatarCollection:
     def itervalues(self):
         return self.serial2avatars.itervalues()
 
+    def isEmpty(self):
+        return bool(self.serial2avatars)
+
 
 class PokerPredefinedDecks:
 
@@ -134,7 +137,7 @@ class PokerTable:
         self.game.forced_dealer_seat = int(description.get("forced_dealer_seat", -1))
         self.game.registerCallback(self._gameCallbackTourneyEndTurn)
         self.game.registerCallback(self._gameCallbackTourneyUpdateStats)
-        self.skin = description.get("skin", "default")
+        self.skin = description.get("skin") or "default"
         self.currency_serial = int(description.get("currency_serial", 0))
         self.playerTimeout = int(description.get("player_timeout", 60))
         self.muckTimeout = int(description.get("muck_timeout", 5))
@@ -487,6 +490,12 @@ class PokerTable:
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     for avatar in self.avatar_collection.get(serial)[:]:
                         self.seated2observer(avatar, serial)
+
+            elif event_type == "finish":
+                # despawn this table if no avatars active
+                if self.avatar_collection.isEmpty() and not self.observers:
+                    self.factory.despawnTable(self.game.id)
+
 
     def cashGame_kickPlayerSittingOutTooLong(self, historyToSearch):
         if self.tourney: return
@@ -1121,6 +1130,9 @@ class PokerTable:
         else:
             self.avatar_collection.remove(serial, avatar)
         del avatar.tables[self.game.id]
+        # despawn table if game is not running and nobody is connected
+        if not self.game.playersAll() and self.avatar_collection.isEmpty() and not self.observers:
+            self.factory.despawnTable(self.game.id)
 
     def buyInPlayer(self, avatar, amount):
         if not self.isSeated(avatar):

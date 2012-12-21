@@ -63,9 +63,6 @@ settings_xml = """\
     command="%(mysql_command)s" />
   <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
 
-  <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
-  <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
-
   <listen tcp="19480" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
@@ -88,9 +85,6 @@ settings_alternate_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
     <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
-
-    <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
-    <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
     <listen tcp="19480" />
 
@@ -173,24 +167,35 @@ class MockDatabase:
 
 class PokerAuthTestCase(unittest.TestCase):
         
-    # -----------------------------------------------------------------------------------------------------
-    def destroyDb(self, *a):
-        sqlmanager.query("DROP DATABASE IF EXISTS %s" % (config.test.mysql.database,),
+
+    def setupDb(self):
+        sqlmanager.setup_db(
+            TESTS_PATH + "/../database/schema.sql", (
+                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
+                    ('Table1','100-200_2000-20000_no-limit'),
+                    ('Table2','100-200_2000-20000_no-limit'),
+                )),
+                ("INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)", (
+                    (1, 1),
+                    (1, 2),
+                )),
+            ),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
-            host=config.test.mysql.host
+            host=config.test.mysql.host,
+            port=config.test.mysql.port,
+            database=config.test.mysql.database
         )
-    # --------------------------------------------------------
+
     def setUp(self):
-        self.destroyDb()
+        self.setupDb()
         self.settings = pokernetworkconfig.Config([])
-        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
-        self.settings.header = self.settings.doc.xpathNewContext()
+        self.settings.loadFromString(settings_xml)
         self.db = PokerDatabase(self.settings)
-    # -----------------------------------------------------------------------------------------------------    
+
     def tearDown(self):
         pokerauth._get_auth_instance = None
-    # -----------------------------------------------------------------------------------------------------    
+
     def test01_Init(self):
         """test01_Init
         Test Poker auth : get_auth_instance"""
@@ -199,7 +204,7 @@ class PokerAuthTestCase(unittest.TestCase):
         settings.loadFromString(settings_xml)
         auth = pokerauth.get_auth_instance(db, None, settings)
         
-    # -----------------------------------------------------------------------------------------------------    
+
     def test02_AlternatePokerAuth(self):
         """test02_AlternatePokerAuth
         Test Poker auth : get_auth_instance alternate PokerAuth"""
@@ -208,7 +213,7 @@ class PokerAuthTestCase(unittest.TestCase):
         settings.loadFromString(settings_alternate_xml)
         auth = pokerauth.get_auth_instance(db, None, settings)
         self.assertTrue(auth.gotcha)
-    # -----------------------------------------------------------------------------------------------------    
+
     def checkIfUserExistsInDB(self, name, selectString = "SELECT serial from users where name = '%s'"):
         cursor = self.db.cursor()
         cursor.execute(selectString % name)
@@ -224,7 +229,7 @@ class PokerAuthTestCase(unittest.TestCase):
             for row in cursor.fetchall(): serials.append(row['serial'])
             cursor.close()
             return serials
-    # -----------------------------------------------------------------------------------------------------    
+
     def test03_authWithAutoCreate(self):
         """test03_authWithAutoCreate
         Test Poker auth : Try basic auth with autocreate on"""
@@ -242,7 +247,7 @@ class PokerAuthTestCase(unittest.TestCase):
             'create user with serial 4'
         ])
         self.failUnless(len(self.checkIfUserExistsInDB('joe_schmoe')) == 1)
-    # -----------------------------------------------------------------------------------------------------    
+
     def test04_authWithoutAutoCreate(self, expectedMessage = 'user john_smith does not exist'):
         """test04_authWithoutAutoCreate
         Test Poker auth : Try basic auth with autocreate on"""
@@ -253,7 +258,7 @@ class PokerAuthTestCase(unittest.TestCase):
         if expectedMessage:
             self.assertTrue(log_history.search(expectedMessage))
         self.failUnless(len(self.checkIfUserExistsInDB('john_smith')) == 0)
-    # -----------------------------------------------------------------------------------------------------    
+
     def test05_authWhenDoubleEntry(self):
         """test05_authWhenDoubleEntry
         Tests case in fallback authentication where more than one entry exists.
@@ -273,7 +278,7 @@ class PokerAuthTestCase(unittest.TestCase):
         log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('doyle_brunson', 'foo')), (False, "Invalid login or password"))
         self.assertEquals(log_history.get_all(), ['more than one row for doyle_brunson'])
-    # -----------------------------------------------------------------------------------------------------    
+
     def test06_validAuthWhenEntryExists(self):
         """test06_validAuthWhenEntryExists
         Tests case for single-row returned existing auth, both success and failure.
@@ -294,7 +299,7 @@ class PokerAuthTestCase(unittest.TestCase):
         log_history.reset()
         self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'wrongpass')), (False, 'Invalid login or password'))
         self.assertEquals(log_history.get_all(), ['password mismatch for dan_harrington'])
-    # -----------------------------------------------------------------------------------------------------    
+
     def test07_mysql11userCreate(self):
         """test07_mysql11userCreate
         Tests userCreate() as it will behave under MySQL 1.1 by mocking up
@@ -312,7 +317,7 @@ class PokerAuthTestCase(unittest.TestCase):
         self.assertEquals(auth.userCreate("nobody", "nothing"), 4815)
         self.assertTrue(log_history.search('creating user nobody'))
         self.assertTrue(log_history.search('create user with serial 4815'))
-    # -----------------------------------------------------------------------------------------------------    
+
     def test08_mysqlbeyond11userCreate(self):
         """test08_mysqlbeyond11userCreate
         Tests userCreate() as it will behave under MySQL > 1.1 by mocking up
@@ -330,7 +335,7 @@ class PokerAuthTestCase(unittest.TestCase):
         self.assertEquals(auth.userCreate("somebody", "something"), 162342)
         self.assertTrue(log_history.search('creating user somebody'))
         self.assertTrue(log_history.search('create user with serial 162342'))
-    # -----------------------------------------------------------------------------------------------------    
+
     def test09_setAndGetLevel(self):
         """test09_setAndGetLevel
         Tests the SetLevel and GetLevel methods.
@@ -341,14 +346,11 @@ class PokerAuthTestCase(unittest.TestCase):
         self.assertEquals(auth.SetLevel('first', 7), None)
         self.assertEquals(auth.GetLevel('first'), 7)
         self.assertEquals(auth.GetLevel('second'), False)
-# -----------------------------------------------------------------------------------------------------    
+
 settings_mysql_xml = """\
 <?xml version="1.0" encoding="UTF-8"?>
 <server verbose="6" ping="300000" autodeal="yes" simultaneous="4" chat="yes" >
     <delays autodeal="18" round="12" position="60" showdown="30" finish="18" />
-
-    <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
-    <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
     <listen tcp="19480" />
 
@@ -374,120 +376,21 @@ settings_mysql_xml = """\
     'engine_path': config.test.engine_path,
     'mysql_command': config.test.mysql.command
 }
-import MySQLdb
 
-class PokerAuthMysqlTestCase(PokerAuthTestCase):
-    # -----------------------------------------------------------------------------------------------------
-    def setUp(self):
-        self.settings = pokernetworkconfig.Config([])
-        self.settings.doc = libxml2.parseMemory(settings_mysql_xml, len(settings_mysql_xml))
-        self.settings.header = self.settings.doc.xpathNewContext()
 
-        self.parameters = self.settings.headerGetProperties("/server/auth")[0]
-        sqlmanager.query("DROP DATABASE IF EXISTS %s" % self.parameters["db"],
-            user=config.test.mysql.root_user.name,
-            password=config.test.mysql.root_user.password,
-            host=config.test.mysql.host,
-            port=config.test.mysql.port
-        )
-        self.db = MySQLdb.connect(
-            host = self.parameters["host"],
-            port = int(self.parameters.get("port", '3306')),
-            user = self.parameters["user"],
-            passwd = self.parameters["password"]
-        )
-        self.db.query("CREATE DATABASE %s" % self.parameters["db"])
-        self.db.query("USE %s" % self.parameters["db"])
-        self.db.query("CREATE TABLE %s (username varchar(20), password varchar(20), privilege int)" % self.parameters["table"])
-        self.db.query("INSERT INTO users (username, password, privilege) VALUES ('testuser', 'testpassword', %i)" % User.REGULAR)
-    # -----------------------------------------------------------------------------------------------------    
-    def tearDown(self):
-        self.db.close()
-        pokerauth._get_auth_instance = None
-    # -----------------------------------------------------------------------------------------------------    
-    def checkIfUserExistsInDB(self, name, selectString = ""):
-        return PokerAuthTestCase.checkIfUserExistsInDB(
-            self, name,
-            selectString="SELECT username from "+self.parameters["table"]+" WHERE username = '%s'")
-    # -----------------------------------------------------------------------------------------------------    
-    def test01_Init(self):
-        """test01_Init
-        Test initalizing pokerauthmysql"""
-        db = None
-        auth = pokerauth.get_auth_instance(db, None, self.settings)
-        result, message = auth.auth(PACKET_LOGIN,("testuser", "testpassword"))
-        self.assertNotEquals(False, result)
-    # -----------------------------------------------------------------------------------------------------    
-    def test03_authWithAutoCreate(self):
-        """test03_authWithAutoCreateis not needed for MySQLAUTH"""
-        pass
-    # -----------------------------------------------------------------------------------------------------    
-    def test04_authWithoutAutoCreate(self):
-        """test04_authWithoutAutoCreate
-        Test Poker auth : Try basic auth with autocreate on"""
-        PokerAuthTestCase.test04_authWithoutAutoCreate(self, expectedMessage = '')
-    # -----------------------------------------------------------------------------------------------------    
-    def test05_authWhenDoubleEntry(self):
-        """test05_authWhenDoubleEntry
-        Tests case in fallback authentication where more than one entry exists.
-        """
-        cursor = self.db.cursor()
-        for ii in [1,2]:
-            cursor.execute(
-                "INSERT INTO "+self.parameters["table"]+" (username, password, privilege) values (%s, %s, %s)",
-                ('doyle_brunson', 'foo', User.REGULAR)
-            )
-        cursor.close()
-
-        auth = pokerauth.get_auth_instance(self.db, None, self.settings)
-        
-        log_history.reset()
-        self.assertEquals(auth.auth(PACKET_LOGIN,('doyle_brunson', 'foo')), (False, "Invalid login or password"))
-        self.assertEquals(log_history.get_all(), ['more than one row for doyle_brunson'])
-    # -----------------------------------------------------------------------------------------------------    
-    def test06_validAuthWhenEntryExists(self):
-        """test06_validAuthWhenEntryExists
-        Tests case for single-row returned existing auth, both success and failure.
-        """
-        cursor = self.db.cursor()
-        cursor.execute(
-            "INSERT INTO "+self.parameters["table"]+" (username, password, privilege) values (%s, %s, %s)",
-            ('dan_harrington', 'bar', User.REGULAR)
-        )
-        cursor.close()
-
-        auth = pokerauth.get_auth_instance(self.db, None, self.settings)
-
-        log_history.reset()
-        self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'bar')), (('dan_harrington', 'dan_harrington', 1L), None))
-        self.assertEquals(log_history.get_all(), [])
-        
-        log_history.reset()
-        self.assertEquals(auth.auth(PACKET_LOGIN,('dan_harrington', 'wrongpass')), (False, 'Invalid login or password'))
-        self.assertEquals(log_history.get_all(), ['password mismatch for dan_harrington'])
-    # -----------------------------------------------------------------------------------------------------    
-    def test07_mysql11userCreate(self):
-        """test08_mysqlbeyond11userCreate is not needed for MySQLAUTH"""
-        pass
-    # -----------------------------------------------------------------------------------------------------    
-    def test08_mysqlbeyond11userCreate(self):
-        """test08_mysqlbeyond11userCreate is not needed for MySQLAUTH"""
-        pass
-# -----------------------------------------------------------------------------------------------------
 def GetTestSuite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(PokerAuthTestCase))
-    suite.addTest(unittest.makeSuite(PokerAuthMysqlTestCase))
     # Comment out above and use line below this when you wish to run just
     # one test by itself (changing prefix as needed).
 #    suite.addTest(unittest.makeSuite(PokerAuthTestCase, prefix = "test09"))
     return suite
     
-# -----------------------------------------------------------------------------------------------------
+
 def Run(verbose = 1):
     return unittest.TextTestRunner(verbosity=verbose).run(GetTestSuite())
     
-# -----------------------------------------------------------------------------------------------------
+
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)

@@ -108,11 +108,11 @@ class SqlTestCase(unittest.TestCase):
         #
         # return the latest autoincrement
         #
-        os.environ['QUERY_STRING'] = 'query=INSERT%20INTO%20messages()VALUES()&output=lastrowid'
+        os.environ['QUERY_STRING'] = 'query=INSERT%20INTO%20messages(message)VALUES(\'\')&output=lastrowid'
         output = pokersql.runQuery(settings)
         self.assertTrue('Content-type:' in output, output)
         self.assertTrue('\n1' in output, output)
-        os.environ['QUERY_STRING'] = 'query=INSERT%20INTO%20messages()VALUES()&output=lastrowid'
+        os.environ['QUERY_STRING'] = 'query=INSERT%20INTO%20messages(message)VALUES(\'\')&output=lastrowid'
         output = pokersql.runQuery(settings)
         self.assertTrue('Content-type:' in output, output)
         self.assertTrue('\n2' in output, output)
