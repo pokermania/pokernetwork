@@ -320,7 +320,7 @@ class ProxyTestCase(unittest.TestCase):
 
         self.proxy_service.spawnTable(1, **self.proxy_service.loadTableConfig(1))
 
-        serial = 0
+        self.serial = 0
         
         self.proxy_site.memcache.set('auth', '0')
         
@@ -333,30 +333,28 @@ class ProxyTestCase(unittest.TestCase):
             self.assertEqual('Table1', packets[0]['name'])
 
         def checkLogin(result):
-            global serial
             packets = Packet.JSON.decode(result)
-            serial = packets[1]['serial']
+            self.serial = packets[1]['serial']
 
         def checkSeat(result):
             self.assertSubstring('PlayerArrive', result)
 
         d = defer.succeed(None)
-        d.addCallback(lambda x: client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth", postdata='{"type":"PacketPokerTableJoin","game_id":1}'))
-        d.addCallback(checkTable)
         d.addCallback(lambda x: client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth", postdata='{"type":"PacketLogin","name":"user1","password":"password1"}'))
         d.addCallback(checkLogin)
-        d.addCallback(lambda x: client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth", postdata='{"type":"PacketPokerSeat","game_id":1,"serial":%d}' % (serial,)))
+        d.addCallback(lambda x: client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth", postdata='{"type":"PacketPokerTableJoin","game_id":1}'))
+        d.addCallback(checkTable)
+        d.addCallback(lambda x: client.getPage("http://127.0.0.1:19480/POKER_REST?uid=uid&auth=auth", postdata='{"type":"PacketPokerSeat","game_id":1,"serial":%d}' % (self.serial,)))
         d.addCallback(checkSeat)
         return d
 
     def test09_pokerPoll(self):
-        d = client.getPage(
-            "http://127.0.0.1:19480/POKER_REST",
-            postdata='{"type":"PacketPokerPoll","game_id":1}'
-        )
+        d = client.getPage("http://127.0.0.1:19480/POKER_REST", postdata='{"type":"PacketPokerPoll","game_id":1}')
+        
         def checkTable(result):
             packets = Packet.JSON.decode(result)
             self.assertEqual(0, len(packets))
+            
         d.addCallback(checkTable)
         return d
 
