@@ -3270,7 +3270,6 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
 class TourneyRebuyTestCase(PokerServiceTestCaseBase):
     def setUp(self, settingsFile=settings_xml):
         PokerServiceTestCaseBase.setUp(self, settingsFile)
-        self.createTourneysSchedules()
 
     class GameMock:
         buy_in = 10;
@@ -3702,8 +3701,9 @@ class BreakTestCase(PokerServiceTestCaseBase):
         # augment tourneyIsRelevant to remember on which tourneys it was called
         tourney_serials = self.service.tourneys.keys()
         tourney_is_relevant_results = {}
+        tourneyIsRelevantOriginal = self.service.tourneyIsRelevant
         def tourneyIsRelevantLogging(tourney):
-            ret = self.service.tourneyIsRelevant(tourney)
+            ret = tourneyIsRelevantOriginal(tourney)
             tourney_is_relevant_results[tourney.serial] = ret
             return ret
         self.service.tourneyIsRelevant = tourneyIsRelevantLogging
@@ -3716,12 +3716,15 @@ class BreakTestCase(PokerServiceTestCaseBase):
         cursor.execute("UPDATE tourneys SET resthost_serial = %s", (self.service.resthost_serial+1))
         
         # start/cancel tourneys by changing their start time
-        for tourney in self.service.tourneys.itervalues(): tourney.start_time = seconds()
+        for tourney in self.service.tourneys.itervalues():
+            tourney.start_time = seconds()
+            tourney.register_time = 0
+            
         self.service.checkTourneysSchedule()
         
         # tourneys should not have been modified
         cursor.execute("SELECT count(*) FROM tourneys WHERE state='registering'")
-        self.assertEquals(cursor.fetchone()[0], 1)
+        self.assertEquals(cursor.fetchone()[0], 2)
         cursor.close()
         
         # tourneys should not have been relevant
@@ -6717,6 +6720,7 @@ def GetTestSuite():
     suite.addTest(loader.loadClass(TourneyFinishedTestCase))
     suite.addTest(loader.loadClass(TourneyUnregisterTestCase))
     suite.addTest(loader.loadClass(TourneyMovePlayerTestCase))
+    suite.addTest(loader.loadClass(TourneyRebuyTestCase))
     suite.addTest(loader.loadClass(TourneyCancelTestCase))
     suite.addTest(loader.loadClass(TourneySatelliteTestCase))
     suite.addTest(loader.loadClass(TourneyManagerTestCase))

@@ -724,15 +724,13 @@ class PokerService(service.Service):
     def checkTourneysSchedule(self):
         self.log.debug("checkTourneysSchedule")
         now = seconds()
-        #
+
         # Cancel sng that stayed in registering state for too long
-        #
         for tourney in filter(lambda tourney: tourney.sit_n_go == 'y', self.tourneys.values()):
             if tourney.state == TOURNAMENT_STATE_REGISTERING and now - tourney.register_time > self.sng_timeout:
                 tourney.changeState(TOURNAMENT_STATE_CANCELED)
-        #
+
         # Respawning sit'n'go tournaments
-        #
         for schedule in filter(lambda schedule: schedule['respawn'] == 'y' and schedule['sit_n_go'] == 'y', self.tourneys_schedule.values()):
             schedule_serial = schedule['serial']
             if (
@@ -740,14 +738,21 @@ class PokerService(service.Service):
                 not filter(lambda tourney: tourney.state == TOURNAMENT_STATE_REGISTERING, self.schedule2tourneys[schedule_serial])
             ):
                 self.spawnTourney(schedule)
-        #
+
+        # Update tournaments with time clock
+        for tourney in filter(lambda tourney: tourney.sit_n_go == 'n', self.tourneys.values()):
+            tourney.updateRunning()
+            
+        # Forget about old tournaments
+        for tourney in filter(lambda tourney: tourney.state in (TOURNAMENT_STATE_COMPLETE, TOURNAMENT_STATE_CANCELED), self.tourneys.values()):
+            if now - tourney.finish_time > DELETE_OLD_TOURNEYS_DELAY:
+                self.deleteTourney(tourney)
+                self.tourneyDeleteRoute(tourney)
+
         # Restore tournaments
-        #
         self.restoreTourneys()
         
-        #
         # One time tournaments
-        #
         one_time = []
         for schedule in filter(lambda schedule: schedule['respawn'] == 'n' and int(schedule['register_time']) < now, self.tourneys_schedule.values()):
             one_time.append(schedule)
@@ -755,9 +760,7 @@ class PokerService(service.Service):
         for schedule in one_time:
             self.spawnTourney(schedule)
         
-        #
         # Respawning regular tournaments
-        #
         for schedule in filter(
             lambda schedule: schedule['respawn'] == 'y' and int(schedule['respawn_interval']) > 0 and schedule['sit_n_go'] == 'n',
             self.tourneys_schedule.values()
@@ -778,20 +781,7 @@ class PokerService(service.Service):
                 )
             ):
                 self.spawnTourney(schedule)
-            
-        #
-        # Update tournaments with time clock
-        #
-        for tourney in filter(lambda tourney: tourney.sit_n_go == 'n', self.tourneys.values()):
-            tourney.updateRunning()
-        #
-        # Forget about old tournaments
-        #
-        for tourney in filter(lambda tourney: tourney.state in (TOURNAMENT_STATE_COMPLETE, TOURNAMENT_STATE_CANCELED), self.tourneys.values()):
-            if now - tourney.finish_time > DELETE_OLD_TOURNEYS_DELAY:
-                self.deleteTourney(tourney)
-                self.tourneyDeleteRoute(tourney)
-
+        
         self.cancelTimer('checkTourney')
         self.timer['checkTourney'] = reactor.callLater(CHECK_TOURNEYS_SCHEDULE_DELAY, self.checkTourneysSchedule)
 
@@ -929,20 +919,24 @@ class PokerService(service.Service):
         try:
             cursor = self.db.cursor()
             sql = "SELECT resthost_serial FROM tourneys WHERE serial = %s"
-            params = (tourney.serial,)
-            cursor.execute(sql, params)
+            cursor.execute(sql, (tourney.serial,))
             resthost_serial_db = int(cursor.fetchone()[0])
             return resthost_serial_db == self.resthost_serial
         except:
             return False
         finally:
             cursor.close()
-        
+    
+    def tourneyDeleteWithSchedule(self, tourney):
+        self.deleteTourney(tourney)
+        if tourney.schedule_serial in self.tourneys_schedule:
+            del self.tourneys_schedule[tourney.schedule_serial]
+            
     def tourneyNewState(self, tourney, old_state, new_state):
         
-        # if the tourney is not relevant for this resthost anymore, delete it
+        # if the tourney is not relevant for this resthost anymore, delete it and its schedule
         if old_state == TOURNAMENT_STATE_REGISTERING and not self.tourneyIsRelevant(tourney):
-            self.deleteTourney(tourney)
+            self.tourneyDeleteWithSchedule(tourney)
             return
         #
         # set up lock check
