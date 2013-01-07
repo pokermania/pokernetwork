@@ -55,7 +55,8 @@ class PokerDatabase:
                 db = self.parameters["name"]
             )
             self.log.debug("MySQL server version is %s", self.db.get_server_info())
-        except:
+        except Exception, login_exception:
+            self.log.warn("could not login as user '%s': %s",(self.parameters['user'], login_exception))
             if 'root_user' in self.parameters:
                 self.log.inform("connection as root user '%s'", self.parameters['root_user'])
                 db = MySQLdb.connect(
@@ -106,7 +107,7 @@ class PokerDatabase:
                 db.close()
                 self.log.inform("granted privilege to '%s' for database '%s'", self.parameters['user'], self.parameters['name'])
             else:
-                self.log.warn("root_user is not defined in the self.parameters, cannot create schema database")
+                self.log.error("root_user is not defined in the self.parameters, cannot create schema database")
             self.db = MySQLdb.connect(
                 host = self.parameters["host"],
                 port = int(self.parameters.get("port", '3306')),
@@ -116,7 +117,7 @@ class PokerDatabase:
             )
 
         self.log.debug("Database connection to %s/%s open", self.parameters['host'], self.parameters['name'])
-        self.db.query("SET AUTOCOMMIT = 1")
+        self.db.autocommit(True)
         self.version = Version(self.getVersionFromDatabase())
         self.log.inform("Database version %s", self.version)
 
