@@ -3289,7 +3289,6 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
     class ClientMockup:
         def __init__(self, serial, testObject):
             self.serial = serial
-#            self.tableJoined = None
             self.packets = []
             self.testObject = testObject
             self.expectedReason = ""
@@ -3307,9 +3306,6 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
         client1 = self.ClientMockup(self.user1_serial, self)
         self.service.avatar_collection.add(self.user1_serial, client1)
 
-
-        bak = self.service.tourneys
-        self.serivce = {}
         self.service.tourneys[1] = self.Tournament(serial=1, reason="")
         self.service.tourneys[2] = self.Tournament(serial=2, reason=pokertournament.TOURNEY_REBUY_ERROR_USER)
         self.service.tourneys[3] = self.Tournament(serial=3, reason=pokertournament.TOURNEY_REBUY_ERROR_TIMEOUT)
