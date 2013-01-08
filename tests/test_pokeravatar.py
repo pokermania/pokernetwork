@@ -206,7 +206,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         server_protocol.makeConnection(server_transport)
         client_protocol.makeConnection(client_transport)
     
-    def setUpServer(self, serverSettings = settings_xml_server):
+    def setUpServer(self, serverSettings=settings_xml_server):
         settings = pokernetworkconfig.Config([])
         settings.loadFromString(serverSettings)
         #
