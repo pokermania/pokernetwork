@@ -10,6 +10,7 @@
             "rest_ssl": 19385
         },
         "rest": {
+            "name": "",
             "host": "localhost",
             "port": 19384,
             "path": "/POKER_REST"
@@ -57,9 +58,5 @@
                 "password": "123"
             }
         }
-    },
-    "resthost": {
-        "host": "localhost",
-        "port": 19384
     }
 }

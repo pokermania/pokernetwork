@@ -151,7 +151,12 @@
   <!-- <listen ... manhole="%(manhole_port)i" />  -->
   <!-- manhole is useful for debugging, use with telnet admin/admin, 
        however, it can be a security risk and should be used only during debugging -->
-  <resthost host="@config.resthost.host@" port="@config.resthost.port@" path="/POKER_REST"/>
+
+  <resthost
+    name="@config.pokernetwork.rest.name@"
+    host="@config.pokernetwork.rest.host@"
+    port="@config.pokernetwork.rest.port@"
+    path="@config.pokernetwork.rest.path@"/>
 
   <!-- <auth script="pokernetwork.pokerauth"/> -->
 
