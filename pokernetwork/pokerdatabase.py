@@ -56,7 +56,7 @@ class PokerDatabase:
             )
             self.log.debug("MySQL server version is %s", self.db.get_server_info())
         except Exception, login_exception:
-            self.log.warn("could not login as user '%s': %s",(self.parameters['user'], login_exception))
+            self.log.warn("could not login as user '%s': %s", self.parameters['user'], login_exception)
             if 'root_user' in self.parameters:
                 self.log.inform("connection as root user '%s'", self.parameters['root_user'])
                 db = MySQLdb.connect(
