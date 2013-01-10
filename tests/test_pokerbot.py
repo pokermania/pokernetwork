@@ -25,6 +25,7 @@ from os import path
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
 
+from config import config
 from twisted.trial import unittest, runner, reporter
 
 import tempfile
@@ -39,15 +40,18 @@ settings_xml_bots_generated = """<?xml version="1.0" encoding="UTF-8"?>
   <servers>hostname:19380</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
-  <currency id="1">/usr/bin/wget wget --quiet -O - 'http://pokersource.info/poker-web/currency_one.php?id=1&amp;command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency>
-  <path>/etc/poker-engine</path> 
+  <currency id="1"/>
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path> 
 
   <table name="One" count="4"/>
 
   <tournament name="sitngo4" count="4"/>
 
 </settings>
-"""
+""" % {
+    'engine_path': config.test.engine_path,
+    'tests_path': TESTS_PATH
+}
 
 settings_xml_bots_named = """<?xml version="1.0" encoding="UTF-8"?>
 <settings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="poker-bot.xsd" delays="false" wait="1" reconnect="yes" reconnect_delay="0,0" watch="no" level="1" cash_in="no" ping="10" verbose="0" no_display_packets="yes" rebuy="yes" name_prefix="BOT" poker_network_version="2.0.0">
@@ -57,28 +61,34 @@ settings_xml_bots_named = """<?xml version="1.0" encoding="UTF-8"?>
   <servers>hostname:19380</servers>
   <muck>yes</muck>
   <auto_post>yes</auto_post>
-  <currency id="1">/usr/bin/wget wget --quiet -O - 'http://pokersource.info/poker-web/currency_one.php?id=1&amp;command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency>
-  <path>/etc/poker-engine</path> 
+  <currency id="1"/>
+  <path>%(engine_path)s/conf %(tests_path)s/../conf</path> 
 
   <table name="One">
-        <bot name="foo1" password="bar1" />
-        <bot name="foo2" password="bar2" />
-        <bot name="foo3" password="bar3" />
+    <bot name="foo1" password="bar1" />
+    <bot name="foo2" password="bar2" />
+  </table>
+  
+  <table name="One" skin="default">
+    <bot name="foo3" password="bar3" />
   </table>
 
   <tournament name="sitngo4">
-        <bot name="foo4" password="bar4" />
-        <bot name="foo5" password="bar5" />
+    <bot name="foo4" password="bar4" />
+    <bot name="foo5" password="bar5" />
   </tournament>
-
+  
 </settings>
-"""
+""" % {
+    'engine_path': config.test.engine_path,
+    'tests_path': TESTS_PATH
+}
 
 class PokerBotTestCase(unittest.TestCase):
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
-        self.filename = os.path.join(self.tmpdir, "poker.server.xml")
-
+        self.filename = os.path.join(self.tmpdir, "poker.bot.xml")
+    
     def createConfig(self, config):
         f = open(self.filename, "w")
         f.write(config)
@@ -117,16 +127,11 @@ def GetTestSuite():
     return suite
 
 def Run():
-    loader = runner.TestLoader()
-#    loader.methodPrefix = "test01"
-    suite = loader.suiteFactory()
-    suite.addTest(loader.loadClass(PokerBotTestCase))
     return runner.TrialRunner(
         reporter.TextReporter,
-        tracebackFormat='default',
-        ).run(GetTestSuite())
+        tracebackFormat='default',        
+    ).run(GetTestSuite())
 
-# ----------------------------------------------------------------
 if __name__ == '__main__':
     if Run().wasSuccessful():
         sys.exit(0)

@@ -317,7 +317,9 @@ def makeService(configuration):
             for _i in xrange(0, int(table["count"])):
                 create_bot(settings=settings, join_info=table, serial=bot_serial.next())
         else:
-            for bot in settings.headerGetProperties("/settings/table[@name=\"%s\"]/bot" % table['name']):
+            table_attributes = ["@name=\"%s\"" % table["name"]]
+            table_attributes.append("@skin=\"%s\"" % table["skin"] if "skin" in table else "not(@skin)")
+            for bot in settings.headerGetProperties("/settings/table[%s]/bot" % " and ".join(table_attributes)):
                 create_bot(settings=settings, join_info=table, serial=bot_serial.next(), name=bot['name'], password=bot['password'])
     for tournament in settings.headerGetProperties("/settings/tournament"):
         tournament['tournament'] = True
@@ -325,7 +327,9 @@ def makeService(configuration):
             for _i in xrange(0, int(tournament["count"])):
                 create_bot(settings=settings, join_info=tournament, serial=bot_serial.next())
         else:
-            for bot in settings.headerGetProperties("/settings/tournament[@name=\"%s\"]/bot" % tournament['name']):
+            tournament_attributes = ["@name=\"%s\"" % tournament["name"]]
+            tournament_attributes.append("@skin=\"%s\"" % tournament["skin"] if "skin" in tournament else "not(@skin)")
+            for bot in settings.headerGetProperties("/settings/tournament[%s]/bot" % " and ".join(tournament_attributes)):
                 create_bot(settings=settings, join_info=tournament, serial=bot_serial.next(), name=bot['name'], password=bot['password'])
     return services
 

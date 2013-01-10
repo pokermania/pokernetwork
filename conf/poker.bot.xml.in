@@ -34,7 +34,7 @@
   <muck>yes</muck>
   <auto_post>yes</auto_post>
 
-  <currency id="1">/usr/bin/env wget --quiet -O - 'http://localhost/poker-web/currency_one.php?id=1&amp;command=get_note&amp;value=5000000&amp;count=100&amp;autocommit=yes'</currency>
+  <currency id="1"/>
 
   <path>@config.pokerengine.paths.conf@</path> 
 

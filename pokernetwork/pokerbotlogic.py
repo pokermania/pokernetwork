@@ -128,20 +128,18 @@ class PokerBot:
         if packet.type == PACKET_BOOTSTRAP:
             reactor.callLater(self.factory.serial * 0.1, self.bootstrap, protocol)
         elif packet.type == PACKET_AUTH_OK:
-            log.inform('bot credentials are ok for user %s', protocol.user.name)
+            log.inform("Bot credentials are ok for user %s", protocol.user.name)
             self.state = STATE_RECONNECTING
         elif packet.type == PACKET_AUTH_REFUSED:
-            log.error('bot credentials are wrong for user %s', protocol.user.name)
+            log.error("Bot credentials are wrong for user %s", protocol.user.name)
             protocol.transport.loseConnection()
 
     def _handleSearch(self, protocol, packet):
         if packet.type == PACKET_POKER_TABLE_LIST:
             if self.state == STATE_SEARCHING:
-                found = False
                 table_info = self.factory.join_info
                 for table in packet.packets:
-                    if table.name == table_info["name"]:
-                        found = True
+                    if table_info.get("skin", table.skin) == table.skin:
                         protocol.sendPacket(PacketPokerTableJoin(game_id = table.id, serial = protocol.getSerial()))
                         if not self.factory.watch:
                             protocol.sendPacket(PacketPokerSeat(game_id = table.id, serial = protocol.getSerial()))
@@ -152,7 +150,7 @@ class PokerBot:
                         break
                 # if we didn't break, we didn't find a table
                 else:
-                    self.log.warn("Unable to find table %s", table_info['name'])
+                    self.log.warn("Unable to find table %s (%s)", table_info["name"], table_info.get("skin",""))
                     protocol.transport.loseConnection()
 
             elif self.state == STATE_RECONNECTING:
@@ -173,22 +171,18 @@ class PokerBot:
                 protocol.transport.loseConnection()
 
         elif packet.type == PACKET_POKER_TOURNEY_LIST:
-            name = self.factory.join_info['name']
-            if len(packet.packets) <= 0:
-                self.log.warn("Unable to find tournament %s", name)
-            found = None
+            tourney_info = self.factory.join_info
+            
             for tourney in packet.packets:
-                if tourney.state == TOURNAMENT_STATE_REGISTERING:
-                    found = tourney.serial
+                if tourney.state == TOURNAMENT_STATE_REGISTERING and tourney_info.get("skin", tourney.skin) == tourney.skin:
+                    protocol.sendPacket(PacketPokerTourneyRegister(serial = protocol.getSerial(), tourney_serial = tourney.serial))
+                    self.state = STATE_RUNNING
                     break
-            if not found:
-                self.log.inform("No %s tournament allows registration, try later", name)
-                self.factory.can_disconnect = False
-                reactor.callLater(10, lambda: self.lookForGame(protocol))
             else:
-                protocol.sendPacket(PacketPokerTourneyRegister(serial = protocol.getSerial(), tourney_serial = found))
-            self.state = STATE_RUNNING
-
+                self.log.inform("Unable to find tournament %s (%s) in state %s", tourney_info["name"], tourney_info.get("skin",""), TOURNAMENT_STATE_REGISTERING)
+                self.factory.can_disconnect = False
+                reactor.callLater(10, self.lookForGame, protocol)
+                    
         elif packet.type == PACKET_POKER_ERROR or packet.type == PACKET_ERROR:
             giveup = True
             if packet.other_type == PACKET_POKER_TOURNEY_REGISTER:
@@ -269,9 +263,6 @@ class PokerBot:
                     serial=packet.serial,
                     **dict(zip(('url', 'bserial', 'name', 'value'), note))
                 ))
-
-
-
         else:
             if self.state == STATE_LOGIN:
                 self._handleLogin(protocol, packet)
