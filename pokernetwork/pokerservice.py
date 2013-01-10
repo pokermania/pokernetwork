@@ -1985,22 +1985,6 @@ class PokerService(service.Service):
                   The tab-separated query string currently accepts two fields:
                          "currency_serial\tvariant"
            """
-        # It appears to me that the original motivation for this \t
-        # seperated format for query_string was that the string would front-load
-        # with more commonly used criteria, and put less frequently used
-        # ones further to the back.  Thus, the query string can be
-        # effeciently constructed by callers.  During implementation of
-        # the table-picker feature, I wrote the documentation above and I
-        # heavily extended this method to account for additional criteria
-        # that table-picker wanted to use.  dachary and I discussed a bit
-        # whether it was better not to expand this method, but I felt it
-        # was close enough that it was.  Our discussion happened on IRC
-        # circa 2009-06-20 and following. -- bkuhn, 2009-06-20
-
-        #  However, after additional debate and looking at the final
-        #  implementation and tests, we discovered this whole approach was
-        #  a mess, yielding the refactoring out of listTables() into its
-        #  helper function, searchTables() -- bkuhn, 2009-07-03
 
         orderBy = " ORDER BY t.players desc, t.serial"
         
@@ -2009,23 +1993,9 @@ class PokerService(service.Service):
         if query_string == '' or query_string == 'all':
             cursor.execute(
                 """ SELECT
-                        t.serial,
-                        t.resthost_serial,
-                        c.seats,
-                        t.average_pot,
-                        t.hands_per_hour,
-                        t.percent_flop,
-                        t.players,
-                        t.observers,
-                        t.waiting,
-                        c.player_timeout,
-                        c.muck_timeout,
-                        c.currency_serial,
-                        c.name,
-                        c.variant,
-                        c.betting_structure,
-                        c.skin,
-                        t.tourney_serial
+                        t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
+                        t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
+                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
                     FROM tables AS t
                     LEFT JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
@@ -2035,23 +2005,9 @@ class PokerService(service.Service):
         elif query_string == 'my':
             cursor.execute(
                 """ SELECT
-                        t.serial,
-                        t.resthost_serial,
-                        c.seats,
-                        t.average_pot,
-                        t.hands_per_hour,
-                        t.percent_flop,
-                        t.players,
-                        t.observers,
-                        t.waiting,
-                        c.player_timeout,
-                        c.muck_timeout,
-                        c.currency_serial,
-                        c.name,
-                        c.variant,
-                        c.betting_structure,
-                        c.skin,
-                        t.tourney_serial
+                        t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
+                        t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
+                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
                     FROM user2table AS u2t
                     LEFT JOIN tables AS t
                         ON t.serial = u2t.table_serial
@@ -2064,23 +2020,9 @@ class PokerService(service.Service):
         elif query_string == 'marked':
             cursor.execute(
                 """ SELECT
-                        t.serial,
-                        t.resthost_serial,
-                        c.seats,
-                        t.average_pot,
-                        t.hands_per_hour,
-                        t.percent_flop,
-                        t.players,
-                        t.observers,
-                        t.waiting,
-                        c.player_timeout,
-                        c.muck_timeout,
-                        c.currency_serial,
-                        c.name,
-                        c.variant,
-                        c.betting_structure,
-                        c.skin,
-                        t.tourney_serial
+                        t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
+                        t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
+                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
                     FROM tables AS t
                     LEFT JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
@@ -2091,23 +2033,9 @@ class PokerService(service.Service):
         elif re.match("^[0-9]+$", query_string):
             cursor.execute(
                 """ SELECT
-                        t.serial,
-                        t.resthost_serial,
-                        c.seats,
-                        t.average_pot,
-                        t.hands_per_hour,
-                        t.percent_flop,
-                        t.players,
-                        t.observers,
-                        t.waiting,
-                        c.player_timeout,
-                        c.muck_timeout,
-                        c.currency_serial,
-                        c.name,
-                        c.variant,
-                        c.betting_structure,
-                        c.skin,
-                        t.tourney_serial
+                        t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
+                        t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
+                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
                     FROM tables AS t
                     LEFT JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
@@ -2146,23 +2074,9 @@ class PokerService(service.Service):
         else:
             cursor.execute(
                 """ SELECT
-                        t.serial,
-                        t.resthost_serial,
-                        c.seats,
-                        t.average_pot,
-                        t.hands_per_hour,
-                        t.percent_flop,
-                        t.players,
-                        t.observers,
-                        t.waiting,
-                        c.player_timeout,
-                        c.muck_timeout,
-                        c.currency_serial,
-                        c.name,
-                        c.variant,
-                        c.betting_structure,
-                        c.skin,
-                        t.tourney_serial
+                        t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
+                        t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
+                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
                     FROM tables AS t
                     LEFT JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
