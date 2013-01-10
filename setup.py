@@ -29,7 +29,7 @@ setup(
     package_data={'pokernetwork': ['../twisted/plugins/*.py']},
     data_files=[
         ('bin', EXECUTABLES),
-        ('share/poker-network', glob('database/*.sql')),
+        ('share/poker-network/database', glob('database/*.sql')),
         ('share/poker-network/conf', glob('conf/*.xml') + ['conf/poker.pem','conf/badwords.txt']),
         ('share/man/man8', [
             'pokernetwork/pokerserver.8',
