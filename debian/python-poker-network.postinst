@@ -74,7 +74,7 @@ case "$1" in
 		if $server_conf_did_not_exist ; then rm -f $server_conf ; fi
 		dbc_generate_include="template:$server_conf"
 		dbc_generate_include_args="-O $pokernetwork_user:$pokernetwork_group -m 600 -o template_infile=/usr/share/poker-network/conf/poker.server.xml"
-		dbc_first_version="1.0.31"
+		dbc_first_version="2.0.0"
 		dbc_go python-poker-network $@
 
 		db_get "python-poker-network/bots"

@@ -153,6 +153,7 @@
        however, it can be a security risk and should be used only during debugging -->
 
   <resthost
+    serial="@config.pokernetwork.rest.serial@"
     name="@config.pokernetwork.rest.name@"
     host="@config.pokernetwork.rest.host@"
     port="@config.pokernetwork.rest.port@"

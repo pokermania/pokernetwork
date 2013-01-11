@@ -10,6 +10,7 @@
             "rest_ssl": 19385
         },
         "rest": {
+            "serial": 1,
             "name": "",
             "host": "localhost",
             "port": 19384,

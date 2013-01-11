@@ -249,7 +249,7 @@ class PokerService(service.Service):
         self.tourney_select_info = None
         settings = self.settings
         for path in settings.header.xpathEval("/server/tourney_select_info"):
-            self.log.inform("trying to load '%s'", path.content)
+            self.log.inform("Trying to load '%s'", path.content)
             module = _import(path.content)
             path = settings.headerGet("/server/tourney_select_info/@settings")
             if path:
@@ -265,7 +265,7 @@ class PokerService(service.Service):
             regExp = "(%s)" % "|".join(i.strip() for i in open(chat_filter_filepath,'r'))
             self.chat_filter = re.compile(regExp,re.IGNORECASE)
         except IOError, e:
-            self.log.error('Could not access \'%s\': %s. Chat messages will not be filtered.', chat_filter_filepath, e.strerror)
+            self.log.error("Could not access '%s': %s. Chat messages will not be filtered.", chat_filter_filepath, e.strerror)
         
     def startService(self):
         self.monitors = []
@@ -379,17 +379,17 @@ class PokerService(service.Service):
                     'muck_timeout'
                 ], c.fetchone()))
             else:
-                self.log.error("couldn't load talbe config %d", serial)
-                raise Exception("couldn't load talbe config %d" % (serial,))
+                self.log.error("Could not load table config: %d", serial)
+                raise Exception("Could not load table config: %d" % (serial,))
         finally:
             c.close()
 
     def despawnTable(self, serial):
-        self.log.inform("despawning table %d", serial, refs=[('Game', self, lambda x: serial)])
+        self.log.inform("Despawning table: %d", serial, refs=[('Game', self, lambda x: serial)])
         self.tables[serial].destroy()
 
     def spawnTable(self, serial, **kw):
-        self.log.inform("spawning table %d", serial, refs=[('Game', self, lambda x: serial)])
+        self.log.inform("Spawning table: %d", serial, refs=[('Game', self, lambda x: serial)])
         table = PokerTable(self, serial, kw)
         self.tables[serial] = table
         return table
@@ -2171,24 +2171,30 @@ class PokerService(service.Service):
 
     def setupResthost(self):
         resthost = self.settings.headerGetProperties("/server/resthost")
+        
         if resthost:
+            self.log.inform('Resthost set: %s', resthost)
             resthost = resthost[0]
-            cursor = self.db.cursor()
-            values = ( resthost['host'], resthost['port'], resthost['path'])
-            name = resthost.get('name', '')
-            cursor.execute("SELECT serial FROM resthost WHERE host = %s AND port = %s AND path = %s", values)
-            if cursor.rowcount > 0:
-                self.resthost_serial = cursor.fetchone()[0]
-                cursor.execute("UPDATE resthost SET state = %s WHERE serial = %s", (self.STATE_ONLINE,self.resthost_serial))
-            else:
-                if not name:
-                    cursor.execute("INSERT INTO resthost (name, host, port, path, state) VALUES ('', %s, %s, %s, %s)", values + (self.STATE_ONLINE,))
-                else:
-                    cursor.execute("INSERT INTO resthost (name, host, port, path, state) VALUES (%s, %s, %s, %s, %s)", (name,) + values + (self.STATE_ONLINE,))
-                self.resthost_serial = cursor.lastrowid
-            cursor.execute("DELETE FROM route WHERE resthost_serial = %s", self.resthost_serial)
-            cursor.close()
-    
+            missing = []
+            for i in ('serial', 'name', 'host', 'port', 'path'):
+                if i not in resthost: missing.append(i)
+            if missing:
+                self.log.crit('Resthost parameters missing: %s', ', '.join(missing))
+                raise Exception('Resthost parameters missing: %s' % ', '.join(missing))
+            try:
+                cursor = self.db.cursor()
+                params = tuple(resthost[i] for i in ('serial', 'name', 'host', 'port', 'path')) + (self.STATE_ONLINE,)
+                cursor.execute(
+                    "INSERT INTO resthost (serial, name, host, port, path, state) VALUES (%s, %s, %s, %s, %s, %s) " \
+                    "ON DUPLICATE KEY UPDATE SET name=%s, host=%s, port=%s, path=%s, state=%s", 
+                params + params[1:])
+                self.resthost_serial = int(resthost['serial'])
+                cursor.execute("DELETE FROM route WHERE resthost_serial = %s", self.resthost_serial)
+            finally:
+                cursor.close()
+        else:
+            self.log.inform('Resthost not set')
+        
     def setResthostOnShuttingDown(self):
         if self.resthost_serial:
             cursor = self.db.cursor()

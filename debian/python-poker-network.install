@@ -2,4 +2,4 @@ debian/tmp/usr/lib/python???
 debian/tmp/usr/bin
 conf/*.xml conf/poker.pem conf/badwords.txt etc/poker-network
 conf/*.xml conf/poker.pem conf/badwords.txt usr/share/poker-network/conf
-database/*.sql usr/share/poker-network
+database/*.sql usr/share/poker-network/database
