@@ -34,19 +34,25 @@ You can see it is packed as an unsigned integer in network (big-endian) byte ord
 Authenticate
 ~~~~~~~~~~~~
 
-We will not explain the method of authetication at the moment. As soon we decided how to do it, we will update this documentation.
-
-After you are autheticated you can ask for a table list. This list will include all basic information about the tables (including names, free seats, and the poker server)
+The Login must be done with the `Social-API`. There you will get the auth token. 
+Then you need to send a :class:`PACKET_POKER_AUTH <pokerpackets.packets.PacketAuth>`.
 
 Get tables
 ~~~~~~~~~~
 
-We will update this section as soon we have a final solution for this.
+This list will include all basic information about the tables (including names, free seats, ...)
+
+Send a :class:`PACKET_POKER_TABLE_SELECT <pokerpackets.clientpackets.PacketPokerTableSelect>` to get :class:`PACKET_POKER_TABLE_LIST <pokerpackets.clientpackets.PacketPokerTableList>` which contains a list of  :class:`PACKET_POKER_TABLE <pokerpackets.clientpackets.PacketPokerTable>`.
+
+You can get the buy in for the table from the betting structure.
+
 
 User Actions
 ~~~~~~~~~~~~
 
-After you chose a table :ref:`sit down <sit>`.
+Set your ``roles`` to ``PLAY`` with a :class:`PacketPokerSetRole <pokerpackets.networkpackets.PacketPokerSetRole>`.
+
+After you chose a table and want to sit down, check the FAQ section :ref:`How to sit at a cash game table ? <sit>`.
 
 During a hand are :ref:`this packets <hand>` possible.
 
@@ -86,8 +92,22 @@ How to cash in ?
 
 How to sit at a cash game table ?
 ---------------------------------
+Send:
 
 | :class:`PACKET_POKER_TABLE_JOIN <pokerpackets.networkpackets.PacketPokerTableJoin>`
+
+
+if it was successfull you will get:
+
+| :class:`POKER_TABLE <pokerpackets.networkpackets.PacketPokerTable>`
+| :class:`POKER_BUY_IN_LIMITS <pokerpackets.networkpackets.PacketPokerBuyInLimits>`
+| :class:`POKER_BATCH_MODE <pokerpackets.networkpackets.PacketPokerBatchMode>`
+| :class:`POKER_SEATS <pokerpackets.networkpackets.PacketPokerSeats>`
+| ... and anything that happend during this hand allready
+| :class:`POKER_STREAM_MODE <pokerpackets.networkpackets.PacketPokerStreamMode>`
+
+After that you need to choose a seat, pay your buy in. It is recommended that you activate auto blind ante, since the player has to pay them. If you want to manage the blind by yourself you need to watch for PACKET_POKER_BUY_IN_REQUEST packets. And last but not least you have to sit to indicate that you are ready to play.
+
 | :class:`PACKET_POKER_SEAT <pokerpackets.networkpackets.PacketPokerSeat>`
 | :class:`PACKET_POKER_BUY_IN <pokerpackets.networkpackets.PacketPokerBuyIn>`
 | :class:`PACKET_POKER_AUTO_BLIND_ANTE <pokerpackets.networkpackets.PacketPokerAutoBlindAnte>` (optional)
@@ -113,6 +133,7 @@ What to expect when watching a table ?
 | :class:`PACKET_POKER_SIT_OUT <pokerpackets.networkpackets.PacketPokerSitOut>`
 | :class:`PACKET_POKER_CHAT <pokerpackets.networkpackets.PacketPokerChat>`
 | :class:`PACKET_POKER_PLAYER_LEAVE <pokerpackets.networkpackets.PacketPokerPlayerLeave>`
+| PACKET_POKER_REBUY
 
 What to expect at all times ?
 -----------------------------
