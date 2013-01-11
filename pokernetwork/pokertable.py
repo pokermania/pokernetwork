@@ -1044,16 +1044,16 @@ class PokerTable:
 
     def seatPlayer(self, avatar, serial, seat):
         if not self.isJoined(avatar):
-            self.log.error("player %d can't seat before joining", serial)
+            self.log.error("player %d can't seat before joining", serial, refs=[('User', serial, int)])
             return False
         if self.isSeated(avatar):
-            self.log.inform("player %d is already seated", serial)
+            self.log.inform("player %d is already seated", serial, refs=[('User', serial, int)])
             return False
         if not self.game.canAddPlayer(serial):
-            self.log.warn("table refuses to seat player %d", serial, refs=['User', serial, int])
+            self.log.warn("table refuses to seat player %d", serial, refs=[('User', serial, int)])
             return False
         if seat != -1 and seat not in self.game.seats_left:
-            self.log.warn("table refuses to seat player %d at seat %d", serial, seat, refs=['User', serial, int])
+            self.log.warn("table refuses to seat player %d at seat %d", serial, seat, refs=[('User', serial, int)])
             return False
 
         amount = self.game.buyIn() if self.transient else 0
@@ -1073,7 +1073,7 @@ class PokerTable:
 
     def sitOutPlayer(self, avatar, serial):
         if not self.isSeated(avatar):
-            self.log.warn("player %d can't sit out before getting a seat", serial)
+            self.log.warn("player %d can't sit out before getting a seat", serial, refs=[('User', serial, int)])
             return False
         #
         # silently do nothing if already sit out
@@ -1084,7 +1084,7 @@ class PokerTable:
 
     def chatPlayer(self, avatar, serial, message):
         if not self.isJoined(avatar):
-            self.log.error("player %d can't chat before joining", serial)
+            self.log.error("player %d can't chat before joining", serial, refs=[('User', serial, int)])
             return False
         message = self.chatFilter(message)
         self.broadcast(PacketPokerChat(
@@ -1101,13 +1101,13 @@ class PokerTable:
 
     def autoBlindAnte(self, avatar, serial, auto):
         if not self.isSeated(avatar):
-            self.log.warn("player %d can't set auto blind/ante before getting a seat", serial)
+            self.log.warn("player %d can't set auto blind/ante before getting a seat", serial, refs=[('User', serial, int)])
             return False
         return avatar.autoBlindAnte(self, serial, auto)
 
     def muckAccept(self, avatar, serial):
         if not self.isSeated(avatar):
-            self.log.warn("player %d can't accept muck before getting a seat", serial)
+            self.log.warn("player %d can't accept muck before getting a seat", serial, refs=[('User', serial, int)])
             return False
         return self.game.muck(serial, want_to_muck=True)
 
