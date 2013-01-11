@@ -31,4 +31,4 @@ install:
 
 # command to run tests, e.g. python setup.py test
 before_script: python setup.py build
-script:  python setup.py test
+script: PYTHON_PATH=$(readlink -f .) python setup.py test
