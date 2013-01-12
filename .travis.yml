@@ -36,7 +36,7 @@ install:
  - pip install http://pypi.python.org/packages/source/p/pyasn1/pyasn1-0.1.4.tar.gz
  - pip install http://pypi.python.org/packages/source/S/SOAPpy/SOAPpy-0.12.5.tar.gz
  - pip install http://pypi.python.org/packages/source/p/python-cjson/python-cjson-1.0.5.tar.gz
- - pip install http://pypi.python.org/packages/source/p/pyOpenSSL/pyOpenSSL-0.13.tar.
+ - pip install http://pypi.python.org/packages/source/p/pyOpenSSL/pyOpenSSL-0.13.tar.gz
  - pip install http://github.com/pokermania/pokerdistutils/archive/master.zip
  - pip install http://github.com/pokermania/reflogging/archive/master.zip
  - pip install http://github.com/pokermania/pokerengine/archive/master.zip
