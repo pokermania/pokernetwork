@@ -2186,7 +2186,7 @@ class PokerService(service.Service):
                 params = tuple(resthost[i] for i in ('serial', 'name', 'host', 'port', 'path')) + (self.STATE_ONLINE,)
                 cursor.execute(
                     "INSERT INTO resthost (serial, name, host, port, path, state) VALUES (%s, %s, %s, %s, %s, %s) " \
-                    "ON DUPLICATE KEY UPDATE SET name=%s, host=%s, port=%s, path=%s, state=%s", 
+                    "ON DUPLICATE KEY UPDATE name=%s, host=%s, port=%s, path=%s, state=%s", 
                 params + params[1:])
                 self.resthost_serial = int(resthost['serial'])
                 cursor.execute("DELETE FROM route WHERE resthost_serial = %s", self.resthost_serial)
