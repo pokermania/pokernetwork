@@ -20,26 +20,33 @@ install:
  - sudo apt-get install -qq gettext
  - sudo apt-get install -qq libmcrypt-dev
  - sudo apt-get install -qq bc
- - pip install http://pypi.python.org/packages/source/w/wstools/wstools-0.4.tar.gz
- - pip install http://pypi.python.org/packages/source/f/fpconst/fpconst-0.7.2.tar.gz
- - pip install http://pypi.python.org/packages/source/z/zope.interface/zope.interface-4.0.1.tar.gz
- - pip install http://pypi.python.org/packages/source/T/Twisted/Twisted-11.1.0.tar.bz2
- - pip install http://pypi.python.org/packages/source/M/MySQL-python/MySQL-python-1.2.3.tar.gz
- - pip install http://ftp.tummy.com/pub/python-memcached/python-memcached-1.48.tar.gz
- - pip install http://pypi.python.org/packages/source/s/simplejson/simplejson-2.6.1.tar.gz
- - pip install http://pypi.python.org/packages/source/c/coverage/coverage-3.5.2.tar.gz
- - pip install http://pypi.python.org/packages/source/p/pycrypto/pycrypto-2.6.tar.gz
- - pip install http://pypi.python.org/packages/source/p/pyasn1/pyasn1-0.1.4.tar.gz
- - pip install http://pypi.python.org/packages/source/S/SOAPpy/SOAPpy-0.12.5.tar.gz
- - pip install http://pypi.python.org/packages/source/p/python-cjson/python-cjson-1.0.5.tar.gz
- - pip install http://pypi.python.org/packages/source/p/pyOpenSSL/pyOpenSSL-0.13.tar.gz
- - pip install http://github.com/pokermania/pokerdistutils/archive/master.zip
- - pip install http://github.com/pokermania/reflogging/archive/master.zip
- - pip install http://github.com/pokermania/pokerengine/archive/master.zip
- - pip install http://github.com/pokermania/pokerpackets/archive/master.zip
+ - pip install -q http://pypi.python.org/packages/source/w/wstools/wstools-0.4.tar.gz
+ - pip install -q http://pypi.python.org/packages/source/f/fpconst/fpconst-0.7.2.tar.gz
+ - pip install -q http://pypi.python.org/packages/source/z/zope.interface/zope.interface-4.0.1.tar.gz
+ - pip install -q http://pypi.python.org/packages/source/T/Twisted/Twisted-11.1.0.tar.bz2
+ - pip install -q http://pypi.python.org/packages/source/M/MySQL-python/MySQL-python-1.2.3.tar.gz
+ - pip install -q http://ftp.tummy.com/pub/python-memcached/python-memcached-1.48.tar.gz
+ - pip install -q http://pypi.python.org/packages/source/s/simplejson/simplejson-2.6.1.tar.gz
+ - pip install -q http://pypi.python.org/packages/source/c/coverage/coverage-3.5.2.tar.gz
+ - pip install -q http://pypi.python.org/packages/source/p/pycrypto/pycrypto-2.6.tar.gz
+ - pip install -q http://pypi.python.org/packages/source/p/pyasn1/pyasn1-0.1.4.tar.gz
+ - pip install -q http://pypi.python.org/packages/source/S/SOAPpy/SOAPpy-0.12.5.tar.gz
+ - pip install -q http://pypi.python.org/packages/source/p/python-cjson/python-cjson-1.0.5.tar.gz
+ - pip install -q http://pypi.python.org/packages/source/p/pyOpenSSL/pyOpenSSL-0.13.tar.gz
+ - pip install -q http://github.com/pokermania/pokerdistutils/archive/master.zip
+ - pip install -q http://github.com/pokermania/reflogging/archive/master.zip
+ - pip install -q http://github.com/pokermania/pokerengine/archive/master.zip
+ - pip install -q http://github.com/pokermania/pokerpackets/archive/master.zip
 
 # command to run tests, e.g. python setup.py test
 before_script:
  - mysqladmin -u root password 123
+ - python setup.py configure -s pokernetwork.paths.src=$(readlink -f ${VIRTUAL_ENV}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages)/pokernetwork
+ - python setup.py configure -s pokernetwork.paths.conf=$(readlink -f ${VIRTUAL_ENV})/share/poker-network/conf
+ - python setup.py configure -s pokernetwork.paths.data=$(readlink -f ${VIRTUAL_ENV})/share/poker-network
+ - python setup.py configure -s pokerengine.paths.src=$(readlink -f ${VIRTUAL_ENV}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/pokerengine)
+ - python setup.py configure -s pokerengine.paths.conf=$(readlink -f ${VIRTUAL_ENV}/share/poker-engine/conf)
+ - python setup.py configure -s pokerengine.paths.data=$(readlink -f ${VIRTUAL_ENV}/share/poker-engine)
+ - python setup.py configure -s test.engine_path=$(readlink -f ${VIRTUAL_ENV}/share/poker-engine)
  - python setup.py build
 script: PYTHON_PATH=$(readlink -f .) python setup.py test
