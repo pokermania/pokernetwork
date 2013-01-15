@@ -10,18 +10,14 @@ before_install: sudo apt-get update -qq
 
 install:
  - sudo apt-get install -qq python-pypoker-eval
- - sudo apt-get install -qq python-cjson
  - sudo apt-get install -qq python-libxml2
  - sudo apt-get install -qq python-libxslt1
  - sudo apt-get install -qq mysql-server
  - sudo apt-get install -qq libmysql++-dev
  - sudo apt-get install -qq memcached
- - sudo apt-get install -qq libtool
  - sudo apt-get install -qq libssl-dev
- - sudo apt-get install -qq rsync
  - sudo apt-get install -qq libmysqlclient-dev
  - sudo apt-get install -qq gettext
- - sudo apt-get install -qq apg
  - sudo apt-get install -qq libmcrypt-dev
  - sudo apt-get install -qq bc
  - pip install http://pypi.python.org/packages/source/w/wstools/wstools-0.4.tar.gz
@@ -43,5 +39,7 @@ install:
  - pip install http://github.com/pokermania/pokerpackets/archive/master.zip
 
 # command to run tests, e.g. python setup.py test
-before_script: python setup.py build
+before_script:
+ - mysqladmin -u root password 123
+ - python setup.py build
 script: PYTHON_PATH=$(readlink -f .) python setup.py test
