@@ -51,7 +51,7 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <listen tcp="19481" />
-  <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
+  <resthost serial="1" host="127.0.0.1" port="19481" path="/POKER_REST" name="" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database

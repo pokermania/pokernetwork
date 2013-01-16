@@ -66,7 +66,7 @@ settings_xml_server_manhole = """\
   <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
   <listen tcp="19481" manhole="%%(manhole_port)i" />
-  <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
+  <resthost serial="1" host="127.0.0.1" port="19481" path="/POKER_REST" name="" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database
@@ -136,7 +136,7 @@ settings_xml_server_open_options = """<?xml version="1.0" encoding="UTF-8"?>
   <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
   <listen tcp="19481" %%(listen_options)s />
-  <resthost host="127.0.0.1" port="19481" path="/POKER_REST" />
+  <resthost serial="1" host="127.0.0.1" port="19481" path="/POKER_REST" name="" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database

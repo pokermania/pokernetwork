@@ -57,7 +57,7 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
   <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="60" currency_serial="1" />
 
   <listen tcp="19482" />
-  <resthost host="127.0.0.1" port="19482" path="/POKER_REST" />
+  <resthost serial="1" name="" host="127.0.0.1" port="19482" path="/POKER_REST" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database
@@ -86,7 +86,7 @@ settings_xml_explain = """<?xml version="1.0" encoding="UTF-8"?>
   <delays autodeal="20" round="0" position="0" showdown="0" autodeal_max="1" finish="0" messages="60" />
 
   <listen tcp="19481" />
-  <resthost host="127.0.0.1" port="19481" path="/POKER_REST" name="explain1" />
+  <resthost serial="2" host="127.0.0.1" port="19481" path="/POKER_REST" name="explain1" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
   <database

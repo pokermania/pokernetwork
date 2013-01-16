@@ -1000,7 +1000,7 @@ class ResthostTestCase(unittest.TestCase):
 
   <listen tcp="19480" />
 
-  <resthost host="HOST" port="7777" path="/PATH" />
+  <resthost serial="1" host="HOST" port="7777" path="/PATH" name="" />
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
@@ -1067,7 +1067,7 @@ class ResthostTestCase(unittest.TestCase):
 
   <listen tcp="19480" />
 
-  <resthost host="HOST" port="7777" path="/PATH" name="explain1" />
+  <resthost serial="1" host="HOST" port="7777" path="/PATH" name="explain1" />
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
