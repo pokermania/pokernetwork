@@ -20,6 +20,8 @@ install:
  - sudo apt-get install -qq gettext
  - sudo apt-get install -qq libmcrypt-dev
  - sudo apt-get install -qq bc
+ - sudo apt-get install -qq apg
+ - sudo apt-get install -qq php5-cli
  - pip install -q http://pypi.python.org/packages/source/w/wstools/wstools-0.4.tar.gz
  - pip install -q http://pypi.python.org/packages/source/f/fpconst/fpconst-0.7.2.tar.gz
  - pip install -q http://pypi.python.org/packages/source/z/zope.interface/zope.interface-4.0.1.tar.gz
