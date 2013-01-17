@@ -29,7 +29,6 @@
 
 import sys
 from os import path
-from pokernetwork.pokerservice import IPokerFactory
 
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
@@ -41,6 +40,7 @@ from zope.interface import implements
 from twisted.trial import unittest, runner, reporter
 from twisted.internet import protocol, reactor, defer
 from twisted.application import service
+from pokernetwork.pokerservice import IPokerFactory
 
 #
 # Must be done before importing pokerclient or pokerclient
