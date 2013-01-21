@@ -53,6 +53,8 @@ settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>
   <table name="Table1" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="4" currency_serial="1" />
   <table name="Table2" variant="holdem" betting_structure="100-200_2000-20000_no-limit" seats="10" player_timeout="4" currency_serial="1" />
 
+  <resthost serial="1" host="127.0.0.1" port="19481" path="/POKER_REST" name="" />
+
   <listen tcp="19480" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" />
@@ -144,7 +146,7 @@ class PokerCrashTestCase(unittest.TestCase):
         buy_in = '300'
         currency_serial = '44'
         cursor = self.db.cursor()
-        cursor.execute('INSERT INTO tourneys (serial,name,buy_in,currency_serial,description_short,description_long,variant,betting_structure,schedule_serial) VALUES (%s, "one", %s, %s, "", "", "holdem", "2-4-no-limit", 0)', ( tourney_serial, buy_in, currency_serial ))
+        cursor.execute('INSERT INTO tourneys (serial,name,buy_in,currency_serial,description_short,description_long,variant,betting_structure,schedule_serial,resthost_serial,sit_n_go) VALUES (%s, "one", %s, %s, "", "", "holdem", "2-4-no-limit", 0, 1, "n")', ( tourney_serial, buy_in, currency_serial ))
         cursor.execute('INSERT INTO user2tourney (user_serial,currency_serial,tourney_serial) VALUES (%s,1,%s)', ( user_serial, tourney_serial ))
         cursor.execute('INSERT INTO user2money (user_serial,currency_serial,amount) VALUES (%s,%s,0)', ( user_serial, currency_serial ))
         cursor.execute('SELECT * FROM tourneys WHERE serial = ' + tourney_serial)
@@ -152,7 +154,7 @@ class PokerCrashTestCase(unittest.TestCase):
         cursor.execute('SELECT amount FROM user2money WHERE user_serial = %s AND currency_serial = %s', ( user_serial, currency_serial ))
         self.assertEqual((0,), cursor.fetchone())
         self.service.startService()
-        cursor.execute('SELECT * FROM tourneys WHERE serial = ' + tourney_serial)
+        cursor.execute('SELECT * FROM tourneys WHERE serial = %s', tourney_serial)
         self.assertEqual(0, cursor.rowcount)
         cursor.execute('SELECT amount FROM user2money WHERE user_serial = %s AND currency_serial = %s', ( user_serial, currency_serial ))
         self.assertEqual((300,), cursor.fetchone())
@@ -167,14 +169,14 @@ class PokerCrashTestCase(unittest.TestCase):
         #
         # Sit and go in 'registering' state is trashed
         #
-        cursor.execute('INSERT INTO tourneys (serial,name,description_short,description_long,variant,betting_structure,currency_serial,schedule_serial) VALUES (%s, "one", "", "", "holdem", "2-4-no-limit", 0, 0)', sng_tourney_serial)
+        cursor.execute('INSERT INTO tourneys (serial,name,description_short,description_long,variant,betting_structure,currency_serial,schedule_serial, resthost_serial) VALUES (%s, "one", "", "", "holdem", "2-4-no-limit", 0, 0, 1)', sng_tourney_serial)
         cursor.execute('INSERT INTO user2tourney (user_serial,currency_serial,tourney_serial) VALUES (%s,1,%s)', ( user_serial, sng_tourney_serial ))
         cursor.execute('SELECT * FROM tourneys WHERE serial = ' + sng_tourney_serial)
         self.assertEqual(1, cursor.rowcount)
         #
         # Regular in 'registering' state is kept
         #
-        cursor.execute('INSERT INTO tourneys (serial,name,sit_n_go,start_time,description_short,description_long,variant,betting_structure,currency_serial,schedule_serial) VALUES (%s, "one", "n", %s, "", "", "holdem", "2-4-no-limit", 0, 0)', ( regular_tourney_serial, seconds() + 2000))
+        cursor.execute('INSERT INTO tourneys (serial,name,sit_n_go,start_time,description_short,description_long,variant,betting_structure,currency_serial,schedule_serial, resthost_serial) VALUES (%s, "one", "n", %s, "", "", "holdem", "2-4-no-limit", 0, 0, 1)', ( regular_tourney_serial, seconds() + 2000))
         cursor.execute('INSERT INTO user2tourney (user_serial,currency_serial,tourney_serial) VALUES (%s,1,%s)', ( user_serial, regular_tourney_serial ))
         cursor.execute('SELECT * FROM tourneys WHERE serial = ' + regular_tourney_serial)
         self.assertEqual(1, cursor.rowcount)
@@ -185,15 +187,15 @@ class PokerCrashTestCase(unittest.TestCase):
         #
         # Sanity checks
         #
-        self.assertEqual([int(regular_tourney_serial)], self.service.tourneys.keys())
+        self.assertEqual([int(sng_tourney_serial), int(regular_tourney_serial)], self.service.tourneys.keys())
         cursor.execute('SELECT * FROM user2tourney WHERE tourney_serial = %s', regular_tourney_serial)
         self.assertEqual(1, cursor.rowcount)
         cursor.execute('SELECT * FROM user2tourney WHERE tourney_serial = %s', sng_tourney_serial)
-        self.assertEqual(0, cursor.rowcount)
+        self.assertEqual(1, cursor.rowcount)
         cursor.execute('SELECT * FROM user2tourney')
-        self.assertEqual(1, cursor.rowcount)
+        self.assertEqual(2, cursor.rowcount)
         cursor.execute('SELECT * FROM tourneys')
-        self.assertEqual(1, cursor.rowcount)
+        self.assertEqual(2, cursor.rowcount)
         cursor.close()
 
 # -----------------------------------------------------------------------------------------------------

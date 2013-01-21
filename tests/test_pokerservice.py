@@ -1805,9 +1805,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         sql = '''
             INSERT INTO `tourneys` (`serial`, `resthost_serial`, `name`, `description_short`, `description_long`, `players_quota`, `players_min`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `start_time`, `state`, `schedule_serial`)
             VALUES 
-                ('100', '0', 'sitngo2_moved', 'Sit and Go 2 players, Moved', '', '2', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'y', %s, 'moved', '200'),
+                ('100', '0', 'sitngo2_moved', 'Sit and Go 2 players, Moved', '', '2', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'y', %s, 'registering', '200'),
                 ('101', '0', 'sitngo2_registering', 'Sit and Go 2 players, Registering', '', '2', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'y', %s, 'registering', '201'),
-                ('102', '0', 'regular_moved', 'Regular 2 players, Registering', '', '2', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'n', %s, 'moved', '202'),
+                ('102', '0', 'regular_moved', 'Regular 2 players, Registering', '', '2', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'n', %s, 'registering', '202'),
                 ('103', '0', 'regular_registering', 'Regular 2 players, Registering', '', '2', '2', 'holdem', 'level-15-30-no-limit', '2', 1, '300000', '0', 'n', %s, 'registering', '203')
         '''
         sql_users = '''
@@ -1820,9 +1820,10 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         '''
         # tourney should be spawned even if it started in the past!
         now = seconds()
-        cursor.execute(sql, [now-check_delay]*4)
+        cursor.execute(sql, [now-check_delay]*3+[now-check_delay*2])
         cursor.execute(sql_users)
         cursor.close()
+
         # call checkTourneysSchedule
         self.service.checkTourneysSchedule()
         
@@ -1830,8 +1831,8 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertTrue(100 in self.service.tourneys)
         self.assertEquals([4], sorted(self.service.tourneys[100].players))
         
-        # sng which is still in registering but is in the past should not be in the list
-        self.assertFalse(101 in self.service.tourneys)
+        # sng which is still in registering but is in the past should also be in the list
+        self.assertTrue(101 in self.service.tourneys)
         
         # regular should now be in the list, even if it would have started slightly in the past
         self.assertTrue(102 in self.service.tourneys)
@@ -1843,16 +1844,17 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         d = defer.Deferred()
         def endTourney(status):
             """finish the tourney"""
-            game = self.service.tourneys[102].games[0]
-            in_position = game.getSerialInPosition()
-            game.callNraise(in_position, game.maxBuyIn())
-            in_position = game.getSerialInPosition()
-            game.call(in_position)
+            for tourney_serial in (102,):
+                game = self.service.tourneys[tourney_serial].games[0]
+                in_position = game.getSerialInPosition()
+                game.callNraise(in_position, game.maxBuyIn())
+                in_position = game.getSerialInPosition()
+                game.call(in_position)
 
-            for table in self.service.tables.values():
-                table.update()
-            for timer in self.service.timer_remove_player.values():
-                timer.reset(0)
+                for table in self.service.tables.values():
+                    table.update()
+                for timer in self.service.timer_remove_player.values():
+                    timer.reset(0)
             d_in = defer.Deferred()
             reactor.callLater(0, d_in.callback, True)
             return d_in 
@@ -2245,7 +2247,10 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         tourney.currency_serial = 1
         tourney.via_satellite = 0
         self.service.tourneys[tourney_serial] = tourney
-        self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial, tourney_serial = tourney_serial))
+        orig = self.service.tourneyIsRelevant
+        self.service.tourneyIsRelevant = lambda *args,**kw: True
+        self.assertTrue(self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial, tourney_serial = tourney_serial)))
+        self.service.tourneyIsRelevant = orig
         packet = PacketPokerTourneyUnregister(serial = user_serial, tourney_serial = tourney_serial)
         return_packet = self.service.tourneyUnregister(packet)
         self.assertEqual(packet, return_packet)
@@ -4867,8 +4872,14 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 self.assertEquals(serial, 194)
                 return True
             
-        acceptList = [ "UPDATE user2money SET amount = amount"]
-        acceptListRowCount = [0]
+        acceptList = [ 
+            "UPDATE user2money SET amount = amount", 
+            "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet FROM user2table",
+            "UPDATE tables SET players",
+            "SELECT serial FROM tourneys WHERE state IN"
+
+        ]
+        acceptListRowCount = [0,1,0,0]
         class MockCursor(MockCursorBase):
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, acceptList)
@@ -4888,10 +4899,15 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         log_history.reset()
 
+        orig = self.service.tourneyIsRelevant
+        self.service.tourneyIsRelevant = lambda *args,**kw: True
         self.failIf(self.service.tourneyRegister(MockPacket()))
+        self.service.tourneyIsRelevant = orig
+
         self.failUnless(hasattr(client, "errorPackets"))
         self.assertEquals(len(client.errorPackets), 1)
         pack = client.errorPackets[0]
+
         self.assertEquals(pack.type, PACKET_ERROR)
         self.failUnless(pack.message.find('Not enough money to enter the tournament 526') == 0)
         self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
@@ -4922,8 +4938,15 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 self.assertEquals(serial, 194)
                 return True
 
-        acceptList = [ "UPDATE user2money SET amount = amount"]
-        acceptListRowCount = [2]
+        acceptList = [ 
+            "UPDATE user2money SET amount = amount", 
+            "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet FROM user2table",
+            "UPDATE tables SET players",
+            "SELECT serial FROM tourneys WHERE state IN"
+
+        ]
+        # acceptListRowCount = [0,1,0,0]
+        acceptListRowCount = [2,1,0,0]
         class MockCursor(MockCursorBase):
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, acceptList)
@@ -4943,7 +4966,11 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         log_history.reset()
 
+
+        orig = self.service.tourneyIsRelevant
+        self.service.tourneyIsRelevant = lambda *args,**kw: True
         self.failIf(self.service.tourneyRegister(MockPacket()))
+        self.service.tourneyIsRelevant = orig
         self.failUnless(hasattr(client, "errorPackets"))
         self.assertEquals(len(client.errorPackets), 1)
         pack = client.errorPackets[0]
@@ -4984,7 +5011,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 MockCursorBase.__init__(cursorSelf, self,
                                         [ "UPDATE user2money SET amount = amount",
                                        "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES",
-                                       "SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE"])
+                                       "SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE",
+                                       "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet FROM user2table",
+                                       "UPDATE tables SET players",
+                                       "SELECT serial FROM tourneys WHERE state IN"])
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -5010,7 +5040,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         log_history.reset()
 
+        orig = self.service.tourneyIsRelevant
+        self.service.tourneyIsRelevant = lambda *args,**kw: True
         self.failIf(self.service.tourneyRegister(MockPacket()))
+        self.service.tourneyIsRelevant = orig
         self.failUnless(hasattr(client, "errorPackets"))
         self.assertEquals(len(client.errorPackets), 1)
         pack = client.errorPackets[0]

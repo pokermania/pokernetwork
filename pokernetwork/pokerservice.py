@@ -1590,6 +1590,16 @@ class PokerService(service.Service):
                 avatar.sendPacketVerbose(error)
             return False
 
+        if not self.tourneyIsRelevant(tourney):
+            error = PacketError(
+                other_type = PACKET_POKER_TOURNEY_REGISTER,
+                code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
+                message = "Registration refused in tournament %d, (may be moved to another resthost " % tourney_serial
+            )
+            for avatar in avatars:
+                avatar.sendPacketVerbose(error)
+            return False
+
         cursor = self.db.cursor()
 
         # Buy in
@@ -2282,7 +2292,7 @@ class PokerService(service.Service):
     def abortRunningTourneys(self):
         cursor = self.db.cursor()
         try:
-            cursor.execute("SELECT serial FROM tourneys WHERE state IN ('running', 'break', 'breakwait')")
+            cursor.execute("SELECT serial FROM tourneys WHERE state IN ('running', 'breakwait')")
             if cursor.rowcount:
                 for (tourney_serial,) in cursor.fetchall():
                     self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_CANCELED, param1 = tourney_serial)
@@ -2314,19 +2324,21 @@ class PokerService(service.Service):
             sql = \
                 "SELECT * FROM tourneys " \
                 "WHERE resthost_serial = %s " \
-                "AND (" \
-                    "(state = 'registering' AND start_time >= %s) OR " \
-                    "(state = 'moved' AND start_time >= %s)" \
-                ") " \
+                "AND state = 'registering' " \
+                "AND (start_time >= %s OR sit_n_go = 'y') " \
                 + tourney_serials_sql
-            params = (self.resthost_serial, now, now-2*CHECK_TOURNEYS_SCHEDULE_DELAY)
+            params = (self.resthost_serial, now-2*CHECK_TOURNEYS_SCHEDULE_DELAY)
             cursor.execute(sql, params)
             self.log.debug("restoreTourneys: %s", cursor._executed)
             for row in cursor.fetchall():
                 restored_info.append((row['serial'], row['schedule_serial']))
                 
                 tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'], row['prize_currency'])
-                tourney.state = row['state']
+                # When the tourney should have allready started:
+                # tourney.register would call updateRunning and try to start the tourney because it is allready in the 
+                # state registering would cancel the tourney since there are not enough players.
+                # We cannot set the tourney state (to registering) yet because the we need to register the player first
+                tourney.state = None
                 cursor.execute(
                     "SELECT u.serial, u.name FROM users AS u " \
                     "JOIN user2tourney AS u2t " \
@@ -2336,6 +2348,8 @@ class PokerService(service.Service):
                 self.log.debug("restoreTourneys: %s", cursor._executed)
                 for user in cursor.fetchall():
                     tourney.register(user['serial'],user['name'])
+                
+                tourney.state = row['state']
                 cursor.execute(
                     "REPLACE INTO route VALUES (0, %s, %s, %s)",
                     (row['serial'], now, self.resthost_serial)
@@ -2358,16 +2372,13 @@ class PokerService(service.Service):
             # abort still running tourneys and refund buyin
             self.abortRunningTourneys()
             
-            # trash tourneys and their user2tourney data which are either sit'n'go and aborted
-            # or in registering state with a starttime in the past+60s
+            # trash tourneys and their user2tourney data which
+            # are in registering state with a starttime in the past+60s
+            # CHECKME: realy no sitngos and whats with the +60s?
             where = \
                 "WHERE t.resthost_serial = %s " \
-                "AND ( " \
-                    "(t.sit_n_go = 'y' AND t.state IN ('aborted', 'registering')) " \
-                    "OR (t.state = 'registering' AND t.start_time < %s) " \
-                    "OR (t.state = 'moved' AND t.start_time < %s) " \
-                ")"
-            params = (self.resthost_serial, now, now-2*CHECK_TOURNEYS_SCHEDULE_DELAY)
+                "AND t.sit_n_go = 'n' AND t.state = 'registering' AND t.start_time < %s"
+            params = (self.resthost_serial, now)
             cursor.execute(
                 "UPDATE tourneys AS t " \
                     "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
@@ -2379,13 +2390,17 @@ class PokerService(service.Service):
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: rows: %d, sql: %s", cursor.rowcount, cursor._executed)
             cursor.execute(
-                "DELETE u2t FROM user2tourney AS u2t LEFT JOIN tourneys AS t ON t.serial = u2t.tourney_serial " + where,
-                params
+                "DELETE u2t FROM user2tourney AS u2t " \
+                "LEFT JOIN tourneys AS t ON t.serial = u2t.tourney_serial " \
+                "WHERE t.resthost_serial = %s AND t.state = 'aborted'",
+                (self.resthost_serial,)
             )
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: %s", cursor._executed)
-            cursor.execute("DELETE t FROM tourneys AS t " + where,
-                params
+            cursor.execute(
+                "DELETE t FROM tourneys AS t " \
+                "WHERE t.resthost_serial = %s AND t.state = 'aborted'",
+                (self.resthost_serial,)
             )
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: %s", cursor._executed)
