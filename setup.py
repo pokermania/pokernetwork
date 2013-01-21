@@ -30,7 +30,7 @@ setup(
     data_files=[
         ('bin', EXECUTABLES),
         ('share/poker-network/database', glob('database/*.sql')),
-        ('share/poker-network/conf', ['conf/poker.server.xml', 'conf/poker.bot.xml', 'conf/poker.pem', 'conf/badwords.txt', 'conf/poker.pme']),
+        ('share/poker-network/conf', ['conf/poker.server.xml', 'conf/poker.bot.xml', 'conf/poker.pem', 'conf/badwords.txt', 'conf/poker.pem']),
         ('share/man/man8', [
             'pokernetwork/pokerserver.8',
             'pokernetwork/pokerbot.8',
