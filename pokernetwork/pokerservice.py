@@ -397,6 +397,7 @@ class PokerService(service.Service):
     def createTable(self, owner, description):
         c = self.db.cursor()
         try:
+            tourney = description.get('tourney')
             c.execute(lex(
                 """ INSERT INTO tables
                     SET
@@ -405,7 +406,7 @@ class PokerService(service.Service):
                 """),
                 (
                     self.resthost_serial,
-                    description.get('tourney_serial')
+                    tourney.serial if tourney else None
                 )
             )
             if c.rowcount != 1:
