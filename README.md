@@ -34,9 +34,9 @@ as player P timeouted or player P wins the pot.
 Development status : Production [![Build Status](https://travis-ci.org/pokermania/pokernetwork.png)](https://travis-ci.org/pokermania/pokernetwork)
 -------------------------------
 
-Features may still be added
-The protocol is rarely changed (backwards compatible if possible)
-The classes API is not stable
+* Features may still be added
+* The protocol is rarely changed (backwards compatible if possible)
+* The classes API is not stable
 
 Download, feedback and bug reports
 
