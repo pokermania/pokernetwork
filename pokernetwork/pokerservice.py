@@ -2293,7 +2293,7 @@ class PokerService(service.Service):
     def abortRunningTourneys(self):
         cursor = self.db.cursor()
         try:
-            cursor.execute("SELECT serial FROM tourneys WHERE state IN ('running', 'breakwait')")
+            cursor.execute("SELECT serial FROM tourneys WHERE state IN ('running', 'break', 'breakwait')")
             if cursor.rowcount:
                 for (tourney_serial,) in cursor.fetchall():
                     self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_CANCELED, param1 = tourney_serial)
@@ -2335,7 +2335,7 @@ class PokerService(service.Service):
                 restored_info.append((row['serial'], row['schedule_serial']))
                 
                 tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'], row['prize_currency'])
-                # When the tourney should have allready started:
+                # When the tourney should have already started:
                 # tourney.register would call updateRunning and try to start the tourney because it is allready in the 
                 # state registering would cancel the tourney since there are not enough players.
                 # We cannot set the tourney state (to registering) yet because the we need to register the player first
