@@ -70,7 +70,7 @@ def makeService(configuration):
     #
     root_logger = reflogging.RootLogger()
     root_logger.set_app_name('network')
-    # accuire root log_level
+    # acquire root log_level
     log_level = settings.headerGetInt('/server/logging/@log_level') or 30
     if 'LOG_LEVEL' in os.environ:
         log_level = int(os.environ['LOG_LEVEL'])
@@ -194,6 +194,5 @@ def run(argv):
     reactor.run()
 
 if __name__ == '__main__':
-    # Does not need coverage since we call run directly in the tests.
-    run(sys.argv) # pragma: no cover
+    run(sys.argv)
     
