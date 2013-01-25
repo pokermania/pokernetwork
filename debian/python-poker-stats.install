@@ -4,4 +4,4 @@
 pokerstats/*.xml usr/share/poker-network/conf
 pokerstats/pokerstats usr/bin
 pokerstats/*.py usr/share/pyshared/pokerstats
-README AUTHORS LICENSE AGPLv3 GPLv3 usr/share/doc/python-poker-stats
+README.md AUTHORS LICENSE AGPLv3 GPLv3 usr/share/doc/python-poker-stats

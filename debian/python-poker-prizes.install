@@ -4,4 +4,4 @@
 pokerprizes/*.py usr/share/pyshared/pokerprizes
 pokerprizes/*.xml usr/share/poker-network/conf
 pokerprizes/*.sql usr/share/poker-network/prizes
-README AUTHORS LICENSE AGPLv3 GPLv3 usr/share/doc/python-poker-prizes
+README.md AUTHORS LICENSE AGPLv3 GPLv3 usr/share/doc/python-poker-prizes

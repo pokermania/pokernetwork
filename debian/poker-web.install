@@ -1,4 +1,4 @@
 pokerweb/conf/* etc/poker-web
 pokerweb/database usr/share/poker-web
-README AUTHORS LICENSE AGPLv3 GPLv3 usr/share/doc/poker-web
+README.md AUTHORS LICENSE AGPLv3 GPLv3 usr/share/doc/poker-web
 pokerweb/pages/*.txt pokerweb/pages/*.html pokerweb/pages/*.php pokerweb/pages/*.ref pokerweb/pages/*.jpg usr/share/poker-web
