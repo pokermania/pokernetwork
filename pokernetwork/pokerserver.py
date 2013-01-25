@@ -164,10 +164,6 @@ def makeService(configuration):
         })
         manhole_service.name = 'manhole'
         manhole_service.setServiceParent(serviceCollection)
-        log.warn(
-            "PokerManhole: manhole is useful for debugging, however, "
-            "it can be a security risk and should be used only during debugging"
-        )
 
     return serviceCollection
 

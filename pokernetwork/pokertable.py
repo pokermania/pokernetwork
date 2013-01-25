@@ -1050,10 +1050,10 @@ class PokerTable:
             self.log.inform("player %d is already seated", serial, refs=[('User', serial, int)])
             return False
         if not self.game.canAddPlayer(serial):
-            self.log.warn("table refuses to seat player %d", serial, refs=[('User', serial, int)])
+            self.log.inform("table refuses to seat player %d", serial, refs=[('User', serial, int)])
             return False
         if seat != -1 and seat not in self.game.seats_left:
-            self.log.warn("table refuses to seat player %d at seat %d", serial, seat, refs=[('User', serial, int)])
+            self.log.inform("table refuses to seat player %d at seat %d", serial, seat, refs=[('User', serial, int)])
             return False
 
         amount = self.game.buyIn() if self.transient else 0
