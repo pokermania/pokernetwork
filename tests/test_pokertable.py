@@ -117,7 +117,7 @@ exampleHand =  [ \
         ('round', 'round5', river, { 1 : hand1, 2 : hand2}), \
         ('showdown', river, {1 : hand1, 2 : hand2}), \
         ('showdown', river_extra_river, {1 : hand1_extra_river, 2 : hand2_extra_river}), \
-        ('position', 1), \
+        ('position', 1, 13), \
         ('blind_request', 1, 222, 735, 'big_and_dead'), \
         ('wait_blind', 1), \
         ('blind', 1, 222, 0), \

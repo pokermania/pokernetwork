@@ -69,8 +69,10 @@ def history2packets(history, game_id, previous_dealer, cache):
 
         elif event_type == "position":
             position = event[1]
+            serial = event[2] if event[2] is not None else 0
             packets.append(PacketPokerPosition(
                 game_id = game_id,
+                serial = serial,
                 position = position
             ))
 
