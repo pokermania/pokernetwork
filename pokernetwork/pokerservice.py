@@ -2008,7 +2008,7 @@ class PokerService(service.Service):
                         t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
                         c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
                     FROM tables AS t
-                    LEFT JOIN tableconfigs AS c
+                    INNER JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
                 """ + orderBy
             )
@@ -2022,7 +2022,7 @@ class PokerService(service.Service):
                     FROM user2table AS u2t
                     LEFT JOIN tables AS t
                         ON t.serial = u2t.table_serial
-                    LEFT JOIN tableconfigs AS c
+                    INNER JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
                     WHERE u2t.user_serial = %s
                 """ + orderBy,
@@ -2035,7 +2035,7 @@ class PokerService(service.Service):
                         t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
                         c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
                     FROM tables AS t
-                    LEFT JOIN tableconfigs AS c
+                    INNER JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
                     WHERE c.name =  %s
                 """,
@@ -2048,7 +2048,7 @@ class PokerService(service.Service):
                         t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
                         c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
                     FROM tables AS t
-                    LEFT JOIN tableconfigs AS c
+                    INNER JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
                     WHERE c.currency_serial =  %s
                 """ + orderBy,
@@ -2089,7 +2089,7 @@ class PokerService(service.Service):
                         t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
                         c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
                     FROM tables AS t
-                    LEFT JOIN tableconfigs AS c
+                    INNER JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
                     WHERE name =  %s
                 """,
@@ -2146,7 +2146,7 @@ class PokerService(service.Service):
                 c.skin,
                 t.tourney_serial
             FROM tables AS t
-            LEFT JOIN tableconfigs AS c
+            INNER JOIN tableconfigs AS c
                 ON c.serial = t.tableconfig_serial
         """
         sqlQuestionMarkParameterList = []
