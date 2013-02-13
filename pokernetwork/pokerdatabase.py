@@ -139,11 +139,12 @@ class PokerDatabase:
 
     def setVersionInDatabase(self, version):
         cursor = self.cursor()
-        sql = "update server set version = '%s'" % version
-        cursor.execute(sql)
-        if cursor.rowcount not in (0, 1):
-            raise ExceptionUpgradeFailed, "%s: changed %d rows, expected one or zero" % ( sql, cursor.rowcount )
-        cursor.close()
+        try:
+            cursor.execute("UPDATE server SET version = %s", (version,))
+            if cursor.rowcount not in (0, 1):
+                raise ExceptionUpgradeFailed, "%s: changed %d rows, expected one or zero" % (cursor._executed, cursor.rowcount)
+        finally:
+            cursor.close()
         
     def checkVersion(self):
         if version != self.version:

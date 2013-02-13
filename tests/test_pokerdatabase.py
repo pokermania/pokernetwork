@@ -282,7 +282,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
         try:
             self.db.setVersionInDatabase("1.3.0")
         except ExceptionUpgradeFailed, euf: # handle trouble
-            self.assertEquals(euf.args[0], "update server set version = '1.3.0': changed 2 rows, expected one or zero")
+            self.assertEquals(euf.args[0], "UPDATE server SET version = '1.3.0': changed 2 rows, expected one or zero")
     # ----------------------------------------------------------------------------
     def test08_forceTestDatabaseTooOld(self):
         import pokernetwork.version

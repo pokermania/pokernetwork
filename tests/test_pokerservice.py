@@ -4487,8 +4487,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 cursorSelf.rowcount = 0
                 cursorSelf.counts = {}
                 cursorSelf.acceptedStatements = [
-                    "update user2tourney set",
-                    "SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE",
+                    "UPDATE user2tourney SET",
+                    "SELECT user_serial, table_serial, currency_serial FROM tables, user2table WHERE",
                     "DELETE FROM tables WHERE"
                 ]
                 cursorSelf.row = ()
@@ -4555,16 +4555,16 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         self.assertEquals(self.service.db.cursorValue.counts, {
             'DELETE FROM tables WHERE': 0,
-            'SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE': 0,
-            'update user2tourney set': 1
+            'SELECT user_serial, table_serial, currency_serial FROM tables, user2table WHERE': 0,
+            'UPDATE user2tourney SET': 1
         })
         self.assertEquals(self.service.tables[22].updateCount, 1)
 
         msgs = log_history.get_all()
         self.assertEquals(len(msgs), 3)
         self.assertEquals(msgs[0], 'tourneyGameFilled: player 10 disconnected')
-        self.assertEquals(msgs[1].find('tourneyGameFilled: update user2tourney set'), 0)
-        self.assertEquals(msgs[2].find('modified 0 rows (expected 1): update user2tourney set'), 0)
+        self.assertEquals(msgs[1].find('tourneyGameFilled: UPDATE user2tourney SET'), 0)
+        self.assertEquals(msgs[2].find('modified 0 rows (expected 1): UPDATE user2tourney SET'), 0)
 
         self.service.db = oldDb
         self.service.seatPlayer = oldSeatPlayer
@@ -6217,12 +6217,12 @@ class PokerServiceCoverageTests(unittest.TestCase):
                              (2, "Protocol is False")]:
             self.assertEquals(msgs[ii], "broadcast: avatar %s excluded" % value)
     def test68_messageCheck(self):
-        validStatements = ["SELECT serial,message FROM messages",
+        validStatements = ["SELECT serial, message FROM messages",
                            "UPDATE messages SET"]
         class MockCursor(MockCursorBase):
             def fetchall(mcSelf): return mcSelf.rows
             def statementActions(cursorSelf, sql, statement):
-                if statement == "SELECT serial,message FROM messages":
+                if statement == "SELECT serial, message FROM messages":
                     cursorSelf.rowcount = 2
                     cursorSelf.rows = [ (7325, "Greeting 1"), (22235, "Goodbye") ]
                 elif statement == "UPDATE messages SET":
@@ -6265,7 +6265,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         self.service.realMessageCheck()
 
-        self.assertEquals(self.service.db.cursorValue.counts["SELECT serial,message FROM messages"], 1)
+        self.assertEquals(self.service.db.cursorValue.counts["SELECT serial, message FROM messages"], 1)
         self.assertEquals(self.service.db.cursorValue.counts["UPDATE messages SET"], 2)
         self.assertEquals(len(self.service.avatars[0].packets), 2)
         self.assertEquals(self.service.avatars[0].packets[0].string, "Greeting 1")
