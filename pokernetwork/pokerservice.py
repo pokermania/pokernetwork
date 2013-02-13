@@ -2945,14 +2945,11 @@ class PokerService(service.Service):
                     (serial, table_id, currency_serial, currency_serial)
                 )
                 if c.rowcount not in (0, 2):
-                    self.log.error("leavePlayer: modified %d rows (expected 0 or 2)\n%s", c.rowcount, c._executed)
-                    # TODO status False?
+                    self.log.error("leavePlayer: modified %d rows (expected 0 or 2)\n%s", c.rowcount, c._executed, refs=[('User', serial, int)])
             c.execute("DELETE FROM user2table WHERE user_serial = %s AND table_serial = %s", (serial , table_id))
             if c.rowcount != 1:
-                self.log.error("leavePlayer: modified %d rows (expected 1)\n%s", c.rowcount, c._executed)
-                # TODO status False?
+                self.log.error("leavePlayer: modified %d rows (expected 1)\n%s", c.rowcount, c._executed, refs=[('User', serial, int)])
             self.databaseEvent(event = PacketPokerMonitorEvent.LEAVE, param1=serial, param2=table_id)
-            # TODO return status? just used in tests
         finally:
             c.close()
 
