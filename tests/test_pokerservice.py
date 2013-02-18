@@ -1789,9 +1789,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     def test14_2_checkTourneysSchedule_recreate_tourney(self):
         class LockCheckMuck(object):
-            def __init__(*a,**kw): pass
-            def start(*a,**kw): pass
-            def stop(*a,**kw): pass
+            def __init__(lockSelf, *a,**kw): pass
+            def start(lockSelf, *a,**kw): pass
+            def stop(lockSelf, *a,**kw): pass
 
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 100
         pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = check_delay = 10
@@ -4785,11 +4785,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.type, PACKET_ERROR)
         self.failUnless(pack.message.find('Player 44 already registered in tournament 99') == 0)
         self.assertEquals(pack.other_type, PACKET_POKER_TOURNEY_REGISTER)
-        self.assertEquals(pack.code,
-                          PacketPokerTourneyRegister.ALREADY_REGISTERED)
+        self.assertEquals(pack.code, PacketPokerTourneyRegister.ALREADY_REGISTERED)
         msgs = log_history.get_all()
         self.assertEquals(len(msgs), 1)
-        self.failUnless(msgs[0].find('ERROR  type = 3 length = 56 message = Player 44 already registered in tournament 99  code = 2')  == 0)
+        self.failUnless(msgs[0].find('ERROR  type = 3 length = 55 message = Player 44 already registered in tournament 99 code = 2')  == 0)
         self.failUnless(msgs[0].find('other_type = %d' % PACKET_POKER_TOURNEY_REGISTER) >= 0)
     def test23_tourneyRegister_tourneyRefuseRegistration(self):
         self.service = pokerservice.PokerService(self.settings)
@@ -4827,7 +4826,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.code, PacketPokerTourneyRegister.REGISTRATION_REFUSED)
         msgs = log_history.get_all()
         self.assertEquals(len(msgs), 1)
-        self.failUnless(msgs[0].find('ERROR  type = 3 length = 49 message = Registration refused in tournament 123') == 0)
+        self.failUnless(msgs[0].find('ERROR  type = 3 length = 48 message = Registration refused in tournament 123') == 0)
 
     def test22_tourneyRegister_viaSatellite(self):
         self.service = pokerservice.PokerService(self.settings)

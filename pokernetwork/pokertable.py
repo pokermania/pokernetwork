@@ -960,10 +960,9 @@ class PokerTable:
         player.setUserData(pokeravatar.DEFAULT_PLAYER_USER_DATA.copy())
         player.money = money
         player.buy_in_payed = True
-        self.game.sit(serial)
         self.game.autoBlindAnte(serial)
-        if sit_out:
-            self.game.sitOut(serial)
+        if not self.game.isBroke(serial) and not sit_out:
+            self.game.sit(serial)
         self.game.close()
 
     def movePlayerFrom(self, serial, to_game_id):

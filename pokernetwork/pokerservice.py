@@ -721,13 +721,33 @@ class PokerService(service.Service):
                 """),
                 (self.resthost_serial, seconds())
             )
-            self.tourneys_schedule = dict((schedule['serial'], schedule) for schedule in cursor.fetchall())
+            self.tourneys_schedule, tourneys_schedule_old = dict((schedule['serial'], schedule) for schedule in cursor.fetchall()), self.tourneys_schedule
+            self.deleteObsoleteTourneys(set(tourneys_schedule_old) - set(self.tourneys_schedule))
             self.checkTourneysSchedule()
             self.cancelTimer('updateTourney')
             self.timer['updateTourney'] = reactor.callLater(UPDATE_TOURNEYS_SCHEDULE_DELAY, self.updateTourneysSchedule)
         finally:
             cursor.close()
 
+    def deleteObsoleteTourneys(self, tourneys_schedule_serials_obsolete):
+        '''delete all tourneys that are associated with an obsolete tourney schedule serial'''
+        
+        if not tourneys_schedule_serials_obsolete: return
+        
+        cursor = self.db.cursor()
+        try:
+            format_in = ", ".join(["%s"] * len(tourneys_schedule_serials_obsolete))
+            sql = \
+                "SELECT serial FROM tourneys_schedule " \
+                "WHERE resthost_serial != %%s " \
+                "AND serial IN (%s)" % (format_in,)
+            cursor.execute(sql, (self.resthost_serial,) + tuple(tourneys_schedule_serials_obsolete))
+            for (schedule_serial,) in cursor.fetchall():
+                for tourney in self.schedule2tourneys[schedule_serial]:
+                    self.deleteTourney(tourney)
+        finally:
+            cursor.close()
+    
     def checkTourneysSchedule(self):
         self.log.debug("checkTourneysSchedule")
         now = seconds()
@@ -1154,7 +1174,7 @@ class PokerService(service.Service):
         table = self.createTable(0, {
             'name': "%s (%s)" % (
                 tourney.name,
-                str(self.tourney_table_serial)
+                self.tourney_table_serial
             ),
             'variant': tourney.variant,
             'betting_structure': tourney.betting_structure,
@@ -1175,10 +1195,8 @@ class PokerService(service.Service):
 
     def tourneyDestroyGame(self, tourney, game):
         wait = int(self.delays.get('extra_wait_tourney_finish', 0))
-        if wait > 0:
-            reactor.callLater(wait, self.tourneyDestroyGameActual, game)
-        else:
-            self.tourneyDestroyGameActual(game)
+        if wait > 0: reactor.callLater(wait, self.tourneyDestroyGameActual, game)
+        else: self.tourneyDestroyGameActual(game)
 
     def tourneyMovePlayer(self, tourney, from_game_id, to_game_id, serial):
         cursor = self.db.cursor()
@@ -1217,22 +1235,21 @@ class PokerService(service.Service):
         timeout_key = "%s_%s" % (tourney.serial,serial)
         for avatar in avatars_seated:
             table.sitOutPlayer(avatar, serial)
-        if not now:
-            if timeout_key not in self.timer_remove_player:
-                delay = int(self.delays.get('tourney_kick', 20))
-                self.timer_remove_player[timeout_key] = reactor.callLater(delay, self.tourneyRemovePlayer, tourney, serial)
-        else:
-            if timeout_key in self.timer_remove_player:
-                if self.timer_remove_player[timeout_key].active():
-                    self.timer_remove_player[timeout_key].cancel()
-                del self.timer_remove_player[timeout_key]
-            self.tourneyRemovePlayer(tourney, serial)
 
+        wait = 0 if now else max(0,int(self.delays.get('tourney_kick', 20)))
+        
+        if not wait and timeout_key in self.timer_remove_player:
+            if self.timer_remove_player[timeout_key].active():
+                self.timer_remove_player[timeout_key].cancel()
+            del self.timer_remove_player[timeout_key]
+
+        if wait: self.timer_remove_player[timeout_key] = reactor.callLater(wait, self.tourneyRemovePlayer, tourney, serial)
+        else: self.tourneyRemovePlayer(tourney, serial)
 
     def tourneyRemovePlayer(self, tourney, serial):
         self.log.debug('remove now tourney(%d) serial(%d)', tourney.serial, serial)
         # the following line causes an IndexError if the player is not in any game. this is a good thing. 
-        table = [t for t in self.tables.itervalues() if t.tourney is tourney and serial in t.game.serial2player][0]
+        table = (t for t in self.tables.itervalues() if t.tourney is tourney and serial in t.game.serial2player).next()
         table.kickPlayer(serial)
         tourney.finallyRemovePlayer(serial)
         
@@ -1425,7 +1442,7 @@ class PokerService(service.Service):
         packet.table2serials = table2serials
         user2money = {}
         if len(table2serials) > 0:
-            cursor.execute("SELECT user_serial, money FROM user2table WHERE table_serial IN ( " + ",".join(map(lambda x: str(x), table2serials.keys())) + " )")
+            cursor.execute("SELECT user_serial, money FROM user2table WHERE table_serial IN ( " + ",".join(map(str, table2serials.keys())) + " )")
             for row in cursor.fetchall():
                 user2money[row['user_serial']] = row['money']
 
@@ -1586,7 +1603,7 @@ class PokerService(service.Service):
             error = PacketError(
                 other_type = PACKET_POKER_TOURNEY_REGISTER,
                 code = PacketPokerTourneyRegister.ALREADY_REGISTERED,
-                message = "Player %d already registered in tournament %d " % ( serial, tourney_serial )
+                message = "Player %d already registered in tournament %d" % ( serial, tourney_serial )
             )
             self.log.inform("%s", error)
             for avatar in avatars:
@@ -1597,7 +1614,7 @@ class PokerService(service.Service):
             error = PacketError(
                 other_type = PACKET_POKER_TOURNEY_REGISTER,
                 code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
-                message = "Registration refused in tournament %d " % tourney_serial
+                message = "Registration refused in tournament %d" % tourney_serial
             )
             self.log.inform("%s", error)
             for avatar in avatars:
@@ -1608,7 +1625,7 @@ class PokerService(service.Service):
             error = PacketError(
                 other_type = PACKET_POKER_TOURNEY_REGISTER,
                 code = PacketPokerTourneyRegister.REGISTRATION_REFUSED,
-                message = "Registration refused in tournament %d, (may be moved to another resthost " % tourney_serial
+                message = "Registration refused in tournament %d (may be moved to another resthost)" % tourney_serial
             )
             for avatar in avatars:
                 avatar.sendPacketVerbose(error)
@@ -2355,7 +2372,7 @@ class PokerService(service.Service):
                 
                 tourney = self.spawnTourneyInCore(row, row['serial'], row['schedule_serial'], row['currency_serial'], row['prize_currency'])
                 # When the tourney should have already started:
-                # tourney.register would call updateRunning and try to start the tourney because it is allready in the 
+                # tourney.register would call updateRunning and try to start the tourney because it is already in the 
                 # state registering would cancel the tourney since there are not enough players.
                 # We cannot set the tourney state (to registering) yet because the we need to register the player first
                 tourney.state = None
@@ -2369,7 +2386,6 @@ class PokerService(service.Service):
                 for user in cursor.fetchall():
                     tourney.register(user['serial'],user['name'])
                 
-                tourney.state = row['state']
                 cursor.execute(
                     "REPLACE INTO route VALUES (0, %s, %s, %s)",
                     (row['serial'], now, self.resthost_serial)
@@ -2510,9 +2526,9 @@ class PokerService(service.Service):
     def getPlayerPlaces(self, serial):
         cursor = self.db.cursor()
         cursor.execute("SELECT table_serial FROM user2table WHERE user_serial = %s", serial)
-        tables = map(lambda x: x[0], cursor.fetchall())
+        tables = [x[0] for x in cursor.fetchall()]
         cursor.execute("SELECT user2tourney.tourney_serial FROM user2tourney,tourneys WHERE user2tourney.user_serial = %s AND user2tourney.tourney_serial = tourneys.serial AND (tourneys.state = 'registering' OR tourneys.state = 'running' OR tourneys.state = 'break' OR  tourneys.state = 'breakwait')", serial)
-        tourneys = map(lambda x: x[0], cursor.fetchall())
+        tourneys = [x[0] for x in cursor.fetchall()]
         cursor.close()
         return PacketPokerPlayerPlaces(
             serial = serial,
@@ -2897,28 +2913,28 @@ class PokerService(service.Service):
             )
             if cursor.rowcount != 1:
                 self.log.error("movePlayer(%d) expected one row got %d", serial, cursor.rowcount)
+                return
+            
             (money,) = cursor.fetchone()
+            
+            sql = "UPDATE user2table " \
+                "SET table_serial = %s " \
+                "WHERE user_serial = %s " \
+                "AND table_serial = %s"
+            params = (to_table_id,serial,from_table_id)
+            
+            for error_cnt in xrange(3):
+                try:
+                    cursor.execute(sql, params)
+                    break
+                except:
+                    self.log.warn("ERROR: couldn't execute %r with params %r for %s times" % (sql, params,error_cnt))
+                    if error_cnt >= 2: raise
 
-            if money > 0:
-                sql = "UPDATE user2table " \
-                    "SET table_serial = %s " \
-                    "WHERE user_serial = %s " \
-                    "AND table_serial = %s"
-                params = (to_table_id,serial,from_table_id)
-                
-                for error_cnt in xrange(3):
-                    try:
-                        cursor.execute(sql, params)
-                        break
-                    except:
-                        self.log.warn("ERROR: couldn't execute %r with params %r for %s times" % (sql, params,error_cnt))
-                        if error_cnt >= 3:
-                            raise
-
-                self.log.debug("movePlayer: %s", cursor._executed)
-                if cursor.rowcount != 1:
-                    self.log.error("modified %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
-                    money = -1
+            self.log.debug("movePlayer: %s", cursor._executed)
+            if cursor.rowcount != 1:
+                self.log.error("modified %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
+                money = -1
 
         finally:
             cursor.close()

@@ -381,10 +381,10 @@ class PokerAvatar:
         else:
             return self.handlePacketDefer(packet)
 
-    def handlePokerState(self,packet,resthost,game_id):
+    def handlePokerState(self, packet, resthost, game_id):
         packets = []
         if not self.explain: return packets
-         
+        
         explain_client_existing = game_id in self.game_id2rest_client and self.explain.games.gameExists(game_id)
         if packet.type != PACKET_POKER_TABLE_JOIN and not resthost and game_id and game_id not in self.tables:
             packets.append(PacketPokerStateInformation(
