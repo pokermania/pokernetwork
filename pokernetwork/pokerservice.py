@@ -1289,10 +1289,10 @@ class PokerService(service.Service):
         #
         # a player was removed - the tourney needs balancing.
         # if the table is not moving forward (i.e. only one player is sit on the table),
-        # call the tourneyFinishHandler once more.
+        # call the tourneyFinishHandler one more time.
         #
         tourney.need_balance = True
-        if table.isStationary():
+        if table.isStationary() and len(tourney.winners) < tourney.registered:
             self.tourneyFinishHandler(tourney, table.game.id)
 
     def tourneySatelliteLookup(self, tourney):
