@@ -108,14 +108,14 @@ case "$1" in
 	echo ${name}
 	;;
   stop)
+	echo -n "Stopping poker server (this could take a while)..."
+	start-stop-daemon --stop --quiet --retry=-2/${server_kill_timeout}/forever/-9/2 --pidfile=${serverpidfile} || true
+	echo " done."
 	if $RUN_BOTS ; then
 		echo -n "Stopping poker bots ..."
 		start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
 		echo "done"
 	fi
-	echo -n "Stopping poker server (this could take a while)..."
-	start-stop-daemon --stop --quiet --retry=-2/${server_kill_timeout}/forever/-9/2 --pidfile=${serverpidfile} || true
-	echo " done."
 	;;
   status)
     if [ -f ${serverpidfile} ] ; then
@@ -150,10 +150,6 @@ case "$1" in
 	echo -n "Stopping poker bots ..."
 	start-stop-daemon --stop --quiet --retry=-2/${bot_kill_timeout}/-15/20/forever/-9/2 --pidfile=${botpidfile} || true
 	echo "done"
-	;;
-  rebot)
-	echo "deprecated - use '$0 bot-restart' instead."
-	$0 bot-restart
 	;;
   restart|force-reload)
 	#
