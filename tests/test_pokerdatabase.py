@@ -144,8 +144,7 @@ class PokerDatabaseTestCase(unittest.TestCase):
         r = re.compile("""INSERT\s+INTO\s+server\s+\(\s*version\s*\)\s+VALUES\s*\("([\d\.]+)"\s*\)""", flags=re.I)
         infile = open(actualSchemaFile, "r")
         self.pokerdbVersion = "0.0.0"
-        while infile:
-            line = infile.readline()
+        for line in infile:
             m = re.match(r, line)
             if m:
                 self.pokerdbVersion = m.group(1)
