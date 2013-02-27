@@ -244,3 +244,16 @@ def cards2packets(game_id, board, pockets, cache):
             if serial not in cache["pockets"]:
                 cache["pockets"][serial] = pocket.copy()
     return packets
+
+def private2public(packet, serial):
+    #
+    # cards private to each player are shown only to the player
+    if packet.type == PACKET_POKER_PLAYER_CARDS and packet.serial != serial:
+        return PacketPokerPlayerCards(
+            game_id = packet.game_id,
+            serial = packet.serial,
+            cards = PokerCards(packet.cards).tolist(False)
+        )
+    else:
+        return packet
+

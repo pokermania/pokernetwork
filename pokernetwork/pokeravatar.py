@@ -38,7 +38,7 @@ from pokernetwork.user import User, checkNameAndPassword, checkAuth
 from pokerpackets.networkpackets import *
 from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokerrestclient import PokerRestClient
-from pokernetwork.pokerpacketizer import createCache, history2packets
+from pokernetwork.pokerpacketizer import createCache, history2packets, private2public
 
 from pokerengine.pokertournament import TOURNAMENT_STATE_REGISTERING, TOURNAMENT_STATE_CANCELED, TOURNAMENT_STATE_RUNNING
 from pokerengine.pokergame import init_i18n as pokergame_init_i18n
@@ -731,6 +731,15 @@ class PokerAvatar:
             return
 
         table = self.packet2table(packet)
+        
+        if packet.type == PACKET_POKER_HAND_REPLAY:
+            if not table or table.game.hand_serial != packet.serial or table.game.isEndOrNull():
+                self.handReplay(packet.game_id, packet.serial)
+            else:
+                self.log.inform("attempt get a hand replay for hand still is progress for game %d and hand %d by player %d",
+                    packet.game_id, packet.serial, self.getSerial()
+                )
+            return
 
         if table:
             self.log.debug("packet for table %s", table.game.id)
@@ -899,19 +908,8 @@ class PokerAvatar:
             elif packet.type == PACKET_POKER_TABLE_QUIT:
                 table.quitPlayer(self, self.getSerial())
 
-            elif packet.type == PACKET_POKER_HAND_REPLAY and packet.serial==table.game.hand_serial and table.game.isRunning():
-                self.sendPacketVerbose(PacketPokerError(
-                    game_id = game.id,
-                    serial = self.getSerial(),
-                    other_type = PACKET_POKER_HAND_REPLAY,
-                    message = 'game is still running'
-                ))
-            
             table.update()
     
-        elif packet.type == PACKET_POKER_HAND_REPLAY:
-            self.handReplay(packet.game_id, packet.serial)
-
         elif packet.type == PACKET_POKER_TABLE: # can only be done by User.ADMIN
             table = self.createTable(packet)
             
@@ -1333,7 +1331,7 @@ class PokerAvatar:
             if timeout_packet:
                 packets.append(timeout_packet)
             for past_packet in packets:
-                self.sendPacketVerbose(table.private2public(past_packet, self.getSerial()))
+                self.sendPacketVerbose(private2public(past_packet, self.getSerial()))
         self.sendPacketVerbose(PacketPokerStreamMode(game_id = game.id))
 
     def addPlayer(self, table, seat):
@@ -1492,6 +1490,8 @@ class PokerAvatar:
         for packet in packets:
             if packet.type == PACKET_POKER_PLAYER_CARDS and packet.serial == self.getSerial():
                 packet.cards = cache["pockets"][self.getSerial()].toRawList()
+            if not self.user.hasPrivilege(User.ADMIN):
+                packet = private2public(packet, self.getSerial())
             if packet.type == PACKET_POKER_PLAYER_LEAVE:
                 continue
             self.sendPacketVerbose(packet)

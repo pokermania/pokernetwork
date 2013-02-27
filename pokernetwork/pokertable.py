@@ -39,7 +39,7 @@ from pokerpackets.networkpackets import *  # @UnusedWildImport
 from pokernetwork.lockcheck import LockCheck
 
 from pokernetwork import pokeravatar
-from pokernetwork.pokerpacketizer import createCache, history2packets
+from pokernetwork.pokerpacketizer import createCache, history2packets, private2public
 
 from pokernetwork import log as network_log
 log = network_log.get_child('pokertable')
@@ -288,24 +288,12 @@ class PokerTable:
                 #
                 # player may be in game but disconnected.
                 for avatar in self.avatar_collection.get(serial):
-                    avatar.sendPacket(self.private2public(packet, serial))
+                    avatar.sendPacket(private2public(packet, serial))
             for avatar in self.observers:
-                avatar.sendPacket(self.private2public(packet, 0))
+                avatar.sendPacket(private2public(packet, 0))
 
         self.factory.eventTable(self)
 
-    def private2public(self, packet, serial):
-        #
-        # cards private to each player are shown only to the player
-        if packet.type == PACKET_POKER_PLAYER_CARDS and packet.serial != serial:
-            return PacketPokerPlayerCards(
-                game_id = packet.game_id,
-                serial = packet.serial,
-                cards = PokerCards(packet.cards).tolist(False)
-            )
-        else:
-            return packet
-    
     def syncDatabase(self):
         updates = {}
         serial2rake = {}
