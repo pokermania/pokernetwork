@@ -2527,7 +2527,7 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
         cursor.execute("SELECT table_serial FROM user2table WHERE user_serial = %s", serial)
         tables = [x[0] for x in cursor.fetchall()]
-        cursor.execute("SELECT user2tourney.tourney_serial FROM user2tourney,tourneys WHERE user2tourney.user_serial = %s AND user2tourney.tourney_serial = tourneys.serial AND (tourneys.state = 'registering' OR tourneys.state = 'running' OR tourneys.state = 'break' OR  tourneys.state = 'breakwait')", serial)
+        cursor.execute("SELECT user2tourney.tourney_serial FROM user2tourney,tourneys WHERE user2tourney.user_serial = %s AND user2tourney.tourney_serial = tourneys.serial AND tourneys.state in ('registering', 'running', 'break', 'breakwait')", serial)
         tourneys = [x[0] for x in cursor.fetchall()]
         cursor.close()
         return PacketPokerPlayerPlaces(
