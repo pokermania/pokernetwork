@@ -540,8 +540,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                         serial  = self.getSerial()) )
     
     def packetReceived(self, packet):
-        self.log.debug("packetReceived: %s", packet)
-
         if packet.type == PACKET_POKER_TIMEOUT_WARNING:
             packet.timeout -= int(self.getLag())
 
@@ -892,7 +890,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
         else:
             what = 'outbound'
 
-        self.log.debug("publishPacket(%d): %s: %s", self.getSerial(), what, packet)
         if packet.type in self.callbacks[what]:
             callbacks = self.callbacks[what][packet.type]
             for callback in callbacks:
