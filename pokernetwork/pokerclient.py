@@ -160,14 +160,6 @@ class PokerClientFactory(UGAMEClientFactory):
     
     def networkAvailable(self):
         pass #pragma: no cover
-        
-    def restart(self):
-        reactor.disconnectAll()
-        import sys
-        import os
-        argv = [ sys.executable ]
-        argv.extend(sys.argv)
-        os.execv(sys.executable, argv)
 
     def quit(self):
         #
@@ -296,6 +288,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.lag = DEFAULT_LAGMAX
         self.lagmax_callbacks = []
         self.explain = PokerExplain()
+        
+        self._poll = False
 
     def setPrefix(self, prefix):
         self._prefix = prefix
@@ -303,7 +297,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
         
     def setCurrentGameId(self, game_id):
         self.log.debug("setCurrentGameId(%s)", game_id)
-        self.hold(0)
         self.currentGameId = game_id
 
     def getCurrentGameId(self):
@@ -452,7 +445,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         # Check that the implementation of the outfit is still valid. If it
         # needs upgrade, send it back to the server.
         #
-        ( url, outfit ) = skin.interpret(packet.url, packet.outfit)
+        url, outfit = skin.interpret(packet.url, packet.outfit)
         if url != packet.url or outfit != packet.outfit:
             ( url_check, outfit_check ) = self.factory.getSkin().interpret(url, outfit)
             #
@@ -546,8 +539,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
             self.sendPacket(packet_type(game_id = game.id, 
                                         serial  = self.getSerial()) )
     
-    def _handleConnection(self, packet):
-        self.log.debug("_handleConnection: %s", packet)
+    def packetReceived(self, packet):
+        self.log.debug("packetReceived: %s", packet)
 
         if packet.type == PACKET_POKER_TIMEOUT_WARNING:
             packet.timeout -= int(self.getLag())
@@ -847,9 +840,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
             self.publishPacketTriggerTimer()
         
     def publishPackets(self):
-        if not self._poll:
-            return
-
         delay = 0.01
         if len(self.publish_packets) > 0:
             #
@@ -872,6 +862,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
             
         self.publishPacketTriggerTimer(delay)
 
+    def block(self):
+        pass
+
+    def unblock(self):
+        pass
+
     def publishPacketTriggerTimer(self, delay = 0.01):
         if not self.publish_timer or not self.publish_timer.active():
             if len(self.publish_packets) > 0:
@@ -885,9 +881,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.publish_packets.pop(0)
         what = 'outbound'
         if hasattr(packet, "game_id"):
-            if self.factory.isOutbound(packet):
-                what = 'outbound'
-            else:
+            if not self.factory.isOutbound(packet):
                 if packet.game_id == self.getCurrentGameId():
                     what = 'current'
                 else:

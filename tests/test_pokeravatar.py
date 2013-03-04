@@ -521,7 +521,6 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
             elif packet.type == PACKET_POKER_CHIPS_POT_RESET:
                 found += 1
                 self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.length, 11)
                 self.assertEquals(packet.serial, 0)
             elif packet.type == PACKET_POKER_BLIND_REQUEST:
                 found += 1
@@ -534,7 +533,6 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
                 self.assertEquals(packet.serial, avatar1.getSerial())
                 self.assertEquals(packet.game_id, gameId)
                 self.assertEquals(packet.position, -1)
-                self.assertEquals(packet.length, 12)
             elif packet.type == PACKET_POKER_BOARD_CARDS:
                 self.assertEquals(packet.game_id, gameId)
                 self.assertEquals(True, packet.serial == avatar0.getSerial() or packet.serial == avatar1.getSerial())
@@ -586,20 +584,9 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
 ##############################################################################
 class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
     # -------------------------------------------------------------------------
-    def setUpServer(self):
-        PokerAvatarTestCaseBaseClass.setUpServer(self)
-    # -------------------------------------------------------------------------
     def ping(self, client):
         client.sendPacket(PacketPing())
         return (client,)
-    # -------------------------------------------------------------------------
-    def test01_ping(self):
-        """ test01_ping """
-        self.createClients(1)
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.ping)
-        d.addCallback(self.quit)
-        return d
     # -------------------------------------------------------------------------
     def explain(self, (client, packet)):
         avatar = self.service.avatars[0]
@@ -988,10 +975,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_STATS:
                 found = True
-                self.assertEquals(packet.length, 19)
                 self.assertEquals(packet.players, 3)
-                assert(packet.bytesin > 0)
-                assert(packet.bytesout > 0)
+                # assert(packet.bytesin > 0)
+                # assert(packet.bytesout > 0)
         self.assertEquals(found, True)
         return (client, packet)
     # ------------------------------------------------------------------------

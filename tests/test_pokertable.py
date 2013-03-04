@@ -859,17 +859,26 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     # -------------------------------------------------------------------
     def test11_packet(self):
         """Test toPacket"""
-        packet_string = "%s" % self.table.toPacket()
-        for sub_string in [
-            'id = %d' % self.table.game.id, 
-            'name = table1', 'variant = holdem',
-            'betting_structure = 1-2_20-200_limit', 'seats = 4',
-            'average_pot = 0', 'hands_per_hour = 0',
-            'percent_flop = 0', 'players = 0', 'observers = 0',
-            'waiting = 0', 'player_timeout = 6', 'muck_timeout = 1',
-            'currency_serial = 0', 'skin = default' 
-        ]:
-            self.failUnlessSubstring(sub_string, packet_string)
+        table = self.table
+
+        packet = self.table.toPacket()
+        assert packet.id == table.game.id
+        assert packet.name == table.game.name
+        assert packet.variant == table.game.variant
+        assert packet.betting_structure == table.game.betting_structure
+        assert packet.seats == table.game.max_players
+        assert packet.players == table.game.allCount()
+        assert packet.average_pot == table.game.stats['hands_per_hour']
+        assert packet.hands_per_hour == table.game.stats['average_pot']
+        assert packet.percent_flop == table.game.stats['percent_flop']
+        assert packet.player_timeout == table.playerTimeout
+        assert packet.muck_timeout == table.muckTimeout
+        assert packet.observers == len(table.observers)
+        assert packet.waiting == len(table.waiting)
+        assert packet.skin == table.skin
+        assert packet.currency_serial == table.currency_serial
+        assert packet.tourney_serial == (table.tourney.serial if table.tourney else 0)
+
     # -------------------------------------------------------------------
     def test12_everyone_timeout(self):
         """Test if all players fall through timeout"""
@@ -1139,9 +1148,9 @@ class PokerTableTestCase(PokerTableTestCaseBase):
                 player.serial,
                 self.table.game.id
             ),
-            'sendPacket: POKER_ERROR  type = 53 length = 72 serial = %d ' \
-            'game_id = %d message = This server has too many seated players and ' \
-            'observers. code = 1 other_type = 71' % (
+            'sendPacket: PacketPokerError(53) serial: %d ' \
+            'game_id: %d message: \'This server has too many seated players and ' \
+            'observers.\' code: 1 other_type: 71' % (
                 player.serial,
                 self.table.game.id
             )
@@ -1299,12 +1308,12 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         messages = log_history.get_all()
         self.assertTrue(log_history.search('removing player 4 from game'))
         self.assertTrue(log_history.search(
-            "broadcast[1, 2, 3] POKER_PLAYER_LEAVE  type = 81 length = 12 "
-            "serial = 4 game_id = %d seat = 8" % (self.table1_value,)
+            "broadcast[1, 2, 3] PacketPokerPlayerLeave(81) "
+            "serial: 4 game_id: %d seat: 8" % (self.table1_value,)
         ))
         self.assertEqual(messages.count(
-            "sendPacket: POKER_PLAYER_LEAVE  type = 81 length = 12 "
-            "serial = 4 game_id = %d seat = 8" % (self.table1_value,)
+            "sendPacket: PacketPokerPlayerLeave(81) "
+            "serial: 4 game_id: %d seat: 8" % (self.table1_value,)
         ), 4)
         
         for ii in [1, 2, 3, 4]:
@@ -1855,21 +1864,6 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         # in transient mode, this doesn't work anyway
 
         self.assertEqual(False, self.table.rebuyPlayerRequest(player[2], 1))
-    # -------------------------------------------------------------------
-    def test11_packet_with_tourney_serial(self):
-        """Test toPacket"""
-        packet_string = "%s" % self.table.toPacket()
-        for sub_string in [ 
-            'id = %d' % self.table.game.id, 
-            'name = table1', 'variant = holdem',
-            'betting_structure = 1-2_20-200_limit', 'seats = 4',
-            'average_pot = 0', 'hands_per_hour = 0',
-            'percent_flop = 0', 'players = 0', 'observers = 0',
-            'waiting = 0', 'player_timeout = 6', 'muck_timeout = 1',
-            'currency_serial = 0', 'skin = default',
-            'tourney_serial = 2'
-        ]:
-            self.failUnlessSubstring(sub_string, packet_string)
     # -------------------------------------------------------------------
     def test27_buyinFailures(self):
         """This test doesn't matter in this subclass"""

@@ -66,6 +66,7 @@ from pokerpackets.networkpackets import *
 from pokernetwork.pokertable  import PokerAvatarCollection
 from MySQLdb.cursors import DictCursor
 
+from pokerpackets import binarypack
 
 class ConstantDeckShuffler:
     def shuffle(self, what):
@@ -2888,9 +2889,7 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
         ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
         self.assertEquals(affiliate, info.affiliate)
-        packed = info.pack()
-        other_info = PacketPokerPersonalInfo()
-        other_info.unpack(packed)
+        other_info = binarypack.unpack(binarypack.pack(info))[1]
         self.assertEquals('1980-01-01', other_info.birthdate)
 
     def test_update_ok(self):
@@ -3540,7 +3539,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         tournament.winners = [ winner_serial ]
         tournament.bailor_serial = self.user2_serial
         tournament.players = [ self.user1_serial, self.user2_serial ]
-        self.service._ping_delay = 1
+        self.service._keepalive_delay = 1
         d = defer.Deferred()
         d.addCallback(self.service.tourneyDeleteRouteActual)
         self.service.tourneyDeleteRouteActual = d.callback
@@ -3557,7 +3556,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         def checkRoute(x):
             cursor.execute("SELECT tourney_serial FROM route WHERE tourney_serial = %s", tournament.serial)
             self.assertEqual(0, cursor.rowcount)
-            self.assertEquals(testclock._seconds_value - self.secondsStart  >= self.service._ping_delay/1000.0, True)
+            self.assertEquals(testclock._seconds_value - self.secondsStart  >= self.service._keepalive_delay/1000.0, True)
             cursor.close()
         d.addCallback(checkAvatarTourneys)
         d.addCallback(checkRoute)
@@ -3584,7 +3583,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
         tournament.bailor_serial = self.user2_serial
-        self.service._ping_delay = 1
+        self.service._keepalive_delay = 1
         self.service.delays['extra_wait_tourney_finish'] = "40"
         d = defer.Deferred()
         d.addCallback(self.service.tourneyDeleteRouteActual)
@@ -4704,7 +4703,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         log_history.reset()
 
         self.failIf(self.service.tourneyRegister(MockPacket()))
-        self.assertEquals(log_history.get_all(),['ERROR  type = 3 length = 38 message = Tournament 91 does not exist code = 1 other_type = 116'])
+        self.assertEquals(log_history.get_all(),["PacketError(3) message: 'Tournament 91 does not exist' code: 1 other_type: 116"])
         self.failUnless(hasattr(client, "errorPacket"))
         self.assertEquals(client.errorPacket.type, PACKET_ERROR)
         self.assertEquals(client.errorPacket.code,PacketPokerTourneyRegister.DOES_NOT_EXIST)
@@ -4788,8 +4787,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.code, PacketPokerTourneyRegister.ALREADY_REGISTERED)
         msgs = log_history.get_all()
         self.assertEquals(len(msgs), 1)
-        self.failUnless(msgs[0].find('ERROR  type = 3 length = 55 message = Player 44 already registered in tournament 99 code = 2')  == 0)
-        self.failUnless(msgs[0].find('other_type = %d' % PACKET_POKER_TOURNEY_REGISTER) >= 0)
+        assert msgs[0] == "PacketError(3) message: 'Player 44 already registered in tournament 99' code: 2 other_type: %d" % (PACKET_POKER_TOURNEY_REGISTER,)
+
     def test23_tourneyRegister_tourneyRefuseRegistration(self):
         self.service = pokerservice.PokerService(self.settings)
         class MockClient:
@@ -4826,7 +4825,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(pack.code, PacketPokerTourneyRegister.REGISTRATION_REFUSED)
         msgs = log_history.get_all()
         self.assertEquals(len(msgs), 1)
-        self.failUnless(msgs[0].find('ERROR  type = 3 length = 48 message = Registration refused in tournament 123') == 0)
+        assert msgs[0] == "PacketError(3) message: 'Registration refused in tournament 123' code: 3 other_type: 116"
 
     def test22_tourneyRegister_viaSatellite(self):
         self.service = pokerservice.PokerService(self.settings)
@@ -4914,7 +4913,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         msgs = log_history.get_all()
         self.assertEquals(len(msgs), 2)
         self.failUnless(msgs[0].find('tourneyRegister: UPDATE user2money SET amount')  == 0)
-        self.failUnless(msgs[1].find('ERROR  type = 3 length = 54 message = Not enough money to enter the tournament 526')  == 0)
+        assert msgs[1] == "PacketError(3) message: 'Not enough money to enter the tournament 526' code: 4 other_type: 116"
 
         self.service.db = oldDb
     def test25_tourneyRegister_updateMoneyWeirdness(self):
@@ -6343,54 +6342,9 @@ class SSLContextFactoryCoverage(unittest.TestCase):
 
         shutil.rmtree(tmpdir)
 ##############################################################################
-from pokernetwork.pokerservice import PokerSOAP, PokerXMLRPC
 class MockRequestBase():
     def __init__(mrSelf):
         mrSelf.method = "GET"
-class PokerTreeCoverageTestCase(unittest.TestCase):
-    def setUp(self):
-        testclock._seconds_reset()
-        self.settings = pokernetworkconfig.Config([])
-        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
-        self.settings.header = self.settings.doc.xpathNewContext()
-    def tearDown(self):
-        if hasattr(self, 'service'):
-            d = self.service.stopService()
-            return d
-    def test01_init(self):
-        self.service = pokerservice.PokerService(self.settings)
-        pt = pokerservice.PokerTree(self.service)
-        self.assertEquals(pt.service, self.service)
-        for (child, cl) in [ ("RPC2", PokerXMLRPC), ("SOAP", PokerSOAP) ]:
-            self.failUnless(child in pt.children, "Missing child of PokerTree: " + child)
-            self.failUnless(isinstance(pt.children[child], cl))
-            self.assertEquals(pt.getChildWithDefault(child, MockRequestBase()).service, self.service)
-    def test02_initNoSoap(self):
-        self.service = pokerservice.PokerService(self.settings)
-        class MockPokerSOAP():
-            def __init__(mpsSelf, service):
-                self.assertEquals(self.service, service)
-                raise Exception("Force SOAP unavailable")
-        savePokerSoap = pokerservice.PokerSOAP
-        pokerservice.PokerSOAP = MockPokerSOAP
-
-        pt = pokerservice.PokerTree(self.service)
-
-        for (childStr, cl) in [ ("RPC2", PokerXMLRPC) ]:
-            self.failUnless(childStr in pt.children, "Missing child of PokerTree: " + childStr)
-            self.failUnless(isinstance(pt.children[childStr], cl))
-            self.assertEquals(pt.getChildWithDefault(childStr, MockRequestBase()).service, self.service)
-
-        self.failIf("SOAP" in pt.children, "SOAP should be disabled")
-        child = pt.getChildWithDefault('SOAP', MockRequestBase())
-        self.assertEquals(child.code, 404)
-        self.assertEquals(child.brief, 'No Such Resource')
-
-        pokerservice.PokerSOAP = savePokerSoap
-    def test03_render(self):
-        self.service = pokerservice.PokerService(self.settings)
-        pt = pokerservice.PokerTree(self.service)
-        self.assertEquals(pt.render(MockRequestBase()), "Use /RPC2 or /SOAP")
 ##############################################################################
 from pokernetwork.pokersite import PokerImageUpload, PokerAvatarResource, PokerResource
 class PokerRestTreeCoverageTestCase(unittest.TestCase):
@@ -6480,104 +6434,6 @@ class MockContentForPokerXML():
     def seek(self, start, finish):
         pass
 
-class PokerXMLCoverageTestCase(unittest.TestCase):
-    def setUp(self):
-        testclock._seconds_reset()
-        self.settings = pokernetworkconfig.Config([])
-        self.settings.doc = libxml2.parseMemory(settings_xml, len(settings_xml))
-        self.settings.header = self.settings.doc.xpathNewContext()
-    def tearDown(self):
-        if hasattr(self, 'service'):
-            d = self.service.stopService()
-            return d
-    def test01_getRequestCookie_hasInstanceVariable(self):
-        class MockRequestWithCookie(MockRequestBase):
-            def __init__(mrSelf):
-                mrSelf.cookies = [ 'thisone', 'notthisone' ]
-
-        self.assertEquals(pokerservice._getRequestCookie(MockRequestWithCookie()),'thisone')
-    def test02_getRequestCookie_callsGetCookie(self):
-        class MockRequestWithCookie(MockRequestBase):
-            def __init__(mrSelf, val):
-                mrSelf.cookies = None
-                mrSelf.sitepath = val
-            def getCookie(mrSelf, stuff):
-                self.assertEquals(stuff, "TWISTED_SESSION_one_two_three")
-                return "called_getcookie"
-
-        caughtIt = False
-        try:
-            self.assertEquals(pokerservice._getRequestCookie(MockRequestWithCookie("notalist")),'thisone')
-            self.failIf(True, "We should have caught a TypeError")
-        except TypeError, te:
-            self.assertEquals(te.__str__(), 'can only concatenate list (not "str") to list')
-            caughtIt = True
-        self.failUnless(caughtIt, "Should have caught a TypeError!")
-
-        self.assertEquals(pokerservice._getRequestCookie(MockRequestWithCookie(['one', 'two', 'three'])),
-                           "called_getcookie")
-    def test03_init(self):
-        self.service = pokerservice.PokerService(self.settings)
-        px = pokerservice.PokerXML(self.service)
-        self.assertEquals(px.service, self.service)
-        self.assertNotEquals(pokerservice.PokerXML.encoding, "")
-        self.assertNotEquals(pokerservice.PokerXML.encoding, None)
-    def test04_render(self):
-        service = MockServiceForPokerXML()
-        pxml = pokerservice.PokerXML(service)
-        request = MockRequestForPokerXML(MockContentForPokerXML("hello"))
-
-        log_history.reset()
-
-        caughtIt = False
-        try:
-            pxml.render(request)
-            self.failIf(True, "We should have caught a NotImplementedError")
-        except NotImplementedError:
-            caughtIt = True
-        self.failUnless(caughtIt, "Should have caught a NotImplementedError!")
-
-        self.assertEquals(request.headerData,
-                          {'Content-type': ['text/xml; charset="UTF-8"']})
-        self.failUnless(log_history.search('render hello'), "render hello should occur in output!")
-    def test04a_maps2result(self):
-        service = MockServiceForPokerXML()
-        pxml = pokerservice.PokerXML(service)
-        request = MockRequestForPokerXML(MockContentForPokerXML("hello"))
-
-        caughtIt = False
-        try:
-            pxml.maps2result(request, {})
-            self.failIf(True, "We should have caught a NotImplementedError")
-        except NotImplementedError:
-            caughtIt = True
-        self.failUnless(caughtIt, "Should have caught a NotImplementedError!")
-    def test05_render_noEncoding(self):
-        service = MockServiceForPokerXML()
-        pxml = pokerservice.PokerXML(service)
-        request = MockRequestForPokerXML(MockContentForPokerXML("hello"))
-
-        log_history.reset()
-
-        caughtIt = False
-        pxml.encoding = None
-        try:
-            pxml.render(request)
-            self.failIf(True, "We should have caught a NotImplementedError")
-        except NotImplementedError:
-            caughtIt = True
-        self.failUnless(caughtIt, "Should have caught a NotImplementedError!")
-
-        self.assertEquals(request.headerData, {'Content-type': ['text/xml']})
-
-        self.assertEquals(log_history.get_all(), ['render hello'])
-    def test06_errorFunction(self):
-        service = MockServiceForPokerXML()
-        pxml = pokerservice.PokerXML(service)
-
-        log_history.reset()
-        pxml.log.error("Test an error")
-        self.assertEquals(log_history.get_all(), ['Test an error'])
 ##############################################################################
 class TourneySelectInfoTestCase(unittest.TestCase):
 
@@ -6766,9 +6622,7 @@ def GetTestSuite():
     suite.addTest(loader.loadClass(PokerFactoryFromPokerServiceTestCase))
     suite.addTest(loader.loadClass(PokerServiceCoverageTests))
     suite.addTest(loader.loadClass(SSLContextFactoryCoverage))
-    suite.addTest(loader.loadClass(PokerTreeCoverageTestCase))
     suite.addTest(loader.loadClass(PokerRestTreeCoverageTestCase))
-    suite.addTest(loader.loadClass(PokerXMLCoverageTestCase))
     suite.addTest(loader.loadClass(TourneySelectInfoTestCase))
     suite.addTest(loader.loadClass(TourneyNotifyTestCase))
     suite.addTest(loader.loadClass(LadderTestCase))

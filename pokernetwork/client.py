@@ -37,11 +37,9 @@ class UGAMEClientProtocol(UGAMEProtocol):
         self.log = UGAMEClientProtocol.log.get_instance(self, refs=[
             ('User', self, lambda x: x.user.serial if x.user.serial > 0 else None)
         ])
-        self._ping_timer = None
         self.user = User()
-        self.bufferized_packets = []
         UGAMEProtocol.__init__(self)
-        self._ping_delay = 5
+        self._keepalive_delay = 5
         self.connection_lost_deferred = defer.Deferred()
 
     def getSerial(self):
@@ -58,35 +56,18 @@ class UGAMEClientProtocol(UGAMEProtocol):
 
     def isLogged(self):
         return self.user.isLogged()
-    
+
+    def packetReceived(self, packet):
+        pass
+
     def sendPacket(self, packet):
-        if self.established != 0:
-            self.ping()
-            self.log.debug("sendPacket: %s", packet)
-            self.dataWrite(packet.pack())
-        else:
-            self.log.debug("sendPacket bufferized %s", packet)
-            self.bufferized_packets.append(packet)
-
-    def ping(self):
-        if not hasattr(self, "_ping_timer") or not self._ping_timer:
-            return
-
-        if self._ping_timer.active():
-            self._ping_timer.reset(self._ping_delay)
-        else:
-            self.log.debug("send ping")
-            self.dataWrite(PacketPing().pack())
-            self._ping_timer = reactor.callLater(self._ping_delay, self.ping)
-        
+        self.log.debug("sendPacket: %s", packet)
+        UGAMEProtocol.sendPacket(self, packet)
+    
     def protocolEstablished(self):
-        self._ping_timer = reactor.callLater(self._ping_delay, self.ping)
         d = self.factory.established_deferred
         self.factory.established_deferred = None
         d.callback(self)
-        for packet in self.bufferized_packets:
-            self.sendPacket(packet)
-        self.bufferized_packets = []
         self.factory.established_deferred = defer.Deferred()
 
     def protocolInvalid(self, server, client):
@@ -103,13 +84,8 @@ class UGAMEClientProtocol(UGAMEProtocol):
             self.factory.established_deferred.errback((self, server, client),)
             
     def connectionLost(self, reason):
-        if hasattr(self, "_ping_timer") and self._ping_timer and self._ping_timer.active():
-            self._ping_timer.cancel()
-        self._ping_timer = None
         self.factory.protocol_instance = None
         UGAMEProtocol.connectionLost(self, reason)
-        if not reason.check(error.ConnectionDone):
-            self.log.debug("connectionLost: %s", reason)
         d = self.connection_lost_deferred
         self.connection_lost_deferred = None
         d.callback(self)

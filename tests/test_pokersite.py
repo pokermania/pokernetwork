@@ -104,27 +104,6 @@ class PokerServiceMockup:
             else:
                   return (111,"hans", 0), None
 
-class HelpersTestCase(unittest.TestCase):
-
-      def test_args2packets(self):
-            self.assertEqual([PacketPing()], list(pokersite.args2packets([{'type':'PacketPing'}])))
-            self.assertEqual([PacketPing()], list(pokersite.args2packets([{'type':PACKET_PING}])))
-            packet = pokersite.args2packets([{'type':'BadPacket'}]).next()
-            self.assertSubstring('Invalid type name BadPacket', packet.message)
-            packet = pokersite.args2packets([{'type':'-1'}]).next()
-            self.assertSubstring('Invalid type', packet.message)
-
-      def test_packets2maps(self):
-            self.assertEqual([{'type': PACKET_PING}], list(pokersite.packets2maps([PacketPing()])))
-            self.assertEqual(
-                [{'packets': [{'type': PACKET_PING}], 'type': PACKET_LIST}],
-                list(pokersite.packets2maps([PacketList(packets=[PacketPing()])]))
-            )
-            packet = Packet()
-            packet.message = "MESSAGE"
-            packet.what = { 0: 1 }
-            self.assertEqual([{'message': 'MESSAGE', 'type': PACKET_NONE, 'what': {'X0': 1}}], list(pokersite.packets2maps([packet])))
-
 class PokerSiteBase(unittest.TestCase):
 
       def setUp(self):
@@ -1022,7 +1001,6 @@ def GetTestSuite():
     suite.addTest(loader.loadClass(SessionExplainTestCase))
     suite.addTest(loader.loadClass(RequestTestCase))
     suite.addTest(loader.loadClass(PokerSiteTestCase))
-    suite.addTest(loader.loadClass(HelpersTestCase))
     suite.addTest(loader.loadClass(PokerTourneyStartTestCase))
     return suite
 

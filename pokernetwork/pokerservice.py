@@ -73,9 +73,8 @@ from pokernetwork.protocol import UGAMEProtocol
 from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
-from pokerpackets.packets import packets2maps
 from pokerpackets.networkpackets import *
-from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource, args2packets
+from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource
 from pokernetwork.pokertable import PokerTable, PokerAvatarCollection
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
@@ -294,7 +293,7 @@ class PokerService(service.Service):
         self.tourney_table_serial = 1
         self.shutting_down = False
         self.simultaneous = self.settings.headerGetInt("/server/@simultaneous")
-        self._ping_delay = self.settings.headerGetInt("/server/@ping")
+        self._keepalive_delay = self.settings.headerGetInt("/server/@ping")
         self.chat = self.settings.headerGet("/server/@chat") == "yes"
 
         # gettextFuncs is a dict that is indexed by full locale strings,
@@ -653,8 +652,8 @@ class PokerService(service.Service):
         return PacketPokerStats(
             players = len(self.avatars),
             hands = 0 if hands is None else int(hands),
-            bytesin = UGAMEProtocol._stats_read,
-            bytesout = UGAMEProtocol._stats_write,
+            bytesin = 0,  # TODO evaluate if and how to log traffic
+            bytesout = 0,
         )
 
     def createAvatar(self):
@@ -1129,7 +1128,7 @@ class PokerService(service.Service):
                     if tourney.serial in player.tourneys:
                         player.tourneys.remove(tourney.serial)
             self.tourneyDeleteRouteActual(tourney.serial)
-        self.timer[key] = reactor.callLater(max(self._ping_delay*2, wait*2), doTourneyDeleteRoute)
+        self.timer[key] = reactor.callLater(max(self._keepalive_delay*2, wait*2), doTourneyDeleteRoute)
         
     def tourneyDeleteRouteActual(self, tourney_serial):
         cursor = self.db.cursor()
@@ -2581,8 +2580,7 @@ class PokerService(service.Service):
                 """),
                 (serial,)
             )
-            for row in c:
-                packet.money[row[0]] = row[1:]
+            packet.money = dict((row[0], row[1:]) for row in c)
             self.log.debug("getUserInfo %s", packet)
             return packet
         finally:
@@ -3138,26 +3136,7 @@ if HAS_OPENSSL:
             DefaultOpenSSLContextFactory.__init__(self, self.pem_file, self.pem_file)
             
 
-from twisted.web import resource, server
-
-class PokerTree(resource.Resource):
-
-    _log = log.get_child('PokerTree')
-
-    def __init__(self, service):
-        resource.Resource.__init__(self)
-        self.service = service
-        self.putChild("RPC2", PokerXMLRPC(self.service))
-        try:
-            self.putChild("SOAP", PokerSOAP(self.service))
-        except:
-            self._log.error("SOAP service not available")
-        self.putChild("", self)
-
-    def render_GET(self, request):
-        return "Use /RPC2 or /SOAP"
-
-components.registerAdapter(PokerTree, IPokerService, resource.IResource)
+from twisted.web import resource
 
 class PokerRestTree(resource.Resource):
 
@@ -3178,171 +3157,3 @@ def _getRequestCookie(request):
         return request.cookies[0]
     else:
         return request.getCookie('_'.join(['TWISTED_SESSION'] + request.sitepath))
-
-#
-# When connecting to the poker server with REST, SOAP or XMLRPC
-# the client must chose to use sessions or not. If using session,
-# the server will issue a cookie and keep track of it during
-# (X == default twisted timeout) minutes.
-#
-# The session cookie is returned as a regular HTTP cookie and
-# the library of the client in charge of the HTTP dialog should
-# handle it transparently. To help the developer using a library
-# that does a poor job at handling the cookies, it is also sent
-# back as the "cookie" field of the PacketSerial packet in response
-# to a successfull authentication request. This cookie may then
-# be used to manually set the cookie header, for instance:
-#
-# Cookie: TWISTED_SESSION=a0bb35083c1ed3bef068d39bd29fad52; Path=/
-#
-# Because this cookie is only sent back in the SERIAL packet following
-# an authentication request, it will not help clients observing the
-# tables. These clients will have to find a way to properly handle the
-# HTTP headers sent by the server.
-#
-# When the client sends a packet to the server using sessions, it must
-# be prepared to receive the backlog of packets accumulated since the
-# last request. For instance,
-#
-#   A client connects in REST session mode
-#   The client sends POKER_TABLE_JOIN and the server replies with
-#   packets describing the state of the table.
-#   A player sitting at the table sends POKER_FOLD.
-#   The server broadcasts the action to all players and observers.
-#   Because the client does not maintain a persistent connection
-#    and is in session mode, the server keeps the POKER_FOLD packet
-#    for later.
-#   The client sends PING to tell the server that it is still alive.
-#   In response the server sends it the cached POKER_FOLD packet and
-#    the client is informed of the action.
-#
-# The tests/test-webservice.py.in tests contain code that will help
-# understand the usage of the REST, SOAP and XMLRPC protocols.
-#
-class PokerXML(resource.Resource):
-
-    encoding = "UTF-8"
-
-    log = log.get_child('PokerXML')
-
-    def __init__(self, service):
-        resource.Resource.__init__(self)
-        self.service = service
-
-    def sessionExpires(self, session):
-        self.service.destroyAvatar(session.avatar)
-        del session.avatar
-
-    def render(self, request):
-        self.log.debug("render %s", request.content.read())
-        request.content.seek(0, 0)
-        if self.encoding is not None:
-            mimeType = 'text/xml; charset="%s"' % self.encoding
-        else:
-            mimeType = "text/xml"
-        request.setHeader("Content-type", mimeType)
-        args = self.getArguments(request)
-        self.log.debug("args = %s", args)
-        session = None
-        use_sessions = args[0]
-        args = args[1:]
-        if use_sessions == "use sessions":
-            self.log.debug("receive session cookie %s", _getRequestCookie(request))
-            session = request.getSession()
-            if not hasattr(session, "avatar"):
-                session.avatar = self.service.createAvatar()
-                session.notifyOnExpire(lambda: self.sessionExpires(session))
-            avatar = session.avatar
-        else:
-            avatar = self.service.createAvatar()
-
-        logout = False
-        result_packets = []
-        for packet in args2packets(args):
-            if isinstance(packet, PacketError):
-                result_packets.append(packet)
-                break
-            else:
-                results = avatar.handlePacket(packet)
-                if use_sessions == "use sessions" and len(results) > 1:
-                    for result in results:
-                        if isinstance(result, PacketSerial):
-                            result.cookie = _getRequestCookie(request)
-                            self.log.debug("send session cookie %s", result.cookie)
-                            break
-                result_packets.extend(results)
-                if isinstance(packet, PacketLogout):
-                    logout = True
-
-        #
-        # If the result is a single packet, it means the requested
-        # action is using sessions (non session packet streams all
-        # start with an auth packet). It may be a Deferred but may never
-        # be a logout (because logout is not supposed to return a deferred).
-        #
-        if len(result_packets) == 1 and isinstance(result_packets[0], defer.Deferred):
-            def renderLater(packet):
-                result_maps = packets2maps([packet])
-                result_string = self.maps2result(request, result_maps)
-                request.setHeader("Content-length", str(len(result_string)))
-                request.write(result_string)
-                request.finish()
-                return
-            d = result_packets[0]
-            d.addCallback(renderLater)
-            return server.NOT_DONE_YET
-        else:
-            if use_sessions != "use sessions":
-                self.service.destroyAvatar(avatar)
-            elif use_sessions == "use sessions":
-                if logout:
-                    session.expire()
-                    session.logout()
-                else:
-                    avatar.queuePackets()
-            result_maps = packets2maps(result_packets)
-            result_string = self.maps2result(request, result_maps)
-            self.log.debug("result_string %s", result_string)
-            request.setHeader("Content-length", str(len(result_string)))
-            return result_string
-
-    def getArguments(self, request):
-        raise NotImplementedError("PokerXML is pure base class, subclass an implement getArguments")
-
-    def maps2result(self, request, maps):
-        raise NotImplementedError("PokerXML is pure base class, subclass an implement maps2result")
-
-import xmlrpclib
-
-class PokerXMLRPC(PokerXML):
-
-    def getArguments(self, request):
-        args = xmlrpclib.loads(request.content.read())[0]
-        return args
-
-    def maps2result(self, request, maps):
-        return xmlrpclib.dumps((maps, ), methodresponse = 1)
-
-
-try:
-    import SOAPpy
-    class PokerSOAP(PokerXML):
-        def getArguments(self, request):
-            data = request.content.read()
-            p, _header, _body, _attrs = SOAPpy.parseSOAPRPC(data, 1, 1, 1)
-            _methodName, args, kwargs, _ns = p._name, p._aslist, p._asdict, p._ns
-            # deal with changes in SOAPpy 0.11
-            if callable(args):
-                args = args()
-            if callable(kwargs):
-                kwargs = kwargs()
-            return SOAPpy.simplify(args)
-
-        def maps2result(self, request, maps):
-            return SOAPpy.buildSOAP(
-                kw = {'Result': maps},
-                method = 'returnPacket',
-                encoding = self.encoding
-            )
-except:
-    log.error("Python SOAP module not available")

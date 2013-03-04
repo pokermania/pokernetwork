@@ -24,7 +24,7 @@ from twisted.python.util import InsensitiveDict
 from twisted.python.runtime import seconds
 
 from pokerpackets.networkpackets import *
-from pokernetwork import pokersite
+from pokerpackets.dictpack import dict2packet
 from pokernetwork import log as network_log
 log = network_log.get_child('pokerrestclient')
 
@@ -131,8 +131,7 @@ class PokerRestClient:
             self.scheduleLongPoll(0)
         self.pendingLongPoll = False
         
-        args = Packet.JSON.decode(data)
-        packets = list(pokersite.args2packets(args))
+        packets = [dict2packet(dict_packet)[0] for dict_packet in Packet.JSON.decode(data)]
         return packets
 
     def receiveError(self, data):

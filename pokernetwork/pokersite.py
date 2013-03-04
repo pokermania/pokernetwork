@@ -28,8 +28,6 @@ from traceback import format_exc
 from twisted.web import server, resource, http
 from twisted.internet import defer, reactor
 
-from pokerpackets.packets import packets2maps
-
 from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 PacketFactoryWithNames = dict((packet_class.__name__,packet_class) for packet_class in PacketFactory.itervalues())
@@ -37,45 +35,13 @@ PacketFactoryWithNames = dict((packet_class.__name__,packet_class) for packet_cl
 from pokernetwork import log as network_log
 log = network_log.get_child('site')
 
+from pokerpackets.dictpack import dict2packet, packet2dict
+
 def _import(path):
     import sys
     __import__(path)
     return sys.modules[path]
 
-
-def args2packets(args):
-    return (arg2packet(arg)[0] for arg in args)
-
-_arg2packet_re = re.compile("^[a-zA-Z]+$")
-
-def arg2packet(arg):
-    packet_class = None
-    packet = None
-    packet_type_numeric = None
-    
-    if type(arg['type']) == int:
-        try: 
-            packet_class = PacketFactory[arg['type']]
-            packet_type_numeric = True
-        except Exception: pass
-    
-    elif type(arg['type']) == str and _arg2packet_re.match(arg['type']):
-        try:
-            packet_class = PacketFactoryWithNames[arg['type']]
-            packet_type_numeric = False
-        except Exception: pass
-        
-    if packet_class is None:
-        packet = PacketError(message = "Invalid type name %s" % arg.get('type',None))
-    else:
-        if 'packets' in arg: arg['packets'] = list(args2packets(arg['packets']))
-        
-        try: packet = packet_class(**arg) if len(arg)>1 else packet_class()
-        except Exception: 
-            packet = PacketError(message = "Unable to instantiate %s(%s): %s" % ( arg['type'], arg, format_exc()))
-            
-    return (packet, packet_type_numeric)
-    
 class Request(server.Request):
 
     def getSession(self):
@@ -163,8 +129,8 @@ class PokerResource(resource.Resource):
             request.setHeader('content-length', str(len(resp)))
             return resp
         
-        (packet, packet_type_numeric) = arg2packet(arg)
-        
+        packet, packet_type_numeric = dict2packet(arg)
+
         deferred = defer.succeed(None)
 
         if request.site.pipes:
@@ -210,7 +176,7 @@ class PokerResource(resource.Resource):
         session = request.getSession()
         d = defer.maybeDeferred(session.avatar.handleDistributedPacket, request, packet, data)
         
-        def render(packets,session = None):
+        def render(packets, session=None, packet=None):
             _host_type, host = request.findProxiedIP()
             self._log.debug("(%s) render %s returns %s", host, data, packets)
             #
@@ -237,7 +203,7 @@ class PokerResource(resource.Resource):
             #
             # Format answer
             #
-            packets_encoded = Packet.JSON.encode(list(packets2maps(packets, packet_type_numeric)))
+            packets_encoded = Packet.JSON.encode([packet2dict(packet, packet_type_numeric) for packet in packets])
             result = '%s(%s)' % (jsonp,packets_encoded) if jsonp else packets_encoded
 
             content_type = 'application/javascript' if jsonp else 'application/json'
@@ -254,12 +220,13 @@ class PokerResource(resource.Resource):
             # session was reloaded (and expired) because the session object could have changed in the meantime
             # no manual session expiration anymore!
             # request.getSession().expire()
+
             
             error_trace = reason.getTraceback()
             host_type, host = request.findProxiedIP()
             request.setResponseCode(http.INTERNAL_SERVER_ERROR)
-            
-            body = error_trace if (host_type, host) == ('client-ip','127.0.0.1') else "Internal Server Error"
+
+            body = error_trace if (host_type, host) == ('client-ip', '127.0.0.1') else "Internal Server Error"
             request.setHeader('content-length', str(len(body)))
             request.setHeader('content-type',"text/plain")
             request.write(body)
@@ -268,7 +235,7 @@ class PokerResource(resource.Resource):
             self._log.error("%s => %s", host, error_trace)
             
             return True
-        d.addCallbacks(render, processingFailed, (session,))
+        d.addCallbacks(render, processingFailed, (session, packet))
         return d
 
 class PokerImageUpload(resource.Resource):

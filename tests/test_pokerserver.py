@@ -306,56 +306,6 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught an Exception")
 
-    def test04_httpSSL_hasSSL_noPemFile(self):
-        self.createConfig({'listen_options': 'http_ssl="3234"', 'additional_path': self.tmpdir})
-        caughtIt = False
-        try:
-            self.createService()
-            self.fail("previous line should have thrown exception")
-        except Exception, ee:
-            self.assertEquals(str(ee), "no poker.pem found in the setting's server path")
-            caughtIt = True
-        self.failUnless(caughtIt, "Should have caught an Exception")
-
-    def test05_httpSSL_hasSSL(self):
-        self.createConfig({'listen_options': 'http_ssl="9356"', 'additional_path': self.tmpdir})
-        self.createPemFile()
-
-        self.createService()
-
-        # Only named service that we could possibly expect is manhole, and
-        # that's not turned on here.  Hence:
-        self.assertEquals(self.service.namedServices, {})
-
-        self.assertEquals(len(self.service.services), 3)
-        for service in self.service.services:
-            self.assertEquals(service.parent, self.service)
-            if isinstance(service, PokerService):
-                # self.assertEquals(len(service.tables.keys()), 2)
-                # self.failUnless(isinstance(service.tables[1], PokerTable))
-                # self.failUnless(isinstance(service.tables[2], PokerTable))
-                pass
-            elif isinstance(service, TCPServer):
-                self.failUnless(service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on") == 0)
-                self.failUnless(service._port.port > 1024)
-                self.assertNotEquals(service._port.port, 9356)
-                self.assertEquals(service._port.port, service._port._realPortNumber) 
-                self.assertEquals(service._port.interface, '')
-                self.assertEquals(service._port.connected, 1)
-                self.assertNotEquals(service._port.socket, None)
-                self.failUnless(service.running)
-            elif isinstance(service, SSLServer):
-                self.failUnless(isinstance(service.args[1], TwistedSite))
-                self.failUnless(isinstance(service.args[2], SSLContextFactory))
-                self.assertTrue(service._port.__str__() in (ssl_site_str % 9356, ssl_web_site_str % 9356))                
-                self.assertEquals(service._port.port, 9356)
-                self.assertEquals(service._port.port, service._port._realPortNumber) 
-                self.assertEquals(service._port.interface, '')
-                self.assertEquals(service._port.connected, 1)
-                self.assertNotEquals(service._port.socket, None)
-                self.failUnless(service.running)
-            else:
-                self.fail("Unknown service found in multiservice list")
 
     def test06_restSSL_hasSSL_noPemFile(self):
         self.createConfig({'listen_options': 'rest_ssl="10234"', 'additional_path': self.tmpdir})
@@ -447,49 +397,10 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
                 self.fail("Unknown service found in multiservice list")
         self.assertEquals(len(self.service.services), count)
 
-    def test09_plainHTTP(self):
-        self.createConfig({'listen_options': 'http="10235"', 'additional_path': self.tmpdir})
-        self.createService()
-
-        # Only named service that we could possibly expect is manhole, and
-        # that's not turned on here.  Hence:
-        self.assertEquals(self.service.namedServices, {})
-
-        self.assertEquals(len(self.service.services), 3)
-        count = 0
-        for service in self.service.services:
-            self.assertEquals(service.parent, self.service)
-            if isinstance(service, PokerService):
-                count += 1
-                # self.assertEquals(len(service.tables.keys()), 2)
-                # self.failUnless(isinstance(service.tables[1], PokerTable))
-                # self.failUnless(isinstance(service.tables[2], PokerTable))
-                pass
-            elif isinstance(service, TCPServer) and service._port.port == 10235:
-                count += 1
-                self.failUnless(service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of twisted.web.server.Site on 10235>") == 0)
-                self.assertEquals(service._port.port, service._port._realPortNumber) 
-                self.assertEquals(service._port.interface, '')
-                self.assertEquals(service._port.connected, 1)
-                self.assertNotEquals(service._port.socket, None)
-                self.failUnless(service.running)
-            elif isinstance(service, TCPServer):
-                count += 1
-                self.failUnless(service._port.__str__().find("<<class 'twisted.internet.tcp.Port'> of pokernetwork.pokerservice.PokerFactoryFromPokerService on") == 0)
-                self.failUnless(service._port.port > 1024)
-                self.assertEquals(service._port.port, service._port._realPortNumber) 
-                self.assertEquals(service._port.interface, '')
-                self.assertEquals(service._port.connected, 1)
-                self.assertNotEquals(service._port.socket, None)
-                self.failUnless(service.running)
-            else:
-                self.fail("Unknown service found in multiservice list")
-        self.assertEquals(len(self.service.services), count)
-
     def test10_everythingOn(self):
         #"19481"
         self.createConfig({
-            'listen_options':'http="7658" http_ssl="6675" rest="5563" rest_ssl="7765" tcp_ssl="9123" manhole="10143"',
+            'listen_options':'rest="5563" rest_ssl="7765" tcp_ssl="9123" manhole="10143"',
             'additional_path': self.tmpdir
         })
         self.createPemFile()
@@ -508,7 +419,7 @@ class PokerServerMakeServiceCoverageTestCase(unittest.TestCase):
         self.assertEquals(manhole.parent, self.service)
         self.failUnless(manhole.running)
 
-        self.assertEquals(len(self.service.services), 8)
+        self.assertEquals(len(self.service.services), 6)
         count = 0
         for service in self.service.services:
             self.assertEquals(service.parent, self.service)

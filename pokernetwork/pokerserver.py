@@ -49,7 +49,7 @@ from twisted.web import server
 from twisted.python import log as twisted_log
 
 from pokernetwork.pokernetworkconfig import Config
-from pokernetwork.pokerservice import PokerTree, PokerRestTree, PokerService, IPokerFactory
+from pokernetwork.pokerservice import PokerRestTree, PokerService, IPokerFactory
 from pokernetwork.pokersite import PokerSite
 from pokernetwork.pokermanhole import makeService as makeManholeService
 
@@ -115,11 +115,11 @@ def makeService(configuration):
     poker_service = PokerService(settings)
     poker_service.setServiceParent(serviceCollection)
 
-    poker_factory = IPokerFactory(poker_service)
 
     #
     # Poker protocol (with or without SSL)
     #
+    poker_factory = IPokerFactory(poker_service)
     tcp_port = settings.headerGetInt("/server/listen/@tcp")
     internet.TCPServer(tcp_port, poker_factory).setServiceParent(serviceCollection)
 
@@ -127,11 +127,10 @@ def makeService(configuration):
     if HAS_OPENSSL and tcp_ssl_port:
         internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)).setServiceParent(serviceCollection)
 
-    rest_site = PokerSite(settings, PokerRestTree(poker_service))
-
     #
     # HTTP (with or without SLL) that implements REST
     #
+    rest_site = PokerSite(settings, PokerRestTree(poker_service))
     rest_port = settings.headerGetInt("/server/listen/@rest")
     if rest_port:
         internet.TCPServer(rest_port, rest_site).setServiceParent(serviceCollection)
@@ -139,19 +138,6 @@ def makeService(configuration):
     rest_ssl_port = settings.headerGetInt("/server/listen/@rest_ssl")
     if HAS_OPENSSL and rest_ssl_port:
         internet.SSLServer(rest_ssl_port, rest_site, SSLContextFactory(settings)).setServiceParent(serviceCollection)
-
-    http_site = server.Site(PokerTree(poker_service))
-
-    #
-    # HTTP (with or without SLL) that implements XML-RPC and SOAP
-    #
-    http_port = settings.headerGetInt("/server/listen/@http")
-    if http_port:
-        internet.TCPServer(http_port, http_site).setServiceParent(serviceCollection)
-
-    http_ssl_port = settings.headerGetInt("/server/listen/@http_ssl")
-    if HAS_OPENSSL and http_ssl_port:
-        internet.SSLServer(http_ssl_port, http_site, SSLContextFactory(settings)).setServiceParent(serviceCollection)
 
     #
     # SSh twisted.conch.manhole

@@ -20,6 +20,8 @@ TAGS
 *.nja
 .pydevproject
 .settings
+*.cache
+.noseids
 
 # created by distutils
 /build
