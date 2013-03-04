@@ -241,7 +241,6 @@ def cards2packets(game_id, board, pockets, cache):
                     serial = serial,
                     cards = pocket.toRawList()
                 ))
-            if serial not in cache["pockets"]:
                 cache["pockets"][serial] = pocket.copy()
     return packets
 

@@ -97,12 +97,9 @@ settings_stripped_deck_no_autodeal_xml = """<?xml version="1.0" encoding="UTF-8"
 board = PokerCards() 
 hand1 = PokerCards(['Qd', 'Ts'])
 hand2 = PokerCards(['Kh', 'Kc'])
-hand1_extra_river = PokerCards(['Qd', 'Ts', '9c'])
-hand2_extra_river = PokerCards(['Qd', 'Ts', '9h'])
 flop  = PokerCards(['Jd', 'Js', "Jc"])
 turn  = PokerCards(['Tc', 'Js', 'Jc', 'Tc'])
 river  = PokerCards(['Tc', 'Js', 'Jc', 'Tc', 'Ad'])
-river_extra_river  = PokerCards(['Tc', 'Js', 'Jc', 'Tc', 'Ad', '9d'])
 
 exampleHand =  [ \
         ('wait_for', 1, 'first_round'), \
@@ -116,7 +113,6 @@ exampleHand =  [ \
 # new round, the history gives you "None"
         ('round', 'round5', river, { 1 : hand1, 2 : hand2}), \
         ('showdown', river, {1 : hand1, 2 : hand2}), \
-        ('showdown', river_extra_river, {1 : hand1_extra_river, 2 : hand2_extra_river}), \
         ('position', 1, 13), \
         ('blind_request', 1, 222, 735, 'big_and_dead'), \
         ('wait_blind', 1), \
