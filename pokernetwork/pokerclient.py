@@ -616,11 +616,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
             self.scheduleTableAbort(game)
 
     def scheduleTableAbort(self, game):
-        game_id = game.id
+        game.id = game.id
         def thisgame(packet):
-            return hasattr(packet, "game_id") and packet.game_id == game_id
+            return hasattr(packet, "game_id") and packet.game_id == game.id
         self.unschedulePackets(thisgame)
-        self.discardPackets(game_id)
+        if game.id in self._queues:
+            del self._queues[game.id]
         self.scheduleTableQuit(game)
 
     def scheduleTableQuit(self, game):
@@ -742,7 +743,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
         def thisgame(packet):
             return hasattr(packet, "game_id") and packet.game_id == game_id
         self.unschedulePackets(thisgame)
-        self.discardPackets(game_id)
+        if game_id in self._queues:
+            del self._queues[game_id]
 
     def getGame(self, game_id):
         return self.factory.getGame(game_id)
