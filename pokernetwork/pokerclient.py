@@ -285,8 +285,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
         self.publish_timer = None
         self.publish_time = 0
         self.publishPackets()
-        self.lag = DEFAULT_LAGMAX
-        self.lagmax_callbacks = []
         self.explain = PokerExplain()
         
         self._poll = False
@@ -303,10 +301,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
         return self.currentGameId
     
     def connectionMade(self):
-        "connectionMade"
-        if self.factory.delays_enable:
-            self._lagmax = ABSOLUTE_LAGMAX
-            self.lag = self.factory.delays.get("lag", DEFAULT_LAGMAX)
         self.no_display_packets = self.factory.no_display_packets
         UGAMEClientProtocol.connectionMade(self)
 
@@ -520,7 +514,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
         return ()
         
     def setPlayerTimeout(self, game, packet):
-        packet.timeout -= int(self.getLag())
         if packet.timeout > 0:
             packet.when = int(seconds())
             player = game.getPlayer(packet.serial)
@@ -540,10 +533,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
                                         serial  = self.getSerial()) )
     
     def packetReceived(self, packet):
-        if packet.type == PACKET_POKER_TIMEOUT_WARNING:
-            packet.timeout -= int(self.getLag())
-
-        elif packet.type == PACKET_POKER_USER_INFO:
+        if packet.type == PACKET_POKER_USER_INFO:
             self.handleUserInfo(packet)
 
         elif packet.type == PACKET_POKER_PERSONAL_INFO:
@@ -620,8 +610,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
         def thisgame(packet):
             return hasattr(packet, "game_id") and packet.game_id == game.id
         self.unschedulePackets(thisgame)
-        if game.id in self._queues:
-            del self._queues[game.id]
         self.scheduleTableQuit(game)
 
     def scheduleTableQuit(self, game):
@@ -743,8 +731,6 @@ class PokerClientProtocol(UGAMEClientProtocol):
         def thisgame(packet):
             return hasattr(packet, "game_id") and packet.game_id == game_id
         self.unschedulePackets(thisgame)
-        if game_id in self._queues:
-            del self._queues[game_id]
 
     def getGame(self, game_id):
         return self.factory.getGame(game_id)
@@ -795,18 +781,8 @@ class PokerClientProtocol(UGAMEClientProtocol):
 
         return False
 
-    def registerLagmax(self, method):
-        self.lagmax_callbacks.append(method)
-
-    def unregisterLagmax(self, method):
-        self.lagmax_callbacks.remove(method)
-        
-    def triggerLagmax(self, packet):
-        for method in self.lagmax_callbacks:
-            method(packet)
     
     def packet2id(self, packet):
-        self.triggerLagmax(packet)
         if not self.factory.isOutbound(packet) and hasattr(packet, "game_id"):
             return packet.game_id
         elif packet.type == PACKET_POKER_TABLE:
