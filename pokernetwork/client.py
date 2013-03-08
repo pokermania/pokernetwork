@@ -60,10 +60,6 @@ class UGAMEClientProtocol(UGAMEProtocol):
     def packetReceived(self, packet):
         pass
 
-    def sendPacket(self, packet):
-        self.log.debug("sendPacket: %s", packet)
-        UGAMEProtocol.sendPacket(self, packet)
-    
     def protocolEstablished(self):
         d = self.factory.established_deferred
         self.factory.established_deferred = None

@@ -52,10 +52,6 @@ class PokerServerProtocol(UGAMEProtocol):
             self.log.error(traceback.format_exc())
             self.transport.loseConnection()
 
-    def sendPacket(self, packet):
-        self.log.debug("sendPacket: %s", packet)
-        UGAMEProtocol.sendPacket(self, packet)
-
     def protocolEstablished(self):
         self.transport.setTcpKeepAlive(True)
         self._keepalive_delay = self.factory.service._keepalive_delay
