@@ -2032,7 +2032,7 @@ class PokerService(service.Service):
                          "currency_serial\tvariant"
            """
 
-        orderBy = " ORDER BY t.players desc, t.serial"
+        orderBy = " GROUP BY c.name, t.players ORDER BY t.players desc, t.serial"
         
         criteria = query_string.split("\t")
         cursor = self.db.cursor(DictCursor)
