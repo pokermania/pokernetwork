@@ -481,7 +481,7 @@ class PokerTable:
 
             elif event_type == "finish":
                 # despawn this table if no avatars active
-                if self.avatar_collection.isEmpty() and not self.observers:
+                if self.avatar_collection.isEmpty() and not self.observers and self.tourney is None:
                     self.factory.despawnTable(self.game.id)
 
 
