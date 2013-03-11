@@ -3647,7 +3647,9 @@ class BreakTestCase(PokerServiceTestCaseBase):
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, [
                     'UPDATE tourneys SET state',
-                    'SELECT resthost_serial FROM tourneys'
+                    'SELECT resthost_serial FROM tourneys',
+                    'DELETE FROM tables WHERE serial =',
+                    'SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet'
                 ])
         self.MockCursor = MockCursor
         
