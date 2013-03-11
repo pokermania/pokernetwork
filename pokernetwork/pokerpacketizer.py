@@ -174,6 +174,7 @@ def history2packets(history, game_id, previous_dealer, cache):
 
         elif event_type == "end":
             winners = event[1]
+            showdown_stack = event[2]
             packets.append(PacketPokerState(
                 game_id = game_id,
                 string = "end"
@@ -182,6 +183,13 @@ def history2packets(history, game_id, previous_dealer, cache):
                 game_id = game_id,
                 serials = winners
             ))
+            for serial, chips in showdown_stack[0]["serial2money"].iteritems():
+                packets.append(PacketPokerPlayerChips(
+                    game_id = game_id,
+                    serial = serial,
+                    bet = 0,
+                    money = chips
+                ))
 
         elif event_type == "sitOut":
             serial = event[1]
