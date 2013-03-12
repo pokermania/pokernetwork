@@ -40,9 +40,9 @@ import libxml2
 from tests import testclock
 
 from twisted.trial import unittest, runner, reporter
-import twisted.internet.base
 from twisted.internet import reactor, defer
 
+import twisted
 twisted.internet.base.DelayedCall.debug = False
 
 
@@ -128,7 +128,7 @@ class ClientMockup:
     def sendPacket(self, packet):
         self.packets.append(packet)
         if self.deferred and self.type == packet.type:
-                reactor.callLater(0, lambda: self.deferred.callback(packet))
+            reactor.callLater(0, lambda: self.deferred.callback(packet))
         
     def join(self, table, reason = ""):
         self.joinedTables.append(table)
@@ -174,21 +174,16 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         d.addCallback(lambda x: self.destroyDb())
         return d
     # ----------------------------------------------------------------
-    def createUsers(self):
+    def createUsers(self, nr):
         cursor = self.db.cursor()
-        for user_number in (1, 2, 3, 4, 5, 6):
+        for user_number in range(1,nr+1):
             cursor.execute("INSERT INTO users (name, password, created) VALUES ('user%d', 'password%d', 0)" % ( user_number, user_number ))
             self.assertEqual(1, cursor.rowcount)
 
-        self.user_serials = []
-        for _ii in range(0,6): self.user_serials.append(None)
-        (self.user_serials[0], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user1", "password1"), "role1")
-        (self.user_serials[1], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user2", "password2"), "role1")
-        (self.user_serials[2], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user3", "password3"), "role1")
-        (self.user_serials[3], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user4", "password4"), "role1")
-        (self.user_serials[4], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user5", "password5"), "role1")
-        (self.user_serials[5], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user6", "password6"), "role1")
-
+        self.user_serials = [None]*nr
+        
+        for user_number in range(1,nr+1):
+            (self.user_serials[user_number-1], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user%d" % user_number, "password%d" % user_number), "role1")
         cursor.close()
     # ----------------------------------------------------------------
     def test01_sixPlayersTourney5PerTable(self):
@@ -209,7 +204,7 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         cursor.close()
 
         self.service.startService()
-        self.createUsers()
+        self.createUsers(6)
         tourneys = self.service.tourneySelect('Only6')
         self.assertEquals(len(tourneys), 1)
         t = tourneys[0]
@@ -218,18 +213,18 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         self.assertEquals(t['players_quota'], 6L)
         self.assertEquals(t['players_min'], 6L)
         self.assertEquals(t['seats_per_game'], 5L)
-        tourneySerial = t['serial']
+        tourney_serial = t['serial']
 
         clients = {}
-        for userSerial in self.user_serials:
-            clients[userSerial] = ClientMockup(userSerial)
-            self.service.avatar_collection.add(userSerial, clients[userSerial])
-            self.service.tourneyRegister(PacketPokerTourneyRegister(serial=userSerial, tourney_serial=tourneySerial))
+        for user_serial in self.user_serials:
+            clients[user_serial] = ClientMockup(user_serial)
+            self.service.avatar_collection.add(user_serial, clients[user_serial])
+            self.service.tourneyRegister(PacketPokerTourneyRegister(serial=user_serial, tourney_serial=tourney_serial))
 
-        tourneys =  self.service.tourneys.values()
+        tourneys = self.service.tourneys.values()
 
         sixTourney = [t for t in self.service.tourneys.itervalues() if t.name=='Only6'][0]
-        self.assertEquals(sixTourney.serial, tourneySerial)
+        self.assertEquals(sixTourney.serial, tourney_serial)
 
         d = defer.Deferred()
         def checkTourney(status):
@@ -244,6 +239,73 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         reactor.callLater(3, d.callback, True)
 
         return d
+    
+    def test02(self):
+        pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
+        pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
+        
+        cursor = self.db.cursor()
+        cursor.execute(
+            "INSERT INTO `tourneys_schedule` (`name`, `description_short`, `description_long`, `players_quota`, `variant`, `betting_structure`, `seats_per_game`, `currency_serial`, `buy_in`, `rake`, `sit_n_go`, `start_time`, `register_time`, `respawn`, `respawn_interval`, `players_min`, `breaks_first`)" \
+            "VALUES ('Only4', 'Sit and Go 6 players and only 4, Holdem', 'Sit and Go 4 players only', '4', 'holdem', 'level-15-30-no-limit', '2', 1, '0', '0', 'y', '0', '0', 'y', '0', '6', 100 )"
+        )
+        cursor.close()
+
+        self.service.startService()
+        self.service.delays['tourney_kick'] = 2
+        self.createUsers(4)
+        tourneys = self.service.tourneySelect('Only4')
+        self.assertEquals(len(tourneys), 1)
+        t = tourneys[0]
+        
+        # by moving, a table gets destroyed
+        tourney_serial = t['serial']
+
+        clients = {}
+        for user_serial in self.user_serials:
+            clients[user_serial] = ClientMockup(user_serial)
+            self.service.avatar_collection.add(user_serial, clients[user_serial])
+            self.service.tourneyRegister(PacketPokerTourneyRegister(serial=user_serial, tourney_serial=tourney_serial))
+
+        tourney = self.service.tourneys.values()[0]
+        user_serials_broke = []
+        d = defer.Deferred()
+        
+        def disconnectBrokeClients():
+            for serial in user_serials_broke:
+                table = clients[serial].tables.itervalues().next()
+                table.disconnectPlayer(clients[serial], serial)
+            
+        def firstRounds(status):
+            self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, tourney.state)
+            for game in tourney.games:
+                table = self.service.tables[game.id]
+                for _i in range(2):
+                    serial = game.getSerialInPosition()
+                    game.callNraise(serial, game.serial2player[serial].money)
+                    table.update()
+                    
+            for game in tourney.games:
+                for player in game.serial2player.itervalues():
+                    if not player.money: user_serials_broke.append(player.serial)
+            
+            disconnectBrokeClients()
+            # wait for players to be removed
+            d = defer.Deferred()
+            reactor.callLater(3, d.callback, True)
+            return d
+        
+        def secondRound(status):
+            self.assertEquals(len(tourney.games), 1)
+            self.assertEquals(len(tourney.games[0].playersAll()), 2)
+            
+        d.addCallback(firstRounds)
+        d.addCallback(secondRound)
+
+        reactor.callLater(3, d.callback, True)
+
+        return d
+    
 # ----------------------------------------------------------------
 
 def GetTestSuite():

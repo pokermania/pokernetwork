@@ -182,9 +182,12 @@ class PokerTable:
     def isValid(self):
         """Returns true if the table has a factory."""
         return hasattr(self, "factory")
-
+    
+    def canBeDespawned(self):
+        return not self.isRunning() and self.avatar_collection.isEmpty() and not self.observers and self.tourney is None
+    
     def destroy(self):
-        """Destroys the table and deletes it from factory.tables.Also informs connected avatars."""
+        """Destroys the table and deletes it from factory.tables. Also informs connected avatars."""
         self.log.debug("destroy table %d", self.game.id)
         #
         # cancel DealTimeout timer
@@ -471,19 +474,15 @@ class PokerTable:
                     self.game_delay["delay"],
                     seconds() - self.game_delay["start"],
                 )
-
             elif event_type == "leave":
                 quitters = event[1]
                 for serial, seat in quitters:  # @UnusedVariable
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     for avatar in self.avatar_collection.get(serial)[:]:
                         self.seated2observer(avatar, serial)
-
-            elif event_type == "finish":
-                # despawn this table if no avatars active
-                if self.avatar_collection.isEmpty() and not self.observers and self.tourney is None:
-                    self.factory.despawnTable(self.game.id)
-
+            # despawn this table if no avatars are active
+            if event_type == "finish" and self.canBeDespawned():
+                self.factory.despawnTable(self.game.id)
 
     def cashGame_kickPlayerSittingOutTooLong(self, historyToSearch):
         if self.tourney: return
@@ -1117,8 +1116,9 @@ class PokerTable:
         else:
             self.avatar_collection.remove(serial, avatar)
         del avatar.tables[self.game.id]
+        
         # despawn table if game is not running and nobody is connected
-        if not self.game.playersAll() and self.avatar_collection.isEmpty() and not self.observers and self.tourney is None:
+        if self.canBeDespawned():
             self.factory.despawnTable(self.game.id)
 
     def buyInPlayer(self, avatar, amount):
