@@ -1192,15 +1192,6 @@ class PokerService(service.Service):
         table = self.getTable(game.id)
         table.destroy()
 
-        # delete tourney table from database
-        c = self.db.cursor()
-        try:
-            c.execute("DELETE FROM tables WHERE serial = %s", (game.id,))
-            if c.rowcount != 1:
-                self.log.warn("tourneyDestroyGameActual: deleted %d rows expected 1: %s", c.rowcount, c._executed)
-        finally:
-            c.close()
-
     def tourneyDestroyGame(self, tourney, game):
         wait = int(self.delays.get('extra_wait_tourney_finish', 0))
         if wait > 0: reactor.callLater(wait, self.tourneyDestroyGameActual, game)
@@ -3092,6 +3083,17 @@ class PokerService(service.Service):
     def deleteTable(self, table):
         self.log.debug("table %s/%d removed from server", table.game.name, table.game.id)
         del self.tables[table.game.id]
+        if table.transient: self.deleteTableEntry(table)
+        
+    def deleteTableEntry(self, table):
+        self.log.debug("table %s/%d deleting db entry", table.game.name, table.game.id)
+        c = self.db.cursor()
+        try:
+            c.execute("DELETE FROM tables WHERE serial = %s", (table.game.id,))
+            if c.rowcount != 1:
+                self.log.warn("tourneyDestroyGameActual: deleted %d rows expected 1: %s", c.rowcount, c._executed)
+        finally:
+            c.close()
 
     def broadcast(self, packet):
         for avatar in self.avatars:
