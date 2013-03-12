@@ -245,7 +245,10 @@ class MockService:
         else:
             self.error("Player is already seated at table, %d." % table_id)
             return False
-
+        
+    def despawnTable(self, x):
+        pass
+    
     def deleteTable(self, x):
         pass
 
@@ -526,6 +529,12 @@ class PokerAvatarCollectionTestCase(unittest.TestCase):
         self.assertEquals([avatar1], avatar_collection.get(serial2))
         avatar_collection.remove(serial2, avatar1)
         self.assertEquals([], avatar_collection.get(serial2))
+        
+    def test02_isEmpty(self):
+        avatar_collection = pokertable.PokerAvatarCollection(prefix = '')
+        self.assertTrue(avatar_collection.isEmpty())
+        avatar_collection.set(100,['av1'])
+        self.assertFalse(avatar_collection.isEmpty())
 
 # --------------------------------------------------------------------------------
 class PokerTableTestCaseBase(unittest.TestCase):

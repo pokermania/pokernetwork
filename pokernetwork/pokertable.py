@@ -89,7 +89,7 @@ class PokerAvatarCollection:
         return self.serial2avatars.itervalues()
 
     def isEmpty(self):
-        return bool(self.serial2avatars)
+        return not bool(self.serial2avatars)
 
 
 class PokerPredefinedDecks:
