@@ -37,6 +37,7 @@ import libxml2
 try: from collections import OrderedDict
 except ImportError: from pokernetwork.ordereddict import OrderedDict
 
+
 from pokernetwork import log as network_log
 log = network_log.get_child('pokerservice')
 
@@ -87,6 +88,7 @@ from datetime import date
 UPDATE_TOURNEYS_SCHEDULE_DELAY = 2 * 60
 CHECK_TOURNEYS_SCHEDULE_DELAY = 60
 DELETE_OLD_TOURNEYS_DELAY = 1 * 60 * 60
+
 
 def _import(path):
     module = __import__(path)
@@ -362,9 +364,9 @@ class PokerService(service.Service):
                     FROM tables as t
                     INNER JOIN tableconfigs as c
                         ON t.tableconfig_serial = c.serial
-                    WHERE t.serial = %s
+                    WHERE t.serial = %s AND t.resthost_serial = %s
                 """),
-                serial
+                (serial, self.resthost_serial)
             )
             if c.rowcount == 1:
                 return dict(zip([
@@ -378,8 +380,8 @@ class PokerService(service.Service):
                     'muck_timeout'
                 ], c.fetchone()))
             else:
-                self.log.error("Could not load table config: %d", serial)
-                raise Exception("Could not load table config: %d" % (serial,))
+                print c.rowcount, c._executed
+                self.log.inform("Could not load table config: %d" % (serial,))
         finally:
             c.close()
 

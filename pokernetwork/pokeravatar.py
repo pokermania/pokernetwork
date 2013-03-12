@@ -719,10 +719,17 @@ class PokerAvatar:
         elif packet.type == PACKET_POKER_TABLE_JOIN:
             if packet.game_id not in self.service.tables:
                 description = self.service.loadTableConfig(packet.game_id)
-                if description:
-                    self.service.spawnTable(packet.game_id, **description)
-                else:
-                    self.log.warn("trying accessing table that is not in database!")
+                if not description:
+                    self.log.warn("Could not load table config: %d", packet.game_id)
+                    self.sendPacketVerbose(PacketPokerError(
+                        code=PacketPokerTableJoin.DOES_NOT_EXIST,
+                        message="The requested table does not exists.",
+                        other_type=packet.type,
+                        serial=self.getSerial(),
+                        game_id=packet.game_id
+                    ))
+                    return
+                self.service.spawnTable(packet.game_id, **description)
             self.performPacketPokerTableJoin(packet)
             return
 

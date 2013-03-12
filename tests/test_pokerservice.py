@@ -428,6 +428,13 @@ list_table_xml = """<?xml version="1.0" encoding="UTF-8"?>
 
   <stats type="RankPercentile"/>
 
+  <resthost
+    serial="1"
+    name="test"
+    host="localhost"
+    port="19384"
+    path="/POKER_REST"/>
+
   <refill serial="1" amount="10000000" />
 
   <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes" />
@@ -6594,6 +6601,76 @@ class LadderTestCase(PokerServiceTestCaseBase):
         game_id = 10
         packet = self.service.getLadder(game_id, 2, 1)
         self.assertEqual(game_id, packet.game_id)
+
+class PokerServiceUnitTests(unittest.TestCase):
+
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+      <server>
+        <delays />
+        <resthost
+          serial="1"
+          name="test"
+          host="localhost"
+          port="19384"
+          path="/POKER_REST"/>
+        <database
+          host="%(dbhost)s" name="%(dbname)s"
+          user="%(dbuser)s" password="%(dbuser_password)s"
+          root_user="%(dbroot)s" root_password="%(dbroot_password)s"
+          schema="%(tests_path)s/../database/schema.sql"
+          command="%(mysql_command)s" />
+        <path>%(engine_path)s/conf %(tests_path)s/../conf</path>
+        <users temporary="BOT.*"/>
+      </server>
+    """ % {
+        'dbhost': config.test.mysql.host,
+        'dbname': config.test.mysql.database,
+        'dbuser': config.test.mysql.user.name,
+        'dbuser_password': config.test.mysql.user.password,
+        'dbroot': config.test.mysql.root_user.name,
+        'dbroot_password': config.test.mysql.root_user.password,
+        'tests_path': TESTS_PATH,
+        'engine_path': config.test.engine_path,
+        'mysql_command': config.test.mysql.command
+    }
+
+    def setUp(self):
+        settings = pokernetworkconfig.Config([])
+        settings.loadFromString(self.xml)
+        self.service = pokerservice.PokerService(settings)
+        self.service.resthost_serial = 1
+        self.service.db = pokerdatabase.PokerDatabase(settings)
+
+    def test_loadTableConfig(self):
+        sqlmanager.setup_db(
+            TESTS_PATH + "/../database/schema.sql", (
+                ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
+                    ('Table1','100-200_2000-20000_no-limit'),
+                )),
+                ("INSERT INTO tables (resthost_serial, tableconfig_serial, tourney_serial) VALUES (%s, %s, %s)", (
+                    (1, 1, None),
+                    (2, 1, None),
+                    (1, None, 1),
+                )),
+            ),
+            user=config.test.mysql.root_user.name,
+            password=config.test.mysql.root_user.password,
+            host=config.test.mysql.host,
+            port=config.test.mysql.port,
+            database=config.test.mysql.database
+        )
+
+        # test normal
+        assert self.service.loadTableConfig(1) != None
+
+        # test non existant
+        assert self.service.loadTableConfig(100) == None
+
+        # test wrong resthost
+        assert self.service.loadTableConfig(2) == None
+
+        # test tourney table
+        assert self.service.loadTableConfig(3) == None
 
 def GetTestSuite():
     loader = runner.TestLoader()
