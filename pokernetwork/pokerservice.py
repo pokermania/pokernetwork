@@ -576,7 +576,7 @@ class PokerService(service.Service):
         if not hasattr(self, "tables"):
             return
         
-        tables = (t for t in self.tables.itervalues() if not t.game.isEndOrNull())
+        tables = [t for t in self.tables.itervalues() if not t.game.isEndOrNull()]
         for table in tables:
             table.broadcast(PacketPokerStateInformation(
                 game_id = table.game.id,
