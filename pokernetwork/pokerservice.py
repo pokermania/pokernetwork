@@ -360,7 +360,7 @@ class PokerService(service.Service):
                         c.player_timeout,
                         c.muck_timeout
                     FROM tables as t
-                    LEFT JOIN tableconfigs as c
+                    INNER JOIN tableconfigs as c
                         ON t.tableconfig_serial = c.serial
                     WHERE t.serial = %s
                 """),
