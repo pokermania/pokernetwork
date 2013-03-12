@@ -1118,7 +1118,7 @@ class PokerTable:
             self.avatar_collection.remove(serial, avatar)
         del avatar.tables[self.game.id]
         # despawn table if game is not running and nobody is connected
-        if not self.game.playersAll() and self.avatar_collection.isEmpty() and not self.observers:
+        if not self.game.playersAll() and self.avatar_collection.isEmpty() and not self.observers and self.tourney is None:
             self.factory.despawnTable(self.game.id)
 
     def buyInPlayer(self, avatar, amount):
