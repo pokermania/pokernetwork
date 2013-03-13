@@ -721,12 +721,11 @@ class PokerAvatar:
                 description = self.service.loadTableConfig(packet.game_id)
                 if not description:
                     self.log.warn("Could not load table config: %d", packet.game_id)
-                    self.sendPacketVerbose(PacketPokerError(
+                    self.sendPacketVerbose(PacketError(
                         code=PacketPokerTableJoin.DOES_NOT_EXIST,
                         message="The requested table does not exists.",
                         other_type=packet.type,
-                        serial=self.getSerial(),
-                        game_id=packet.game_id
+                        serial=self.getSerial()
                     ))
                     return
                 self.service.spawnTable(packet.game_id, **description)

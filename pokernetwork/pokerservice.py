@@ -380,7 +380,6 @@ class PokerService(service.Service):
                     'muck_timeout'
                 ], c.fetchone()))
             else:
-                print c.rowcount, c._executed
                 self.log.inform("Could not load table config: %d" % (serial,))
         finally:
             c.close()
