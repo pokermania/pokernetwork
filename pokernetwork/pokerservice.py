@@ -1938,21 +1938,22 @@ class PokerService(service.Service):
             self.hand_cache[hand_serial] = description
         
         cursor = self.db.cursor()
-        sql = "UPDATE hands SET description = %s WHERE serial = %s"
-        params = (str(description), hand_serial)
-        cursor.execute(sql, params)
-        self.log.debug("saveHand: %s" , cursor._executed)
-        if cursor.rowcount not in (1,0):
-            self.log.error("modified %d rows (expected 1 or 0): %s", cursor.rowcount, cursor._executed)
+        try:
+            sql = "UPDATE hands SET description = %s WHERE serial = %s"
+            params = (str(description), hand_serial)
+            cursor.execute(sql, params)
+            self.log.debug("saveHand: %s" , cursor._executed)
+            if cursor.rowcount not in (1,0):
+                self.log.error("modified %d rows (expected 1 or 0): %s", cursor.rowcount, cursor._executed)
+                
+            sql = "INSERT INTO user2hand VALUES "
+            sql += ", ".join("(%d, %d)" % (player_serial, hand_serial) for player_serial in player_list)
+            cursor.execute(sql)
+            self.log.debug("saveHand: %s", sql)
+            if cursor.rowcount != len(player_list):
+                self.log.error("inserted %d rows (expected exactly %d): %s", cursor.rowcount, len(player_list), cursor._executed)
+        finally:
             cursor.close()
-            return
-        sql = "INSERT INTO user2hand VALUES "
-        sql += ", ".join("(%d, %d)" % (player_serial, hand_serial) for player_serial in player_list)
-        cursor.execute(sql)
-        self.log.debug("saveHand: %s", sql)
-        if cursor.rowcount != len(player_list):
-            self.log.error("inserted %d rows (expected exactly %d): %s", cursor.rowcount, len(player_list), cursor._executed)
-        cursor.close()
 
     def listHands(self, sql_list, sql_total):
         cursor = self.db.cursor()

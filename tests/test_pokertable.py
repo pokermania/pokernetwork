@@ -3050,12 +3050,12 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         cards = []
         for i in range(2):
             for card_strings in cards_to_player:
-                cards.append(table.game.eval.string2card(card_strings[i]))
-        cards.extend(table.game.eval.string2card(cards_board))
+                cards.append(game.eval.string2card(card_strings[i]))
+        cards.extend(game.eval.string2card(cards_board))
         cards.reverse()
         
-        table.game.deck = table.game.eval.card2string(cards)
-        table.game.shuffler = PokerPredefinedDecks([cards])
+        game.deck = game.eval.card2string(cards)
+        game.shuffler = PokerPredefinedDecks([cards])
 
         
         def addPlayerAndReorder(self, *a,**kw):
