@@ -15,13 +15,14 @@ class TestLoggingHandler(BaseHandler):
         self.set_level(10)
 
     def record(self, severity, name, refs, format, *a, **kw):
+        args = tuple(i() if callable(i) else i for i in a)
         log_history.output.append(Message(
             severity = severity,
             path = name,
             refs = str(refs),
             message = format,
-            args = a,
-            formated = format % a if a else format
+            args = args,
+            formated = format % args if args else format
         ))
 
 class Log(object):
