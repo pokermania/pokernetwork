@@ -59,6 +59,11 @@ from pokerpackets.networkpackets import *
 from pokernetwork.pokeravatar import DEFAULT_PLAYER_USER_DATA, PokerAvatar
 from pokerengine.pokercards import PokerCards
 
+try:
+    from nose.plugins.attrib import attr
+except ImportError:
+    attr = lambda *args, **kw: lambda fn: fn
+
 global table1ID
 global table2ID
 global table3ID
@@ -719,6 +724,27 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.destroy()
         self.assertEquals(1, dealTimeout.cancelled)
         self.assertEquals(False, "dealTimeout" in self.table.timer_info)
+    # -------------------------------------------------------------------
+    @attr("og_now")
+    def test03_scheduleAutoDeal_should_not_call_beginTurn(self):
+        gen = (e for e in (True, False))
+        def shouldAutoDealNew():
+            return gen.next()
+        old_shouldAutoDeal = self.table.shouldAutoDeal
+        self.table.shouldAutoDeal = shouldAutoDealNew
+
+        def beginTurnNew():
+            self.assertTrue(False, "beginTurn should not be called")
+        old_beginTurn = self.table.beginTurn
+        self.table.beginTurn = beginTurnNew
+
+        self.createPlayer(1)
+        self.createPlayer(2)
+        self.table.scheduleAutoDeal()
+        d = defer.Deferred()
+        reactor.callLater(2, d.callback, True)
+        return d
+
     # -------------------------------------------------------------------
     def test06_duplicate_buyin(self):
         """ Buy in requested twice for a given player """
