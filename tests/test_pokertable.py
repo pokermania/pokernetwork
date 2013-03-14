@@ -3186,6 +3186,69 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         table.scheduleAutoDeal()
         return d1
     
+    def test65_lateFirstRound(self):
+        self.table = table = self.table9
+        game = table.game
+        self.service.has_ladder = False
+        table.factory.buyInPlayer = lambda serial, table_id, currency_serial, amount: amount 
+
+        def addPlayerAndReorder(self, *a,**kw):
+            was_added = self.addPlayerOrig(*a,**kw)
+            if was_added:
+                self.serial2player = OrderedDict(sorted(self.serial2player.items(),key=lambda (k,v):od_order.index(k)))
+            return was_added
+        
+        game.addPlayerOrig = game.addPlayer
+        game.addPlayer = lambda *a,**kw: addPlayerAndReorder(game,*a,**kw) 
+        
+        clients_all = {}
+        clients = {}
+
+        s_sit = [10, 20, 30, 40, 50, 60]
+        s_all = [10, 20, 30, 40, 50, 60]
+        
+        s_seats = [0,1,2,3,4,5,6,7,8]
+        od_order = [10, 20, 30, 40, 50, 60, 70]
+
+        def joinAndSeat(serial, should_sit, pos, explain=False):
+            clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            if explain: client.setExplain(PacketPokerExplain.REST)
+            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
+            if table.seatPlayer(client, serial, pos):
+                self.assertTrue(table.buyInPlayer(client, game.buyIn()))
+                game.noAutoBlindAnte(serial)
+                if should_sit:
+                    clients[serial] = client
+                    table.sitPlayer(client, serial)
+            table.update()
+        
+        for pos,serial in enumerate(s_all):
+            joinAndSeat(serial,serial in s_sit,s_seats[pos])
+        
+        #
+        # setup game (forced_dealer does not work because of first_turn == False)
+        game.dealer_seat = 0
+        game.first_turn = False
+        #
+        # put missed_blind on None, if not all missed_blinds are reset
+        for serial in s_all:
+            game.serial2player[serial].missed_blind = None
+        
+        def firstGame(packet):
+            s_all.append(70); s_sit.append(70); joinAndSeat(70, True, 6)
+            game.blind(30); table.update()
+            game.blind(40); table.update()
+            
+            self.assertFalse(log_history.search("updateBlinds statement unexpectedly reached"))
+            self.assertTrue(game.isFirstRound())
+        
+        d1 = clients[s_sit[0]].waitFor(PACKET_POKER_START)
+        d1.addCallback(firstGame)
+        table.scheduleAutoDeal()
+        log_history.reset()
+        return d1
+                
         
 # --------------------------------------------------------------------------------
 
