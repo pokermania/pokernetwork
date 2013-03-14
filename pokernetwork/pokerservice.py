@@ -379,8 +379,6 @@ class PokerService(service.Service):
                     'player_timeout',
                     'muck_timeout'
                 ], c.fetchone()))
-            else:
-                self.log.inform("Could not load table config: %d" % (serial,))
         finally:
             c.close()
 
