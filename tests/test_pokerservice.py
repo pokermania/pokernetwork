@@ -5297,7 +5297,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def statementActions(cursorSelf, sql, statement):
                 cursorSelf.rowcount = 5
             def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, ["UPDATE hands SET "])
+                MockCursorBase.__init__(cursorSelf, self, ["UPDATE hands SET ", "INSERT INTO user2hand VALUES "])
         self.service = pokerservice.PokerService(self.settings)
 
         oldDb = self.service.db
@@ -5307,7 +5307,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         pack = self.service.saveHand([("foo", 3, 991, 1, 100, "he", ".50-1_10-100_limit", [113, 222], 8, {})], 991)
         msgs = log_history.get_all()
-        self.assertEquals(len(msgs), 2)
+        self.assertEquals(len(msgs), 4)
         self.failUnless(msgs[0].find("saveHand: UPDATE hands SET description = ") == 0)
         self.failUnless(msgs[1].find('modified 5 rows (expected 1 or 0): UPDATE hands') == 0)
         self.service.db = oldDb
