@@ -287,16 +287,16 @@ class PokerBot:
         ev = game.handEV(serial, LEVEL2ITERATIONS[self.factory.level])
         
         if game.state == "pre-flop":
-            if ev < 100:
+            if ev < 400:
                 action = "check"
-            elif ev < 500:
+            elif ev < 700:
                 action = "call"
             else:
                 action = "raise"
         elif game.state == "flop" or game.state == "third":
-            if ev < 200:
+            if ev < 300:
                 action = "check"
-            elif ev < 600:
+            elif ev < 700:
                 action = "call"
             else:
                 action = "raise"
@@ -321,13 +321,14 @@ class PokerBot:
         serial = protocol.getSerial()
         name = protocol.getName()
         if serial not in game.serialsNotFold():
-            self.log.warn("%s: the server must have decided to play on our behalf before we had a chance to decide "
+            self.log.warn(
+                "%s: the server must have decided to play on our behalf before we had a chance to decide "
                 "(TIMEOUT happening at the exact same time we reconnected), most likely",
                 name
             )
             return
         
-        (desired_action, ev) = self.eval(game, serial)
+        desired_action, ev = self.eval(game, serial)
         actions = game.possibleActions(serial)
         self.log.debug("%s serial = %d, hand = %s, board = %s", name, serial, game.getHandAsString(serial), game.getBoardAsString())
         self.log.debug("%s wants to %s (ev = %d)", name, desired_action, ev)
@@ -350,7 +351,7 @@ class PokerBot:
         elif desired_action == "call":
             protocol.sendPacket(PacketPokerCall(game_id = game.id, serial = serial))
         elif desired_action == "raise":
-            (min_bet, max_bet, to_call) = game.betLimits(serial)
+            min_bet, _max_bet, _to_call = game.betLimits(serial)
             protocol.sendPacket(PacketPokerRaise(game_id = game.id, serial = serial, amount = min_bet * 2))
         else:
             self.log.warn("=> unexpected actions = %s", actions)
