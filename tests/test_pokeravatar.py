@@ -181,15 +181,15 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
                     (1, 3),
                     (1, 4),
                 )),
-                ('INSERT INTO tourneys_schedule (name, description_short, description_long, players_quota, variant, ' \
+                ('INSERT INTO tourneys_schedule (resthost_serial, name, description_short, description_long, players_quota, variant, ' \
                 'betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, start_time, ' \
                 'register_time, respawn, respawn_interval) ' \
-                'VALUES ("sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", "2", "holdem", "level-15-30-no-limit", ' \
+                'VALUES (1, "sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", "2", "holdem", "level-15-30-no-limit", ' \
                 '"2", 1, "300000", "0", "y", "0", "0", "y", "0");',None),
-                ('INSERT INTO tourneys_schedule (name, description_short, description_long, players_quota, variant, ' \
+                ('INSERT INTO tourneys_schedule (resthost_serial, name, description_short, description_long, players_quota, variant, ' \
                 'betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, breaks_interval, ' \
                 'rebuy_delay, add_on, add_on_delay, start_time, register_time, respawn, respawn_interval, players_min) ' \
-                'VALUES ("regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", "1000", "holdem", "level-001", "10", ' \
+                'VALUES (1, "regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", "1000", "holdem", "level-001", "10", ' \
                 '1, "0", "0", "n", "60", "30", "1", "60", unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - ' \
                 'INTERVAL 1 HOUR), "n", "0", 3);', None),
             ),
