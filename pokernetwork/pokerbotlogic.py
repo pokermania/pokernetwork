@@ -287,7 +287,7 @@ class PokerBot:
         ev = game.handEV(serial, LEVEL2ITERATIONS[self.factory.level])
         
         if game.state == "pre-flop":
-            if ev < 400:
+            if ev < 550:
                 action = "check"
             elif ev < 700:
                 action = "call"
