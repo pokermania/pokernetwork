@@ -104,6 +104,8 @@ settings_xml_server = """\
     <table name="Table4" variant="holdem" betting_structure=".50-1_5-100000_ante-limit" seats="10" player_timeout="60" currency_serial="1" />
     <listen tcp="19480" />
 
+    <resthost serial="1" host="127.0.0.1" port="19481" path="/POKER_REST" name="test" />
+
     <refill serial="1" amount="10000" />
     <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
     <database
