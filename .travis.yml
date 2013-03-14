@@ -42,6 +42,7 @@ install:
 
 # command to run tests, e.g. python setup.py test
 before_script:
+ - ln -s $(readlink -f pokernetwork) $(readlink -f ${VIRTUAL_ENV}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages)/pokernetwork
  - mysqladmin -u root password 123
  - python setup.py configure -s pokernetwork.paths.src=$(readlink -f ${VIRTUAL_ENV}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages)/pokernetwork
  - python setup.py configure -s pokernetwork.paths.conf=$(readlink -f ${VIRTUAL_ENV})/share/poker-network/conf
