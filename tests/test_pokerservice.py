@@ -484,6 +484,13 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
                     (1, 5),
                     (1, 6),
                     (1, 7),
+                    (2, 7),
+                )
+            )
+            c.executemany(
+                "INSERT INTO user2table (user_serial, table_serial) VALUES (%s, %s)",
+                (
+                    (1, 1),
                 )
             )
         finally:
@@ -492,7 +499,6 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
             self.service.spawnTable(i, **self.service.loadTableConfig(i))
 
     def test01_my(self):
-        self.service.startService()
         db = self.service.db
         serial = 44
         db.db.query("INSERT INTO user2table (user_serial, table_serial) VALUES (%d, %d)" % (serial, TABLE1))
@@ -500,7 +506,6 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         self.assertEqual(1, len(tables))
         self.assertEqual(tables[0]['serial'], TABLE1)
     def test02_currency(self):
-        self.service.startService()
         tables = self.service.listTables('50', 0)
         self.assertEqual(0, len(tables))
         tables = self.service.listTables('1', 0)
@@ -508,7 +513,6 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         tables = self.service.listTables('2', 0)
         self.assertEqual(3, len(tables))
     def test03_currency_and_variant(self):
-        self.service.startService()
         tables = self.service.listTables('1\tfakevariant', 0)
         self.assertEqual(0, len(tables))
         tables = self.service.listTables('2\tfakevariant', 0)
@@ -522,7 +526,6 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         tables = self.service.listTables('2\t7stud', 0)
         self.assertEqual(1, len(tables))
     def test04_variant(self):
-        self.service.startService()
         tables = self.service.listTables('\tfakevariant', 0)
         self.assertEqual(0, len(tables))
         tables = self.service.listTables('\tholdem', 0)
@@ -530,21 +533,27 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         tables = self.service.listTables('\t7stud', 0)
         self.assertEqual(1, len(tables))
     def test05_all(self):
-        self.service.startService()
         tables = self.service.listTables('', 0)
         self.assertEqual(7, len(tables))
         tables = self.service.listTables('all', 0)
-        self.assertEqual(7, len(tables))
+        self.assertEqual(8, len(tables))
     def test06_name(self):
-        self.service.startService()
         tables = self.service.listTables('fakename', 0)
         self.assertEqual(0, len(tables))
         for name in [ "NL HE 10-max 100/200", "NL HE 6-max 100/200",
                       "Limit HE 10-max 2/4", "Limit HE 6-max 2/4", "Stud 8-max 2/4" ]:
             tables = self.service.listTables(name, 0)
             self.assertEqual(1, len(tables))
-    def test07_currency_and_variant_and_bettingStructure(self):
-        self.service.startService()
+    def test07_marked(self):
+        tables = self.service.listTables('marked', 0)
+        self.assertEqual(7, len(tables))
+        self.assertEqual(tables[0]['player_seated'], 0)
+        
+        tables = self.service.listTables('marked', 1)
+        self.assertEqual(7, len(tables))
+        self.assertEqual(tables[0]['player_seated'], 1)
+        
+    def test08_currency_and_variant_and_bettingStructure(self):
         tables = self.service.searchTables(1, 'fakevariant', 'fakebetting')
         self.assertEqual(0, len(tables))
         tables = self.service.searchTables(2, 'fakevariant', '1-2_20-200_limit')
@@ -563,8 +572,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         self.assertEqual(1, len(tables))
         tables = self.service.searchTables(None, '7stud', '100-200_2000-20000_no-limit')
         self.assertEqual(0, len(tables))
-    def test08_currency_and_variant_and_bettingStructure_and_count_noOne(self):
-        self.service.startService()
+    def test09_currency_and_variant_and_bettingStructure_and_count_noOne(self):
         tables = self.service.searchTables(1,'fakevariant', 'fakebetting', 2)
         self.assertEqual(0, len(tables))
         tables = self.service.searchTables(2, 'fakevariant', '1-2_20-200_limit', 2)
@@ -583,8 +591,7 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         self.assertEqual(0, len(tables))
         tables = self.service.searchTables(None, '7stud', '100-200_2000-20000_no-limit', 2)
         self.assertEqual(0, len(tables))
-    def test09_currency_and_variant_and_bettingStructure_and_count_withSome(self):
-        self.service.startService()
+    def test10_currency_and_variant_and_bettingStructure_and_count_withSome(self):
         log_history.reset()
         nlHe100Currency1 = 3
         nlHe100Currency2 = 4
@@ -783,35 +790,19 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
                         tables = self.service.searchTables(currencySerial, variant, betting, ii)
                         self.assertEqual(0, len(tables))
         self.assertEquals(log_history.get_all(), [])
-    def test10_tooMany(self):
-        self.service.startService()
+    def test11_tooMany(self):
 
         log_history.reset()
         tables = self.service.listTables('\tholdem\t', 0)
         self.assertEqual(6, len(tables))
         self.assertEquals(log_history.get_all(), ["Following listTables() criteria query_string has more parameters than expected, ignoring third one and beyond in: \tholdem\t"])
-    def test11_currencySerialIsNotAnInteger(self):
-        self.service.startService()
+    def test12_currencySerialIsNotAnInteger(self):
 
         log_history.reset()
         tables = self.service.listTables("hithere\t", 0)
         self.assertEqual(0, len(tables))
         self.assertEquals(log_history.get_all(), ["listTables(): currency_serial parameter must be an integer, instead was: hithere"])
-    def test13_emptyArgsShouldGenerateSameAsSelectAll(self):
-        self.service.startService()
-
-        log_history.reset()
-        tables = self.service.listTables("all", 0)
-        allSelectCount = len(tables)
-        self.assertEquals(allSelectCount, 7)
-        self.assertEquals(log_history.get_all(), [])
-
-        log_history.reset()
-        tables = self.service.listTables("\t", 0)
-        self.assertEqual(allSelectCount, len(tables))
-        self.assertEquals(log_history.get_all(), [])
     def test14_sqlInjectionInParametersShouldNotWork(self):
-        self.service.startService()
 
         log_history.reset()
         tables = self.service.listTables("\tholdem'; DELETE from tables WHERE variant = 'holdem", 0)

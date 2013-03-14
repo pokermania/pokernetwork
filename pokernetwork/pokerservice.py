@@ -512,8 +512,7 @@ class PokerService(service.Service):
         outputStr = "Aces"
         try:
             # I am not completely sure poker-engine should be hardcoded here like this...
-            transObj = gettext.translation('poker-engine', 
-                                                languages=[lang], codeset=codeset)
+            transObj = gettext.translation('poker-engine', languages=[lang], codeset=codeset)
             transObj.install()
             myGetTextFunc = transObj.gettext
             # This test call of the function *must* be a string in the
@@ -2032,7 +2031,9 @@ class PokerService(service.Service):
                          "currency_serial\tvariant"
            """
 
-        orderBy = " GROUP BY c.name, t.players ORDER BY t.players desc, t.serial"
+        query_suffix = " ORDER BY t.players desc, t.serial"
+        if self.resthost_serial and query_string != 'all': 
+            query_suffix = (" AND t.resthost_serial = %d" % self.resthost_serial) + query_suffix
         
         criteria = query_string.split("\t")
         cursor = self.db.cursor(DictCursor)
@@ -2045,7 +2046,8 @@ class PokerService(service.Service):
                     FROM tables AS t
                     INNER JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
-                """ + orderBy
+                    WHERE 1
+                """ + query_suffix
             )
 
         elif query_string == 'my':
@@ -2055,12 +2057,12 @@ class PokerService(service.Service):
                         t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
                         c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
                     FROM user2table AS u2t
-                    LEFT JOIN tables AS t
+                    INNER JOIN tables AS t
                         ON t.serial = u2t.table_serial
                     INNER JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
                     WHERE u2t.user_serial = %s
-                """ + orderBy,
+                """ + query_suffix,
                 serial
             )
         elif query_string == 'marked':
@@ -2068,13 +2070,16 @@ class PokerService(service.Service):
                 """ SELECT
                         t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
                         t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
-                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
+                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial,
+                        IF(u2t.user_serial IS NULL,0,1) AS player_seated
                     FROM tables AS t
                     INNER JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
-                    WHERE c.name =  %s
-                """,
-                query_string
+                    LEFT JOIN user2table u2t
+                        ON u2t.table_serial=t.serial AND u2t.user_serial = %s
+                    WHERE 1
+                """ + query_suffix,
+                serial
             )
         elif re.match("^[0-9]+$", query_string):
             cursor.execute(
@@ -2086,7 +2091,7 @@ class PokerService(service.Service):
                     INNER JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
                     WHERE c.currency_serial =  %s
-                """ + orderBy,
+                """ + query_suffix,
                 query_string
             )
         elif len(criteria) > 1:
@@ -2094,15 +2099,16 @@ class PokerService(service.Service):
             # criteria, starting with everything set to None.  This is to
             # setup the defaults to be None when we call the helper
             # function.
-            whereValues = { 'currency_serial' : None, 'variant' : None }
+            whereValues = {'currency_serial': None, 'variant': None}
+            
             if len(criteria) == 2:
-                ( whereValues['currency_serial'], whereValues['variant'] ) = criteria
+                whereValues['currency_serial'], whereValues['variant'] = criteria
             else:
                 self.log.error("Following listTables() criteria query_string "
                     "has more parameters than expected, ignoring third one and beyond in: %s",
                     query_string
                 )
-                ( whereValues['currency_serial'], whereValues['variant'] ) = criteria[:2]
+                whereValues['currency_serial'], whereValues['variant'] = criteria[:2]
             # Next, do some minor format verification for those values that are
             # supposed to be integers.
             if whereValues['currency_serial'] != None and whereValues['currency_serial'] != '':
@@ -2127,7 +2133,7 @@ class PokerService(service.Service):
                     INNER JOIN tableconfigs AS c
                         ON c.serial = t.tableconfig_serial
                     WHERE name =  %s
-                """,
+                """ + query_suffix,
                 query_string
             )
 
@@ -2156,9 +2162,17 @@ class PokerService(service.Service):
         on this, so don't change it.  The secondary sorting key is the
         ascending table serial.
         """
-        orderBy = " ORDER BY t.players desc, t.serial"
-        whereValues = { 'currency_serial' : currency_serial, 'variant' : variant,
-                        'betting_structure' : betting_structure, 'min_players' : min_players }
+        
+        query_suffix = " ORDER BY t.players desc, t.serial"
+        if self.resthost_serial: query_suffix = (" AND t.resthost_serial = %d" % self.resthost_serial) + query_suffix
+        
+        whereValues = {
+            'currency_serial': currency_serial, 
+            'variant': variant,
+            'betting_structure': betting_structure, 
+            'min_players': min_players
+        
+        }
         cursor = self.db.cursor(DictCursor)
         # Now build the SQL statement we need.
         sql = \
@@ -2209,7 +2223,7 @@ class PokerService(service.Service):
                 sql += kk + " = " + "%s"
             sqlQuestionMarkParameterList.append(vv)
 
-        sql += orderBy
+        sql += query_suffix
         cursor.execute(sql, sqlQuestionMarkParameterList)
         result = cursor.fetchall()
         cursor.close()
