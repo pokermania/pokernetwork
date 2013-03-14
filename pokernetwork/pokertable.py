@@ -527,9 +527,9 @@ class PokerTable:
                             player.serial
                         )
                         avatar.bugous_processing_hand = True
-
-        self.beginTurn()
-        self.update()
+        if self.shouldAutoDeal():
+            self.beginTurn()
+            self.update()
 
     def autoDealCheck(self, autodeal_check, delta):
         self.log.debug("autoDealCheck")
@@ -563,8 +563,7 @@ class PokerTable:
                 avatar.sendPacket(packet)
         return True
 
-    def scheduleAutoDeal(self):
-        self.cancelDealTimeout()
+    def shouldAutoDeal(self):
         if self.factory.shutting_down:
             self.log.debug("Not autodealing because server is shutting down")
             return False
@@ -598,6 +597,13 @@ class PokerTable:
             if only_temporary_users:
                 self.log.debug("Not autodealing because players are categorized as temporary")
                 return False
+        return True
+
+    def scheduleAutoDeal(self):
+        self.cancelDealTimeout()
+
+        if not self.shouldAutoDeal():
+            return False
 
         delay = self.game_delay["delay"]
         if not self.allReadyToPlay() and delay > 0:
