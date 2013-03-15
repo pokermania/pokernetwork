@@ -1007,7 +1007,10 @@ class PokerAvatar:
                 if player and player.isAuto():
                     self.sendPacketVerbose(PacketPokerAutoFold(serial=packet.serial))
             if table.tourney:
-                self.sendPacketVerbose(PacketPokerTourney(**dict(table.tourney.__dict__.items() + [('rebuy_time_remaining', table.tourney.getRebuyTimeRemaining())])))
+                tourney_dict = table.tourney.__dict__.copy()
+                tourney_dict['rebuy_time_remaining'] = table.tourney.getRebuyTimeRemaining()
+                tourney_dict['kick_timeout'] = max(0, int(self.service.delays.get('tourney_kick', 20)))
+                self.sendPacketVerbose(PacketPokerTourney(**tourney_dict))
 
     # -------------------------------------------------------------------------
     def performPacketPokerSeat(self, packet, table, game):
