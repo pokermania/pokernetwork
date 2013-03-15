@@ -3076,7 +3076,7 @@ class PokerService(service.Service):
                 (self.resthost_serial,)
             )
             for table_serial, currency_serial, user_serial, money, bet in c:
-                self.log.warn(
+                self.log.inform(
                     "cleanupCrashedTables: found zombie in user2table, table: %d, user: %d, currency: %d, money: %d, bet: %d",
                     table_serial, user_serial, currency_serial, money, bet, refs=[
                         ('Game', self, lambda x: table_serial),
