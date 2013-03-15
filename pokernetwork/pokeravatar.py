@@ -1289,7 +1289,6 @@ class PokerAvatar:
             rebuy_min = game.minMoney()
         ))
         self.sendPacketVerbose(PacketPokerBatchMode(game_id = game.id))
-        nochips = 0
         for player in game.serial2player.values():
             player_info = table.getPlayerInfo(player.serial)
             self.sendPacketVerbose(PacketPokerPlayerArrive(
@@ -1316,7 +1315,7 @@ class PokerAvatar:
                 self.sendPacketVerbose(PacketPokerPlayerChips(
                     game_id = game.id,
                     serial = player.serial,
-                    bet = nochips,
+                    bet = 0, 
                     money = player.money - player.rebuy_given
                 ))
                 if game.isSit(player.serial):

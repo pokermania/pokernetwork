@@ -931,7 +931,8 @@ class PokerTable:
             auto = player.auto,
             auto_blind_ante = player.auto_blind_ante,
             wait_for = player.wait_for,
-            seat = player.seat
+            seat = player.seat,
+            buy_in_payed = player.buy_in_payed
         ))
         if self.factory.has_ladder:
             packet = self.factory.getLadder(self.game.id, self.currency_serial, player.serial)
