@@ -3458,12 +3458,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         # Despite the fact that we set avatars[0] to queue packets before
         # the loop started, we find that only the packets from the last
         # hand are present.
-        count = 0
         foldCount = 0
         rakeCount = 0
         winCount = 0
         for pack in avatars[0]._packets_queue:
-            count += 1
             self.assertEquals(pack.game_id, gameId)
             if pack.type == PACKET_POKER_FOLD:
                 foldCount += 1
@@ -3473,7 +3471,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             elif pack.type == PACKET_POKER_WIN:
                 self.assertEquals(pack.serial, 0)
                 winCount += 1
-        self.assertEquals(count, 200)
         self.assertEquals([ winCount, rakeCount, foldCount ], [ 10, 10, 10])
         self.assertEquals(winCount, 10)
         return (clients[2], None)
@@ -3550,12 +3547,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         # Despite the fact that we set avatars[0] to queue packets before
         # the loop started, we find that only the packets from the last
         # hand are present.
-        count = 0
         foldCount = 0
         rakeCount = 0
         winCount = 0
         for pack in avatars[2]._packets_queue:
-            count += 1
             self.assertEquals(pack.game_id, gameId)
             if pack.type == PACKET_POKER_FOLD:
                 foldCount += 1
@@ -3565,7 +3560,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             elif pack.type == PACKET_POKER_WIN:
                 self.assertEquals(pack.serial, 0)
                 winCount += 1
-        self.assertEquals(count, 200)
         self.assertEquals([ winCount, rakeCount, foldCount ], [ 10, 10, 10])
         self.assertEquals(winCount, 10)
         return (client, None)
@@ -3641,12 +3635,10 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         # Despite the fact that we set avatars[0] to queue packets before
         # the loop started, we find that only the packets from the last
         # hand are present.
-        count = 0
         foldCount = 0
         rakeCount = 0
         winCount = 0
         for pack in avatars[2]._packets_queue:
-            count += 1
             self.assertEquals(pack.game_id, gameId)
             if pack.type == PACKET_POKER_FOLD:
                 foldCount += 1
@@ -3656,7 +3648,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             elif pack.type == PACKET_POKER_WIN:
                 self.assertEquals(pack.serial, 0)
                 winCount += 1
-        self.assertEquals(count, 200)
         self.assertEquals([ winCount, rakeCount, foldCount ], [ 10, 10, 10])
         self.assertEquals(winCount, 10)
         return (clients[2], None)
@@ -3727,7 +3718,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         
         # we should get the warning on the observer
         self.assertTrue(log_history.search("user %d has more than 15 packets queued; will force-disconnect when 21 are queued"  % clients[2].getSerial()))
-        expectedCount = 20
+        expectedCount = 23
         log_history.reset()
         self.dealTable((client, packet), gameId)
         self.assertNotEquals(findBigBlind(1, expectedCount), None)

@@ -135,7 +135,7 @@ exampleHand =  [ \
         ('raise', 10, 976), \
         ('canceled', 4, 10), \
         ('rake', 7, { 1 : 7}), \
-        ('end', [8, 1], [{ 'serial2share': { 8: 888, 1: 233 } }]), \
+        ('end', [8, 1], [{ 'serial2share': { 8: 888, 1: 233 }, 'serial2money' : {8: 8888, 1:33} }]), \
         ('sitOut', 1), \
         ('leave', [(1, 2), (2, 7)]), \
         ('finish', 1), \
@@ -2863,6 +2863,11 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             game.callNraise(29047, game.serial2player[29047].money); table.update()
             game.call(114305); table.update()
             game.fold(82247); table.update()
+            d ={}
+            for player in game.serial2player.values():
+                d[player.serial] = player.money
+
+            self.assertEqual(d, game.showdown_stack[0]['serial2money'])
             
             for serial, client in clients_all.iteritems():
                 ex_money_map = client.explain.games.getGame(game.id).moneyMap()
