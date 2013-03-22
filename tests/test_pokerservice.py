@@ -6214,65 +6214,6 @@ class PokerServiceCoverageTests(unittest.TestCase):
         for (ii, value) in [ (0, "Without protocol"), (1, "Protocol is None"),
                              (2, "Protocol is False")]:
             self.assertEquals(msgs[ii], "broadcast: avatar %s excluded" % value)
-    def test68_messageCheck(self):
-        validStatements = ["SELECT serial, message FROM messages",
-                           "UPDATE messages SET"]
-        class MockCursor(MockCursorBase):
-            def fetchall(mcSelf): return mcSelf.rows
-            def statementActions(cursorSelf, sql, statement):
-                if statement == "SELECT serial, message FROM messages":
-                    cursorSelf.rowcount = 2
-                    cursorSelf.rows = [ (7325, "Greeting 1"), (22235, "Goodbye") ]
-                elif statement == "UPDATE messages SET":
-                    if cursorSelf.counts["UPDATE messages SET"] == 1:
-                        self.failUnless(sql.find('serial = 7325') > 0, "first serial in update wrong")
-                    else:
-                        self.failUnless(sql.find('serial = 22235') > 0, "second serial in update wrong")
-                    cursorSelf.rowcount = 0
-                    cursorSelf.rows = [ ]
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, validStatements)
-        class MockAvatar():
-            def __init__(maSelf, desc):
-                maSelf.name = desc
-                maSelf.packets = []
-                maSelf.protocol = True
-            def sendPacketVerbose(maSelf, packet): maSelf.packets.append(packet)
-
-        self.service = pokerservice.PokerService(self.settings)
-
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        self.service.avatars = [ MockAvatar("Joe") ]
-
-        # Set up Deffered to be sure callback worked.  We should get a
-        # reactor/deferred error on the test if the timer works wrong.
-        deferredMessageCheck = defer.Deferred()
-        def testThatMessageCheckTimerWorked():
-            self.assertEquals(log_history.get_all(), [])
-            deferredMessageCheck.callback(True)
-            self.service.db = oldDb
-
-        # Set up fake message Check for callback.
-        self.service.realMessageCheck = self.service.messageCheck
-        self.service.messageCheck = testThatMessageCheckTimerWorked
-
-        log_history.reset()
-        self.service.delays['messages'] = 3
-
-        self.service.realMessageCheck()
-
-        self.assertEquals(self.service.db.cursorValue.counts["SELECT serial, message FROM messages"], 1)
-        self.assertEquals(self.service.db.cursorValue.counts["UPDATE messages SET"], 2)
-        self.assertEquals(len(self.service.avatars[0].packets), 2)
-        self.assertEquals(self.service.avatars[0].packets[0].string, "Greeting 1")
-        self.assertEquals(self.service.avatars[0].packets[1].string, "Goodbye")
-
-        self.assertEquals(log_history.get_all(), [])
-
-        log_history.reset()
-        return deferredMessageCheck
 ##############################################################################
 class SSLContextFactoryCoverage(unittest.TestCase):
     def test01_initNoHeader(self):

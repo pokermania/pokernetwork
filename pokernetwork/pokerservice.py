@@ -326,7 +326,6 @@ class PokerService(service.Service):
 
         self.cleanupTourneys()
         self.updateTourneysSchedule()
-        self.messageCheck()
         self.poker_auth.SetLevel(PACKET_POKER_SEAT, User.REGULAR)
         self.poker_auth.SetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
         self.poker_auth.SetLevel(PACKET_POKER_GET_PERSONAL_INFO, User.REGULAR)
@@ -3115,27 +3114,6 @@ class PokerService(service.Service):
                 avatar.sendPacketVerbose(packet)
             else:
                 self.log.debug("broadcast: avatar %s excluded" % str(avatar))
-
-    def messageCheck(self):
-        cursor = self.db.cursor()
-        try:
-            cursor.execute(lex(
-                """ SELECT serial, message FROM messages
-                    WHERE
-                        sent = 'n' AND
-                        send_date < FROM_UNIXTIME(%s)
-                """),
-                (seconds(),)
-            )
-            rows = cursor.fetchall()
-            for (serial, message) in rows:
-                self.broadcast(PacketMessage(string = message))
-                cursor.execute("UPDATE messages SET sent = 'y' WHERE serial = %d" % serial)
-            self.cancelTimer('messages')
-            delay = int(self.delays.get('messages', 60))
-            self.timer['messages'] = reactor.callLater(delay, self.messageCheck)
-        finally:
-            cursor.close()
 
     def chatMessageArchive(self, player_serial, game_id, message):
         c = self.db.cursor()
