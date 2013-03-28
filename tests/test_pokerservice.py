@@ -1498,7 +1498,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.tables = {}
             self.joinedTables = []
             self.testObject = testObject
-            self.expectedReason = ""
             self._queue_packets = []
 
         def sendPacketVerbose(self, packet):
@@ -1511,7 +1510,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         def join(self, table, reason = ""):
             self.joinedTables.append(table)
             self.tables[table.game.id] = table
-            self.testObject.assertEquals(self.expectedReason, reason)
 
         def getSerial(self):
             return self.serial
@@ -1873,7 +1871,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         client1 = self.ClientMockup(self.user1_serial, self)
         self.service.avatar_collection.add(self.user1_serial, client1)
-        client1.expectedReason = PacketPokerTable.REASON_TOURNEY_START
         heads_up = [t for t in self.service.tourneys.values() if t.name=='sitngo2'][0]
         log_history.reset()
         self.service.tourneyRegister(PacketPokerTourneyRegister(
@@ -1896,18 +1893,21 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         ))
 
         d = defer.Deferred()
+        def joinAll(status):
+            table = self.service.tables.values()[0]
+            table.joinPlayer(client1, client1.getSerial())
+            return status
+        
         def checkTourneys(status):
+            self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, heads_up.state)
+            
             # joined_count should now be one, as the tourneyGameFilled() should
             # have been called, and we only had one client connected.
             self.assertEquals(self.service.joined_count, 1)
-            self.assertEquals(len(client1.packets), 14)
-            for p in client1.packets:
-                self.assertEquals(p.game_id, self.service.tables.values()[0].game.id)
             self.assertEquals(len(client1.tables), 1)
             self.assertEquals(self.service.tables.values()[0].game.id in client1.tables, True)
             self.assertEquals(client1.tables[self.service.tables.values()[0].game.id], self.service.tables.values()[0])
 
-            self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, heads_up.state)
             game = heads_up.games[0]
             in_position = game.getSerialInPosition()
             game.callNraise(in_position, game.maxBuyIn())
@@ -1923,6 +1923,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             reactor.callLater(0, d_in.callback, True)
             return d_in
         
+        d.addCallback(joinAll)
         d.addCallback(checkTourneys)
         reactor.callLater(3, d.callback, True)
         return d
@@ -2410,11 +2411,9 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
             self.tableJoined = None
             self.packets = []
             self.testObject = testObject
-            self.expectedReason = ""
 
         def join(self, table, reason = ""):
             self.tableJoined = table
-            self.testObject.assertEquals(self.expectedReason, reason)
 
         def sendPacketVerbose(self, packet):
             self.packets.append(packet)
@@ -3293,7 +3292,6 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
             self.serial = serial
             self.packets = []
             self.testObject = testObject
-            self.expectedReason = ""
 
         def join(self, table, reason = ""):
             self.tableJoined = table
@@ -3373,7 +3371,6 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
 #            self.tableJoined = None
             self.packets = []
             self.testObject = testObject
-            self.expectedReason = ""
 
         def join(self, table, reason = ""):
             self.tableJoined = table
@@ -4560,10 +4557,9 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(self.service.tables[22].updateCount, 1)
 
         msgs = log_history.get_all()
-        self.assertEquals(len(msgs), 3)
-        self.assertEquals(msgs[0], 'tourneyGameFilled: player 10 disconnected')
-        self.assertEquals(msgs[1].find('tourneyGameFilled: UPDATE user2tourney SET'), 0)
-        self.assertEquals(msgs[2].find('modified 0 rows (expected 1): UPDATE user2tourney SET'), 0)
+        self.assertEquals(len(msgs), 2)
+        self.assertEquals(msgs[0].find('tourneyGameFilled: UPDATE user2tourney SET'), 0)
+        self.assertEquals(msgs[1].find('modified 0 rows (expected 1): UPDATE user2tourney SET'), 0)
 
         self.service.db = oldDb
         self.service.seatPlayer = oldSeatPlayer
@@ -6107,38 +6103,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         log_history.reset()
         self.failUnless(self.service.updatePlayerMoney(7355, 1026, 0))
         self.assertEquals(log_history.get_all(), [])
-    def test64_updatePlayerMoney_updateReturns0Rows(self):
-        validStatements = ["UPDATE user2table SET"]
-        class MockCursor(MockCursorBase):
-            def statementActions(cursorSelf, sql, statement):
-                if statement == "UPDATE user2table SET":
-                    self.failUnless(sql.find("money + 77") > 0, "amount value wrong")
-                    self.failUnless(sql.find("bet - 77") > 0, "amount value wrong")
-                    self.failUnless(sql.find("user_serial = 742") > 0, "user_serial wrong")
-                    self.failUnless(sql.find("table_serial = 852") > 0, "currency_serial wrong")
-                    cursorSelf.rowcount = 0
-                    cursorSelf.row = []
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, validStatements)
 
-        self.service = pokerservice.PokerService(self.settings)
-
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        log_history.reset()
-
-        self.failIf(self.service.updatePlayerMoney(742, 852, 77))
-        for statement in validStatements:
-            self.assertEquals(self.service.db.cursorValue.counts[statement], 1)
-        msgs = log_history.get_all()
-        self.assertEquals(len(msgs), 2)
-        self.failUnless(msgs[0].find('updatePlayerMoney: UPDATE user2table SET') == 0, 
-                        "Missing expected string in: " + msgs[0])
-        self.failUnless(msgs[1].find('modified 0 rows (expected 1): UPDATE user2table SET') == 0,
-                        "Missing expected string in: " +  msgs[1])
-
-        self.service.db = oldDb
     def test64_updatePlayerMoney_updateReturns0Rows(self):
         acceptList = ["UPDATE user2table SET"]
         acceptListRowCount = [0]

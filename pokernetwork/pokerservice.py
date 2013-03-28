@@ -1138,20 +1138,8 @@ class PokerService(service.Service):
         for player in game.playersAll():
             serial = player.serial
             player.setUserData(pokeravatar.DEFAULT_PLAYER_USER_DATA.copy())
-            avatars = self.avatar_collection.get(serial)
-            if avatars:
-                self.log.debug("tourneyGameFilled: player %d connected", serial)
-                table.avatar_collection.set(serial, avatars)
-            else:
-                self.log.debug("tourneyGameFilled: player %d disconnected", serial)
             self.seatPlayer(serial, game.id, game.buyIn())
 
-            for avatar in avatars:
-                # First, force a count increase, since this player will
-                # now be at the table, but table.joinPlayer() was never
-                # called (which is where the increase usually happens).
-                self.joinedCountIncrease()
-                avatar.join(table, reason = PacketPokerTable.REASON_TOURNEY_START)
             cursor.execute(lex(
                 """ UPDATE user2tourney SET table_serial = %s
                     WHERE

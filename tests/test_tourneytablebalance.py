@@ -229,7 +229,6 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         d = defer.Deferred()
         def checkTourney(status):
             self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, sixTourney.state)
-            self.assertEquals(self.service.joined_count, 6)
             for game in sixTourney.games:
                 # tables should be equalized
                 self.assertTrue(len(game.serial2player.keys()) >= 2)
@@ -275,9 +274,17 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
             for serial in user_serials_broke:
                 table = clients[serial].tables.itervalues().next()
                 table.disconnectPlayer(clients[serial], serial)
-            
-        def firstRounds(status):
+        
+        def joinAll(status):
             self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, tourney.state)
+            for game in tourney.games:
+                table = self.service.tables[game.id]
+                for serial in game.serial2player:
+                    table.joinPlayer(clients[serial], serial)
+                    table.update()
+            return status
+                        
+        def firstRounds(status):
             for game in tourney.games:
                 table = self.service.tables[game.id]
                 for _i in range(2):
@@ -298,7 +305,8 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         def secondRound(status):
             self.assertEquals(len(tourney.games), 1)
             self.assertEquals(len(tourney.games[0].playersAll()), 2)
-            
+        
+        d.addCallback(joinAll)
         d.addCallback(firstRounds)
         d.addCallback(secondRound)
 
