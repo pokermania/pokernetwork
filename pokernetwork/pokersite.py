@@ -47,7 +47,7 @@ class Request(server.Request):
     def getSession(self):
         uid = self.args.get('uid', [self.site._mkuid()])[0]
         auth = self.args.get('auth', [self.site._mkuid()])[0]
-        explain = self.args.get('explain', ['yes'])[0] == 'yes'
+        explain = self.args.get('explain', ['no'])[0] == 'yes'
         try:
             self.session = self.site.getSession(uid, auth, explain)
         except KeyError:
