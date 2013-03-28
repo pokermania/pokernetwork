@@ -725,17 +725,17 @@ class PokerAvatar:
                     for table_serial, table in self.service.tables.iteritems():
                         if self.getSerial() in table.game.serial2player:
                             self.sendPacketVerbose(PacketPokerTableMove(
-                                serial=self.getSerial(),
-                                game_id=packet.game_id,
-                                to_game_id=table_serial
+                                serial = self.getSerial(),
+                                game_id = packet.game_id,
+                                to_game_id = table_serial
                             ))
                             break
                     else:
                         self.sendPacketVerbose(PacketError(
-                            code=PacketPokerTableJoin.DOES_NOT_EXIST,
-                            message="The requested table does not exists.",
-                            other_type=packet.type,
-                            serial=self.getSerial()
+                            serial = self.getSerial(),
+                            code = PacketPokerTableJoin.DOES_NOT_EXIST,
+                            message = "The requested table does not exists.",
+                            other_type = packet.type
                         ))
                     return
                 self.service.spawnTable(packet.game_id, **description)
