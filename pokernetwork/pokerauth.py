@@ -53,81 +53,76 @@ class PokerAuth:
 
     def GetLevel(self, pkt_type):
         # return the minimum privilege level if not defined
-        return self.type2auth.get(pkt_type,0) 
+        return self.type2auth.get(pkt_type, 0) 
 
-    def _authLogin(self,name,password):
-        cursor = self.db.cursor()
-        cursor.execute("SELECT serial, password, privilege FROM users WHERE name = %s",(name,))
-        numrows = int(cursor.rowcount)
-        serial = 0
-        privilege = User.REGULAR
-        valid_credentials = False
-        if numrows <= 0 and password is not None:
-            if self.auto_create_account:
-                valid_credentials = True
-                self.log.inform("user %s does not exist, create it", name)
-                serial = self.userCreate(name, password)
-                cursor.close()
-            else:
-                self.log.debug("user %s does not exist", name)
-                cursor.close()
-        elif numrows > 1:
-            self.log.warn("more than one row for %s", name)
-            cursor.close()
-        else:
-            (serial, password_sql, privilege) = cursor.fetchone()
-            cursor.close()
-            valid_credentials = (password_sql == password)
+    def _authLogin(self, name, password):
+        c = self.db.cursor()
+        try:
+            c.execute("SELECT serial, password, privilege FROM users WHERE name = %s", (name,))
+            if c.rowcount < 1:
+                if self.auto_create_account:
+                    serial = self.userCreate(name, password)
+                    return (serial, name, User.REGULAR), None
+                else:
+                    self.log.debug("user does not exist.  name: %s", name)
+                    return False, "Invalid login or password"
+            if c.rowcount > 1:
+                self.log.warn("multiple entries for user in database.  name: %s", name)
+                return False, "Invalid login or password"
 
-        if valid_credentials:
-            return ( (serial, name, privilege), None )
-        else:
-#            if a user was found with this name, log the unsuccesful attempt
-            if serial != 0:
-                self.log.debug('password mismatch for %s', name)
-            return ( False, "Invalid login or password" )
+            serial, sql_password, privilege = c.fetchone()
+
+            if sql_password != password:
+                self.log.debug("invalid password in login attempt.  name: %s, serial: %d", name, serial)
+                return False, "Invalid login or password"
+
+            return (serial, name, privilege), None
+
+        finally:
+            c.close()
+
+    def _authAuth(self, token):
+        # memcache
+        serial = self.memcache.get(token)
+        if serial is None:
+            self.log.debug("auth mismatch. token not found in memcache.  token: %s", token)
+            return False, "Invalid session"
+
+        # database
+        c = self.db.cursor()
+        try:
+            c.execute("SELECT name, privilege FROM users WHERE serial = %s", (serial,))
+            if c.rowcount < 1:
+                self.log.debug("auth mismatch. user not found in database.  serial: %d", serial)
+                return False, "Invalid session"
+            if c.rowcount > 1:
+                self.log.warn("multiple entries for user in database.  serial: %d", serial)
+                return False, "Invalid session"
+            name, privilege = c.fetchone()
+            return serial, name, privilege
+        finally:
+            c.close()
         
-    def _authAuth(self,auth_token):
-        serial = 0
-        privilege = User.REGULAR
-        valid_credentials = False
-        memcache_serial = self.memcache.get(auth_token)
-        if memcache_serial is not None:
-            cursor = self.db.cursor()
-            cursor.execute("SELECT serial, name, privilege FROM users WHERE serial = %s",(memcache_serial,))
-            numrows = int(cursor.rowcount)
-            if numrows == 1:
-                valid_credentials = True
-                (serial, name, privilege) = cursor.fetchone()
-        if valid_credentials:
-            return ( (serial, name, privilege), None )
-        else:
-            self.log.debug("auth mismatch: %s", auth_token)
-            return ( False, "Invalid login or password" )
-               
-    def auth(self,auth_type,auth_args):
+    def auth(self, auth_type, auth_args):
         if auth_type == PACKET_LOGIN:
-            (name,password) = auth_args
-            return self._authLogin(name, password)
-        elif auth_type == PACKET_AUTH:
-            (auth_token,) = auth_args
-            return self._authAuth(auth_token)
-        else:
-            self.log.error("auth_type '%s' not implemented", auth_type)
-            raise NotImplementedError()
+            return self._authLogin(*auth_args)
+
+        if auth_type == PACKET_AUTH:
+            return self._authAuth(*auth_args)
+
+        self.log.error("auth_type not implemented.  auth_type: %d", auth_type)
+        raise NotImplementedError()
 
     def userCreate(self, name, password):
-        self.log.inform("creating user %s", name)
-        cursor = self.db.cursor()
-        cursor.execute(
-           "INSERT INTO users (created, name, password) values (%s, %s, %s)",
-           (seconds(), name, password)
-        )
-        serial = cursor.lastrowid
-        self.log.inform("create user with serial %s", serial)
-        cursor.execute("INSERT INTO users_private (serial) values (%s)", (serial,))
-        cursor.close()
-        return int(serial)
+        c = self.db.cursor()
+        try:
+            c.execute("INSERT INTO users SET created = %s, name = %s, password = %s", (seconds(), name, password))
+            serial = c.lastrowid
+            c.execute("INSERT INTO users_private SET serial = %s", (serial,))
+            self.log.inform("created user.  serial: %d, name: %s", serial, name)
+            return serial
+        finally:
+            c.close()
 
 _get_auth_instance = None
 def get_auth_instance(db, memcache, settings):
