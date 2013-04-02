@@ -87,6 +87,7 @@ class PokerAuth:
         if serial is None:
             self.log.debug("auth mismatch. token not found in memcache.  token: %s", token)
             return False, "Invalid session"
+        serial = int(serial)
 
         # database
         c = self.db.cursor()
@@ -99,7 +100,7 @@ class PokerAuth:
                 self.log.warn("multiple entries for user in database.  serial: %d", serial)
                 return False, "Invalid session"
             name, privilege = c.fetchone()
-            return serial, name, privilege
+            return (serial, name, privilege), None
         finally:
             c.close()
         
