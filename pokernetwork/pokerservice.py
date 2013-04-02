@@ -2567,7 +2567,7 @@ class PokerService(service.Service):
                 """ SELECT
                         u2m.currency_serial,
                         u2m.amount,
-                        COALESCE(u2t.money, 0) + COALESCE(u2t.bet, 0) AS in_game,
+                        COALESCE(u2t.money, 0) AS in_game,
                         u2m.points
                     FROM user2money AS u2m
                     LEFT JOIN (user2table u2t, tables t, tableconfigs c)
@@ -2916,7 +2916,8 @@ class PokerService(service.Service):
             
             (money,) = cursor.fetchone()
             
-            sql = "UPDATE user2table " \
+            sql = \
+                "UPDATE user2table " \
                 "SET table_serial = %s " \
                 "WHERE user_serial = %s " \
                 "AND table_serial = %s"
@@ -2952,9 +2953,8 @@ class PokerService(service.Service):
                         LEFT JOIN tableconfigs AS c
                             ON c.serial = t.tableconfig_serial
                         SET
-                            u2m.amount = u2m.amount + COALESCE(u2t.money, 0) + COALESCE(u2t.bet, 0),
-                            u2t.money = 0,
-                            u2t.bet = 0
+                            u2m.amount = u2m.amount + COALESCE(u2t.money, 0),
+                            u2t.money = 0
                         WHERE u2m.user_serial = %s AND t.serial = %s AND u2m.currency_serial = %s AND c.currency_serial = %s
                     """),
                     (serial, table_id, currency_serial, currency_serial)
@@ -2990,8 +2990,8 @@ class PokerService(service.Service):
         status = True
         cursor = self.db.cursor()
         cursor.execute(
-            "UPDATE user2table SET money = money + %s, bet = bet - %s WHERE user_serial = %s AND table_serial = %s",
-            (amount, amount, serial, table_id)
+            "UPDATE user2table SET money = money + %s WHERE user_serial = %s AND table_serial = %s",
+            (amount, serial, table_id)
         )
         self.log.debug("updatePlayerMoney: %s", cursor._executed)
         if cursor.rowcount != 1:
@@ -3036,15 +3036,6 @@ class PokerService(service.Service):
         finally:
             cursor.close()
 
-    def resetBet(self, table_id):
-        cursor = self.db.cursor()
-        try:
-            cursor.execute("UPDATE user2table SET bet = 0 WHERE table_serial = %s", (table_id,))
-            self.log.debug("resetBet: %s", cursor._executed)
-        finally:
-            cursor.close()
-        return True
-
     def getTable(self, game_id):
         return self.tables.get(game_id, False)
 
@@ -3052,7 +3043,7 @@ class PokerService(service.Service):
         c = self.db.cursor()
         try:
             c.execute(lex(
-                """ SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet
+                """ SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money
                     FROM user2table AS u2t
                     LEFT JOIN tables AS t
                         ON t.serial = u2t.table_serial
@@ -3062,10 +3053,10 @@ class PokerService(service.Service):
                 """),
                 (self.resthost_serial,)
             )
-            for table_serial, currency_serial, user_serial, money, bet in c:
+            for table_serial, currency_serial, user_serial, money in c:
                 self.log.inform(
-                    "cleanupCrashedTables: found zombie in user2table, table: %d, user: %d, currency: %d, money: %d, bet: %d",
-                    table_serial, user_serial, currency_serial, money, bet, refs=[
+                    "cleanupCrashedTables: found zombie in user2table, table: %d, user: %d, currency: %d, money: %d",
+                    table_serial, user_serial, currency_serial, money, refs=[
                         ('Game', self, lambda x: table_serial),
                         ('User', self, lambda x: user_serial)
                     ]

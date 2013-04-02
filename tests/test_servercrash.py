@@ -116,13 +116,13 @@ class PokerCrashTestCase(unittest.TestCase):
         # Although the name is not in the configuration file (settings),
         # it has a matching resthost_serial and is cleanedup
         #
-        cursor.execute('INSERT INTO user2table (user_serial, table_serial, money, bet) VALUES (1000, 142, 10, 1)')
+        cursor.execute('INSERT INTO user2table (user_serial, table_serial, money) VALUES (1000, 142, 10)')
         cursor.execute("INSERT INTO users (serial, created, name, password) VALUES (1000, 0, 'testuser', '')")
         cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) VALUES (1000, 1, 0)")
         #
         # resthost_serial does not match, the records are left untouched
         #
-        cursor.execute('INSERT INTO user2table (user_serial, table_serial, money, bet) VALUES (1000, 202, 10, 1)')
+        cursor.execute('INSERT INTO user2table (user_serial, table_serial, money) VALUES (1000, 202, 10)')
         #
         # Table1 is in the configuration file and cleaned up even though
         # resthost_serial does not match

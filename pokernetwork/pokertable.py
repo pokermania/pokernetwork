@@ -300,7 +300,6 @@ class PokerTable:
     def syncDatabase(self):
         updates = {}
         serial2rake = {}
-        reset_bet = False
         for event in self.game.historyGet()[self.history_index:]:
             event_type = event[0]
             if event_type == "game":
@@ -386,7 +385,6 @@ class PokerTable:
                     if serial not in updates:
                         updates[serial] = 0
                     updates[serial] += share
-                reset_bet = True
 
             elif event_type == "sitOut":
                 pass
@@ -411,9 +409,6 @@ class PokerTable:
 
         for (serial, rake) in serial2rake.iteritems():
             self.factory.updatePlayerRake(self.currency_serial, serial, rake)
-
-        if reset_bet:
-            self.factory.resetBet(self.game.id)
 
     def compressedHistory(self, history):
         new_history = []

@@ -332,10 +332,6 @@ class MockService:
             self.testObject.assertEqual(game_id,  self.testObject.table1_value)
             self.testObject.assertEqual(tourney.name,  'My Old Sit and Go')
 
-    def resetBet(self, gameId):
-        if self.testObject:
-            self.testObject.assertEqual(gameId,  self.testObject.table1_value)
-
     def databaseEvent(self, event, **kwargs):
         if self.testObject:
             self.testObject.assertEqual(PacketPokerMonitorEvent.HAND, event)

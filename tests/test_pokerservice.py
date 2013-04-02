@@ -1817,7 +1817,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         '''
         # tourney should be spawned even if it started in the past!
         now = seconds()
-        cursor.execute(sql, [now-check_delay]*3+[now-check_delay*2])
+        cursor.execute(sql, [now-check_delay]*3+[now-check_delay*2-1])
         cursor.execute(sql_users)
         cursor.close()
 
@@ -2213,7 +2213,7 @@ class RefillTestCase(unittest.TestCase):
         self.assertEquals(0, self.service.autorefill(serial))
         table_money = 1000
         table_serial = 1
-        self.service.db.db.query("INSERT INTO user2table VALUES (%d, %d, %d, 0)" % (serial, table_serial, table_money))
+        self.service.db.db.query("INSERT INTO user2table (user_serial,table_serial,money) VALUES (%d, %d, %d)" % (serial, table_serial, table_money))
         money_left = 100
         self.service.db.db.query("UPDATE user2money SET amount = %d WHERE user_serial = %d" % (money_left, serial))
         self.assertEquals(refill-table_money, self.service.autorefill(serial))
@@ -2439,7 +2439,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.assertEquals(client1.packets[0].tourney_serial, tourney_serial)
         client1.packets = []
         self.assertEquals(client1.tableJoined, None)
-        self.service.db.db.query("INSERT INTO user2table VALUES (%s, %s, %s, 0)" % (self.user1_serial,table_serial,table_money))
+        self.service.db.db.query("INSERT INTO user2table (user_serial,table_serial,money) VALUES (%s, %s, %s)" % (self.user1_serial,table_serial,table_money))
         self.service.db.db.query("UPDATE user2tourney SET table_serial = %s" % (table_serial,))
         self.service.tourneys[tourney_serial].can_register = False
         log_history.reset()
@@ -2695,8 +2695,8 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
         self.service.spawnTourney(schedule)
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial, tourney_serial = tourney_serial))
-        self.service.db.db.query("INSERT INTO user2table VALUES (" + str(self.user1_serial) + ", " + str(table_serial) + ", " + str(table_money) + ", 0)")
-        self.service.db.db.query("UPDATE user2tourney SET table_serial = " + str(table_serial))
+        self.service.db.db.query("INSERT INTO user2table (user_serial,table_serial,money) VALUES (%d, %d, %d)" % (self.user1_serial, table_serial, table_money))
+        self.service.db.db.query("UPDATE user2tourney SET table_serial = %d" % table_serial)
         self.service.tourneys[tourney_serial].can_register = False
         packet = self.service.tourneyManager(tourney_serial)
         self.assertEqual(tourney_serial, packet.tourney['serial'])
@@ -3323,7 +3323,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         cursor = self.service.db.cursor()
         cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) values (1337807,1,400)")
-        cursor.execute("INSERT INTO user2table VALUES (1337807,2,10,0)")
+        cursor.execute("INSERT INTO user2table (user_serial,table_serial,money) VALUES (1337807,2,10)")
         tournament = self.Tournament(serial=1)
 
         # The expected money is added on the table
@@ -3349,7 +3349,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
         cursor = self.service.db.cursor()
 
         cursor.execute("DELETE FROM user2money WHERE user_serial = 1337807")
-        cursor.execute("INSERT INTO user2table VALUES (1337807,2,10,0)")
+        cursor.execute("INSERT INTO user2table (user_serial,table_serial,money) VALUES (1337807,2,10)")
 
         tournament = self.Tournament(serial=1)
 
@@ -3644,7 +3644,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
                     'UPDATE tourneys SET state',
                     'SELECT resthost_serial FROM tourneys',
                     'DELETE FROM tables WHERE serial =',
-                    'SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet'
+                    'SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money'
                 ])
         self.MockCursor = MockCursor
         
@@ -4868,7 +4868,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             
         acceptList = [ 
             "UPDATE user2money SET amount = amount", 
-            "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet FROM user2table",
+            "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money FROM user2table",
             "UPDATE tables SET players",
             "SELECT serial FROM tourneys WHERE state IN"
 
@@ -4934,7 +4934,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         acceptList = [ 
             "UPDATE user2money SET amount = amount", 
-            "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet FROM user2table",
+            "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money FROM user2table",
             "UPDATE tables SET players",
             "SELECT serial FROM tourneys WHERE state IN"
 
@@ -5006,7 +5006,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                                         [ "UPDATE user2money SET amount = amount",
                                        "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES",
                                        "SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE",
-                                       "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money, u2t.bet FROM user2table",
+                                       "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money FROM user2table",
                                        "UPDATE tables SET players",
                                        "SELECT serial FROM tourneys WHERE state IN"])
 
@@ -6114,7 +6114,6 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 MockCursorBase.statementActionsStatic(cursorSelf, sql, statement, acceptList, acceptListRowCount)
                 if statement == "UPDATE user2table SET":
                     self.failUnless(sql.find("money + 77") > 0, "amount value wrong")
-                    self.failUnless(sql.find("bet - 77") > 0, "amount value wrong")
                     self.failUnless(sql.find("user_serial = 742") > 0, "user_serial wrong")
                     self.failUnless(sql.find("table_serial = 852") > 0, "currency_serial wrong")
 
