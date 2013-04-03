@@ -23,7 +23,6 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #
 #
-import sys, traceback
 from twisted.internet import reactor, protocol, defer
 
 from pokernetwork import log as network_log
@@ -31,6 +30,7 @@ log = network_log.get_child('server')
 
 from pokernetwork.protocol import UGAMEProtocol
 from pokerpackets.packets import PacketError
+from pokernetwork.util.trace import format_exc
 
 from reflogging import deprecated
 
@@ -49,7 +49,7 @@ class PokerServerProtocol(UGAMEProtocol):
             if self.avatar:
                 self.sendPackets(self.avatar.handlePacket(packet))
         except:
-            self.log.error(traceback.format_exc())
+            self.log.error(format_exc())
             self.transport.loseConnection()
 
     def protocolEstablished(self):

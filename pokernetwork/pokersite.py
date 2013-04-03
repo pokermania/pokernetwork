@@ -23,8 +23,6 @@
 import re
 import base64
 
-from traceback import format_exc
-
 from twisted.web import server, resource, http
 from twisted.internet import defer, reactor
 

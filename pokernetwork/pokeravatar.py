@@ -32,7 +32,7 @@
 from string import join
 
 from twisted.internet import reactor, defer
-from traceback import format_exc
+from pokernetwork.util.trace import format_exc
 
 from pokernetwork.user import User, checkNameAndPassword, checkAuth
 from pokerpackets.networkpackets import *
@@ -298,7 +298,7 @@ class PokerAvatar:
             except Exception:
                 explain_error_message = format_exc()
                 packets = [ PacketError(other_type=PACKET_NONE, message=explain_error_message) ]
-                self.log.warn('%s', explain_error_message)
+                self.log.error('%s', explain_error_message, refs=[('Explain', self.getSerial(), int), ('Game', packet, lambda p: p.game_id if 'game_id' in p.__dict__ else None)])
                 # if the explain instance caused an exception, that instance is destroyed
                 # along with the avatar, as it may have an inconsistent state
                 self.explain = None
