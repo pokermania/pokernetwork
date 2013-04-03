@@ -1310,5 +1310,5 @@ class PokerTable:
             self._lock_check.stop()
     
     def __lockCheckEndCallback(self, game_id, event_type, *args):
-        if event_type == 'end':
+        if event_type == 'end_round_last':
             self._stopLockCheck()
