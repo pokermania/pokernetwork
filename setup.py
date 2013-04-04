@@ -25,7 +25,10 @@ EXECUTABLES = [
 setup(
     name='poker-network',
     version='2.3.0',
-    packages=['pokernetwork'],
+    packages=[
+        'pokernetwork',
+        'pokernetwork.util'
+    ],
     package_data={'pokernetwork': ['../twisted/plugins/*.py']},
     data_files=[
         ('bin', EXECUTABLES),
