@@ -2625,7 +2625,8 @@ class TourneyCreateTestCase(PokerServiceTestCaseBase):
         packet = PacketPokerCreateTourney(
             currency_serial = 1,
             name = tourney_name,
-            players = [self.user1_serial, self.user2_serial]
+            players = [self.user1_serial, self.user2_serial],
+            betting_structure = 'level-001'
         )
         result = self.service.tourneyCreate(packet)
         self.assertEquals(PACKET_POKER_TOURNEY, result.type)
@@ -2640,7 +2641,8 @@ class TourneyCreateTestCase(PokerServiceTestCaseBase):
         packet = PacketPokerCreateTourney(
             currency_serial = 1,
             buy_in = self.default_money * 10,
-            players = players
+            players = players,
+            betting_structure = 'level-001'
         )
         result = self.service.tourneyCreate(packet)
         self.assertEquals(PACKET_POKER_ERROR, result.type)

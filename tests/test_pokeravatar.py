@@ -1105,7 +1105,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 else:
                     ignored += 1
         self.assertEquals(found, 28)
-        self.assertEquals(ignored, 16)
+        self.assertEquals(ignored, 18)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test15_handPlay(self):
@@ -2554,10 +2554,13 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             elif packet.type == PACKET_POKER_START:
                 # expect 1
                 found += 1
+            elif packet.type == PACKET_POKER_BET_LIMITS:
+                # expect 1
+                found += 1
             else:
                 self.fail("Unexpected packet" + packet.__str__())
 
-        self.assertEquals(found, 14)
+        self.assertEquals(found, 15)
         # This game start should "succeed" (but later fail due to game running) because 
         #  the owner of the table is our player.
         self.assertEqual(log_history.search("tried to start a new game while in game"), False)
@@ -3709,7 +3712,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             avatars[ii].resetPacketsQueue()
 
         table.autodeal = True
-        expectedCount = 14
+        expectedCount = 15
 
         log_history.reset()
         self.dealTable((client, packet), gameId)

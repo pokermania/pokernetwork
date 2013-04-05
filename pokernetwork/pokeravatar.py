@@ -1333,6 +1333,10 @@ class PokerAvatar:
                     ))
 
         self.sendPacketVerbose(PacketPokerSeats(game_id = game.id, seats = game.seats()))
+        
+        # send bet limits, if already generated 
+        if table.bet_limits is not None: self.sendPacketVerbose(table.getBetLimits())
+        
         if not game.isEndOrNull():
             #
             # If a game is running, replay it.
@@ -1345,11 +1349,13 @@ class PokerAvatar:
             #
             packets, previous_dealer, errors = history2packets(game.historyGet(), game.id, -1, createCache()) #@UnusedVariable
             for error in errors: table.log.error("%s", error)
+            
             timeout_packet = table.getCurrentTimeoutWarning()
-            if timeout_packet:
-                packets.append(timeout_packet)
+            if timeout_packet: packets.append(timeout_packet)
+            
             for past_packet in packets:
                 self.sendPacketVerbose(private2public(past_packet, self.getSerial()))
+        
         self.sendPacketVerbose(PacketPokerStreamMode(game_id = game.id))
 
     def addPlayer(self, table, seat):

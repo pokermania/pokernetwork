@@ -166,7 +166,9 @@ class PokerTable:
             "delay": 0,
         }
         self.update_recursion = False
-
+        
+        self.bet_limits = None
+        
         # Lock Checker
         self._initLockCheck()
 
@@ -296,11 +298,42 @@ class PokerTable:
                 avatar.sendPacket(private2public(packet, 0))
 
         self.factory.eventTable(self)
-
-    def syncDatabase(self):
+        
+    def updateBetLimits(self, history):
+        """Looks for changed bet limits and, if found, appends a new BetLimits packet to packets"""
+        should_update = False
+        if not should_update:        
+            for event in reversed(history):
+                if event[0] in ("game", "round"):
+                    should_update = True
+                    break
+        if should_update:
+            bet_limits = self.game.betLimits() + (self.game.getChipUnit(), self.game.roundCap())
+            if bet_limits != self.bet_limits:
+                self.bet_limits = bet_limits
+                return True
+        return False
+    
+    def getBetLimits(self):
+        limit_min, limit_max, limit_step, limit_cap = self.bet_limits
+        limit_type = {"money": PacketPokerBetLimits.NO_LIMIT, "pot": PacketPokerBetLimits.POT_LIMIT}.get(limit_max, PacketPokerBetLimits.LIMIT)
+        if limit_type != PacketPokerBetLimits.LIMIT: 
+            limit_max = 0
+            limit_cap = 0
+            
+        return PacketPokerBetLimits(
+            game_id = self.game.id,
+            min = limit_min,
+            max = limit_max,
+            step = limit_step,
+            cap = limit_cap,
+            limit = limit_type
+        )
+                
+    def syncDatabase(self, history):
         updates = {}
         serial2rake = {}
-        for event in self.game.historyGet()[self.history_index:]:
+        for event in history:
             event_type = event[0]
             if event_type == "game":
                 pass
@@ -454,8 +487,8 @@ class PokerTable:
 
         return new_history
 
-    def delayedActions(self):
-        for event in self.game.historyGet()[self.history_index:]:
+    def delayedActions(self, history):
+        for event in history:
             event_type = event[0]
             if event_type == "game":
                 self.game_delay = {
@@ -475,22 +508,16 @@ class PokerTable:
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     for avatar in self.avatar_collection.get(serial)[:]:
                         self.seated2observer(avatar, serial)
-            # despawn this table if no avatars are active
-            if event_type == "finish" and self.canBeDespawned():
-                self.factory.despawnTable(self.game.id)
-
-    def cashGame_kickPlayerSittingOutTooLong(self, historyToSearch):
+    
+    def cashGame_kickPlayerSittingOutTooLong(self, history):
         if self.tourney: return
-        handIsFinished = False
-        # Go through the history backwards, stopping at
-        # self.history_index, since we expect finish to be at the end if
-        # it is there, and we don't want to consider previously reduced
-        # history.
-        for event in reversed(historyToSearch):
+        finished = False
+        # Go through the history backwards, as the finish event is found at the end
+        for event in reversed(history):
             if event[0] == "finish":
-                handIsFinished = True
+                finished = True
                 break
-        if handIsFinished:
+        if finished:
             for player in self.game.playersAll():
                 if player.getMissedRoundCount() >= self.max_missed_round:
                     self.kickPlayer(player.serial)
@@ -660,11 +687,16 @@ class PokerTable:
             self.updateTimers(history_tail)
             packets, self.previous_dealer, errors = history2packets(history_tail, self.game.id, self.previous_dealer, self.cache)
             for error in errors: self.log.warn("%s", error)
-            self.syncDatabase()
-            self.delayedActions()
+            self.syncDatabase(history_tail)
+            self.delayedActions(history_tail)
+            if self.updateBetLimits(history_tail):
+                packets.append(self.getBetLimits())
             if len(packets) > 0:
                 self.broadcast(packets)
             self.tourneyEndTurn()
+            
+            if not self.isRunning() and self.canBeDespawned():
+                self.factory.despawnTable(self.game.id)
             if self.isValid():
                 self.cashGame_kickPlayerSittingOutTooLong(history_tail)
                 self.scheduleAutoDeal()

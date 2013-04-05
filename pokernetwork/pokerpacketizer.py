@@ -12,14 +12,13 @@ def history2packets(history, game_id, previous_dealer, cache):
         if event_type == "game":
             level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips = event[1:]  # @UnusedVariable
             if len(serial2chips) > 1:
-                nochips = 0
                 for (serial, chips) in serial2chips.iteritems():
                     if serial == 'values':
                         continue
                     packets.append(PacketPokerPlayerChips(
                         game_id = game_id,
                         serial = serial,
-                        bet = nochips,
+                        bet = 0,
                         money = chips
                     ))
             packets.append(PacketPokerInGame(
@@ -66,7 +65,11 @@ def history2packets(history, game_id, previous_dealer, cache):
                 game_id = game_id,
                 string = name
             ))
-
+            
+        elif event_type == "bet_limits":
+            min_bet, max_bet, step = event[1:]
+            print min_bet, max_bet, step
+            
         elif event_type == "position":
             position = event[1]
             serial = event[2] if event[2] is not None else 0

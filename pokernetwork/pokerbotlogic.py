@@ -351,7 +351,7 @@ class PokerBot:
         elif desired_action == "call":
             protocol.sendPacket(PacketPokerCall(game_id = game.id, serial = serial))
         elif desired_action == "raise":
-            min_bet, _max_bet, _to_call = game.betLimits(serial)
+            min_bet, _max_bet, _to_call = game.betLimitsForSerial(serial)
             protocol.sendPacket(PacketPokerRaise(game_id = game.id, serial = serial, amount = min_bet * 2))
         else:
             self.log.warn("=> unexpected actions = %s", actions)

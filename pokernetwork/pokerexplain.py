@@ -707,7 +707,7 @@ class PokerExplain:
             
         packets = []
         serial = self.getSerial()
-        (min_bet, max_bet, to_call) = game.betLimits(serial)
+        min_bet, max_bet, to_call = game.betLimitsForSerial(serial)
         found = None
         steps = self.chips_values[:]
         steps.reverse()

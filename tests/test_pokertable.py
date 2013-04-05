@@ -1516,6 +1516,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
                 mgSelf.id = 77701
                 mgSelf.state = GAME_STATE_MUCK
                 mgSelf.hand_serial = 77701
+                mgSelf.serial2player = {}
             def muck(mgSelf, serial, want_to_muck = False):
                 mgSelf.mucked[serial] = want_to_muck
 
@@ -1525,6 +1526,9 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             def isRunning(mgSelf): return False
             def potAndBetsAmount(mgSelf): return 0
             def historyCanBeReduced(mgSelf): False
+            def betLimits(mgSelf): return (0, 0)
+            def getChipUnit(mgSelf): return 1
+            def roundCap(mgSelf): return 1
 
         self.table.timer_info["muckTimeout"] = None
         origGame = self.table.game
@@ -1618,7 +1622,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
 
         self.table.game.state = GAME_STATE_MUCK
         self.table.game.muckable_serials = [1,2]
-        self.table.syncDatabase = lambda: None
+        self.table.syncDatabase = lambda history: None
         self.table.muckTimeoutTimer()
         self.assertEquals([], self.table.game.muckable_serials)
     # -------------------------------------------------------------------
