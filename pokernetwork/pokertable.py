@@ -695,7 +695,7 @@ class PokerTable:
                 self.broadcast(packets)
             self.tourneyEndTurn()
             
-            if not self.isRunning() and self.canBeDespawned():
+            if self.canBeDespawned():
                 self.factory.despawnTable(self.game.id)
             if self.isValid():
                 self.cashGame_kickPlayerSittingOutTooLong(history_tail)

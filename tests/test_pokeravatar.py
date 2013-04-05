@@ -1105,7 +1105,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 else:
                     ignored += 1
         self.assertEquals(found, 28)
-        self.assertEquals(ignored, 18)
+        self.assertEquals(ignored, 16)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test15_handPlay(self):
