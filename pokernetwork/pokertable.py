@@ -690,7 +690,7 @@ class PokerTable:
             self.syncDatabase(history_tail)
             self.delayedActions(history_tail)
             if self.updateBetLimits(history_tail):
-                packets.append(self.getBetLimits())
+                packets = [self.getBetLimits()] + packets
             if len(packets) > 0:
                 self.broadcast(packets)
             self.tourneyEndTurn()
