@@ -1438,12 +1438,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 'output': "%sattempt to deny muck%s" % (messageStart, forPlayerByPlayer),
                 'packet': PacketPokerMuckDeny(serial=someoneElseSerial, game_id=gameId)
             },
-            'setaccount': {
-                'output': "password must be at least 5 characters long",
-                'packet': PacketPokerSetAccount(serial=someoneElseSerial),
-                'err_type': PACKET_ERROR,
-                'other_type': PACKET_POKER_SET_ACCOUNT
-            },
             'automuck': {
                 'output': "%sattempt to set auto muck%s, or player is not in game" % (messageStart, forPlayerByPlayer),
                 'packet': PacketPokerAutoMuck(serial=someoneElseSerial, game_id=gameId, info = 0x01) 
