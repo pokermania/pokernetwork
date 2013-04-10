@@ -334,6 +334,8 @@ class PokerService(service.Service):
         self.poker_auth.SetLevel(PACKET_POKER_HAND_SELECT_ALL, User.ADMIN)
         self.poker_auth.SetLevel(PACKET_POKER_CREATE_TOURNEY, User.ADMIN)
         self.poker_auth.SetLevel(PACKET_POKER_TABLE, User.ADMIN)
+        self.poker_auth.SetLevel(PACKET_POKER_CREATE_ACCOUNT, User.ADMIN)
+        self.poker_auth.SetLevel(PACKET_POKER_SET_ACCOUNT, User.ADMIN)
         service.Service.startService(self)
         self.down = False
 
