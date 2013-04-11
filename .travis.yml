@@ -9,36 +9,36 @@ virtualenv:
 before_install: sudo apt-get update -qq
 
 install:
- - sudo apt-get install -qq python-pypoker-eval
- - sudo apt-get install -qq python-libxml2
- - sudo apt-get install -qq python-libxslt1
- - sudo apt-get install -qq mysql-server
- - sudo apt-get install -qq libmysql++-dev
- - sudo apt-get install -qq memcached
- - sudo apt-get install -qq libssl-dev
- - sudo apt-get install -qq libmysqlclient-dev
- - sudo apt-get install -qq gettext
- - sudo apt-get install -qq libmcrypt-dev
- - sudo apt-get install -qq bc
- - sudo apt-get install -qq apg
- - sudo apt-get install -qq php5-cli
- - pip install -q http://pypi.python.org/packages/source/w/wstools/wstools-0.4.tar.gz
- - pip install -q http://pypi.python.org/packages/source/f/fpconst/fpconst-0.7.2.tar.gz
- - pip install -q http://pypi.python.org/packages/source/z/zope.interface/zope.interface-4.0.1.tar.gz
- - pip install -q http://pypi.python.org/packages/source/T/Twisted/Twisted-11.1.0.tar.bz2
- - pip install -q http://pypi.python.org/packages/source/M/MySQL-python/MySQL-python-1.2.3.tar.gz
- - pip install -q http://ftp.tummy.com/pub/python-memcached/python-memcached-1.48.tar.gz
- - pip install -q http://pypi.python.org/packages/source/s/simplejson/simplejson-2.6.1.tar.gz
- - pip install -q http://pypi.python.org/packages/source/c/coverage/coverage-3.5.2.tar.gz
- - pip install -q http://pypi.python.org/packages/source/p/pycrypto/pycrypto-2.6.tar.gz
- - pip install -q http://pypi.python.org/packages/source/p/pyasn1/pyasn1-0.1.4.tar.gz
- - pip install -q http://pypi.python.org/packages/source/S/SOAPpy/SOAPpy-0.12.5.tar.gz
- - pip install -q http://pypi.python.org/packages/source/p/python-cjson/python-cjson-1.0.5.tar.gz
- - pip install -q http://pypi.python.org/packages/source/p/pyOpenSSL/pyOpenSSL-0.13.tar.gz
- - pip install -q http://github.com/pokermania/pokerdistutils/archive/master.zip
- - pip install -q http://github.com/pokermania/reflogging/archive/master.zip
- - pip install -q http://github.com/pokermania/pokerengine/archive/master.zip
- - pip install -q http://github.com/pokermania/pokerpackets/archive/master.zip
+ - sudo apt-get install python-pypoker-eval
+ - sudo apt-get install python-libxml2
+ - sudo apt-get install python-libxslt1
+ - sudo apt-get install mysql-server
+ - sudo apt-get install libmysql++-dev
+ - sudo apt-get install memcached
+ - sudo apt-get install libssl-dev
+ - sudo apt-get install libmysqlclient-dev
+ - sudo apt-get install gettext
+ - sudo apt-get install libmcrypt-dev
+ - sudo apt-get install bc
+ - sudo apt-get install apg
+ - sudo apt-get install php5-cli
+ - pip install http://pypi.python.org/packages/source/w/wstools/wstools-0.4.tar.gz
+ - pip install http://pypi.python.org/packages/source/f/fpconst/fpconst-0.7.2.tar.gz
+ - pip install http://pypi.python.org/packages/source/z/zope.interface/zope.interface-4.0.1.tar.gz
+ - pip install http://pypi.python.org/packages/source/T/Twisted/Twisted-11.1.0.tar.bz2
+ - pip install http://pypi.python.org/packages/source/M/MySQL-python/MySQL-python-1.2.3.tar.gz
+ - pip install http://ftp.tummy.com/pub/python-memcached/python-memcached-1.48.tar.gz
+ - pip install http://pypi.python.org/packages/source/s/simplejson/simplejson-2.6.1.tar.gz
+ - pip install http://pypi.python.org/packages/source/c/coverage/coverage-3.5.2.tar.gz
+ - pip install http://pypi.python.org/packages/source/p/pycrypto/pycrypto-2.6.tar.gz
+ - pip install http://pypi.python.org/packages/source/p/pyasn1/pyasn1-0.1.4.tar.gz
+ - pip install http://pypi.python.org/packages/source/S/SOAPpy/SOAPpy-0.12.5.tar.gz
+ - pip install http://pypi.python.org/packages/source/p/python-cjson/python-cjson-1.0.5.tar.gz
+ - pip install http://pypi.python.org/packages/source/p/pyOpenSSL/pyOpenSSL-0.13.tar.gz
+ - pip install http://github.com/pokermania/pokerdistutils/archive/master.zip
+ - pip install http://github.com/pokermania/reflogging/archive/master.zip
+ - pip install http://github.com/pokermania/pokerengine/archive/master.zip
+ - pip install http://github.com/pokermania/pokerpackets/archive/master.zip
 
 # command to run tests, e.g. python setup.py test
 before_script:
