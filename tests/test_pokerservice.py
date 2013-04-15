@@ -68,6 +68,11 @@ from MySQLdb.cursors import DictCursor
 
 from pokerpackets import binarypack
 
+try:
+    from nose.plugins.attrib import attr
+except ImportError:
+    attr = lambda *args, **kw: lambda fn: fn
+
 class ConstantDeckShuffler:
     def shuffle(self, what):
         what[:] = [
@@ -5449,7 +5454,6 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[2]], 1)
 
         msgs = log_history.get_all()
-        self.assertEquals(len(msgs), 6)
         self.assertEquals(msgs[0].find("cleanupTourneys: "), 0)
         self.assertEquals(msgs[1].find("restoreTourneys: "), 0)
 

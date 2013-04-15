@@ -2377,7 +2377,8 @@ class PokerService(service.Service):
                 # tourney.register would call updateRunning and try to start the tourney because it is already in the 
                 # state registering would cancel the tourney since there are not enough players.
                 # We cannot set the tourney state (to registering) yet because the we need to register the player first
-                tourney.state = None
+
+                old_state, tourney.state = tourney.state, TOURNAMENT_STATE_LOADING
                 cursor.execute(
                     "SELECT u.serial, u.name FROM users AS u " \
                     "JOIN user2tourney AS u2t " \
@@ -2392,9 +2393,12 @@ class PokerService(service.Service):
                     "REPLACE INTO route VALUES (0, %s, %s, %s)",
                     (row['serial'], now, self.resthost_serial)
                 )
-                tourney.state = TOURNAMENT_STATE_ANNOUNCED
-                tourney.updateRegistering()
-                tourney.updateRunning()
+
+                tourney.state = old_state
+                if tourney.state == TOURNAMENT_STATE_ANNOUNCED:
+                    tourney.updateRegistering()
+                if tourney.state == TOURNAMENT_STATE_REGISTERING:
+                    tourney.updateRunning()
         finally:
             cursor.close()
             
