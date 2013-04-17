@@ -199,8 +199,8 @@ class PokerTable:
         self.cancelPlayerTimers()
         #
         # destroy factory table
-        self.factory.destroyTable(self.game.id)
-
+        if self.transient:
+            self.factory.destroyTable(self.game.id)
         #
         # broadcast TableDestroy to connected avatars
         self.broadcast(PacketPokerTableDestroy(game_id=self.game.id))
