@@ -89,7 +89,7 @@ class ConstantPlayerShuffler:
         what.sort()
 
 pokertournament.shuffler = ConstantPlayerShuffler()
-pokergame.shuffler = ConstantDeckShuffler()
+pokergame.Shuffler = ConstantDeckShuffler
 
 TABLE1 = 1
 TABLE2 = 2
