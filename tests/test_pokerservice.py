@@ -3728,7 +3728,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         
         # augment tourneyIsRelevant to remember on which tourneys it was called
-        tourney_serials = self.service.tourneys.keys()
+        tourney_serials = [t.serial for t in self.service.tourneys.values() if t.sit_n_go != "y"]
         tourney_is_relevant_results = {}
         tourneyIsRelevantOriginal = self.service.tourneyIsRelevant
         def tourneyIsRelevantLogging(tourney):
@@ -3760,7 +3760,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         self.assertEquals(tourney_is_relevant_results, dict((t_serial, False) for t_serial in tourney_serials))
 
         # all tourneys should be gone
-        self.assertEqual(len(self.service.tourneys), 0)
+        self.assertEqual(len(self.service.tourneys), 1)
 
     def test01_tourneyNewState_simpleTransitions(self):
         def ok(tourney):
