@@ -1804,7 +1804,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         d2.addCallback(checkCancel)
         reactor.callLater(12, lambda: d2.callback(True))
         return defer.DeferredList((d1, d2), fireOnOneErrback=True)
-        # assert False, "so weit so gut"
 
     def test14_1_checkTourneysSchedule_cancel_sitngo_already_canceled(self):
         self.service.startService()
