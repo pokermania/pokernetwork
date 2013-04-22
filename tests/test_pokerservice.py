@@ -1769,17 +1769,42 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEqual(111, service.sng_timeout)
 
     def test14_checkTourneysSchedule_cancel_sitngo(self):
+        pokerservice.DELETE_OLD_TOURNEYS_DELAY = 0
+        pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
+        pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
         self.service.startService()
-        self.service.sng_timeout = 0
+        self.createUsers()
+
+        self.service.sng_timeout = 1
         heads_up_before = [t for t in self.service.tourneys.values() if t.name=='sitngo2'][0]
         register_time = int(pokerservice.seconds()) - 1
         self.service.checkTourneysSchedule()
-        self.assertEquals(pokertournament.TOURNAMENT_STATE_CANCELED, heads_up_before.state)
-        heads_up_after1, heads_up_after2 = [t for t in self.service.tourneys.values() if t.name=='sitngo2']
-        self.failUnless(abs(register_time - heads_up_after2.register_time) <= 1)
-        self.assertEquals(heads_up_before.serial, heads_up_after1.serial)
-        self.assertNotEqual(heads_up_before.serial, heads_up_after2.serial)
-        self.assertEqual(heads_up_before.schedule_serial, heads_up_after2.schedule_serial)
+        self.assertEquals(pokertournament.TOURNAMENT_STATE_REGISTERING, heads_up_before.state)
+
+        d1 = defer.Deferred()
+        def register(status):
+            # heads_up_before.last_registered = pokerservice.seconds()
+            self.service.tourneyRegister(PacketPokerTourneyRegister(
+                serial = self.user1_serial,
+                tourney_serial = heads_up_before.serial
+            ))
+            self.assertEquals(pokertournament.TOURNAMENT_STATE_REGISTERING, heads_up_before.state)
+            self.assertNotEqual(None, heads_up_before.last_registered)
+        d1.addCallback(register)
+        reactor.callLater(10, lambda: d1.callback(True))
+
+        d2 = defer.Deferred()
+        def checkCancel(status):
+            self.assertEquals(pokertournament.TOURNAMENT_STATE_CANCELED, heads_up_before.state)
+            heads_up_after1, heads_up_after2 = [t for t in self.service.tourneys.values() if t.name=='sitngo2']
+            self.failUnless(abs(register_time - heads_up_after2.register_time) <= 13)
+            self.assertEquals(heads_up_before.serial, heads_up_after1.serial)
+            self.assertNotEqual(heads_up_before.serial, heads_up_after2.serial)
+            self.assertEqual(heads_up_before.schedule_serial, heads_up_after2.schedule_serial)
+        d2.addCallback(checkCancel)
+        reactor.callLater(12, lambda: d2.callback(True))
+        return defer.DeferredList((d1, d2), fireOnOneErrback=True)
+        # assert False, "so weit so gut"
 
     def test14_1_checkTourneysSchedule_cancel_sitngo_already_canceled(self):
         self.service.startService()
