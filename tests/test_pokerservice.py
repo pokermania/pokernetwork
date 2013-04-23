@@ -5168,7 +5168,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(self.service.loadHand(3), 8)
         self.assertEquals(log_history.get_all(), [])
         self.service.db = oldDb
-    def test31_getHandSerial_coverCursorWithLastrowid(self):
+    def test31_createHand_coverCursorWithLastrowid(self):
         self.service = pokerservice.PokerService(self.settings)
         class MockCursor(MockCursorBase):
             def statementActions(cursorSelf, sql, statement):
@@ -5186,10 +5186,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 
         log_history.reset()
 
-        self.assertEquals(self.service.getHandSerial(), 9)
+        self.assertEquals(self.service.createHand(1), 9)
         self.assertEquals(log_history.get_all(), [])
         self.service.db = oldDb
-    def test32_getHandSerial_coverCursorWithInsertID(self):
+    def test32_createHand_coverCursorWithInsertID(self):
         self.service = pokerservice.PokerService(self.settings)
         class MockCursor(MockCursorBase):
             def __init__(cursorSelf):
@@ -5207,7 +5207,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 
         log_history.reset()
 
-        self.assertEquals(self.service.getHandSerial(), 22)
+        self.assertEquals(self.service.createHand(1), 22)
         self.assertEquals(log_history.get_all(), [])
         self.service.db = oldDb
     def test33_getHandHistory_failedLoadHand(self):

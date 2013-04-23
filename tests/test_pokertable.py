@@ -239,7 +239,7 @@ class MockService:
         else:
             return amount
 
-    def getHandSerial(self):
+    def createHand(self, game_id, tourney_serial=None):
         self.hand_serial += 1
         return self.hand_serial
 

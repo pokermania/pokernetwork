@@ -251,7 +251,8 @@ class PokerTable:
         self.cancelDealTimeout()
         if self.game.isEndOrNull():
             self.historyReset()
-            hand_serial = self.factory.getHandSerial()
+            tourney_serial = self.tourney.serial if self.tourney else None
+            hand_serial = self.factory.createHand(self.game.id, tourney_serial)
             self.log.debug("Dealing hand %s/%d", self.game.name, hand_serial)
             self.game.setTime(seconds())
             self.game.beginTurn(hand_serial)
