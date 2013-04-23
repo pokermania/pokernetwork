@@ -1837,7 +1837,7 @@ class PokerService(service.Service):
 
     def createHand(self, game_id, tourney_serial=None):
         cursor = self.db.cursor()
-        cursor.execute("INSERT INTO hands (description, table_serial, tourney_serial) VALUES ('[]', %s, %s)",
+        cursor.execute("INSERT INTO hands (description, game_id, tourney_serial) VALUES ('[]', %s, %s)",
             (game_id, tourney_serial))
         serial = cursor.lastrowid
         cursor.close()

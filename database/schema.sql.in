@@ -68,7 +68,7 @@ CREATE TABLE hands (
   created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `name` varchar(32) DEFAULT NULL,
   description text NOT NULL,
-  table_serial int(10) DEFAULT NULL,
+  game_id int(10) DEFAULT NULL,
   tourney_serial int(10) DEFAULT NULL,
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
