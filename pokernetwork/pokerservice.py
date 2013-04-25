@@ -1917,7 +1917,7 @@ class PokerService(service.Service):
         return history
 
     def saveHand(self, description, hand_serial, save_to_cache=True):
-        (hand_type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips) = description[0] #@UnusedVariable
+        hand_type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips = description[0] #@UnusedVariable
         #
         # save the value to the hand_cache if needed
         if save_to_cache:
@@ -1925,23 +1925,19 @@ class PokerService(service.Service):
                 del self.hand_cache[obsolete_hand_serial]
             self.hand_cache[hand_serial] = description
         
-        cursor = self.db.cursor()
+        c = self.db.cursor()
         try:
-            sql = "UPDATE hands SET description = %s WHERE serial = %s"
-            params = (str(description), hand_serial)
-            cursor.execute(sql, params)
-            self.log.debug("saveHand: %s" , cursor._executed)
-            if cursor.rowcount not in (1,0):
-                self.log.error("modified %d rows (expected 1 or 0): %s", cursor.rowcount, cursor._executed)
+            c.execute("UPDATE hands SET description = %s WHERE serial = %s", (str(description), hand_serial))
+            self.log.debug("saveHand: %s" , c._executed)
+            if c.rowcount not in (1, 0):
+                self.log.error("modified %d rows (expected 1 or 0): %s", c.rowcount, c._executed)
                 
-            sql = "INSERT INTO user2hand VALUES "
-            sql += ", ".join("(%d, %d)" % (player_serial, hand_serial) for player_serial in player_list)
-            cursor.execute(sql)
-            self.log.debug("saveHand: %s", sql)
-            if cursor.rowcount != len(player_list):
-                self.log.error("inserted %d rows (expected exactly %d): %s", cursor.rowcount, len(player_list), cursor._executed)
+            c.execute("INSERT INTO user2hand(user_serial, hand_serial) VALUES " + ", ".join(["(%d, %d)" % (user_serial, hand_serial) for user_serial in player_list]))
+            self.log.debug("saveHand: %s", c._executed)
+            if c.rowcount != len(player_list):
+                self.log.error("inserted %d rows (expected exactly %d): %s", c.rowcount, len(player_list), c._executed)
         finally:
-            cursor.close()
+            c.close()
 
     def listHands(self, sql_list, sql_total):
         cursor = self.db.cursor()
