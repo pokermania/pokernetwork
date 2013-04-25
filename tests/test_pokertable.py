@@ -55,6 +55,7 @@ log = reflogging.root_logger.get_child('test-pokertable')
 
 from pokerengine import pokertournament
 from pokernetwork import pokertable, pokernetworkconfig
+from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 from pokernetwork.pokeravatar import DEFAULT_PLAYER_USER_DATA, PokerAvatar
 from pokerengine.pokercards import PokerCards

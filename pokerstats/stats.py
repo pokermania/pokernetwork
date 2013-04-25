@@ -35,6 +35,8 @@ from twisted.internet import error, defer
 
 from pokernetwork import pokernetworkconfig
 from pokernetwork.pokerclient import PokerClientFactory
+from pokerpackets.packets import *
+from pokerpackets.networkpackets import *
 from pokerpackets.clientpackets import *
 from pokerstats.statslogic import PokerStats
 

@@ -39,6 +39,7 @@ from pokernetwork import pokerservice
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokermemcache
 from pokernetwork import pokersite
+from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>

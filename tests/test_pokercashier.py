@@ -47,6 +47,7 @@ twisted.internet.base.DelayedCall.debug = False
 from pokernetwork import pokercashier, pokernetworkconfig
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
+from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 from pokernetwork.pokerdatabase import PokerDatabase
 

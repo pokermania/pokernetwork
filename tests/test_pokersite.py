@@ -41,6 +41,7 @@ from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokeravatar
 from pokernetwork.pokertable import PokerAvatarCollection
+from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 
 class PokerAuthMockup:

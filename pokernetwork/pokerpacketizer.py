@@ -1,5 +1,6 @@
 from pokerengine.pokercards import PokerCards
-from pokerpackets.networkpackets import *  # @UnusedWildImport
+from pokerpackets.packets import *
+from pokerpackets.networkpackets import *
 
 def createCache():
     return {"board": PokerCards(), "pockets": {}}

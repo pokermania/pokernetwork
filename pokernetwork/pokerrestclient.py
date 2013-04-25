@@ -23,6 +23,7 @@ from twisted.web import http, client
 from twisted.python.util import InsensitiveDict
 from twisted.python.runtime import seconds
 
+from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 from pokerpackets.dictpack import dict2packet
 from pokernetwork import log as network_log

@@ -23,7 +23,9 @@ import MySQLdb
 
 from twisted.internet import reactor
 
-from pokernetwork.pokerclientpackets import *
+from pokernetwork.packets import *
+from pokernetwork.networkpackets import *
+from pokernetwork.clientpackets import *
 
 class PokerStats:
 

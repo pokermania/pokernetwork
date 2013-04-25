@@ -61,6 +61,8 @@ from pokernetwork import pokerclient
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 
+from pokerpackets.packets import *
+from pokerpackets.networkpackets import *
 from pokerpackets.clientpackets import *
 
 from mock_transport import PairedDeferredTransport

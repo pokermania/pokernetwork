@@ -43,7 +43,7 @@ from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
 from pokernetwork import proxyfilter
-from pokerpackets.packets import Packet
+from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 
 settings_xml_server = """<?xml version="1.0" encoding="UTF-8"?>

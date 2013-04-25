@@ -62,6 +62,8 @@ from twisted.internet import error
 
 from pokerengine.pokertournament import *
 from pokernetwork import pokernetworkconfig
+from pokerpackets.packets import *
+from pokerpackets.networkpackets import *
 from pokerpackets.clientpackets import *
 from pokernetwork.pokerclient import PokerClientFactory, PokerClientProtocol
 from pokernetwork.pokerbotlogic import StringGenerator, NoteGenerator, PokerBot

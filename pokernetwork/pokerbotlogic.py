@@ -30,6 +30,7 @@ from twisted.internet import reactor
 
 from pokerengine.pokertournament import *
 from pokernetwork.user import checkName
+from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 from pokerpackets.clientpackets import *
 from pokernetwork import log as network_log

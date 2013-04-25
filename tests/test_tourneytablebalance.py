@@ -51,6 +51,7 @@ from pokernetwork import pokerservice, pokernetworkconfig
 from pokernetwork import currencyclient
 from pokernetwork import pokerdatabase
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
+from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 
 class ConstantDeckShuffler:

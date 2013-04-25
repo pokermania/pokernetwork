@@ -58,6 +58,8 @@ from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerclient
 from pokernetwork import currencyclient
 currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
+from pokerpackets.packets import *
+from pokerpackets.networkpackets import *
 from pokerpackets.clientpackets import *
 from pokernetwork.pokertable import PokerAvatarCollection
 from pokernetwork.pokerrestclient import PokerRestClient

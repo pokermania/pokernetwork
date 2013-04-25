@@ -44,6 +44,7 @@ from pokernetwork import pokermemcache
 from pokernetwork import pokersite
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokerservice
+from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 from pokernetwork.pokerrestclient import PokerRestClient
 PokerRestClient.DEFAULT_LONG_POLL_FREQUENCY = -1
