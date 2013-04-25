@@ -800,13 +800,11 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         # ... but cannot sit down again
         self.assertEqual(False, self.table.seatPlayer(player[5], 5, -1))
 
-        # I wonder if these should really return True rather than None?  -- bkuhn
         self.assertEqual(None, self.table.muckAccept(player[5], 5))
         self.assertEqual(None, self.table.muckDeny(player[5], 5))
         self.assertEqual(None, self.table.autoBlindAnte(player[5], 5, True))
 
-        self.assertEqual(True, self.table.rebuyPlayerRequest(player[5], \
-                                              self.table.game.buyIn()))
+        self.assertEqual(True, self.table.rebuyPlayerRequest(player[5], self.table.game.buyIn()))
         # finally, player5 tries to join table 2, which isn't permitted since
         # we've set MockService.simultaneous to 1
         self.assertEqual(False, self.table2.joinPlayer(player[5], 5))
@@ -847,8 +845,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         """Test that sitOut works correctly"""
         player = self.createPlayer(4)
 
-        # player4 sits out but tries it twice.  (Guess he clicked too much
-        # on the button)
+        # player4 sits out but tries it twice.
         self.assertEqual(True, self.table.sitOutPlayer(player, 4))
         self.assertEqual(True, self.table.sitOutPlayer(player, 4))
     # -------------------------------------------------------------------

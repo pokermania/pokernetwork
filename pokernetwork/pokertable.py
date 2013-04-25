@@ -1189,15 +1189,17 @@ class PokerTable:
             self.log.warn("player %d can't rebuy before paying the buy in", serial)
             return False
 
+        # after a rebuy, the money the user has has to be between buyIn and maxBuyIn
         maximum = self.game.maxBuyIn() - self.game.getPlayerMoney(serial)
+        minimum = self.game.buyIn() - self.game.getPlayerMoney(serial)
+        amount = min(max(amount, minimum), maximum)
+        
         if maximum <= 0:
             self.log.warn("player %d can't bring more money to the table", serial, refs=[('User', serial, int)])
             return False
+        
 
-        if amount == 0:
-            amount = self.game.buyIn()
-
-        amount = self.factory.buyInPlayer(serial, self.game.id, self.currency_serial, min(amount, maximum))
+        amount = self.factory.buyInPlayer(serial, self.game.id, self.currency_serial, amount)
 
         if amount == 0:
             self.log.warn("player %d is broke and cannot rebuy", serial)

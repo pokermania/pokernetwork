@@ -233,7 +233,7 @@ class PokerBot:
                 if not self.factory.join_info['tournament'] and not self.factory.watch:
                     game = self.factory.packet2game(packet)
                     serial = protocol.getSerial()
-                    if ( game and game.isBroke(serial) ):
+                    if game and game.isBroke(serial):
                         protocol.sendPacket(PacketPokerRebuy(game_id = game.id, serial = serial))
                         protocol.sendPacket(PacketPokerSit(game_id = game.id, serial = serial))
             
