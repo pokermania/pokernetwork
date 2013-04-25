@@ -35,7 +35,10 @@ from twisted.internet import reactor, defer
 from pokernetwork.util.trace import format_exc
 
 from pokernetwork.user import User, checkNameAndPassword, checkAuth
+
+from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
+
 from pokernetwork.pokerexplain import PokerExplain
 from pokernetwork.pokerrestclient import PokerRestClient
 from pokernetwork.pokerpacketizer import createCache, history2packets, private2public
