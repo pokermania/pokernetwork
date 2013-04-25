@@ -5316,7 +5316,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def statementActions(cursorSelf, sql, statement):
                 cursorSelf.rowcount = 5
             def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, ["UPDATE hands SET ", "INSERT INTO user2hand VALUES "])
+                MockCursorBase.__init__(cursorSelf, self, ["UPDATE hands SET ", "INSERT INTO user2hand (user_serial, hand_serial) VALUES "])
         self.service = pokerservice.PokerService(self.settings)
 
         oldDb = self.service.db
@@ -5336,7 +5336,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 # Make it always 1, so the update succeeds and insert fails
                 cursorSelf.rowcount = 1
             def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, ["UPDATE hands SET ", "INSERT INTO user2hand VALUES "])
+                MockCursorBase.__init__(cursorSelf, self, ["UPDATE hands SET ", "INSERT INTO user2hand (user_serial, hand_serial) VALUES "])
         self.service = pokerservice.PokerService(self.settings)
 
         oldDb = self.service.db
@@ -5350,7 +5350,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.assertEquals(len(msgs), 3)
         self.failUnless(msgs[0].find("saveHand: UPDATE hands SET description = ") == 0)
         self.failUnless(msgs[1].find('saveHand: INSERT INTO user2hand') == 0)
-        self.failUnless(msgs[2].find('inserted 1 rows (expected exactly 2): INSERT INTO user2hand VALUES') == 0)
+        self.failUnless(msgs[2].find('inserted 1 rows (expected exactly 2): INSERT INTO user2hand ') == 0)
         self.service.db = oldDb
     def test38_eventTable_serialZero(self):
         class MockCursor(MockCursorBase):

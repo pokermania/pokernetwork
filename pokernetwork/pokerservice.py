@@ -1932,7 +1932,7 @@ class PokerService(service.Service):
             if c.rowcount not in (1, 0):
                 self.log.error("modified %d rows (expected 1 or 0): %s", c.rowcount, c._executed)
                 
-            c.execute("INSERT INTO user2hand(user_serial, hand_serial) VALUES " + ", ".join(["(%d, %d)" % (user_serial, hand_serial) for user_serial in player_list]))
+            c.execute("INSERT INTO user2hand (user_serial, hand_serial) VALUES " + ", ".join(["(%d, %d)" % (user_serial, hand_serial) for user_serial in player_list]))
             self.log.debug("saveHand: %s", c._executed)
             if c.rowcount != len(player_list):
                 self.log.error("inserted %d rows (expected exactly %d): %s", c.rowcount, len(player_list), c._executed)
