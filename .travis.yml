@@ -38,10 +38,10 @@ install:
     http://pypi.python.org/packages/source/S/SOAPpy/SOAPpy-0.12.5.tar.gz
     http://pypi.python.org/packages/source/p/python-cjson/python-cjson-1.0.5.tar.gz
     http://pypi.python.org/packages/source/p/pyOpenSSL/pyOpenSSL-0.13.tar.gz
-    git://github.com/pokermania/pokerdistutils.git
-    git://github.com/pokermania/reflogging.git
-    git://github.com/pokermania/pokerengine.git
-    git://github.com/pokermania/pokerpackets.git
+    git+https://github.com/pokermania/pokerdistutils.git#egg=poker-distutils
+    git+https://github.com/pokermania/reflogging.git#egg=reflogging
+    git+https://github.com/pokermania/pokerengine.git#egg=poker-engine
+    git+https://github.com/pokermania/pokerpackets.git#egg=poker-packets
 
 # command to run tests, e.g. python setup.py test
 before_script:
