@@ -6,7 +6,7 @@ python:
 virtualenv:
   system_site_packages: true
 
-before_install: sudo apt-get update -qq
+before_install: sudo apt-get update
 
 install:
  - sudo apt-get install
