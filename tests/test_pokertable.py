@@ -1158,18 +1158,18 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     # -------------------------------------------------------------------
     def test27_buyinFailures(self):
         p9 = self.createPlayer(9, False)
-        self.assertEqual(True, self.table.joinPlayer(p9, 9))
-        self.assertEqual(True, self.table.seatPlayer(p9, 9, -1))
-        self.assertEqual(True, self.table.buyInPlayer(p9, 1000))
+        assert self.table.joinPlayer(p9, 9)
+        assert self.table.seatPlayer(p9, 9, -1)
+        assert self.table.buyInPlayer(p9, 1000)
 
         p9.money = 0
-
-        self.assertEqual(False, self.table.rebuyPlayerRequest(p9, 50))
+        assert not self.table.rebuyPlayerRequest(p9, 50)
 
         p1 = self.createPlayer(1)
-        self.table.game.getPlayer(1).money = 50
         self.table.game.rebuy = lambda a, b: False
-        self.assertEqual(False, self.table.rebuyPlayerRequest(p1, 0))
+
+        p1.money = 50
+        assert not self.table.rebuyPlayerRequest(p1, 0)
     # -------------------------------------------------------------------
     def checkFailedJoinDueToMax(self, player):
         self.assertEqual(False, self.table.isJoined(player))
