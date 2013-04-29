@@ -1162,7 +1162,8 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEqual(True, self.table.seatPlayer(p9, 9, -1))
         self.assertEqual(True, self.table.buyInPlayer(p9, 1000))
 
-        self.table.game.getPlayer(9).money = 0
+        p9.money = 0
+
         self.assertEqual(False, self.table.rebuyPlayerRequest(p9, 50))
 
         p1 = self.createPlayer(1)
