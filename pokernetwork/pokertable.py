@@ -304,11 +304,10 @@ class PokerTable:
     def updateBetLimits(self, history):
         """Looks for changed bet limits and, if found, appends a new BetLimits packet to packets"""
         should_update = False
-        if not should_update:        
-            for event in reversed(history):
-                if event[0] in ("game", "round"):
-                    should_update = True
-                    break
+        for event in reversed(history):
+            if event[0] in ("game", "round"):
+                should_update = True
+                break
         if should_update:
             bet_limits = self.game.betLimits() + (self.game.getChipUnit(), self.game.roundCap())
             if bet_limits != self.bet_limits:
