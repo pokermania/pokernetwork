@@ -107,11 +107,11 @@ class PokerPredefinedDecks:
 
 
 class PokerTable:
-    
+
     TIMEOUT_DELAY_COMPENSATION = 2
 
     log = log.get_child('PokerTable')
-    
+
     def __init__(self, factory, id=0, description=None):
         self.log = PokerTable.log.get_instance(self, refs=[
             ('Game', self, lambda table: table.game.id),
@@ -130,13 +130,14 @@ class PokerTable:
             ))
         self.observers = []
         self.waiting = []
+        self.rebuy_stack =[]
         self.game.id = id
         self.game.name = description["name"]
         self.game.setVariant(description["variant"])
         self.game.setBettingStructure(description["betting_structure"])
         self.game.setMaxPlayers(int(description["seats"]))
         self.game.forced_dealer_seat = int(description.get("forced_dealer_seat", -1))
-        self.game.registerCallback(self._gameCallbackTourneyEndTurn)
+        self.game.registerCallback(self._gameCallbackEndTurn)
         self.game.registerCallback(self._gameCallbackTourneyUpdateStats)
         self.skin = description.get("skin") or "default"
         self.currency_serial = int(description.get("currency_serial", 0))
@@ -167,9 +168,9 @@ class PokerTable:
             "delay": 0,
         }
         self.update_recursion = False
-        
+
         self.bet_limits = None
-        
+
         # Lock Checker
         self._initLockCheck()
 
@@ -185,10 +186,10 @@ class PokerTable:
     def isValid(self):
         """Returns true if the table has a factory."""
         return hasattr(self, "factory")
-    
+
     def canBeDespawned(self):
         return not self.isRunning() and self.avatar_collection.isEmpty() and not self.observers and self.tourney is None
-    
+
     def destroy(self):
         """Destroys the table and deletes it from factory.tables. Also informs connected avatars."""
         self.log.debug("destroy table %d", self.game.id)
@@ -260,6 +261,12 @@ class PokerTable:
             for player in self.game.playersAll():
                 player.getUserData()['ready'] = True
 
+    def endTurn(self):
+        for serial, amount in self.rebuy_stack:
+            self.rebuyPlayerRequestNow(serial, amount)
+
+        self.rebuy_stack = []
+
     def historyReset(self):
         self.history_index = 0
         self.cache = createCache()
@@ -300,7 +307,7 @@ class PokerTable:
                 avatar.sendPacket(private2public(packet, 0))
 
         self.factory.eventTable(self)
-        
+
     def updateBetLimits(self, history):
         """Looks for changed bet limits and, if found, appends a new BetLimits packet to packets"""
         should_update = False
@@ -314,14 +321,14 @@ class PokerTable:
                 self.bet_limits = bet_limits
                 return True
         return False
-    
+
     def getBetLimits(self):
         limit_min, limit_max, limit_step, limit_cap = self.bet_limits
         limit_type = {"money": PacketPokerBetLimits.NO_LIMIT, "pot": PacketPokerBetLimits.POT_LIMIT}.get(limit_max, PacketPokerBetLimits.LIMIT)
-        if limit_type != PacketPokerBetLimits.LIMIT: 
+        if limit_type != PacketPokerBetLimits.LIMIT:
             limit_max = 0
             limit_cap = 0
-            
+
         return PacketPokerBetLimits(
             game_id = self.game.id,
             min = limit_min,
@@ -330,7 +337,7 @@ class PokerTable:
             cap = limit_cap,
             limit = limit_type
         )
-                
+
     def syncDatabase(self, history):
         updates = {}
         serial2rake = {}
@@ -455,10 +462,10 @@ class PokerTable:
                 'muck','finish', 'leave','rebuy'
             ):
                 pass
-            
+
             elif event_type == 'game':
                 new_history.append(event)
-                
+
             elif event_type == 'round':
                 name, board, pockets = event[1:]
                 if pockets != cached_pockets: cached_pockets = pockets
@@ -466,7 +473,7 @@ class PokerTable:
                 if board != cached_board: cached_board = board
                 else: board = None
                 new_history.append((event_type, name, board, pockets))
-                
+
             elif event_type == 'showdown':
                 board, pockets = event[1:]
                 if pockets != cached_pockets: cached_pockets = pockets
@@ -474,7 +481,7 @@ class PokerTable:
                 if board != cached_board: cached_board = board
                 else: board = None
                 new_history.append((event_type, board, pockets))
-                
+
             elif event_type in (
                 'call', 'check', 'fold',
                 'raise', 'canceled', 'position',
@@ -482,7 +489,7 @@ class PokerTable:
                 'rake', 'end', 'sit', 'sitOut',
             ):
                 new_history.append(event)
-                
+
             else:
                 self.log.warn("compressedHistory: unknown history type %s ", event_type)
 
@@ -509,7 +516,7 @@ class PokerTable:
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     for avatar in self.avatar_collection.get(serial)[:]:
                         self.seated2observer(avatar, serial)
-    
+
     def cashGame_kickPlayerSittingOutTooLong(self, history):
         if self.tourney: return
         finished = False
@@ -679,7 +686,7 @@ class PokerTable:
         self.update_recursion = True
         if not self.isValid():
             return "not valid"
-        
+
         history = self.game.historyGet()
         history_len = len(history)
         history_tail = history[self.history_index:]
@@ -695,7 +702,7 @@ class PokerTable:
             if len(packets) > 0:
                 self.broadcast(packets)
             self.tourneyEndTurn()
-            
+
             if self.canBeDespawned():
                 self.factory.despawnTable(self.game.id)
             if self.isValid():
@@ -773,10 +780,10 @@ class PokerTable:
 
     def isRunning(self):
         return self.game.isRunning()
-    
+
     def isStationary(self):
         return self.game.isEndOrNull() and 'dealTimeout' not in self.timer_info
-    
+
     def seated2observer(self, avatar, serial):
         if avatar.getSerial() != serial:
             self.log.warn("pokertable.seated2observer: avatar.user.serial (%d) "
@@ -915,7 +922,7 @@ class PokerTable:
 
         money = self.game.serial2player[serial].money
         name = self.game.serial2player[serial].name
-        
+
         sit_out = self.movePlayerFrom(serial, to_game_id)
         for avatar in avatars:
             self.destroyPlayer(avatar, serial)
@@ -1079,7 +1086,7 @@ class PokerTable:
 
         amount = self.game.buyIn() if self.transient else 0
         minimum_amount = (self.currency_serial, self.game.buyIn())
-        
+
         if not self.factory.seatPlayer(serial, self.game.id, amount, minimum_amount):
             return False
 
@@ -1151,7 +1158,7 @@ class PokerTable:
         else:
             self.avatar_collection.remove(serial, avatar)
         del avatar.tables[self.game.id]
-        
+
         # despawn table if game is not running and nobody is connected
         if self.canBeDespawned():
             self.factory.despawnTable(self.game.id)
@@ -1177,12 +1184,28 @@ class PokerTable:
         amount = self.factory.buyInPlayer(avatar.getSerial(), self.game.id, self.currency_serial, max(amount, self.game.buyIn()))
         return avatar.setMoney(self, amount)
 
-    def rebuyPlayerRequest(self, avatar, amount):
-        if not self.isSeated(avatar):
-            self.log.warn("player %d can't rebuy to a table before getting a seat", avatar.getSerial())
+    def rebuyPlayerRequest(self, serial, amount):
+        if self.game.isRebuyPossible():
+            return self.rebuyPlayerRequestNow(serial, amount)
+
+        self.rebuy_stack.append((serial, amount))
+
+    def rebuyPlayerRequestNow(self, serial, amount):
+        retval = self._rebuyPlayerRequestNow(serial, amount)
+        if not retval:
+            for avatar in self.avatar_collection.get(serial):
+                avatar.sendPacketVerbose(PacketPokerError(
+                    game_id = self.game.id,
+                    serial = avatar.getSerial(),
+                    other_type = PACKET_POKER_REBUY
+                ))
+        return retval
+
+    def _rebuyPlayerRequestNow(self, serial, amount):
+        if serial not in self.game.serial2player:
+            self.log.warn("player %d can't rebuy to a table before getting a seat", serial)
             return False
 
-        serial = avatar.getSerial()
         player = self.game.getPlayer(serial)
         if not player.isBuyInPayed():
             self.log.warn("player %d can't rebuy before paying the buy in", serial)
@@ -1289,7 +1312,7 @@ class PokerTable:
             #
             # any event in the game resets the player timeout
             if (
-                info["playerTimeoutSerial"] != serial or 
+                info["playerTimeoutSerial"] != serial or
                 len(self.game.historyGet()) > self.history_index
             ):
                 timer = info["playerTimeout"]
@@ -1302,12 +1325,12 @@ class PokerTable:
             #
             # if the game is not running, cancel the previous timeout
             self.cancelPlayerTimers()
-    
+
     def getCurrentTimeoutWarning(self):
         info = self.timer_info
         packet = None
         if (
-            self.game.isRunning() and 
+            self.game.isRunning() and
             info["playerTimeout"] is not None and
             info["playerTimeoutSerial"] != 0 and
             info["playerTimeoutTime"] is not None and
@@ -1322,28 +1345,30 @@ class PokerTable:
             )
         return packet
 
-    
-    def _gameCallbackTourneyEndTurn(self,game_id,game_type,*args):
+
+    def _gameCallbackEndTurn(self,game_id,game_type,*args):
         if game_type == 'end':
-            self.tourneyEndTurn()
-            
+            self.endTurn()
+            if self.tourney:
+                self.tourneyEndTurn()
+
     def _gameCallbackTourneyUpdateStats(self,game_id,game_type,*args):
         if game_type == 'end':
             self.tourneyUpdateStats()
-                
+
     def _initLockCheck(self):
         self._lock_check = LockCheck(20 * 60, self._warnLock)
         self.game.registerCallback(self.__lockCheckEndCallback)
         self._lock_check_locked = False
-        
+
     def _startLockCheck(self):
         if self._lock_check:
             self._lock_check.start()
-        
+
     def _stopLockCheck(self):
         if self._lock_check:
             self._lock_check.stop()
-    
+
     def __lockCheckEndCallback(self, game_id, event_type, *args):
         if event_type == 'end_round_last':
             self._stopLockCheck()

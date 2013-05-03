@@ -813,12 +813,8 @@ class PokerAvatar:
             elif packet.type == PACKET_POKER_REBUY:
                 if self.getSerial() == packet.serial:
                     self.service.autorefill(packet.serial)
-                    if not table.rebuyPlayerRequest(self, packet.amount):
-                        self.sendPacketVerbose(PacketPokerError(
-                            game_id = game.id,
-                            serial = packet.serial,
-                            other_type = PACKET_POKER_REBUY
-                        ))
+                    table.rebuyPlayerRequest(packet.serial, packet.amount)
+                    self.sendPacketVerbose(PacketAck())
                 else:
                     self.log.inform("attempt to rebuy for player %d by player %d", packet.serial, self.getSerial())
 

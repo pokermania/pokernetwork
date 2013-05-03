@@ -774,7 +774,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEqual(False, self.table.muckDeny(player[5], 5))
         self.assertEqual(False, self.table.autoBlindAnte(player[5], 5, True))
         self.assertEqual(False, self.table.buyInPlayer(player[5], 0))
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 30))
+        self.assertEqual(False, self.table.rebuyPlayerRequestNow(5, 30))
 
         # player5 cannot sit out either because she isn't joined yet.
         self.assertEqual(False, self.table.sitOutPlayer(player[5], 5))
@@ -793,7 +793,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEqual(False, self.table.sitPlayer(player[5], 5))
 
         self.assertEqual(True, self.table.seatPlayer(player[5], 5, -1))
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 2))
+        self.assertEqual(False, self.table.rebuyPlayerRequestNow(5, 2))
 
         self.assertEqual(True, self.table.buyInPlayer(player[5], 0))
 
@@ -804,7 +804,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEqual(None, self.table.muckDeny(player[5], 5))
         self.assertEqual(None, self.table.autoBlindAnte(player[5], 5, True))
 
-        self.assertEqual(True, self.table.rebuyPlayerRequest(player[5], self.table.game.buyIn()))
+        self.assertEqual(True, self.table.rebuyPlayerRequest(5, self.table.game.buyIn()))
         # finally, player5 tries to join table 2, which isn't permitted since
         # we've set MockService.simultaneous to 1
         self.assertEqual(False, self.table2.joinPlayer(player[5], 5))
@@ -853,8 +853,8 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         """Test that buyins over the maximum are refused"""
         player = self.createPlayer(1)
 
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player, 1))
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player, 2))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(1, 1))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(1, 2))
     # -------------------------------------------------------------------
     def test09_list_players(self):
         """Test to make sure the list of players given by pokertable is right"""
@@ -1163,13 +1163,13 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         assert self.table.buyInPlayer(p9, 1000)
 
         p9.money = 0
-        assert not self.table.rebuyPlayerRequest(p9, 50)
+        assert not self.table.rebuyPlayerRequest(9, 50)
 
         p1 = self.createPlayer(1)
         self.table.game.rebuy = lambda a, b: False
 
         p1.money = 50
-        assert not self.table.rebuyPlayerRequest(p1, 0)
+        assert not self.table.rebuyPlayerRequest(1, 0)
     # -------------------------------------------------------------------
     def checkFailedJoinDueToMax(self, player):
         self.assertEqual(False, self.table.isJoined(player))
@@ -1868,7 +1868,8 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.assertEqual(False, self.table.muckAccept(player[5], 5))
         self.assertEqual(False, self.table.muckDeny(player[5], 5))
         self.assertEqual(False, self.table.autoBlindAnte(player[5], 5, True))
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 30))
+
+        self.assertEqual(False, self.table.rebuyPlayerRequest(5, 30))
 
         # player5 cannot sit out either because she isn't joined yet.
         self.assertEqual(False, self.table.sitOutPlayer(player[5], 5))
@@ -1882,7 +1883,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         # and thus must rebuy
 
         self.assertEqual(True, self.table.seatPlayer(player[5], 5, -1))
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], 2))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(5, 2))
 
         # this table is transient, so no one can buy in.
         self.assertEqual(False, self.table.buyInPlayer(player[5], 0))
@@ -1892,12 +1893,12 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.assertEqual(None, self.table.muckDeny(player[5], 5))
         self.assertEqual(None, self.table.autoBlindAnte(player[5], 5, True))
 
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player[5], self.table.game.maxBuyIn()))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(5, self.table.game.maxBuyIn()))
 
         # player2 tries to rebuy but is already at the max, and besides,
         # in transient mode, this doesn't work anyway
 
-        self.assertEqual(False, self.table.rebuyPlayerRequest(player[2], 1))
+        self.assertEqual(False, self.table.rebuyPlayerRequest(2, 1))
     # -------------------------------------------------------------------
     def test27_buyinFailures(self):
         """This test doesn't matter in this subclass"""
@@ -2630,7 +2631,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         
         def firstGame(packet):
             # player 95972 rebuys and sits in
-            table.rebuyPlayerRequest(clients_all[95972], 0)
+            table.rebuyPlayerRequest(95972, 0)
             table.sitPlayer(clients_all[95972], 95972)
             clients[95972] = clients_all[95972]
             table.update()
@@ -2718,7 +2719,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         def firstGame(packet):
             #
             # rebuy of 155411
-            table.rebuyPlayerRequest(clients_all[155411], 0)
+            table.rebuyPlayerRequest(155411, 0)
             table.sitPlayer(clients_all[155411], 155411)
             clients[155411] = clients_all[155411]
             table.update()
@@ -2938,7 +2939,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             
         def firstGame(packet):
             # player rebuys
-            table.rebuyPlayerRequest(clients_all[158428], game.buyIn()); table.update()
+            table.rebuyPlayerRequest(158428, game.buyIn()); table.update()
             table.sitPlayer(clients_all[158428], 158428); table.update()
             
             # players join later
@@ -2947,10 +2948,12 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             joinAndSeat(79069, False, -1)
             
             for serial, c in clients_all.iteritems():
+                explain_money = c.explain.games.getGame(game.id).serial2player[158428].money
+                game_money = game.serial2player[158428].money
                 self.assertEqual(
-                    c.explain.games.getGame(game.id).serial2player[158428].money, 
-                    game.serial2player[158428].money,
-                    'Explain %d has an inconsistent amount of money' % serial
+                    explain_money,
+                    game_money,
+                    'explain(%d) thinks %d has %d chips but he has %d chips' % (serial, 158428, explain_money, game_money)
                 )
         
         table.scheduleAutoDeal()
@@ -3031,7 +3034,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         
         def firstGame(packet):
             # player rebuys
-            table.rebuyPlayerRequest(clients[100], game.maxBuyIn()); table.update()
+            table.rebuyPlayerRequest(100, game.maxBuyIn()); table.update()
             table.seatPlayer(clients[100], 100, -1); table.update()
             table.sitPlayer(clients[100], 100); table.update()
             game.blind(300); table.update()
@@ -3154,7 +3157,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             game.blind(158434); table.update()
             
             clients[69931] = clients_all[69931]
-            table.rebuyPlayerRequest(clients[69931], game.buyIn())
+            table.rebuyPlayerRequestNow(69931, game.buyIn())
             table.sitPlayer(clients[69931],69931)
             table.update()
             
