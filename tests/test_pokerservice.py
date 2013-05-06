@@ -1131,13 +1131,14 @@ class ResthostTestCase(unittest.TestCase):
         cursor = db.cursor()
         cursor.execute("SELECT * FROM resthost WHERE serial = 1")        
         self.assertEqual(1, cursor.rowcount)
-        serial, name, host, port, path, state = cursor.fetchone()
+        serial, name, host, port, path, state, maintenance = cursor.fetchone()
         self.assertEqual(1, serial)
         self.assertEqual('HOST', host)
         self.assertEqual(7777, port)
         self.assertEqual('/PATH', path)
         self.assertEqual('', name)
         self.assertEqual(1, state)
+        self.assertEqual(0, maintenance)
 
     def test001_init_with_name(self):
         """ setupResthost with name """
@@ -1147,20 +1148,21 @@ class ResthostTestCase(unittest.TestCase):
         cursor = db.cursor()
         cursor.execute("SELECT * FROM resthost WHERE serial = 1")        
         self.assertEqual(1, cursor.rowcount)
-        serial, name, host, port, path, state = cursor.fetchone()
+        serial, name, host, port, path, state, maintenance = cursor.fetchone()
         self.assertEqual(1, serial)
         self.assertEqual('HOST', host)
         self.assertEqual(7777, port)
         self.assertEqual('/PATH', path)
         self.assertEqual('explain1', name)
         self.assertEqual(1,state)
+        self.assertEqual(0, maintenance)
 
     def test01_packet2resthost(self):
         self.setUpService(self.xml_with_resthost)
         self.service.startService()
         
         db = self.service.db
-        db.db.query("INSERT INTO resthost VALUES (2, 'two', 'host2', 2222, 'path2', 0)")
+        db.db.query("INSERT INTO resthost VALUES (2, 'two', 'host2', 2222, 'path2', 0, 0)")
         db.db.query("INSERT INTO route VALUES (102, 0, 0, 2)")
 
         #
@@ -1224,10 +1226,10 @@ class ResthostTestCase(unittest.TestCase):
         self.failIf(resthost)
         self.failIf(game_id)
         db = self.service.db
-        db.db.query("INSERT INTO resthost VALUES (10, 'one', 'host1', 1, 'path1', 0)")
+        db.db.query("INSERT INTO resthost VALUES (10, 'one', 'host1', 1, 'path1', 0, 0)")
         db.db.query("INSERT INTO route VALUES (0, 100, 0, 10)")
         db.db.query("INSERT INTO route VALUES (0, 200, 0, 10)")
-        db.db.query("INSERT INTO resthost VALUES (20, 'two', 'host2', 2, 'path2', 0)")
+        db.db.query("INSERT INTO resthost VALUES (20, 'two', 'host2', 2, 'path2', 0, 0)")
         db.db.query("INSERT INTO route VALUES (0, 300, 0, 20)")
         resthost, game_id = self.service.packet2resthost(PacketPokerCreateTourney())
         self.assertEqual('host2', resthost[0])
