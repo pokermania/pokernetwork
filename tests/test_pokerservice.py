@@ -1219,21 +1219,8 @@ class ResthostTestCase(unittest.TestCase):
         resthost, game_id = self.service.packet2resthost(PacketPokerTourneyRegister(tourney_serial = 999))
         self.assertEqual(None, resthost)
 
-    def test02_packet2resthost_createTourney(self):
-        self.setUpService(self.xml)
-        self.service.startService()
         resthost, game_id = self.service.packet2resthost(PacketPokerCreateTourney())
-        self.failIf(resthost)
-        self.failIf(game_id)
-        db = self.service.db
-        db.db.query("INSERT INTO resthost VALUES (10, 'one', 'host1', 1, 'path1', 0, 0)")
-        db.db.query("INSERT INTO route VALUES (0, 100, 0, 10)")
-        db.db.query("INSERT INTO route VALUES (0, 200, 0, 10)")
-        db.db.query("INSERT INTO resthost VALUES (20, 'two', 'host2', 2, 'path2', 0, 0)")
-        db.db.query("INSERT INTO route VALUES (0, 300, 0, 20)")
-        resthost, game_id = self.service.packet2resthost(PacketPokerCreateTourney())
-        self.assertEqual('host2', resthost[0])
-        self.assertEqual(None, game_id)
+        self.assertEqual(None, resthost)
 
 class PokerServiceTestCase(PokerServiceTestCaseBase):
 
