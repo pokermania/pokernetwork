@@ -101,6 +101,7 @@ CREATE TABLE resthost (
   `port` int(10) unsigned NOT NULL,
   path varchar(255) NOT NULL,
   state int(10) unsigned NOT NULL DEFAULT '0',
+  maintenance int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
