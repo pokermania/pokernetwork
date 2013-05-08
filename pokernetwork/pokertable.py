@@ -266,6 +266,22 @@ class PokerTable:
             self.rebuyPlayerRequestNow(serial, amount)
 
         self.rebuy_stack = []
+        for player in self.game.playersAll():
+            self.log.debug("player %r, auto_refill %r, auto_rebuy %r" % (player.serial, player.auto_refill, player.auto_rebuy))
+            if self.game.isBroke(player.serial) and player.auto_rebuy != PacketSetOption.OFF:
+                self.rebuyPlayerRequestNow(player.serial, self._getPrefferedRebuyAmount(player.auto_rebuy))
+            if player.auto_refill != PacketSetOption.OFF:
+                self.rebuyPlayerRequestNow(player.serial, self._getPrefferedRebuyAmount(player.auto_refill))
+
+    def _getPrefferedRebuyAmount(self, value):
+        if value == PacketSetOption.AUTO_REBUY_BEST:
+            return self.game.bestBuyIn()
+        elif value == PacketSetOption.AUTO_REBUY_MAX:
+            return self.game.maxBuyIn()
+        elif value == PacketSetOption.AUTO_REBUY_MIN:
+            return self.game.buyIn()
+        else:
+            return 0
 
     def historyReset(self):
         self.history_index = 0
@@ -1132,6 +1148,18 @@ class PokerTable:
             self.log.warn("player %d can't set auto blind/ante before getting a seat", serial, refs=[('User', serial, int)])
             return False
         return avatar.autoBlindAnte(self, serial, auto)
+
+    def autoRefill(self, serial, auto):
+        if auto not in range(4):
+            return False
+        self.game.serial2player[serial].auto_refill = auto
+        return True
+
+    def autoRebuy(self, serial, auto):
+        if auto not in range(4):
+            return False
+        self.game.serial2player[serial].auto_rebuy = auto
+        return True
 
     def muckAccept(self, avatar, serial):
         if not self.isSeated(avatar):

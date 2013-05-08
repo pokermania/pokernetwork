@@ -557,7 +557,12 @@ class PokerAvatar:
                 self.log.inform("attempt to get personal info for user %d by user %d", packet.serial, self.getSerial())
                 self.sendPacketVerbose(PacketAuthRequest())
             return
-
+        elif packet.type == PACKET_SET_OPTION:
+            if self.getSerial() == packet.serial:
+                self.setOption(packet.game_id, packet.option_id, packet.value)
+            else:
+                self.log.inform("attempt to set a option for user %d by user %d", packet.serial, self.getSerial())
+            return
         elif packet.type == PACKET_POKER_PLAYER_INFO:
             if self.getSerial() == packet.serial:
                 if self.setPlayerInfo(packet):
@@ -871,7 +876,7 @@ class PokerAvatar:
                 
             elif packet.type == PACKET_POKER_AUTO_PLAY:
                 if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.getPlayer(packet.serial):
-                    table.game.autoPlay(packet.serial, packet.auto_muck)
+                    table.game.autoPlay(packet.serial, packet.auto_play)
                 else:
                     self.log.inform("attempt to set auto play for player %d by player %d, or player is not in game", packet.serial, self.getSerial())
 
@@ -1465,6 +1470,54 @@ class PokerAvatar:
             return True
         else:
             return False
+
+    def setOption(self, game_id, option_id, value):
+        serial = self.getSerial()
+        self.log.inform("setOption, serial %r, game_id %r, option_id %r, value %r" % (serial, game_id, option_id, value))
+        table = self.tables.get(game_id)
+        # PacketSetOption.AUTO_REFILL
+
+        lookup = {
+            # Key is option_id
+            # Values: is a tuple of possible_values, function, arguments
+            # possible_values should be a tuple of Strings. Each string must be defined as a class variable in PacketSetOption
+            #
+            # if the value is part of the given_values, the fuction is called with the arguements
+            PacketSetOption.AUTO_REFILL: (
+                ("OFF", "AUTO_REBUY_MIN", "AUTO_REBUY_BEST", "AUTO_REBUY_MAX"),
+                table.autoRefill, (serial, value)),
+            PacketSetOption.AUTO_REBUY: (
+                ("OFF", "AUTO_REBUY_MIN", "AUTO_REBUY_BEST", "AUTO_REBUY_MAX"),
+                table.autoRebuy, (serial, value)),
+            PacketSetOption.AUTO_PLAY: (("OFF", "ON"), table.game.autoPlay, (serial, value)),
+            PacketSetOption.AUTO_MUCK: (
+                ("AUTO_MUCK_WIN", "AUTO_MUCK_WIN", "AUTO_MUCK_WIN"),
+                table.game.autoMuck, (serial, value)),
+            PacketSetOption.AUTO_BLIND_ANTE: (("OFF", "ON"), table.autoBlindAnte, (self, serial, bool(value))),
+
+        }
+
+        if option_id not in lookup:
+            self.sendPacketVerbose(PacketError(
+                other_type=PACKET_SET_OPTION,
+                code=PacketSetOption.ERROR_UNKNOWN_NAME,
+                message="Option %r is not possible to set." % option_id
+            ))
+            return False
+
+        possible_values, func, args = lookup[option_id]
+        possible_values = [getattr(PacketSetOption, name) for name in possible_values]
+        if value not in possible_values:
+            self.sendPacketVerbose(PacketError(
+                other_type=PACKET_SET_OPTION,
+                code=PacketSetOption.ERROR_WRONG_VALUE,
+                message="Value %r could not be set for option_id %r. Possible values are %r" % (value, option_id, possible_values)
+            ))
+            return False
+
+        func(*args)
+        self.sendPacketVerbose(PacketAck())
+        return True
         
     def handReplay(self, game_id, hand_serial):
         history = self.service.loadHand(hand_serial)
