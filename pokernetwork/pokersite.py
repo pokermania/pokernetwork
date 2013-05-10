@@ -236,55 +236,6 @@ class PokerResource(resource.Resource):
         d.addCallbacks(render, processingFailed, (session, packet))
         return d
 
-class PokerImageUpload(resource.Resource):
-
-    _log = log.get_child('PokerImageUpload')
-
-    def __init__(self, service):
-        resource.Resource.__init__(self)
-        self.service = service
-        self.deferred = defer.succeed(None)
-        self.isLeaf = True
-
-    def render(self, request):
-        self._log.debug("render %s", request.content.read())
-        request.content.seek(0, 0)
-        self.deferred.addCallback(lambda result: self.deferRender(request))
-        def failed(reason):
-            body = reason.getTraceback()
-            request.setResponseCode(http.INTERNAL_SERVER_ERROR)
-            request.setHeader('content-type',"text/html")
-            request.setHeader('content-length', str(len(body)))
-            request.write(body)
-            request.connectionLost(reason)
-            self._log.error("%s", body)
-            return True
-        self.deferred.addErrback(failed)
-        return server.NOT_DONE_YET
-
-    def deferRender(self, request):
-        session = request.getSession()
-        if session.avatar.isLogged():
-            serial = request.getSession().avatar.getSerial()
-            data = request.args['filename'][0]    
-            packet = PacketPokerPlayerImage(image = base64.b64encode(data), serial = serial)
-            self.service.setPlayerImage(packet)
-            result_string = 'image uploaded'
-            request.setHeader("Content-length", str(len(result_string)))
-            request.setHeader("Content-type", 'text/plain; charset="UTF-8"')
-            request.write(result_string)
-            request.finish()
-            return
-        else:
-            session.expire()
-            body = 'not logged'
-            request.setResponseCode(http.UNAUTHORIZED)
-            request.setHeader('content-type',"text/html")
-            request.setHeader('content-length', str(len(body)))
-            request.write(body)
-            request.finish()
-            return
-
 class PokerTourneyStartResource(resource.Resource):
 
     _log = log.get_child('PokerTourneyStartResource')

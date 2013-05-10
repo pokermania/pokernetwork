@@ -6271,7 +6271,7 @@ class MockRequestBase():
     def __init__(mrSelf):
         mrSelf.method = "GET"
 ##############################################################################
-from pokernetwork.pokersite import PokerImageUpload, PokerAvatarResource, PokerResource
+from pokernetwork.pokersite import PokerAvatarResource, PokerResource
 class PokerRestTreeCoverageTestCase(unittest.TestCase):
     def setUp(self):
         testclock._seconds_reset()
@@ -6286,7 +6286,7 @@ class PokerRestTreeCoverageTestCase(unittest.TestCase):
         self.service = pokerservice.PokerService(self.settings)
         prt = pokerservice.PokerRestTree(self.service)
         self.assertEquals(prt.service, self.service)
-        for (child, cl) in [ ("POKER_REST", PokerResource), ("UPLOAD", PokerImageUpload),
+        for (child, cl) in [ ("POKER_REST", PokerResource),
                              ("AVATAR", PokerAvatarResource) ]:
             self.failUnless(child in prt.children, "Missing child of PokerTree: " + child)
             self.failUnless(isinstance(prt.children[child], cl))

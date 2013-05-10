@@ -76,7 +76,7 @@ from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
-from pokernetwork.pokersite import PokerTourneyStartResource, PokerImageUpload, PokerAvatarResource, PokerResource
+from pokernetwork.pokersite import PokerTourneyStartResource, PokerAvatarResource, PokerResource
 from pokernetwork.pokertable import PokerTable, PokerAvatarCollection
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
@@ -2771,40 +2771,6 @@ class PokerService(service.Service):
             return False
         return True
 
-
-    def getPlayerImage(self, serial):
-        placeholder = PacketPokerPlayerImage(serial = serial)
-
-        if serial == 0:
-            return placeholder
-
-        cursor = self.db.cursor()
-        cursor.execute("SELECT skin_image,skin_image_type from users where serial = %s", (serial,))
-        if cursor.rowcount != 1:
-            self.log.error("getPlayerImage(%d) expected one row got %d", serial, cursor.rowcount)
-            return placeholder
-        (skin_image, skin_image_type) = cursor.fetchone()
-        if skin_image == None:
-            skin_image = ""
-        cursor.close()
-        return PacketPokerPlayerImage(
-            serial = serial,
-            image = skin_image,
-            image_type = skin_image_type
-        )
-
-    def setPlayerImage(self, player_image):
-        cursor = self.db.cursor()
-        cursor.execute(
-            "UPDATE users SET skin_image = %s, skin_image_type = %s WHERE serial = %s",
-            (player_image.image, player_image.image_type, player_image.serial)
-        )
-        self.log.debug("setPlayerInfo: %s", cursor._executed)
-        if cursor.rowcount != 1 and cursor.rowcount != 0:
-            self.log.error("setPlayerImage: modified %d rows (expected 1 or 0): %s", cursor.rowcount, cursor._executed)
-            return False
-        return True
-
     def getName(self, serial):
         if serial == 0:
             return "anonymous"
@@ -3113,7 +3079,6 @@ class PokerRestTree(resource.Resource):
         resource.Resource.__init__(self)
         self.service = service
         self.putChild("POKER_REST", PokerResource(self.service))
-        self.putChild("UPLOAD", PokerImageUpload(self.service))
         self.putChild("TOURNEY_START", PokerTourneyStartResource(self.service))
         self.putChild("AVATAR", PokerAvatarResource(self.service))
         self.putChild("", self)
