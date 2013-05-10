@@ -103,12 +103,12 @@ settings_xml_server = """\
     <table name="Table2" variant="holdem" betting_structure="1-2_20-200_limit" seats="10" player_timeout="60" currency_serial="1" />
     <table name="Table3" variant="holdem" betting_structure="test18pokerclient" seats="10"
         player_timeout="600" muck_timeout="600" currency_serial="1" forced_dealer_seat="0" />
-    <table name="Table4" variant="holdem" betting_structure=".50-1_5-100000_ante-limit" seats="10" player_timeout="60" currency_serial="1" />
+    <table name="Table4" variant="holdem" betting_structure="10-20_100-2000000_ante-limit" seats="10" player_timeout="60" currency_serial="1" />
     <listen tcp="19480" />
 
     <resthost serial="1" host="127.0.0.1" port="19481" path="/POKER_REST" name="test" />
 
-    <refill serial="1" amount="10000" />
+    <refill serial="1" amount="100" />
     <cashier acquire_timeout="5" pokerlock_queue_timeout="30" user_create="yes"/>
     <database
         host="%(dbhost)s" name="%(dbname)s"
@@ -175,7 +175,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
                     ('Table3','test18pokerclient', 600, 600), #player timeout 600, muck timeout 600
                 )),
                 ("INSERT INTO tableconfigs (name, variant, betting_structure, seats, currency_serial) VALUES (%s, 'holdem', %s, 10, 1)", (
-                    ('Table4', '.50-1_5-100000_ante-limit'),
+                    ('Table4', '10-20_100-2000000_ante-limit'),
                 )),
                 ("INSERT INTO tables (resthost_serial, tableconfig_serial) VALUES (%s, %s)", (
                     (1, 1),
@@ -187,7 +187,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
                 'betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, start_time, ' \
                 'register_time, respawn, respawn_interval) ' \
                 'VALUES (1, "sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", "2", "holdem", "level-15-30-no-limit", ' \
-                '"2", 1, "300000", "0", "y", "0", "0", "y", "0");',None),
+                '"2", 1, "3000", "0", "y", "0", "0", "y", "0");',None),
                 ('INSERT INTO tourneys_schedule (resthost_serial, name, description_short, description_long, players_quota, variant, ' \
                 'betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, breaks_interval, ' \
                 'rebuy_delay, add_on, add_on_delay, start_time, register_time, respawn, respawn_interval, players_min) ' \
@@ -482,7 +482,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
     # ------------------------------------------------------------------------
     def beginHandSetup(self, (client, packet), gameId, autoDeal = False):
         dealerAssigned = 1
-        blindAmount = 100
+        blindAmount = 1
         blindExpected = 'small'
         table = self.service.getTable(gameId)
         avatar0 = self.service.avatars[0]
@@ -553,12 +553,12 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
     # ------------------------------------------------------------------------
     def doBlindPost(self, (client, packet), id, gameId):
         # By now, we should have seen as noted above, a request for the
-        # blinds for avatar1 for 100 small blind.  Here we send it.
+        # blinds for avatar1 for 1 small blind.  Here we send it.
         avatars = self.service.avatar_collection.get(client.getSerial())
         self.failUnless(len(avatars) ==  1, "Only one avatar should have this serial")
         avatar = avatars[0]
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerBlind(serial= avatar.getSerial(), game_id = gameId, dead = 0, amount = 100))
+        avatar.handlePacketLogic(PacketPokerBlind(serial= avatar.getSerial(), game_id = gameId, dead = 0, amount = 1))
         return (client, packet)
     # -------------------------------------------------------------------------
     def setMoneyForPlayer(self, (client, packet), id, currency_serial, setting, gameId):
@@ -820,7 +820,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.quit)
         return d
@@ -967,7 +967,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.quit)
         return d
     # ------------------------------------------------------------------------
@@ -1034,18 +1034,18 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     self.assertEquals(packet.game_id, gameId)
                     self.assertEquals(packet.dead, 0)
                     if packet.serial == avatar[1].getSerial():
-                        self.assertEquals(packet.amount, 100)
+                        self.assertEquals(packet.amount, 1)
                     elif packet.serial == avatar[0].getSerial():
-                        self.assertEquals(packet.amount, 200)
+                        self.assertEquals(packet.amount, 2)
                     else:
                         self.assertEquals("", "Unknown serial: %d" % packet.serial)
                 elif packet.type == PACKET_POKER_CHIPS_PLAYER2BET:
                     found += 1
                     self.assertEquals(packet.game_id, gameId)
                     if (packet.serial == avatar[0].getSerial()):
-                        self.assertEquals(packet.chips, [100, 2])
+                        self.assertEquals(packet.chips, [1, 2])
                     elif (packet.serial == avatar[1].getSerial()):
-                        self.assertEquals(packet.chips, [100, 1])
+                        self.assertEquals(packet.chips, [1, 1])
                     else:
                         assert("unknown serial in player2bet packet: %d" % packet.serial)
                 elif packet.type == PACKET_POKER_CHIPS:
@@ -1053,11 +1053,11 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     self.assertEquals(packet.serial, mySerial)
                     self.assertEquals(packet.game_id, gameId)
                     if (avid == 0):
-                        self.assertEquals(packet.bet, 200)
-                        self.assertEquals(packet.money, 800)
+                        self.assertEquals(packet.bet, 2)
+                        self.assertEquals(packet.money, 8)
                     else:
-                        self.assertEquals(packet.bet, 100)
-                        self.assertEquals(packet.money, 900)
+                        self.assertEquals(packet.bet, 1)
+                        self.assertEquals(packet.money, 9)
                 elif packet.type == PACKET_POKER_CHAT:
                     found += 1
                     self.assertEquals(packet.game_id, gameId)
@@ -1091,19 +1091,19 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     found += 1
                     self.assertEquals(packet.game_id, gameId)
                     self.assertEquals(packet.serial, 0)
-                    self.assertEquals(packet.step, 100)
+                    self.assertEquals(packet.step, 1)
                     if (avid == 0):
-                        self.assertEquals(packet.min, 200)
-                        self.assertEquals(packet.max, 200)
-                        self.assertEquals(packet.allin, 1800)
-                        self.assertEquals(packet.pot, 300)
+                        self.assertEquals(packet.min, 2)
+                        self.assertEquals(packet.max, 2)
+                        self.assertEquals(packet.allin, 18)
+                        self.assertEquals(packet.pot, 3)
                         self.assertEquals(packet.call, 0)
                     else:
-                        self.assertEquals(packet.min, 300)
-                        self.assertEquals(packet.max, 300)
-                        self.assertEquals(packet.allin, 1900)
-                        self.assertEquals(packet.pot, 500)
-                        self.assertEquals(packet.call, 100)
+                        self.assertEquals(packet.min, 3)
+                        self.assertEquals(packet.max, 3)
+                        self.assertEquals(packet.allin, 19)
+                        self.assertEquals(packet.pot, 5)
+                        self.assertEquals(packet.call, 1)
                 else:
                     ignored += 1
         self.assertEquals(found, 28)
@@ -1125,7 +1125,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId, 50, 30)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             d.addCallback(self.autoBlindAnte, index, gameId)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -1141,7 +1141,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}]
             )
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             # Note: this avatar does not autopost, and doBlindPost handles it.
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -1201,7 +1201,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId, 50, 30)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             d.addCallback(self.autoBlindAnte, index, gameId)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -1218,7 +1218,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 [{ 'rank' : 50, 'percentile' : 30, 'serial' : 4}]
             )
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             # Note: this avatar does not autopost, and doBlindPost handles it.
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -1243,7 +1243,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.sitTable, 0, 2)
         d.addCallback(self.sendExplainTooLate)
@@ -1361,7 +1361,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 'output': "%sattempt to cash in%s" % (messageStart, userByUser),
                 'packet': PacketPokerCashIn(
                     serial = someoneElseSerial, 
-                    name = "YOU_BEEN_CRACKED", value = 1000000,
+                    name = "YOU_BEEN_CRACKED", value = 10000,
                     url = "http://example.com/myhack"
                 ),
                 'err_type': PACKET_POKER_ERROR,
@@ -1371,7 +1371,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 'output': "%sattempt to cash out%s" % (messageStart, userByUser),
                 'packet': PacketPokerCashOut(
                      serial = someoneElseSerial, 
-                     name = "YOU_BEEN_CRACKED", value = 1000000,
+                     name = "YOU_BEEN_CRACKED", value = 10000,
                      url = "http://example.com/myhack"
                 ),
                 'err_type': PACKET_POKER_ERROR,
@@ -1403,11 +1403,11 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             },
             'buyin': {
                 'output': "%sattempt to bring money%s" % (messageStart, forPlayerByPlayer),
-                'packet': PacketPokerBuyIn(serial=someoneElseSerial, amount=1000, game_id=gameId)
+                'packet': PacketPokerBuyIn(serial=someoneElseSerial, amount=10, game_id=gameId)
             },
             'rebuy': {
                 'output': "%sattempt to rebuy%s" % (messageStart, forPlayerByPlayer),
-                'packet': PacketPokerRebuy(serial=someoneElseSerial, amount=1000, game_id=gameId)
+                'packet': PacketPokerRebuy(serial=someoneElseSerial, amount=10, game_id=gameId)
             },
             'chat': {
                 'output': "%sattempt to chat%s" % (messageStart, forPlayerByPlayer),
@@ -1446,7 +1446,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             },
             'blind': {
                 'output': "%sattempt to pay the blind%s, or player is not not playing" % (messageStart, ofPlayerByPlayer),
-                'packet': PacketPokerBlind(serial=someoneElseSerial, game_id=gameId, dead=0, amount=100)
+                'packet': PacketPokerBlind(serial=someoneElseSerial, game_id=gameId, dead=0, amount=1)
             },
             'waitblind': {
                 'output': "%sattempt to wait for big blind%s" % (messageStart, ofPlayerByPlayer),
@@ -1466,7 +1466,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             },
             'raise': {
                 'output': "%sattempt to raise%s, or player is not not playing" % (messageStart, forPlayerByPlayer),
-                'packet': PacketPokerRaise(serial = someoneElseSerial, game_id = gameId, amount=100)
+                'packet': PacketPokerRaise(serial = someoneElseSerial, game_id = gameId, amount=1)
             },
             'start': { 
                 'output': "%splayer %d %s" % (
@@ -1522,7 +1522,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.sitTable, 0, 2)
         d.addCallback(self.requestsWithWrongSerial, 0, 2)
@@ -1593,7 +1593,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.noAutoBlindAnte, 0, 2)
         return d
@@ -1610,7 +1610,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.sitTable, 0, 2)
         d.addCallback(self.readyToPlay, 0, 2)
@@ -1623,8 +1623,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         avatar = self.service.avatars[id]
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerSitOut(serial= client.getSerial(),
-                                                        game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerSitOut(serial = client.getSerial(), game_id = gameId))
         found = False
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_AUTO_FOLD:
@@ -1639,8 +1638,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
-                                                      game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(), game_id = gameId))
         founds = [packet.type for packet in avatar.resetPacketsQueue()
                   if packet.type == PACKET_POKER_SIT
                   or packet.type == PACKET_POKER_AUTO_FOLD]
@@ -1663,7 +1661,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.createRankDBTable, gameId, rank = 50, percentile = 30)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId, 50, 30)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             d.addCallback(self.autoBlindAnte, index, gameId)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -1687,9 +1685,12 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerBlind(serial= avatar.getSerial(),
-                                                   game_id = gameId, dead = 0,
-                                                   amount = 100))
+        avatar.handlePacketLogic(PacketPokerBlind(
+            serial = avatar.getSerial(),
+            game_id = gameId, 
+            dead = 0,
+            amount = 100
+        ))
         otherAvatar.removePlayer(table, otherAvatar.getSerial())
         return (client, packet)
     # ------------------------------------------------------------------------
@@ -1706,7 +1707,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             d.addCallback(self.autoBlindAnte, index, gameId)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -2176,7 +2177,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         for packet in avatar.resetPacketsQueue():
             count = 0
             if packet.type == PACKET_POKER_PLAYERS_LIST:
-                self.assertEquals(packet.players, [('user0', 2000, 0), ('user1', 2000, 0)])
+                self.assertEquals(packet.players, [('user0', 20, 0), ('user1', 20, 0)])
                 count += 1
             self.assertEquals(count, 1)
         return (client, packet)
@@ -2191,7 +2192,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             d.addCallback(self.autoBlindAnte, index, gameId)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -2318,7 +2319,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.sitTable, 0, 2)
         d.addCallback(self.readyToPlay, 0, 2)
@@ -2345,7 +2346,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 count += 1
                 self.assertEquals(packet.serial, 4)
                 self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.amount, 200)
+                self.assertEquals(packet.amount, 2)
                 self.assertEquals(packet.dead, 0)
                 self.assertEquals(packet.state, "big")
         self.assertEquals(count >= 3, True)
@@ -2360,7 +2361,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
             return d
@@ -2372,7 +2373,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             d.addCallback(self.autoBlindAnte, index, gameId)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -2404,7 +2405,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 count += 1
                 self.assertEquals(packet.serial, 4)
                 self.assertEquals(packet.game_id, gameId)
-                self.assertEquals(packet.amount, 5)
+                self.assertEquals(packet.amount, 1)
         self.assertEquals(count >= 3, True)
         return (client, packet)
     # ------------------------------------------------------------------------
@@ -2415,9 +2416,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table4', '.50-1_5-100000_ante-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table4', '10-20_100-2000000_ante-limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 100)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
             return d
@@ -2427,9 +2428,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.sendExplain)
             d.addCallback(self.sendRolePlay)
             d.addCallback(self.login, index)
-            d.addCallback(self.joinTable, index, gameId, 'Table4', '.50-1_5-100000_ante-limit')
+            d.addCallback(self.joinTable, index, gameId, 'Table4', '10-20_100-2000000_ante-limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 100)
             d.addCallback(self.autoBlindAnte, index, gameId)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -2447,9 +2448,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar.bugous_processing_hand = isBugous
 
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerProcessingHand(serial = 
-                                                           client.getSerial(),
-                                                            game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerProcessingHand(serial = client.getSerial(), game_id = gameId))
         count = 0
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_ERROR:
@@ -2472,9 +2471,9 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.setupCallbackChain)
         d.addCallback(self.sendRolePlay)
         d.addCallback(self.login, 0)
-        d.addCallback(self.joinTable, 0, 4, 'Table4', '.50-1_5-100000_ante-limit')
+        d.addCallback(self.joinTable, 0, 4, 'Table4', '10-20_100-2000000_ante-limit')
         d.addCallback(self.seatTable, 0, 4)
-        d.addCallback(self.buyInTable, 0, 4, 2000)
+        d.addCallback(self.buyInTable, 0, 4, 100)
         d.addCallback(self.sitTable, 0, 4)
         d.addCallback(self.processingHand, 0, 4)
         d.addCallback(self.processingHand, 0, 4, True)
@@ -2583,7 +2582,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             d.addCallback(self.autoBlindAnte, index, gameId)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -2666,8 +2665,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         table.rebuyPlayerRequest = forceFalse
         table.buyInPlayer = forceFalse
         for sendPack in (
-            PacketPokerBuyIn(serial = client.getSerial(), amount = 10000, game_id = gameId),
-            PacketPokerRebuy(serial = client.getSerial(), amount = 10000, game_id = gameId)
+            PacketPokerBuyIn(serial = client.getSerial(), amount = 100, game_id = gameId),
+            PacketPokerRebuy(serial = client.getSerial(), amount = 100, game_id = gameId)
         ):
             avatar.queuePackets()
             avatar.handlePacketLogic(sendPack)
@@ -2721,7 +2720,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.sitTable, 0, 2)
         d.addCallback(self.readyToPlay, 0, 2)
@@ -2750,7 +2749,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.sitTable, 0, 2)
         d.addCallback(self.readyToPlay, 0, 2)
@@ -2778,7 +2777,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             },
             'ante': {
                 'output': "attempt to pay the ante of player %d" % client.getSerial(),
-                'packet': PacketPokerAnte(game_id = gameId, amount = 500, serial = client.getSerial())
+                'packet': PacketPokerAnte(game_id = gameId, amount = 5, serial = client.getSerial())
             },
             'lookcards': {
                 'answer_type': PACKET_POKER_LOOK_CARDS,
@@ -2828,7 +2827,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.sitTable, 0, 2)
         d.addCallback(self.readyToPlay, 0, 2)
@@ -2855,7 +2854,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.autoMuck, 0, 2, pokergame.AUTO_MUCK_LOSE)
         return d
@@ -2884,7 +2883,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.tableQuit, 0, 2)
         return d
@@ -2969,7 +2968,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.fullQuit, 0)
         return d
@@ -3004,7 +3003,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnte, 0, 2)
         d.addCallback(self.doLogoutSucceed, 0)
         return d
@@ -3092,7 +3091,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.login, 0)
         d.addCallback(self.joinTable, 0, 2, 'Table2', '1-2_20-200_limit')
         d.addCallback(self.seatTable, 0, 2)
-        d.addCallback(self.buyInTable, 0, 2, 2000)
+        d.addCallback(self.buyInTable, 0, 2, 20)
         d.addCallback(self.autoBlindAnteForceTourney, 0, 2)
         return d
     # -------------------------------------------------------------------------
@@ -3130,12 +3129,12 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 found += 1
                 self.assertEquals(packet.serial, 5)
                 self.assertEquals(packet.game_id, table.game.id)
-                self.assertEquals(packet.amount,  100)
+                self.assertEquals(packet.amount,  1)
             elif packet.type ==  PACKET_POKER_BLIND_REQUEST:
                 found += 1
                 self.assertEquals(packet.serial, 4)
                 self.assertEquals(packet.game_id, table.game.id)
-                self.assertEquals(packet.amount,  200)
+                self.assertEquals(packet.amount,  2)
                 self.assertEquals(packet.state,  'big')
         self.assertEquals(found, 6)
         return (client, packet)
@@ -3154,7 +3153,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
             return d
@@ -3166,7 +3165,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             d.addCallback(self.autoBlindAnte, index, gameId)
             d.addCallback(self.sitTable, index, gameId)
             d.addCallback(self.readyToPlay, index, gameId)
@@ -3420,7 +3419,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             while bbPacket == None:
                 for packet in packets:
                     if packet.type == PACKET_POKER_BLIND and packet.serial == avatars[id].getSerial():
-                        self.assertEquals(packet.amount, 200)
+                        self.assertEquals(packet.amount, 2)
                         self.assertEquals(packet.game_id, gameId)
                         bbPacket = packet
                         break
@@ -3470,7 +3469,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             elif pack.type == PACKET_POKER_WIN:
                 self.assertEquals(pack.serial, 0)
                 winCount += 1
-        self.assertEquals([ winCount, rakeCount, foldCount ], [ 10, 10, 10])
+        self.assertEquals([ winCount, rakeCount, foldCount ], [ 10, 0, 10])
         self.assertEquals(winCount, 10)
         return (clients[2], None)
     # ------------------------------------------------------------------------
@@ -3485,7 +3484,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             return d
         gameId = 2
         table = self.service.getTable(gameId)
@@ -3518,7 +3517,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             while bbPacket == None:
                 for packet in packets:
                     if packet.type == PACKET_POKER_BLIND and packet.serial == avatars[id].getSerial():
-                        self.assertEquals(packet.amount, 200)
+                        self.assertEquals(packet.amount, 2)
                         self.assertEquals(packet.game_id, gameId)
                         bbPacket = packet
                         break
@@ -3559,7 +3558,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             elif pack.type == PACKET_POKER_WIN:
                 self.assertEquals(pack.serial, 0)
                 winCount += 1
-        self.assertEquals([ winCount, rakeCount, foldCount ], [ 10, 10, 10])
+        self.assertEquals([ winCount, rakeCount, foldCount ], [ 10, 0, 10])
         self.assertEquals(winCount, 10)
         return (client, None)
     # ------------------------------------------------------------------------
@@ -3573,7 +3572,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             return d
         gameId = 2
         table = self.service.getTable(gameId)
@@ -3607,7 +3606,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             while bbPacket == None:
                 for packet in packets:
                     if packet.type == PACKET_POKER_BLIND and packet.serial == avatars[id].getSerial():
-                        self.assertEquals(packet.amount, 200)
+                        self.assertEquals(packet.amount, 2)
                         self.assertEquals(packet.game_id, gameId)
                         bbPacket = packet
                         break
@@ -3647,7 +3646,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             elif pack.type == PACKET_POKER_WIN:
                 self.assertEquals(pack.serial, 0)
                 winCount += 1
-        self.assertEquals([ winCount, rakeCount, foldCount ], [ 10, 10, 10])
+        self.assertEquals([ winCount, rakeCount, foldCount ], [ 10, 0, 10])
         self.assertEquals(winCount, 10)
         return (clients[2], None)
     # ------------------------------------------------------------------------
@@ -3661,7 +3660,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             return d
         gameId = 2
         table = self.service.getTable(gameId)
@@ -3689,7 +3688,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         def findBigBlind(id, expectedCount):
             bbPacket = None
             packets = []
-            for ii in [ 0, 1]:
+            for ii in [0, 1]:
                 self.assertEquals(expectedCount, len(avatars[ii]._packets_queue))
                 if expectedCount >= 15:
                     self.assertTrue(log_history.search("user %d has more than 15 packets queued; will force-disconnect when 21 are queued" % clients[ii].getSerial()))
@@ -3697,7 +3696,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             while bbPacket == None:
                 for packet in packets:
                     if packet.type == PACKET_POKER_BLIND and packet.serial == avatars[id].getSerial():
-                        self.assertEquals(packet.amount, 200)
+                        self.assertEquals(packet.amount, 2)
                         self.assertEquals(packet.game_id, gameId)
                         bbPacket = packet
                         break
@@ -3717,7 +3716,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         
         # we should get the warning on the observer
         self.assertTrue(log_history.search("user %d has more than 15 packets queued; will force-disconnect when 21 are queued"  % clients[2].getSerial()))
-        expectedCount = 23
+        expectedCount = 22
         log_history.reset()
         self.dealTable((client, packet), gameId)
         self.assertNotEquals(findBigBlind(1, expectedCount), None)
@@ -3770,7 +3769,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             d.addCallback(self.login, index)
             d.addCallback(self.joinTable, index, gameId, 'Table2', '1-2_20-200_limit')
             d.addCallback(self.seatTable, index, gameId)
-            d.addCallback(self.buyInTable, index, gameId, 2000)
+            d.addCallback(self.buyInTable, index, gameId, 20)
             return d
         gameId = 2
         saveClientQueueMax = self.service.client_queued_packet_max
@@ -3793,7 +3792,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         another_player = self.service.avatars[otherid].user.serial
         avatar.handlePacketLogic(PacketPokerCreateTourney(
             serial = client.getSerial(),
-            buy_in = 100,
+            buy_in = 1,
             players = [another_player],
             players_quota = 2,
             currency_serial = 1,

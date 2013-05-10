@@ -235,7 +235,7 @@ class MockService:
             return True
 
     def buyInPlayer(self, serial, game_id, currency_serial, amount):
-        if serial == 9 and amount != 2000 and amount != 100000000:
+        if serial == 9 and amount != 20 and amount != 200:
             return 0
         else:
             return amount
@@ -302,36 +302,36 @@ class MockService:
         if self.testObject:
             self.testObject.assertEqual(gameId,  self.testObject.table1_value)
             if serial == 1:
-                self.testObject.assertEqual(amount,  -1399)
+                self.testObject.assertEqual(amount, -1399)
             elif serial == 3:
-                self.testObject.assertEqual(amount,  -100)
+                self.testObject.assertEqual(amount, -1)
             elif serial == 10:
-                self.testObject.assertEqual(amount,  -976)
+                self.testObject.assertEqual(amount, -976)
             elif serial == 4:
-                self.testObject.assertEqual(amount,  10)
+                self.testObject.assertEqual(amount, 10)
             elif serial == 5:
-                self.testObject.assertEqual(amount,  -555)
+                self.testObject.assertEqual(amount, -555)
             elif serial == 6:
-                self.testObject.assertEqual(amount,  -626)
+                self.testObject.assertEqual(amount, -626)
             elif serial == 8:
-                self.testObject.assertEqual(amount,  888)
+                self.testObject.assertEqual(amount, 888)
             else:
                 self.testObject.fail("Unkown serial in hand history: %d" % serial)
                 
     def updatePlayerRake(self, currencySerial, serial, rakeAmount):
         if self.testObject:
-            self.testObject.assertEqual(rakeAmount,  7)
-            self.testObject.assertEqual(serial,  1)
+            self.testObject.assertEqual(rakeAmount, 7)
+            self.testObject.assertEqual(serial, 1)
 
     def tourneyEndTurn(self, tourney, game_id):
         if self.testObject:
-            self.testObject.assertEqual(game_id,  self.testObject.table1_value)
-            self.testObject.assertEqual(tourney.name,  'My Old Sit and Go')
+            self.testObject.assertEqual(game_id, self.testObject.table1_value)
+            self.testObject.assertEqual(tourney.name, 'My Old Sit and Go')
     
     def tourneyUpdateStats(self,tourney, game_id):
         if self.testObject:
-            self.testObject.assertEqual(game_id,  self.testObject.table1_value)
-            self.testObject.assertEqual(tourney.name,  'My Old Sit and Go')
+            self.testObject.assertEqual(game_id, self.testObject.table1_value)
+            self.testObject.assertEqual(tourney.name, 'My Old Sit and Go')
 
     def databaseEvent(self, event, **kwargs):
         if self.testObject:
@@ -610,6 +610,15 @@ class PokerTableTestCaseBase(unittest.TestCase):
         self.assertEquals(self.table2.max_missed_round, 5)
 
         self.clients = {}
+        
+        # self.table's game has a special remove player function that always
+        # fails for serial 9
+        _removePlayer = self.table.game.removePlayer
+        def fakeGameRemovePlayer(serial):
+            ret = _removePlayer(serial)
+            return False if serial == 9 else ret
+        self.table.game.removePlayer = fakeGameRemovePlayer
+        
     # -------------------------------------------------------------------
     def tearDown(self):
         self.table._lock_check.stop()
@@ -625,7 +634,7 @@ class PokerTableTestCaseBase(unittest.TestCase):
         self.clients[serial] = client
         if getReadyToPlay:
             client.reasonExpected = "MockCreatePlayerJoin"
-            self.assertEqual(True, table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
+            self.assertEqual(True, table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
             client.reasonExpected = ""
             self.assertEqual(True, table.seatPlayer(client, serial, -1))
             self.assertEqual(True, table.buyInPlayer(client, self.table.game.maxBuyIn()))
@@ -826,18 +835,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         except KeyError, ke:
             self.assertEqual(2, ke[0])
 
-        # Special test: player 9's removePlayer always fails, so it covers
-        # error conditions.  Note that this has to be reset via this method in
-        # tests that wish to use it:
-
-        def fakeGameRemovePlayer(serial):
-            from pokerengine.pokergame import PokerGameServer
-            ret = PokerGameServer.removePlayer(self.table.game, serial)
-            if serial == 9:
-                return False
-            else:
-                return ret
-        self.table.game.removePlayer = fakeGameRemovePlayer
+        # Special test: player 9's removePlayer always fails
         p = self.createPlayer(9)
         self.assertEquals(None, self.table.kickPlayer(9))
     # -------------------------------------------------------------------
@@ -1063,16 +1061,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         p = self.createPlayer(9)
         self.assertEquals(True, self.table.quitPlayer(p, 9))
     # -------------------------------------------------------------------
-    def test20altForNewClientAPI_quitting(self):
-        # This is disabled until the API changes
-        return True
-
-        p = self.createPlayer(1)
-        self.assertEquals(True, self.table.quitPlayer(p, 1))
-        p = self.createPlayer(2, False, clientClass=MockClientWithRemoveTable)
-        self.assertEqual(True, self.table.joinPlayer(p, 2))
-        self.assertEquals(True, self.table.quitPlayer(p, 2))
-    # -------------------------------------------------------------------
     def test20_1_brokenLeaving(self):
         p = self.createPlayer(1)
         self.assertEquals(True, self.table.leavePlayer(p, 1))
@@ -1160,7 +1148,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         p9 = self.createPlayer(9, False)
         assert self.table.joinPlayer(p9, 9)
         assert self.table.seatPlayer(p9, 9, -1)
-        assert self.table.buyInPlayer(p9, 1000)
+        assert self.table.buyInPlayer(p9, 10)
 
         p9.money = 0
         assert not self.table.rebuyPlayerRequest(9, 50)
@@ -2119,14 +2107,14 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             self.table.game.noAutoBlindAnte(serial)
             
         for serial,client in clients.iteritems():
-            client.setMoney(self.table,1000)
+            client.setMoney(self.table,10)
         
         self.table.scheduleAutoDeal()
         
         def payBlinds(packet):
-            self.table.game.blind(2,1000)
+            self.table.game.blind(2,10)
             self.table.update()
-            self.table.game.blind(1,1000)
+            self.table.game.blind(1,10)
             self.table.update()
             
             # game is finished by now in the PokerGameServer, but
@@ -2155,20 +2143,20 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             table.game.noAutoBlindAnte(serial)
 
         for serial,client in clients.iteritems():
-            client.setMoney(table,3000)
+            client.setMoney(table,30)
         
         def waitForPosition(packet):
             table.game.serial2player[1].sit_out_next_turn = True
             table.game.serial2player[2].sit_out_next_turn = True
-            table.game.callNraise(2, 200000)
+            table.game.callNraise(2, 2000)
             table.update()
             table.game.call(1)
             table.update()
             table.destroy()
         
         def payBlinds(packet):
-            table.game.blind(2,2500)
-            table.game.blind(1,2000)
+            table.game.blind(2,25)
+            table.game.blind(1,20)
             d2 = clients[1].waitFor(PACKET_POKER_POSITION)
             d2.addCallback(waitForPosition)
             table.update()
@@ -2277,8 +2265,8 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         for serial in player_list:
             sitIn(serial)
 
-        table.game.getPlayer(103).money = 100000000
-        clients[103].setMoney(table,100000000)
+        table.game.getPlayer(103).money = 1000000
+        clients[103].setMoney(table,1000000)
         table.update()
         
         def secondGame(packet):
@@ -2323,7 +2311,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             table.game.check(105); table.update()
             
             table.game.check(102); table.update()
-            table.game.callNraise(103, 400); table.update()
+            table.game.callNraise(103, 4); table.update()
             table.game.call(104); table.update()
             table.game.call(105); table.update()
             table.game.fold(102); table.update()
@@ -2332,7 +2320,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             table.game.call(104); table.update()
             table.game.callNraise(105, 560); table.update()
             
-            table.game.callNraise(103, 10000000000000); table.update()
+            table.game.callNraise(103, 100000000000); table.update()
             table.game.fold(104); table.update()
             table.game.call(105); table.update()
             d2 = clients[103].waitFor(PACKET_POKER_BLIND_REQUEST)
@@ -2492,7 +2480,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             table.game.check(85554); table.update()
             table.game.check(55742); table.update()
             table.game.check(85554); table.update()
-            table.game.callNraise(55742, 400); table.update()
+            table.game.callNraise(55742, 4); table.update()
             table.game.fold(85554); table.update()
             d2 = clients[85554].waitFor(PACKET_POKER_BLIND_REQUEST)
             d2.addCallback(game2)

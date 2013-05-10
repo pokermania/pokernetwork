@@ -21,7 +21,7 @@ Depends:
     ucf,
     adduser,
     python-twisted (>= 10.1),
-    python-poker-engine (>= 1.7.18),
+    python-poker-engine (>= 2.0.0),
     python-poker-packets (>= 3.1.18),
     python-mysqldb,
     python-soappy,
