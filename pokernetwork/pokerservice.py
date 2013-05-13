@@ -1012,8 +1012,8 @@ class PokerService(service.Service):
             wait = int(self.delays.get('extra_wait_%s_start' % wait_type, 0))
             wait_msg_interval = 20
             if wait > 0:
-                for remaining in range(wait-int(wait_msg_interval/2),0,-wait_msg_interval):
-                    reactor.callLater(remaining,self.tourneyStartingMessage,tourney,wait-remaining)
+                for remaining in range(wait-int(wait_msg_interval/2), 0, -wait_msg_interval):
+                    reactor.callLater(remaining, self.tourneyStartingMessage, tourney, wait-remaining)
                 reactor.callLater(wait, self.tourneyDeal, tourney)
             else:
                 self.tourneyDeal(tourney)
