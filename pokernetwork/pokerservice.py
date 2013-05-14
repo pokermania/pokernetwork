@@ -34,8 +34,10 @@ import locale
 import gettext
 import libxml2
 
-try: from collections import OrderedDict
-except ImportError: from pokernetwork.ordereddict import OrderedDict
+try:
+    from collections import OrderedDict
+except ImportError:
+    from pokernetwork.util.ordereddict import OrderedDict
 
 
 from pokernetwork import log as network_log
