@@ -64,7 +64,7 @@ from MySQLdb.cursors import DictCursor
 
 from twisted.python import components
 
-from pokernetwork.sql import lex
+from pokernetwork.util.sql import lex
 
 from pokerengine.pokertournament import *
 from pokerengine.pokercards import PokerCards
