@@ -42,7 +42,7 @@ from twisted.internet import reactor, defer
 try:
     from collections import OrderedDict
 except ImportError:
-    from pokernetwork.ordereddict import OrderedDict
+    from pokernetwork.util.ordereddict import OrderedDict
 
 from random import seed, randint
 import copy

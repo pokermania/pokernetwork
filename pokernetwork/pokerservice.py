@@ -34,8 +34,10 @@ import locale
 import gettext
 import libxml2
 
-try: from collections import OrderedDict
-except ImportError: from pokernetwork.ordereddict import OrderedDict
+try:
+    from collections import OrderedDict
+except ImportError:
+    from pokernetwork.util.ordereddict import OrderedDict
 
 
 from pokernetwork import log as network_log
@@ -64,7 +66,7 @@ from MySQLdb.cursors import DictCursor
 
 from twisted.python import components
 
-from pokernetwork.sql import lex
+from pokernetwork.util.sql import lex
 
 from pokerengine.pokertournament import *
 from pokerengine.pokercards import PokerCards
