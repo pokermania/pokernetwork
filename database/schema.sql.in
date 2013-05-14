@@ -82,17 +82,6 @@ CREATE TABLE messages (
   PRIMARY KEY (`serial`,send_date,sent)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-DROP TABLE IF EXISTS monitor;
-CREATE TABLE monitor (
-  `serial` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `event` tinyint(4) NOT NULL,
-  param1 bigint(20) NOT NULL,
-  param2 bigint(20) NOT NULL,
-  param3 bigint(20) NOT NULL,
-  PRIMARY KEY (`serial`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 DROP TABLE IF EXISTS resthost;
 CREATE TABLE resthost (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
