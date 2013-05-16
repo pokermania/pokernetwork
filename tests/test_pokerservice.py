@@ -395,9 +395,6 @@ class MonitorTestCase(unittest.TestCase):
         self.service.databaseEvent(event = 1, param1 = 2, param2 = 3)
         self.failUnless(avatar.sent)
         self.failUnless(hasattr(self.service, 'HERE'))
-        cursor = self.db.cursor()
-        cursor.execute("SELECT COUNT(*) FROM monitor WHERE event = 1")
-        self.assertEquals(1, cursor.rowcount)
 
 class CleanUpTemporaryUsersTestCase(PokerServiceTestCaseBase):
 
@@ -1605,18 +1602,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEquals(client.packet_end_tournament.money == 20, True)
         self.assertEquals(client.packet_end_tournament.rank == 2, True)
         self.assertEquals(client.packet_end_tournament.players == 3, True)
-
-
-    def test12_playerImage(self):
-        self.service.startService()
-
-        self.createUsers()
-        player_image1 = PacketPokerPlayerImage(serial = self.user1_serial, image = "12345")
-        self.assertEquals(True, self.service.setPlayerImage(player_image1))
-        player_image2 = self.service.getPlayerImage(self.user1_serial)
-        self.assertEquals(player_image1.image, player_image2.image)
-        player_image2 = self.service.getPlayerImage(self.user2_serial)
-        self.assertEquals("", player_image2.image)
 
     def test13_checkTourneysSchedule_spawn_regular(self):
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
@@ -5795,82 +5780,11 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.failUnless(msgs[1].find('setPlayerInfo: modified 3 rows (expected 1 or 0): UPDATE users SET') == 0)
 
         self.service.db = oldDb
-    def test52_getPlayerImage_serial0(self):
-        log_history.reset()
-        self.service = pokerservice.PokerService(self.settings)
-        pack = self.service.getPlayerImage(0)
-        self.assertEquals(pack.type, PACKET_POKER_PLAYER_IMAGE)
-        self.assertEquals(pack.serial, 0)
-        self.assertEquals(pack.image, '')
-        self.assertEquals(pack.image_type, 'image/png')
 
-        self.assertEquals(log_history.get_all(), [])
-    def test53_getPlayerImage_selectRowCount3(self):
-        class MockCursor(MockCursorBase):
-            def statementActions(cursorSelf, sql, statement):
-                if statement == "SELECT skin_image,":
-                    self.failUnless(sql.find("serial = 825") > 0, "serial wrong")
-                    cursorSelf.rowcount = 3
-                    cursorSelf.row = []
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, ["SELECT skin_image,"])
-        self.service = pokerservice.PokerService(self.settings)
-
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        log_history.reset()
-
-        pack = self.service.getPlayerImage(825)
-        self.assertEquals(pack.type, PACKET_POKER_PLAYER_IMAGE)
-        self.assertEquals(pack.serial, 825)
-        self.assertEquals(pack.image, '')
-        self.assertEquals(pack.image_type, 'image/png')
-
-        self.assertEquals(self.service.db.cursorValue.counts["SELECT skin_image,"], 1)
-        self.assertEquals(log_history.get_all(), ['getPlayerImage(825) expected one row got 3'])
-
-        self.service.db = oldDb
-    def test54_setPlayerImage_rowcountwrong(self):
-        class MockCursor(MockCursorBase):
-            def statementActions(cursorSelf, sql, statement):
-                if statement == "UPDATE users SET":
-                    self.failUnless(sql.find("serial = 277") > 0, "serial wrong")
-                    self.failUnless(sql.find("skin_image = 'Picture'") > 0, "skin_image wrong")
-                    self.failUnless(sql.find("skin_image_type = 'image/png'") > 0, "image_type wrong")
-                    cursorSelf.rowcount = 3
-                    cursorSelf.row = []
-            def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self, ["UPDATE users SET"])
-        self.service = pokerservice.PokerService(self.settings)
-
-        oldDb = self.service.db
-        self.service.db = MockDatabase(MockCursor)
-
-        class MockPlayerImage():
-            def __init__(mpSelf):
-                mpSelf.image = 'Picture'
-                mpSelf.image_type = 'image/png'
-                mpSelf.serial = 277
-
-        log_history.reset()
-
-        self.failIf(self.service.setPlayerImage(MockPlayerImage()), 'with row returning 3, this should fail')
-
-        self.assertEquals(self.service.db.cursorValue.counts["UPDATE users SET"], 1)
-        msgs = log_history.get_all()
-        self.assertEquals(len(msgs), 2)
-        self.failUnless(msgs[0].find("setPlayerInfo: UPDATE users SET") == 0,'first message should be verbose output')
-        self.failUnless(
-            msgs[1].find("setPlayerImage: modified 3 rows (expected 1 or 0): UPDATE users SET") == 0,
-            'second message should be error about rows'
-        )
-
-
-        self.service.db = oldDb
     def test55_buyInPlayer_currencySerialNone(self):
         self.service = pokerservice.PokerService(self.settings)
         self.assertEquals(self.service.buyInPlayer(775, 232, None, 2330), 2330)
+
     def test56_buyInPlayer_updateRowcountBad(self):
         class MockCursor(MockCursorBase):
             def statementActions(cursorSelf, sql, statement):
@@ -5918,6 +5832,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.getMoney = saveGetMoney
         self.service.databaseEvent = saveDBEvent
         self.service.db = oldDb
+
     def test57_seatPlayer_insertRowcountBad(self):
         acceptList = ["INSERT INTO user2table"]
         class MockCursor(MockCursorBase):
