@@ -177,13 +177,16 @@ class PokerBot:
             for tourney in packet.packets:
                 if tourney.state == TOURNAMENT_STATE_REGISTERING and tourney_info.get("skin", tourney.skin) == tourney.skin:
                     protocol.sendPacket(PacketPokerTourneyRegister(serial = protocol.getSerial(), tourney_serial = tourney.serial))
-                    self.state = STATE_RUNNING
                     break
             else:
                 self.log.inform("Unable to find tournament %s (%s) in state %s", tourney_info["name"], tourney_info.get("skin",""), TOURNAMENT_STATE_REGISTERING)
                 self.factory.can_disconnect = False
                 reactor.callLater(10, self.lookForGame, protocol)
-                    
+                
+        elif packet.type == PACKET_POKER_TOURNEY_START:
+            protocol.sendPacket(PacketPokerTableJoin(game_id = packet.table_serial, serial = protocol.getSerial()))
+            self.state = STATE_RUNNING
+            
         elif packet.type == PACKET_POKER_ERROR or packet.type == PACKET_ERROR:
             giveup = True
             if packet.other_type == PACKET_POKER_TOURNEY_REGISTER:
@@ -200,7 +203,7 @@ class PokerBot:
             if giveup:
                 self.log.error("%s", packet)
                 protocol.transport.loseConnection()
-            
+        
     def _handlePlay(self, protocol, packet):
         if packet.type == PACKET_POKER_BATCH_MODE:
             self.state = STATE_BATCH

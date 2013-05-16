@@ -1402,9 +1402,9 @@ class PokerService(service.Service):
         calls = []
         def send(avatar_serial,table_serial):
             # get all avatars that are logged in and having an explain instance
-            avatars = (a for a in self.avatar_collection.get(avatar_serial) if a.isLogged() and a.explain)
+            avatars = [a for a in self.avatar_collection.get(avatar_serial) if a.isLogged()]
             for avatar in avatars:
-                avatar.sendPacket(PacketPokerTourneyStart(tourney_serial=tourney_serial,table_serial=table_serial))
+                avatar.sendPacket(PacketPokerTourneyStart(tourney_serial = tourney_serial,table_serial = table_serial))
                 
         for avatar_serial,properties in user2properties.iteritems():
             avatar_serial = long(avatar_serial)

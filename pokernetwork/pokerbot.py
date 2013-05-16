@@ -140,6 +140,7 @@ class PokerBotFactory(PokerClientFactory):
         protocol.registerHandler(True, PACKET_POKER_ERROR, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_TABLE_LIST, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_TOURNEY_LIST, pokerbot._handleConnection)
+        protocol.registerHandler(True, PACKET_POKER_TOURNEY_START, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_WIN, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_PLAYER_LEAVE, pokerbot._handleConnection)
         protocol.registerHandler(True, PACKET_POKER_SEAT, pokerbot._handleConnection)
