@@ -2351,7 +2351,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         tourney = MockTourney()
         self.service.avatar_collection = PokerAvatarCollection()
         self.service.avatar_collection.add(423, client)
-        self.service.tourneys = { 865 : tourney }
+        self.service.tourneys = {865: tourney}
 
         # Not worth making this test cover dbevent, other tests do.  Here,
         # we make sure it is called as expected
@@ -2363,7 +2363,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
             calledDBCount += 1
             self.assertEquals(event, PacketPokerMonitorEvent.UNREGISTER)
             self.assertEquals(param1, 423)
-            self.assertEquals(param2, 10)
+            self.assertEquals(param2, 865)
             self.assertEquals(param3, 20)
 
         self.service.databaseEvent = dbEventMock
@@ -2371,7 +2371,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         log_history.reset()
 
         pack = MockPacket()
-        retPack =  self.service.tourneyUnregister(pack)
+        retPack = self.service.tourneyUnregister(pack)
         self.assertEquals(pack, retPack)
         self.assertEquals(calledDBCount, 1)
         msgs = log_history.get_all()
@@ -2729,7 +2729,6 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         avatar1 = self.service.createAvatar()
         avatar1.queuePackets()
         avatar1.relogin(self.user1_serial)
-        avatar1.setExplain(True)
         #
         # user isLogged but not in explain mode
         #
@@ -2768,7 +2767,7 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         d1.addCallback(check)
         return defer.DeferredList((d1, d2), fireOnOneErrback = True)
 
-    def test02_no_explain(self):
+    def test02_not_logged_in(self):
         self.service.startService()
         self.service.verbose = 6
         self.createUsers()
@@ -2782,39 +2781,6 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         avatar1 = self.service.createAvatar()
         avatar1.queuePackets()
         avatar1.relogin(self.user1_serial)
-        avatar1.setExplain(True)
-
-        self.startTournament(table_serial, table_money)
-        avatar1.resetPacketsQueue()
-        self.assertEquals(1, len(self.service.tourneyNotifyStart(tourney_serial)))
-        #
-        # When the actual notification occurs (scheduled with callLater) it
-        # will not be broadcasted because the avatar is no longer in explain mode.
-        #
-        avatar1.setExplain(None)
-        #
-        # If user1 is notified, it will be called and raise an error
-        #
-        def mustNotBeCalled(packets):
-            self.assertEqual(None, packets)
-        avatar1.longpollDeferred().addCallback(mustNotBeCalled)
-        avatar1.longPollTimer.cancel()
-
-    def test03_not_logged_in(self):
-        self.service.startService()
-        self.service.verbose = 6
-        self.createUsers()
-        user_serial = self.user1_serial
-        table_serial = 606
-        table_money = 140
-        tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
-        #
-        # user isLogged and in explain mode
-        #
-        avatar1 = self.service.createAvatar()
-        avatar1.queuePackets()
-        avatar1.relogin(self.user1_serial)
-        avatar1.setExplain(True)
 
         self.startTournament(table_serial, table_money)
         self.assertEquals(1, len(self.service.tourneyNotifyStart(tourney_serial)))
@@ -2832,7 +2798,7 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         avatar1.longpollDeferred().addCallback(mustNotBeCalled)
         avatar1.longPollTimer.cancel()
 
-    def test04_wrong_tourney(self):
+    def test03_wrong_tourney(self):
         self.service.startService()
         caughtIt = False
         try:
@@ -2842,7 +2808,7 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
             caughtIt = True
         self.failUnless(caughtIt, "Should have caught a UserWarning!")
 
-    def test05_broadcast_start(self):
+    def test04_broadcast_start(self):
         self.service.startService()
         tourney_serial = self.service.tourneys_schedule.keys()[0]
         host,port = 'hostname',80
@@ -2852,7 +2818,7 @@ class TourneyNotifyTestCase(PokerServiceTestCaseBase):
         self.service.getPage = getPage
         self.service.tourneyBroadcastStart(tourney_serial)
 
-    def test06_monitor(self):
+    def test05_monitor(self):
         self.service.startService()
         tourney_serial = self.service.tourneys_schedule.keys()[0]
         self.createUsers()
@@ -5008,13 +4974,14 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 if sql[:len(statement)] == "UPDATE user2money SET amount = amount":
                     cursorSelf.rowcount = 1
             def __init__(cursorSelf):
-                MockCursorBase.__init__(cursorSelf, self,
-                                        [ "UPDATE user2money SET amount = amount",
-                                       "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES",
-                                       "SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE",
-                                       "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money FROM user2table",
-                                       "UPDATE tables SET players",
-                                       "SELECT serial FROM tourneys WHERE state IN"])
+                MockCursorBase.__init__(cursorSelf, self,[ 
+                    "UPDATE user2money SET amount = amount",
+                    "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES",
+                    "SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE",
+                    "SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money FROM user2table",
+                    "UPDATE tables SET players",
+                    "SELECT serial FROM tourneys WHERE state IN"
+                ])
 
         self.service = pokerservice.PokerService(self.settings)
 
@@ -5025,7 +4992,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         tourney = MockTourney()
         self.service.avatar_collection = PokerAvatarCollection()
         self.service.avatar_collection.add(423, client)
-        self.service.tourneys = { 865 : tourney }
+        self.service.tourneys = {865: tourney}
 
         # Not worth making this test cover dbevent, other tests do.  Here,
         # we make sure it is called as expected
@@ -5033,7 +5000,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         def dbEventMock(event = None, param1 = None, param2 = None, param3 = None): 
             self.assertEquals(event, PacketPokerMonitorEvent.REGISTER)
             self.assertEquals(param1, 423)
-            self.assertEquals(param2, 10)
+            self.assertEquals(param2, 865)
             self.assertEquals(param3, 20)
 
         self.service.databaseEvent = dbEventMock
@@ -5041,7 +5008,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         log_history.reset()
 
         orig = self.service.tourneyIsRelevant
-        self.service.tourneyIsRelevant = lambda *args,**kw: True
+        self.service.tourneyIsRelevant = lambda *args, **kw: True
         self.failIf(self.service.tourneyRegister(MockPacket()))
         self.service.tourneyIsRelevant = orig
         self.failUnless(hasattr(client, "errorPackets"))

@@ -1108,9 +1108,9 @@ class PokerService(service.Service):
                     (serial, prize_currency, prize)
                 )
                 self.log.debug("tourneyFinished: %s", cursor._executed)
-            self.databaseEvent(event = PacketPokerMonitorEvent.PRIZE, param1 = serial, param2 = prize_currency, param3 = prize)
+            self.databaseEvent(event = PacketPokerMonitorEvent.PRIZE, param1 = serial, param2 = tourney.serial, param3 = prize)
 
-        #added the following so that it wont break tests where the tournament mockup doesn't contain a finish_time
+        # FIXME added the following so that it wont break tests where the tournament mockup doesn't contain a finish_time
         if not hasattr(tourney, "finish_time"):
             tourney.finish_time = seconds()
         cursor.execute("UPDATE tourneys SET finish_time = %s WHERE serial = %s", (tourney.finish_time, int(tourney.serial)))
@@ -1657,7 +1657,7 @@ class PokerService(service.Service):
                 for avatar in avatars:
                     avatar.sendPacketVerbose(error)
                 return False
-        self.databaseEvent(event = PacketPokerMonitorEvent.REGISTER, param1 = serial, param2 = currency_serial, param3 = withdraw)
+        self.databaseEvent(event = PacketPokerMonitorEvent.REGISTER, param1 = serial, param2 = tourney_serial, param3 = withdraw)
 
         # Register
         sql = "INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (%s, %s, %s)"
@@ -1728,7 +1728,7 @@ class PokerService(service.Service):
                     code = PacketPokerTourneyUnregister.SERVER_ERROR,
                     message = "Server error : user_serial = %d and currency_serial = %d was not in user2money" % (serial,currency_serial)
                 )
-            self.databaseEvent(event = PacketPokerMonitorEvent.UNREGISTER, param1 = serial, param2 = currency_serial, param3 = withdraw)
+            self.databaseEvent(event = PacketPokerMonitorEvent.UNREGISTER, param1 = serial, param2 = tourney_serial, param3 = withdraw)
         #
         # unregister
         cursor.execute("DELETE FROM user2tourney WHERE user_serial = %s AND tourney_serial = %s",(serial,tourney_serial))
@@ -2919,7 +2919,7 @@ class PokerService(service.Service):
             c.execute("DELETE FROM user2table WHERE user_serial = %s AND table_serial = %s", (serial , table_id))
             if c.rowcount != 1:
                 self.log.error("leavePlayer: modified %d rows (expected 1)\n%s", c.rowcount, c._executed, refs=[('User', serial, int)])
-            self.databaseEvent(event = PacketPokerMonitorEvent.LEAVE, param1=serial, param2=table_id)
+            self.databaseEvent(event = PacketPokerMonitorEvent.LEAVE, param1 = serial, param2 = table_id)
         finally:
             c.close()
 
