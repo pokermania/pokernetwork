@@ -59,6 +59,8 @@ STATE_BATCH = 4
 # trick if not running the bots as root.
 #
 
+game_id2tourney_id = {}
+
 class Pool:
 
     def __init__(self, command):
@@ -184,6 +186,7 @@ class PokerBot:
                 reactor.callLater(10, self.lookForGame, protocol)
                 
         elif packet.type == PACKET_POKER_TOURNEY_START:
+            game_id2tourney_id[packet.table_serial] = packet.tourney_serial
             protocol.sendPacket(PacketPokerTableJoin(game_id = packet.table_serial, serial = protocol.getSerial()))
             self.state = STATE_RUNNING
             
@@ -229,16 +232,21 @@ class PokerBot:
                     self.lookForGame(protocol)
 
         elif packet.type == PACKET_POKER_WIN:
-            if self.factory.rebuy and self.state == STATE_RUNNING:
-                #
-                # Rebuy if necessary
-                #
-                if not self.factory.join_info['tournament'] and not self.factory.watch:
-                    game = self.factory.packet2game(packet)
-                    serial = protocol.getSerial()
-                    if game and game.isBroke(serial):
-                        protocol.sendPacket(PacketPokerRebuy(game_id = game.id, serial = serial))
-                        protocol.sendPacket(PacketPokerSit(game_id = game.id, serial = serial))
+            if self.factory.rebuy and self.state == STATE_RUNNING and not self.factory.watch:
+
+                game = self.factory.packet2game(packet)
+                serial = protocol.getSerial()
+
+                if game and game.isBroke(serial):
+
+                    if self.factory.join_info['tournament']:
+                        self.log.crit("tourney rebuy %d", game_id2tourney_id[game.id])
+                        protocol.sendPacket(PacketPokerTourneyRebuy(serial=serial, tourney_serial=game_id2tourney_id[game.id]))
+                        protocol.sendPacket(PacketPokerSit(serial=serial, game_id=game.id))
+
+                    else:
+                        protocol.sendPacket(PacketPokerTourneyRebuy(serial=serial, game_id=game.id))
+                        protocol.sendPacket(PacketPokerSit(serial=serial, game_id=game.id))
             
         elif packet.type == PACKET_POKER_SELF_IN_POSITION:
             game = self.factory.packet2game(packet)
