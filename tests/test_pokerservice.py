@@ -6153,7 +6153,7 @@ class MockRequestBase():
     def __init__(mrSelf):
         mrSelf.method = "GET"
 ##############################################################################
-from pokernetwork.pokersite import PokerAvatarResource, PokerResource
+from pokernetwork.pokersite import PokerResource
 class PokerRestTreeCoverageTestCase(unittest.TestCase):
     def setUp(self):
         testclock._seconds_reset()
@@ -6168,15 +6168,14 @@ class PokerRestTreeCoverageTestCase(unittest.TestCase):
         self.service = pokerservice.PokerService(self.settings)
         prt = pokerservice.PokerRestTree(self.service)
         self.assertEquals(prt.service, self.service)
-        for (child, cl) in [ ("POKER_REST", PokerResource),
-                             ("AVATAR", PokerAvatarResource) ]:
+        for (child, cl) in [("POKER_REST", PokerResource)]:
             self.failUnless(child in prt.children, "Missing child of PokerTree: " + child)
             self.failUnless(isinstance(prt.children[child], cl))
             self.assertEquals(prt.getChildWithDefault(child, MockRequestBase()).service, self.service)
     def test02_render(self):
         self.service = pokerservice.PokerService(self.settings)
         prt = pokerservice.PokerRestTree(self.service)
-        self.assertEquals(prt.render(MockRequestBase()), "Use /POKER_REST or /UPLOAD or /AVATAR or /TOURNEY_START")
+        self.assertEquals(prt.render(MockRequestBase()), "Use /POKER_REST or /TOURNEY_START")
 ##############################################################################
 # The following Mockups are used for PokerXML and its subclasses.
 

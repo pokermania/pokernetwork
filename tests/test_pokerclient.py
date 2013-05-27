@@ -582,30 +582,6 @@ class PokerClientTestCase(unittest.TestCase):
             d[index].addCallback(self.allIn)
         return defer.DeferredList(d)
     
-    def test10_playerImage(self):
-        """ test10_login """
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.login, 0)
-        def setPlayerImage((client, packet),):
-            client.sendPacket(PacketPokerPlayerImage(
-                serial = client.getSerial(),
-                image = "2345"
-            ))
-            return client.packetDeferred(True, PACKET_ACK)
-        d.addCallback(setPlayerImage)
-        def getPlayerImage((client, packet),):
-            self.assertEqual(PACKET_ACK, packet.type)
-            client.sendPacket(PacketPokerGetPlayerImage(serial = client.getSerial()))
-            return client.packetDeferred(True, PACKET_POKER_PLAYER_IMAGE)
-        d.addCallback(getPlayerImage)
-        def checkPlayerImage((client, packet),):
-            self.assertEqual(PACKET_POKER_PLAYER_IMAGE, packet.type)
-            self.assertEqual("2345", packet.image)
-            return (client, packet)
-        d.addCallback(checkPlayerImage)
-        d.addCallback(self.quit)
-        return d
-
     def cashOut(self, client, url, value):
         client.sendPacket(PacketPokerCashOut(serial = client.getSerial(), url = url, value = value))
         return client.packetDeferred(True, PACKET_POKER_CASH_OUT)

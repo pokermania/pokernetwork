@@ -778,29 +778,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         dl.addCallback(quitAll)
         return dl
     # -------------------------------------------------------------------------
-    def test07_getImage(self):
-        """Tests player getting its image"""
-        self.createClients(1)
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.sendExplain)
-        d.addCallback(self.login, 0)
-        def getImage((client, packet)):
-            avatar = self.service.avatars[0]
-            avatar.queuePackets()
-            avatar.handlePacketLogic(PacketPokerGetPlayerImage(
-                    serial = client.getSerial()))
-            found = False
-            for packet in avatar._packets_queue:
-                if packet.type == PACKET_POKER_PLAYER_IMAGE:
-                    found = True
-                    self.assertEquals(packet.serial, client.getSerial())
-                    self.assertEquals(packet.image_type, "image/png")
-            self.assertEquals(found, True)
-            return (client, packet)
-        d.addCallback(getImage)
-        d.addCallback(self.quit)
-        return d
-    # ------------------------------------------------------------------------
     def test08_joinTable(self):
         """Tests table joining."""
         self.createClients(1)
@@ -1343,10 +1320,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                       url = "http://example.com/myhack", 
                       outfit = "Naked"
                 )
-            },
-            'player_image': { 
-                'output': "%sattempt to set player image%s" % (messageStart, forPlayerByPlayer),
-                'packet': PacketPokerPlayerImage(serial = someoneElseSerial, image_type = "crack/tiff", image = "YOU_BEEN_CRACKED") 
             },
             'set_personal': { 
                 'output': "%sattempt to set player info%s" % (messageStart, forPlayerByPlayer),
@@ -1936,58 +1909,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.sendExplain)
         d.addCallback(self.login, 0)
         d.addCallback(self.errorSetPokerPlayerInfo, 0)
-        return d
-    # ------------------------------------------------------------------------
-    def setPokerPlayerImage(self, (client, packet), id ):
-        avatar = self.service.avatars[id]
-        avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerPlayerImage(serial= client.getSerial(),
-                                                        image = "naked.png",
-                                                        image_type = "image/gif"))
-        found = False
-        for packet in avatar.resetPacketsQueue():
-            if packet.type == PACKET_ACK:
-                found = True
-        self.assertEquals(found, True)
-        return (client, packet)
-    # ------------------------------------------------------------------------
-    def errorSetPokerPlayerImage(self, (client, packet), id ):
-        avatar = self.service.avatars[id]
-        avatar.queuePackets()
-        def forceFalse(player_info):
-            return False
-        originalFunction = avatar.service.setPlayerImage
-        avatar.service.setPlayerImage = forceFalse
-        avatar.handlePacketLogic(PacketPokerPlayerImage(serial= client.getSerial(),
-                                                        image = "naked.png",
-                                                        image_type = "image/gif"))
-        found = False
-        for packet in avatar.resetPacketsQueue():
-            if packet.type == PACKET_ERROR:
-                self.assertEquals(packet.other_type, PACKET_POKER_PLAYER_IMAGE)
-                self.assertEquals(packet.code, PACKET_POKER_PLAYER_IMAGE)
-                self.assertEquals(packet.message, "Failed to save set player image")
-                found = True
-        self.assertEquals(found, True)
-        avatar.service.setPlayerImage = originalFunction
-        return (client, packet)
-    # ------------------------------------------------------------------------
-    def test30_setPlayerImage(self):
-        """Test for setting the player image."""
-        self.createClients(1)
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.setupCallbackChain)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.setPokerPlayerImage, 0)
-        return d
-    # ------------------------------------------------------------------------
-    def test31_errorSetPlayerImage(self):
-        """Test for setting the player image."""
-        self.createClients(1)
-        d = self.client_factory[0].established_deferred
-        d.addCallback(self.setupCallbackChain)
-        d.addCallback(self.login, 0)
-        d.addCallback(self.errorSetPokerPlayerImage, 0)
         return d
     # ------------------------------------------------------------------------
     calledCashIn = False

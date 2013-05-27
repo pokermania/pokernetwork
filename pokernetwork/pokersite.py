@@ -256,51 +256,6 @@ class PokerTourneyStartResource(resource.Resource):
         request.write(body)
         return True
 
-class PokerAvatarResource(resource.Resource):
-
-    _log = log.get_child('PokerAvatarResource')
-
-    def __init__(self, service):
-        resource.Resource.__init__(self)
-        self.service = service
-        self.deferred = defer.succeed(None)
-        self.isLeaf = True
-
-    def render(self, request):
-        self._log.debug("render %s", request.content.read())
-        request.content.seek(0, 0)
-        serial = int(request.path.split('/')[-1])
-        self.deferred.addCallback(lambda result: self.deferRender(request, serial))
-        def failed(reason):
-            body = reason.getTraceback()
-            request.setResponseCode(http.INTERNAL_SERVER_ERROR)
-            request.setHeader('content-type',"text/html")
-            request.setHeader('content-length', str(len(body)))
-            request.write(body)
-            request.connectionLost(reason)
-            self._log.error("%s", body)
-            return True
-        self.deferred.addErrback(failed)
-        return server.NOT_DONE_YET
-
-    def deferRender(self, request, serial):
-        packet  = self.service.getPlayerImage(serial)
-        if len(packet.image):
-            result_string = base64.b64decode(packet.image)
-            request.setHeader("Content-length", str(len(result_string)))
-            request.setHeader("Content-type", packet.image_type)
-            request.write(result_string)
-            request.finish()
-            return
-        else:
-            body = 'not found'
-            request.setResponseCode(http.NOT_FOUND)
-            request.setHeader('content-type',"text/html")
-            request.setHeader('content-length', str(len(body)))
-            request.write(body)
-            request.finish()
-            return
-
 class PokerSite(server.Site):
 
     requestFactory = Request

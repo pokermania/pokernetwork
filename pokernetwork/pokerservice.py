@@ -78,7 +78,7 @@ from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase
 from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
-from pokernetwork.pokersite import PokerTourneyStartResource, PokerAvatarResource, PokerResource
+from pokernetwork.pokersite import PokerTourneyStartResource, PokerResource
 from pokernetwork.pokertable import PokerTable, PokerAvatarCollection
 from pokernetwork import pokeravatar
 from pokernetwork.user import User
@@ -3082,11 +3082,10 @@ class PokerRestTree(resource.Resource):
         self.service = service
         self.putChild("POKER_REST", PokerResource(self.service))
         self.putChild("TOURNEY_START", PokerTourneyStartResource(self.service))
-        self.putChild("AVATAR", PokerAvatarResource(self.service))
         self.putChild("", self)
 
     def render_GET(self, request):
-        return "Use /POKER_REST or /UPLOAD or /AVATAR or /TOURNEY_START"
+        return "Use /POKER_REST or /TOURNEY_START"
 
 def _getRequestCookie(request):
     if request.cookies:

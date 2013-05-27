@@ -80,14 +80,7 @@ class PokerServiceMockup:
     def tourneyNotifyStart(self, tourney_serial):
         self.tourney_serial = tourney_serial
     
-    player_image = None
-    def setPlayerImage(self, player_image):
-        self.player_image = player_image    
-
     player_serial = None
-    def getPlayerImage(self, serial):
-        self.player_serial = serial
-        return self.player_image
 
     def getClientQueuedPacketMax(self):
         return 2000
@@ -360,70 +353,6 @@ class PokerTourneyStartTestCase(unittest.TestCase):
         self.assertEquals(666, self.service.tourney_serial)
         r.getSession().expire()
 
-
-class PokerAvatarResourceTestCase(unittest.TestCase):
-
-    class Transport:
-        def getPeer(self):
-            return None
-        def getHost(self):
-            return None
-
-    class Channel:
-        def __init__(self, site):
-            self.transport = PokerAvatarResourceTestCase.Transport()
-            self.site = site
-
-    def setUp(self):
-        testclock._seconds_reset()      
-        settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
-<server verbose="6" />
-"""
-        self.settings = pokernetworkconfig.Config([])
-        self.settings.loadFromString(settings_xml)
-        pokermemcache.memcache = pokermemcache.MemcacheMockup
-        self.service = PokerServiceMockup()
-        self.site = pokersite.PokerSite(self.settings, pokersite.PokerAvatarResource(self.service))
-        self.site.memcache = pokermemcache.memcache.Client([])
-
-    def test01_render(self):
-        data = 'image data'
-        serial = 64
-        self.service.setPlayerImage(PacketPokerPlayerImage(image=base64.b64encode(data), serial=serial))
-        r = pokersite.Request(self.Channel(self.site), True)
-        r.site = r.channel.site
-        r.gotLength(0)
-        r.handleContentChunk('')
-        r.requestReceived('GET', '/%i' % serial, '')
-        self.assertSubstring('\r\n\r\n%s' % data, r.transport.getvalue())
-        self.assertEquals(serial, self.service.player_serial)
-
-    def test02_not_found(self):
-        serial = 100
-        self.service.setPlayerImage(PacketPokerPlayerImage(image='', serial=serial))
-        r = pokersite.Request(self.Channel(self.site), True)
-        r.site = r.channel.site
-        r.gotLength(0)
-        r.handleContentChunk('')
-        r.requestReceived('GET', '/%i' % serial, '')
-        self.assertSubstring('not found', r.transport.getvalue())
-        self.assertEquals(serial, self.service.player_serial)
-
-    def test03_error(self):
-        data = 'image data'
-        serial = 64
-        self.service.setPlayerImage(PacketPokerPlayerImage(image=base64.b64encode(data), serial=serial))
-        r = pokersite.Request(self.Channel(self.site), True)
-        r.site = r.channel.site
-        r.gotLength(0)
-        r.handleContentChunk('')
-        error_pattern = 'UNLIKELY'
-        def getPlayerImageFailed(player_serial):
-            raise UserWarning, error_pattern
-        self.service.getPlayerImage = getPlayerImageFailed
-        r.requestReceived('GET', '/%i' % serial, '')
-        self.assertSubstring('error_pattern', r.transport.getvalue())
-        self.assertEquals(None, self.service.player_serial)
 
 class FilterTestCase(unittest.TestCase):
 
@@ -904,8 +833,6 @@ def GetTestSuite():
     suite.addTest(loader.loadClass(FilterTestCase))
     suite.addTest(loader.loadClass(FilterFinishTestCase))
     suite.addTest(loader.loadClass(PokerResourceTestCase))
-    suite.addTest(loader.loadClass(PokerImageUploadTestCase))
-    suite.addTest(loader.loadClass(PokerAvatarResourceTestCase))
     suite.addTest(loader.loadClass(SessionTestCase))
     suite.addTest(loader.loadClass(SessionExplainTestCase))
     suite.addTest(loader.loadClass(RequestTestCase))
