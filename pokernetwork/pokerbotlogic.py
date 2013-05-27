@@ -287,7 +287,7 @@ class PokerBot:
         if not game.isBlindAnteRound():
             if self.factory.wait > 0:
                 self.factory.can_disconnect = False
-                reactor.callLater(self.factory.wait, lambda: self.play(protocol, game))
+                reactor.callLater(self.factory.wait, self.play, protocol, game)
             else:
                 self.play(protocol, game)
 
@@ -296,37 +296,42 @@ class PokerBot:
             actions = ("check", "call", "raise")
             return (actions[randint(0, 2)], -1)
 
-        ev = game.handEV(serial, LEVEL2ITERATIONS[self.factory.level])
+        ev = game.handEV(serial, LEVEL2ITERATIONS[self.factory.level]) * 0.001
+        actions = game.possibleActions(serial)
+        player = game.serial2player[serial]
         
-        if game.state == "pre-flop":
-            if ev < 550:
-                action = "check"
-            elif ev < 700:
-                action = "call"
-            else:
-                action = "raise"
-        elif game.state == "flop" or game.state == "third":
-            if ev < 300:
-                action = "check"
-            elif ev < 700:
-                action = "call"
-            else:
-                action = "raise"
-        elif game.state == "turn" or game.state == "fourth":
-            if ev < 300:
-                action = "check"
-            elif ev < 700:
-                action = "call"
-            else:
-                action = "raise"
-        else:
-            if ev < 400:
-                action = "check"
-            elif ev < 800:
-                action = "call"
-            else:
-                action = "raise"
+        # the contribution consists of the sum of all bets the player has made
+        contribution = game.side_pots['contributions']['total'].get(serial,0)
+        bets = game.potAndBetsAmount()
+        
+        # modify ev to be a bit more pessimistic
+        ev -= 0.05
+        
+        # risk exponent for the additional bets. should be in (0,1]
+        risk = 0.75
+        
+        actions_returns = {}
+        
+        if 'fold' in actions:
+            actions_returns['fold'] = -contribution
             
+        if 'check' in actions:
+            actions_returns['check'] = bets*ev - (contribution)*(1-ev)
+            
+        if 'call' in actions:
+            highest_amount = game.highestBetNotFold()
+            additional_amounts = sum(highest_amount - p.bet for p in game.playersInGame())
+            actions_returns['call'] = (bets+additional_amounts**risk)*ev - (contribution+highest_amount-player.bet)*(1-ev)
+        
+        if 'raise' in actions:
+            min_bet, _max_bet, _to_call = game.betLimitsForSerial(serial)
+            highest_amount = game.highestBetNotFold() + 2*min_bet
+            additional_amounts = sum(highest_amount - p.bet for p in game.playersInGame())
+            actions_returns['raise'] = (bets+additional_amounts**risk)*ev - (contribution+highest_amount-player.bet)*(1-ev)
+            
+        action = max(actions_returns.iteritems(), key=lambda i: i[1])[0]
+        self.log.inform("%s actions (%s) (ev = %.2f)", serial, ', '.join('%s %.2f' % kv for kv in actions_returns.items()), ev)
+        
         return (action, ev)
         
     def play(self, protocol, game):
@@ -341,21 +346,13 @@ class PokerBot:
             return
         
         desired_action, ev = self.eval(game, serial)
-        actions = game.possibleActions(serial)
         self.log.debug("%s serial = %d, hand = %s, board = %s", name, serial, game.getHandAsString(serial), game.getBoardAsString())
-        self.log.debug("%s wants to %s (ev = %d)", name, desired_action, ev)
+        self.log.debug("%s wants to %s (ev = %.2f)", name, desired_action, ev)
         self.log.inform("%s serial = %d, hand = %s, board = %s",
             name, serial, game.getHandAsString(serial), game.getBoardAsString()
         )
-        self.log.inform("%s wants to %s (ev = %d)", name, desired_action, ev)
-        while not desired_action in actions:
-            if desired_action == "check":
-                desired_action = "fold"
-            elif desired_action == "call":
-                desired_action = "check"
-            elif desired_action == "raise":
-                desired_action = "call"
-
+        self.log.inform("%s wants to %s (ev = %.2f)", name, desired_action, ev)
+        
         if desired_action == "fold":
             protocol.sendPacket(PacketPokerFold(game_id = game.id, serial = serial))
         elif desired_action == "check":
