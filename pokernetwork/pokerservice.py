@@ -1793,7 +1793,7 @@ class PokerService(service.Service):
         cursor = self.db.cursor()
 
         try:
-            currency_serial = tournament.prize_currency or tournament.currency_serial
+            currency_serial = tournament.currency_serial
             cursor.execute(
                "UPDATE user2money,user2table SET " \
                "user2table.money = user2table.money + %s, " \
