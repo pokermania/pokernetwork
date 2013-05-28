@@ -245,7 +245,7 @@ class PokerBot:
                         protocol.sendPacket(PacketPokerSit(serial=serial, game_id=game.id))
 
                     else:
-                        protocol.sendPacket(PacketPokerTourneyRebuy(serial=serial, game_id=game.id))
+                        protocol.sendPacket(PacketPokerRebuy(serial=serial, game_id=game.id))
                         protocol.sendPacket(PacketPokerSit(serial=serial, game_id=game.id))
             
         elif packet.type == PACKET_POKER_SELF_IN_POSITION:
