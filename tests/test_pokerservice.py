@@ -247,7 +247,7 @@ class MockCursorBase:
         cursorSelf._executed = sql
         return cursorSelf.rowcount
     def fetchone(cursorSelf): return cursorSelf.row
-    def fetchall(cursorSelf): return [cursorSelf.row]
+    def fetchall(cursorSelf): return [cursorSelf.row] if cursorSelf.row else [] 
     def __iter__(cursorSelf):
         def i():
             if False:
@@ -2017,9 +2017,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             "currency_serial = 1, "
             "schedule_serial = 1,"
             "start_time = %d" % (testclock._seconds_value + 120,))
-        cursor.execute("INSERT INTO user2tourney VALUES (1, 1, 4000, 0, -1)")
-        cursor.execute("INSERT INTO user2tourney VALUES (2, 1, 4000, 0, -1)")
-        cursor.execute("INSERT INTO user2tourney VALUES (3, 1, 4000, 0, -1)")
+        cursor.execute("INSERT INTO user2tourney VALUES (1, 1, 4000, 0, -1, 0, 0)")
+        cursor.execute("INSERT INTO user2tourney VALUES (2, 1, 4000, 0, -1, 0, 0)")
+        cursor.execute("INSERT INTO user2tourney VALUES (3, 1, 4000, 0, -1, 0, 0)")
         self.service.db = pokerdatabase.PokerDatabase(self.settings)
         self.service.dirs = [path.join(config.test.engine_path, 'conf')]
         self.service.cleanupTourneys()
@@ -2027,7 +2027,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.assertEqual(set([1, 2, 3]), set(tourney.players.keys()))
         cursor.execute("SELECT tourney_serial FROM route WHERE tourney_serial = 4000")        
         self.assertEqual(1, cursor.rowcount)
-        (tournament_serial,) = cursor.fetchone()
+        tournament_serial = cursor.fetchone()[0]
         self.assertEqual(4000, tournament_serial)
         cursor.close()        
     def test19_testJoinCounter(self):
@@ -3251,7 +3251,8 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
             self.reason = reason
             self.serial = serial
             self.id2game = {13:TourneyRebuyTestCase.GameMock()}
-            self.prize_currency = 1
+            self.currency_serial = 1
+            self.prize_currency = 0
 
         def rebuy(self, packet):
             if self.reason:
@@ -3296,15 +3297,19 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
         cursor = self.service.db.cursor()
         cursor.execute("INSERT INTO user2money (user_serial, currency_serial, amount) values (1337807,1,400)")
         cursor.execute("INSERT INTO user2table (user_serial,table_serial,money) VALUES (1337807,2,10)")
+        cursor.execute("INSERT INTO user2tourney (user_serial,tourney_serial,table_serial,currency_serial) VALUES (1337807,1,2,1)")
         tournament = self.Tournament(serial=1)
 
-        # The expected money is added on the table
+        # The expected money is added on the table and the rebuy_count is incremented
         self.assertEqual(self.service.tourneyRebuy(tournament, serial=1337807, table_id=2, player_chips=300, tourney_chips=700), 700)
         cursor.execute("SELECT amount FROM user2money WHERE user_serial = 1337807")
         self.assertEqual(cursor.fetchone()[0], 100)
         cursor.execute("SELECT money FROM user2table WHERE user_serial = 1337807")
         self.assertEqual(cursor.fetchone()[0], 710)
-
+        
+        cursor.execute("SELECT rebuy_count FROM user2tourney WHERE user_serial = 1337807")
+        self.assertEqual(cursor.fetchone()[0], 1)
+        
         # the second run should fail because we have not enough money left.
         self.assertEqual(self.service.tourneyRebuy(tournament, serial=1337807, table_id=2, player_chips=300, tourney_chips=700), 0)
         cursor.execute("SELECT amount FROM user2money WHERE user_serial = 1337807")
@@ -5352,78 +5357,41 @@ class PokerServiceCoverageTests(unittest.TestCase):
             def statementActions(cursorSelf, sql, statement):
                 cursorSelf.rowcount = 0
                 cursorSelf.row = []
-                    # Second time method does select, we just want 0 rows returned.
-                #elif statement == "UPDATE user2money,user2tourney SET amount = amount":
-                if statement in (cursorSelf.acceptedStatements[0], cursorSelf.acceptedStatements[9]):
+                if statement in (cursorSelf.acceptedStatements[0], cursorSelf.acceptedStatements[2], cursorSelf.acceptedStatements[3]):
                     cursorSelf.rowcount = 1
-                    pass
-                elif statement == cursorSelf.acceptedStatements[1]:
-                    if cursorSelf.counts[statement] <= 1:
-                        cursorSelf.row = {
-                            'buy_in': 100,
-                            'rake': 0,
-                            'state': 'registering',
-                            'currency_serial': 168,
-                            'serial': 732,
-                            'schedule_serial': 7,
-                            'prize_currency': 1,
-                            'start_time': seconds() + 3600,
-                            'sit_n_go': 'n',
-                            'bailor_serial': None,
-                            'player_timeout': 1337,
-                            'via_satellite': False ,
-                            'satellite_of': 0,
-                            'satellite_player_count': 0
-                        }
-                        cursorSelf.rowcount = 1
-                elif statement == cursorSelf.acceptedStatements[2]:
-                    cursorSelf.row = {
-                        'serial': 732,
-                        'name': 'user732'
-                    }
-                    cursorSelf.rowcount = 1
-                elif statement in cursorSelf.acceptedStatements:
-                    pass
-                else:
-                    self.failIf(1, "unknown sql statement: " + statement + " " + sql)
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, [
-                    "DELETE t FROM tourneys AS t",
-                    "SELECT * FROM tourneys WHERE",
-                    "SELECT u.serial, u.name FROM users AS u JOIN user2tourney AS u2t ON",
                     "UPDATE tourneys AS t LEFT JOIN user2tourney AS u2t ON",
+                    "SELECT u2t.user_serial, u2t.tourney_serial, (t.buy_in+t.rake)*(1+u2t.rebuy_count) AS refund",
                     "DELETE u2t FROM user2tourney AS u2t LEFT JOIN tourneys",
-                    "REPLACE INTO route VALUES",
-                    "SELECT user_serial,table_serial,currency_serial FROM tables,user2table WHERE",
-                    "DELETE FROM tables WHERE",
-                    "SELECT serial FROM tourneys WHERE state IN",
-                    "UPDATE tourneys SET state"
+                    "DELETE t FROM tourneys AS t",
                 ])
-        class MockDBWithDifferentCursorMethod(MockDatabase):
-            def cursor(dbSelf, dummy = None):
-                # Needed because cleanupTourneys() calls with argument "DictCursor"
-                return MockDatabase.cursor(dbSelf)
 
         self.service = pokerservice.PokerService(self.settings)
+        self.service.restoreTourneys = lambda *a: None
+        self.service.abortRunningTourneys = lambda *a: None
         self.service.startService()
 
         oldDb = self.service.db
-        self.service.db = MockDBWithDifferentCursorMethod(MockCursor)
+        self.service.db = MockDatabase(MockCursor)
 
         log_history.reset()
-
+        
         self.service.cleanupTourneys()
 
-        # Make sure the right number of SQL statements got executed; 
-        # the loop should have been called only once
-        self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[1]], 1)
-        self.assertEquals(self.service.db.cursorValue.counts[self.service.db.cursor().acceptedStatements[2]], 1)
-
         msgs = log_history.get_all()
+        
         self.assertEquals(msgs[0].find("cleanupTourneys: "), 0)
-        self.assertEquals(msgs[1].find("restoreTourneys: "), 0)
+        self.assertEquals(msgs[1].find("cleanupTourneys: "), 0)
+        self.assertEquals(msgs[2].find("cleanupTourneys: "), 0)
 
         self.service.db = oldDb
+    def test40_restoreTourneys(self):
+        # FIXME add this test
+        pass
+    def test40_abortRunningTourneys(self):
+        # FIXME add this test
+        pass
     def test41_getMoney_bigRowCount(self):
         class MockCursor(MockCursorBase):
             def statementActions(cursorSelf, sql, statement):
@@ -5942,9 +5910,10 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         self.service = pokerservice.PokerService(self.settings)
 
-        def mockDBEvent(event, param1, param2):
-            self.assertEquals(param2, 6543)
+        def mockDBEvent(event, param1, param2, param3):
             self.assertEquals(param1, 236)
+            self.assertEquals(param2, 6543)
+            self.assertEquals(param3, 8999)
             self.assertEquals(event, PacketPokerMonitorEvent.LEAVE)
 
         saveDBEvent = self.service.databaseEvent

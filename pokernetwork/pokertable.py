@@ -827,7 +827,6 @@ class PokerTable:
         if self.isSeated(avatar):
             #
             # If not on a closed table, stand up
-            #
             if self.isOpen():
                 if avatar.removePlayer(self, serial):
                     self.seated2observer(avatar, serial)
@@ -842,7 +841,6 @@ class PokerTable:
         if self.isJoined(avatar):
             #
             # The player is no longer connected to the table
-            #
             self.destroyPlayer(avatar, serial)
 
         return True
@@ -876,25 +874,16 @@ class PokerTable:
             if self.isOpen():
                 #
                 # If not on a closed table, stand up.
-                #
                 if avatar.removePlayer(self, serial):
                     self.seated2observer(avatar, serial)
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
                 else:
                     self.update()
-            else:
-                #
-                # If on a closed table, the player
-                # will stay at the table, he does not
-                # have the option to leave.
-                #
-                pass
 
         if self.isJoined(avatar):
             #
             # The player is no longer connected to the table
-            #
             self.destroyPlayer(avatar, serial)
 
         return True
@@ -908,7 +897,6 @@ class PokerTable:
         if self.isSeated(avatar):
             #
             # If not on a closed table, stand up
-            #
             if self.isOpen():
                 if avatar.removePlayer(self, serial):
                     self.seated2observer(avatar, serial)

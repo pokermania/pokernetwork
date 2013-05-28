@@ -283,9 +283,6 @@ class PokerService(service.Service):
         self.setupTourneySelectInfo()
         self.setupLadder()
         self.setupResthost()
-        self.cleanupCrashedTables()
-        
-        if self.temporary_users_cleanup: self.cleanUpTemporaryUsers()
         
         self.cashier = pokercashier.PokerCashier(self.settings)
         self.cashier.setDb(self.db)
@@ -327,7 +324,10 @@ class PokerService(service.Service):
             except locale.Error, le:
                 self.log.error('Unable to restore original locale: %s', le)
 
+        self.cleanupCrashedTables()
         self.cleanupTourneys()
+        if self.temporary_users_cleanup: self.cleanUpTemporaryUsers()
+        
         self.updateTourneysSchedule()
         self.poker_auth.SetLevel(PACKET_POKER_SEAT, User.REGULAR)
         self.poker_auth.SetLevel(PACKET_POKER_GET_USER_INFO, User.REGULAR)
@@ -1712,13 +1712,13 @@ class PokerService(service.Service):
         # Refund registration fees
         #
         currency_serial = tourney.currency_serial
-        withdraw = tourney.buy_in + tourney.rake
-        if withdraw > 0:
+        refund = tourney.buy_in + tourney.rake
+        if refund > 0:
             cursor.execute(
                 "UPDATE user2money SET amount = amount + %s " \
                 "WHERE user_serial = %s " \
                 "AND currency_serial = %s",
-                (withdraw,serial,currency_serial)
+                (refund,serial,currency_serial)
             )
             self.log.debug("tourneyUnregister: %s", cursor._executed)
             if cursor.rowcount != 1:
@@ -1728,10 +1728,10 @@ class PokerService(service.Service):
                     code = PacketPokerTourneyUnregister.SERVER_ERROR,
                     message = "Server error : user_serial = %d and currency_serial = %d was not in user2money" % (serial,currency_serial)
                 )
-            self.databaseEvent(event = PacketPokerMonitorEvent.UNREGISTER, param1 = serial, param2 = tourney_serial, param3 = withdraw)
+            self.databaseEvent(event = PacketPokerMonitorEvent.UNREGISTER, param1 = serial, param2 = tourney_serial, param3 = refund)
         #
         # unregister
-        cursor.execute("DELETE FROM user2tourney WHERE user_serial = %s AND tourney_serial = %s",(serial,tourney_serial))
+        cursor.execute("DELETE FROM user2tourney WHERE user_serial = %s AND tourney_serial = %s", (serial,tourney_serial))
         self.log.debug("tourneyUnregister: %s", cursor._executed)
         if cursor.rowcount != 1:
             self.log.error("delete no rows (expected 1): %s", cursor._executed)
@@ -1739,7 +1739,7 @@ class PokerService(service.Service):
             return PacketError(
                 other_type = PACKET_POKER_TOURNEY_UNREGISTER,
                 code = PacketPokerTourneyUnregister.SERVER_ERROR,
-                message = "Server error : user_serial = %d and tourney_serial = %d was not in user2tourney" % ( serial, tourney_serial )
+                message = "Server error : user_serial = %d and tourney_serial = %d was not in user2tourney" % (serial, tourney_serial)
             )
         cursor.close()
 
@@ -1795,22 +1795,26 @@ class PokerService(service.Service):
         try:
             currency_serial = tournament.currency_serial
             cursor.execute(
-               "UPDATE user2money,user2table SET " \
+               "UPDATE user2money,user2table,user2tourney SET " \
                "user2table.money = user2table.money + %s, " \
-               "user2money.amount = user2money.amount - %s " \
-               "WHERE user2money.user_serial = %s " \
-               "AND user2money.currency_serial = %s " \
-               "AND user2table.user_serial = %s " \
+               "user2money.amount = user2money.amount - %s, " \
+               "user2tourney.rebuy_count = user2tourney.rebuy_count + 1 " \
+               "WHERE user2table.user_serial = %s " \
                "AND user2table.table_serial = %s " \
+               "AND user2tourney.user_serial = %s " \
+               "AND user2tourney.tourney_serial = %s " \
+               "AND user2money.user_serial = %s " \
+               "AND user2money.currency_serial = %s " \
                "AND user2money.amount >= %s",
-               (tourney_chips, player_chips, serial, currency_serial, 
-                serial, table_id, player_chips)
+               (tourney_chips, player_chips, serial, table_id, serial, tournament.serial, serial, currency_serial, player_chips)
             )
 
-            if cursor.rowcount != 2:
+            if cursor.rowcount not in (0,3): 
+                self.log.warn("modified %d rows (expected 3): %s", cursor.rowcount, cursor._executed)
                 return 0
-
-            return tourney_chips
+            
+            return tourney_chips if cursor.rowcount == 3 else 0
+        
         finally:
             cursor.close();
 
@@ -1828,14 +1832,14 @@ class PokerService(service.Service):
         success, game_id, reason = tourney.rebuy(packet.serial)
 
         if success:
-            return packet.OK
+            return PacketPokerTourneyRebuy.OK
         else:
             return {
-                TOURNEY_REBUY_ERROR_USER: packet.REBUY_LIMIT_EXEEDED,
-                TOURNEY_REBUY_ERROR_TIMEOUT: packet.REBUY_TIMEOUT_EXEEDED,
-                TOURNEY_REBUY_ERROR_MONEY: packet.NOT_ENOUGH_MONEY,
-                TOURNEY_REBUY_ERROR_OTHER: packet.OTHER_ERROR,
-            }.get(reason, packet.OTHER_ERROR)
+                TOURNEY_REBUY_ERROR_USER: PacketPokerTourneyRebuy.REBUY_LIMIT_EXEEDED,
+                TOURNEY_REBUY_ERROR_TIMEOUT: PacketPokerTourneyRebuy.REBUY_TIMEOUT_EXEEDED,
+                TOURNEY_REBUY_ERROR_MONEY: PacketPokerTourneyRebuy.NOT_ENOUGH_MONEY,
+                TOURNEY_REBUY_ERROR_OTHER: PacketPokerTourneyRebuy.OTHER_ERROR,
+            }.get(reason, PacketPokerTourneyRebuy.OTHER_ERROR)
 
 
     def createHand(self, game_id, tourney_serial=None):
@@ -2323,7 +2327,7 @@ class PokerService(service.Service):
                     "UPDATE tourneys AS t " \
                         "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
                         "LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial " \
-                    "SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'aborted' " \
+                    "SET u2m.amount = u2m.amount + (t.buy_in + t.rake)*(1+u2t.rebuy_count), t.state = 'aborted' " \
                     "WHERE " \
                         "t.resthost_serial = %s AND " \
                         "t.state IN ('running', 'break', 'breakwait')",
@@ -2391,29 +2395,38 @@ class PokerService(service.Service):
         self.tourneys = {}
         self.schedule2tourneys = {}
         self.tourneys_schedule = {}
-        cursor = self.db.cursor(DictCursor)
+        cursor = self.db.cursor()
         now = seconds()
         try:
             # abort still running tourneys and refund buyin
             self.abortRunningTourneys()
             
             # trash tourneys and their user2tourney data which
-            # are in registering state with a starttime in the past+60s
-            # CHECKME: realy no sitngos and whats with the +60s?
-            where = \
-                "WHERE t.resthost_serial = %s " \
-                "AND t.sit_n_go = 'n' AND t.state = 'registering' AND t.start_time < %s"
-            params = (self.resthost_serial, now)
+            # are in registering state with a starttime in the past
             cursor.execute(
                 "UPDATE tourneys AS t " \
-                    "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
-                    "LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial " \
+                "LEFT JOIN user2tourney AS u2t ON u2t.tourney_serial = t.serial " \
+                "LEFT JOIN user2money AS u2m ON u2m.user_serial = u2t.user_serial " \
                 "SET u2m.amount = u2m.amount + t.buy_in + t.rake, t.state = 'aborted' " \
-                + where,
-                params
+                "WHERE t.resthost_serial = %s " \
+                "AND t.sit_n_go = 'n' AND t.state = 'registering' AND t.start_time < %s",
+                (self.resthost_serial, now)
             )
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: rows: %d, sql: %s", cursor.rowcount, cursor._executed)
+            
+            # get refunds for all players registered in aborted tourneys
+            # and delete all associated user2tourney entries
+            cursor.execute(
+                "SELECT u2t.user_serial, u2t.tourney_serial, (t.buy_in+t.rake)*(1+u2t.rebuy_count) AS refund " \
+                "FROM user2tourney AS u2t " \
+                "LEFT JOIN tourneys as t ON t.serial = u2t.tourney_serial "
+                "WHERE t.resthost_serial = %s AND t.state = 'aborted'",
+                (self.resthost_serial,)
+            )
+            refunds = cursor.fetchall()
+            if cursor.rowcount:
+                self.log.debug("cleanupTourneys: %s", cursor._executed)
             cursor.execute(
                 "DELETE u2t FROM user2tourney AS u2t " \
                 "LEFT JOIN tourneys AS t ON t.serial = u2t.tourney_serial " \
@@ -2422,6 +2435,10 @@ class PokerService(service.Service):
             )
             if cursor.rowcount:
                 self.log.debug("cleanupTourneys: %s", cursor._executed)
+            # communicate all refunds
+            for user_serial, tourney_serial, refund in refunds:
+                self.databaseEvent(event = PacketPokerMonitorEvent.UNREGISTER, param1 = user_serial, param2 = tourney_serial, param3 = refund)
+            
             cursor.execute(
                 "DELETE t FROM tourneys AS t " \
                 "WHERE t.resthost_serial = %s AND t.state = 'aborted'",
@@ -2844,7 +2861,7 @@ class PokerService(service.Service):
                 status = (cursor.fetchone()[0] >= 1)
             if status:
                 cursor.execute(
-                    "INSERT INTO user2table ( user_serial, table_serial, money) VALUES (%s, %s, %s)",
+                    "INSERT INTO user2table (user_serial, table_serial, money) VALUES (%s, %s, %s)",
                     (serial, table_id, amount)
                 )
                 self.log.debug("seatPlayer: %s", cursor._executed)
@@ -2919,7 +2936,7 @@ class PokerService(service.Service):
             c.execute("DELETE FROM user2table WHERE user_serial = %s AND table_serial = %s", (serial , table_id))
             if c.rowcount != 1:
                 self.log.error("leavePlayer: modified %d rows (expected 1)\n%s", c.rowcount, c._executed, refs=[('User', serial, int)])
-            self.databaseEvent(event = PacketPokerMonitorEvent.LEAVE, param1 = serial, param2 = table_id)
+            self.databaseEvent(event = PacketPokerMonitorEvent.LEAVE, param1 = serial, param2 = table_id, param3 = currency_serial)
         finally:
             c.close()
 
