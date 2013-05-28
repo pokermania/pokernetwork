@@ -1,0 +1,1 @@
+UPDATE user2money SET amount = amount / 100, rake = rake / 100, points = points / 100 WHERE currency_serial = 1;
