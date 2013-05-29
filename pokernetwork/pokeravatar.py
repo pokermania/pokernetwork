@@ -978,7 +978,7 @@ class PokerAvatar:
             table = self.service.getTable(packet.game_id)
         if table:
             self.removeGamePacketsQueue(packet.game_id)
-            if not table.joinPlayer(self, self.getSerial(),reason = reason):
+            if not table.joinPlayer(self, self.getSerial(), reason = reason):
                 if deprecatedEmptyTableBehavior:
                     self.sendPacketVerbose(PacketPokerTable(reason = reason))
                 self.sendPacketVerbose(PacketPokerError(
@@ -992,11 +992,6 @@ class PokerAvatar:
                 player = table.game.getPlayer(self.getSerial())
                 if player and player.isAuto():
                     self.sendPacketVerbose(PacketPokerAutoFold(serial=packet.serial))
-            if table.tourney:
-                tourney_dict = table.tourney.__dict__.copy()
-                tourney_dict['rebuy_time_remaining'] = table.tourney.getRebuyTimeRemaining()
-                tourney_dict['kick_timeout'] = max(0, int(self.service.delays.get('tourney_kick', 20)))
-                self.sendPacketVerbose(PacketPokerTourney(**tourney_dict))
 
     # -------------------------------------------------------------------------
     def performPacketPokerSeat(self, packet, table, game):
@@ -1277,6 +1272,13 @@ class PokerAvatar:
             best = game.bestBuyIn(),
             rebuy_min = game.minMoney()
         ))
+        
+        if table.tourney:
+            tourney_dict = table.tourney.__dict__.copy()
+            tourney_dict['rebuy_time_remaining'] = table.tourney.getRebuyTimeRemaining()
+            tourney_dict['kick_timeout'] = max(0, int(self.service.delays.get('tourney_kick', 20)))
+            self.sendPacketVerbose(PacketPokerTourney(**tourney_dict))
+        
         self.sendPacketVerbose(PacketPokerBatchMode(game_id = game.id))
         for player in game.serial2player.values():
             player_info = table.getPlayerInfo(player.serial)
