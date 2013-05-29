@@ -1830,6 +1830,7 @@ class PokerService(service.Service):
             return packet.OTHER_ERROR
 
         success, game_id, reason = tourney.rebuy(packet.serial)
+        self.tables[game_id].scheduleAutoDeal()
 
         if success:
             return PacketPokerTourneyRebuy.OK
