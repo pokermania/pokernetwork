@@ -308,7 +308,7 @@ class PokerBot:
         ev -= 0.05
         
         # risk exponent for the additional bets. should be in (0,1]
-        risk = 0.75
+        risk = 0.9
         
         actions_returns = {}
         
