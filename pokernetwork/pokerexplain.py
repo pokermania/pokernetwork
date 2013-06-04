@@ -577,6 +577,11 @@ class PokerExplain:
                     game.blindAnteRoundEnd()
                 if packet.string == "end" and game.state != "null":
                     game.endState()
+                elif game.inGameCount() < 2:
+                    # The game has probably ended, and we get now more state packets, than we expect
+                    # we can ignore them
+                    return True
+
                 #
                 # A state change is received at the begining of each
                 # betting round. No state change is received when
