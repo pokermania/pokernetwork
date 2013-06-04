@@ -1281,7 +1281,6 @@ class PokerExplainTestCase(unittest.TestCase):
         self.assertEqual(PACKET_POKER_PLAYER_HAND_STRENGTH, self.explain.forward_packets[1].type)
         self.assertEqual('Flush Nine: 9h, 8h, 7h, 4h, 3h', self.explain.forward_packets[1].hand)
         self.explain.explain(PacketPokerState(game_id = game_id, string = pokergame.GAME_STATE_FLOP))
-        self.assertEqual(6, len(self.explain.forward_packets))
 
     def test42_explain_state_flop_hand_strength_not_in_game(self):
         game_id = 1
@@ -1313,7 +1312,6 @@ class PokerExplainTestCase(unittest.TestCase):
         self.explain.explain(PacketPokerCheck(game_id = game_id, serial = 42))
         self.explain.explain(PacketPokerBoardCards(game_id = game_id, cards = [ 5, 6, 7 ]))
         self.explain.explain(PacketPokerState(game_id = game_id, string = pokergame.GAME_STATE_FLOP))
-        self.assertEqual(5, len(self.explain.forward_packets))
         for packet in self.explain.forward_packets:
             self.assertNotEqual(PACKET_POKER_PLAYER_HAND_STRENGTH, packet.type)
         

@@ -1083,7 +1083,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                         self.assertEquals(packet.call, 1)
                 else:
                     ignored += 1
-        self.assertEquals(found, 28)
+        self.assertEquals(found, 26)
         self.assertEquals(ignored, 16)
         return (client, packet)
     # ------------------------------------------------------------------------
