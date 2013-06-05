@@ -922,11 +922,8 @@ class PokerTable:
         # We are safe because called from within the server under
         # controlled circumstances.
         #
-
-        money = self.game.serial2player[serial].money
-        name = self.game.serial2player[serial].name
-
-        sit_out, bot, auto, auto_policy = self.movePlayerFrom(serial, to_game_id)
+        old_player = self.game.getPlayer(serial).copy()
+        self.movePlayerFrom(serial, to_game_id)
         for avatar in avatars:
             self.destroyPlayer(avatar, serial)
 
@@ -936,12 +933,12 @@ class PokerTable:
             other_table.observer2seated(avatar)
 
         money_check = self.factory.movePlayer(serial, self.game.id, to_game_id)
-        if money_check != money:
-            self.log.warn("movePlayer: player %d money %d in database, %d in memory", serial, money_check, money)
+        if money_check != old_player.money:
+            self.log.warn("movePlayer: player %d money %d in database, %d in memory", serial, money_check, old_player.money)
 
         for avatar in avatars:
             avatar.join(other_table, reason=reason)
-        other_table.movePlayerTo(serial, name, money, sit_out, bot, auto, auto_policy)
+        other_table.movePlayerTo(old_player)
         other_table.sendNewPlayerInformation(serial)
         if not other_table.update_recursion:
             other_table.scheduleAutoDeal()
@@ -985,19 +982,21 @@ class PokerTable:
         ))
         return packets
 
-    def movePlayerTo(self, serial, name, money, sit_out, bot, auto, auto_policy):
-        self.game.open()
-        player = self.game.addPlayer(serial, name=name)
+    def movePlayerTo(self, old_player):
+        was_open = self.game.is_open
+        if not was_open: self.game.open()
+        serial = old_player.serial
+        player = self.game.addPlayer(serial, name=old_player.name)
         player.setUserData(pokeravatar.DEFAULT_PLAYER_USER_DATA.copy())
-        player.money = money
+        player.money = old_player.money
         player.buy_in_payed = True
         self.game.autoBlindAnte(serial)
-        if not self.game.isBroke(serial) and not sit_out:
+        if not self.game.isBroke(serial) and not old_player.isSitOut():
             self.game.sit(serial)
-        player.bot = bot
-        player.auto = auto
-        player.auto_policy = auto_policy
-        self.game.close()
+        player.bot = old_player.isBot()
+        player.auto = old_player.isAuto()
+        player.auto_policy = old_player.auto_policy
+        if not was_open: self.game.close()
 
     def movePlayerFrom(self, serial, to_game_id):
         game = self.game
@@ -1009,7 +1008,6 @@ class PokerTable:
             seat = player.seat)
         )
         game.removePlayer(serial)
-        return player.isSitOut(), player.isBot(), player.isAuto(), player.auto_policy
 
     def possibleObserverLoggedIn(self, avatar, serial):
         if not self.game.getPlayer(serial):
