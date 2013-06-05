@@ -49,7 +49,7 @@ from pokerengine.pokergame import init_i18n as pokergame_init_i18n
 from pokernetwork import log as network_log
 log = network_log.get_child('pokeravatar')
 
-DEFAULT_PLAYER_USER_DATA = { 'ready': True }
+DEFAULT_PLAYER_USER_DATA = {'ready': True}
 
 class PokerAvatar:
 
@@ -633,8 +633,10 @@ class PokerAvatar:
                 # the packet is directly passed to the service, so that the service could 
                 # return the correct error codes. Otherwise the we would need to import 
                 # pokerservice to know all the reasons for the failure. 
-                error_code = self.service.tourneyRebuyRequest(packet)
-                if error_code != packet.OK:
+                error_code, game_id = self.service.tourneyRebuyRequest(packet)
+                if not error_code:
+                    self.service.getTable(game_id).update()
+                else:
                     self.sendPacketVerbose(PacketError(
                         serial = packet.serial,
                         other_type = PACKET_POKER_TOURNEY_REBUY,

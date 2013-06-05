@@ -820,7 +820,6 @@ class PokerTable:
                 self.game.sitOutNextTurn(serial)
                 self.game.autoPlayer(serial)
             else:
-                self.game.autoPlayerFoldNextTurn(serial)
                 self.game.autoPlayer(serial)
                 self.broadcast(PacketPokerAutoFold(serial = serial, game_id = self.game.id))
         self.update()
@@ -927,7 +926,7 @@ class PokerTable:
         money = self.game.serial2player[serial].money
         name = self.game.serial2player[serial].name
 
-        sit_out = self.movePlayerFrom(serial, to_game_id)
+        sit_out, bot, auto, auto_policy = self.movePlayerFrom(serial, to_game_id)
         for avatar in avatars:
             self.destroyPlayer(avatar, serial)
 
@@ -942,7 +941,7 @@ class PokerTable:
 
         for avatar in avatars:
             avatar.join(other_table, reason=reason)
-        other_table.movePlayerTo(serial, name, money, sit_out)
+        other_table.movePlayerTo(serial, name, money, sit_out, bot, auto, auto_policy)
         other_table.sendNewPlayerInformation(serial)
         if not other_table.update_recursion:
             other_table.scheduleAutoDeal()
@@ -986,16 +985,18 @@ class PokerTable:
         ))
         return packets
 
-    def movePlayerTo(self, serial, name, money, sit_out):
+    def movePlayerTo(self, serial, name, money, sit_out, bot, auto, auto_policy):
         self.game.open()
-        self.game.addPlayer(serial,name=name)
-        player = self.game.getPlayer(serial)
+        player = self.game.addPlayer(serial, name=name)
         player.setUserData(pokeravatar.DEFAULT_PLAYER_USER_DATA.copy())
         player.money = money
         player.buy_in_payed = True
         self.game.autoBlindAnte(serial)
         if not self.game.isBroke(serial) and not sit_out:
             self.game.sit(serial)
+        player.bot = bot
+        player.auto = auto
+        player.auto_policy = auto_policy
         self.game.close()
 
     def movePlayerFrom(self, serial, to_game_id):
@@ -1007,9 +1008,8 @@ class PokerTable:
             to_game_id = to_game_id,
             seat = player.seat)
         )
-        sit_out = game.isSitOut(serial)
         game.removePlayer(serial)
-        return sit_out
+        return player.isSitOut(), player.isBot(), player.isAuto(), player.auto_policy
 
     def possibleObserverLoggedIn(self, avatar, serial):
         if not self.game.getPlayer(serial):
@@ -1278,7 +1278,6 @@ class PokerTable:
                 self.game.sitOutNextTurn(serial)
                 self.game.autoPlayer(serial)
             else:
-                self.game.autoPlayerFoldNextTurn(serial)
                 self.game.autoPlayer(serial)
                 self.broadcast(PacketPokerAutoFold(serial = serial, game_id = self.game.id))
             self.broadcast(PacketPokerTimeoutNotice(serial = serial, game_id = self.game.id))

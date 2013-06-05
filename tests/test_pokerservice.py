@@ -3285,11 +3285,11 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
         self.service.tourneys[4] = self.Tournament(serial=4, reason=pokertournament.TOURNEY_REBUY_ERROR_MONEY)
         self.service.tourneys[5] = self.Tournament(serial=5, reason=pokertournament.TOURNEY_REBUY_ERROR_OTHER)
 
-        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=1)), PacketPokerTourneyRebuy.OK)
-        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=2)), PacketPokerTourneyRebuy.REBUY_LIMIT_EXEEDED)
-        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=3)), PacketPokerTourneyRebuy.REBUY_TIMEOUT_EXEEDED)
-        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=4)), PacketPokerTourneyRebuy.NOT_ENOUGH_MONEY)
-        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=5)), PacketPokerTourneyRebuy.OTHER_ERROR)
+        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=1))[0], None)
+        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=2))[0], PacketPokerTourneyRebuy.REBUY_LIMIT_EXEEDED)
+        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=3))[0], PacketPokerTourneyRebuy.REBUY_TIMEOUT_EXEEDED)
+        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=4))[0], PacketPokerTourneyRebuy.NOT_ENOUGH_MONEY)
+        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=5))[0], PacketPokerTourneyRebuy.OTHER_ERROR)
 
 
     def test_rebuy(self):

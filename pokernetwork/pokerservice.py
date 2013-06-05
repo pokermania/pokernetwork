@@ -1827,20 +1827,19 @@ class PokerService(service.Service):
         
         if tourney is None:
             self.log.warn("tourney_serial %d does not exist" % packet.tourney_serial)
-            return packet.OTHER_ERROR
+            return PacketPokerTourneyRebuy.OTHER_ERROR, None
 
         success, game_id, reason = tourney.rebuy(packet.serial)
-        self.tables[game_id].scheduleAutoDeal()
 
         if success:
-            return PacketPokerTourneyRebuy.OK
+            return None, game_id
         else:
             return {
                 TOURNEY_REBUY_ERROR_USER: PacketPokerTourneyRebuy.REBUY_LIMIT_EXEEDED,
                 TOURNEY_REBUY_ERROR_TIMEOUT: PacketPokerTourneyRebuy.REBUY_TIMEOUT_EXEEDED,
                 TOURNEY_REBUY_ERROR_MONEY: PacketPokerTourneyRebuy.NOT_ENOUGH_MONEY,
                 TOURNEY_REBUY_ERROR_OTHER: PacketPokerTourneyRebuy.OTHER_ERROR,
-            }.get(reason, PacketPokerTourneyRebuy.OTHER_ERROR)
+            }.get(reason, PacketPokerTourneyRebuy.OTHER_ERROR), game_id
 
 
     def createHand(self, game_id, tourney_serial=None):
