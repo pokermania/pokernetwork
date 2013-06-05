@@ -1192,7 +1192,6 @@ class PokerService(service.Service):
         try:
             from_table = self.getTable(from_game_id)
             from_table.movePlayer(
-                from_table.avatar_collection.get(serial),
                 serial,
                 to_game_id,
                 reason = PacketPokerTable.REASON_TOURNEY_MOVE

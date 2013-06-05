@@ -916,7 +916,7 @@ class PokerTable:
 
         return True
 
-    def movePlayer(self, avatars, serial, to_game_id, reason=""):
+    def movePlayer(self, serial, to_game_id, reason=""):
         """
         moves a player to another table/game. Usually called from pokertournament
 
@@ -925,7 +925,7 @@ class PokerTable:
 
         returns: nothing
         """
-        avatars = avatars[:]
+        avatars = self.avatar_collection.get(serial)[:]
         #
         # We are safe because called from within the server under
         # controlled circumstances.

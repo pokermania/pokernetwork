@@ -2049,7 +2049,7 @@ class PokerTableMoveTestCase(PokerTableTestCaseBase):
         def checkJoin(table, reason):
             self.table_joined = table
         player.join = checkJoin
-        self.table.movePlayer(self.table.avatar_collection.get(1), 1, self.table2.game.id, reason="MockMoveTest")
+        self.table.movePlayer(1, self.table2.game.id, reason="MockMoveTest")
         self.assertEquals(self.table_joined, self.table2)
         return expectPlayerDeferred
 
