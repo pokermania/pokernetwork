@@ -917,6 +917,14 @@ class PokerTable:
         return True
 
     def movePlayer(self, avatars, serial, to_game_id, reason=""):
+        """
+        moves a player to another table/game. Usually called from pokertournament
+
+        arguments:
+            reason:  will be passed to the avatar.join() function
+
+        returns: nothing
+        """
         avatars = avatars[:]
         #
         # We are safe because called from within the server under
@@ -983,6 +991,13 @@ class PokerTable:
         return packets
 
     def movePlayerTo(self, old_player):
+        """
+        adds a new player to this table.
+
+        should be called on the table where the player is moved towards.
+
+        returns: nothing
+        """
         was_open = self.game.is_open
         if not was_open: self.game.open()
         serial = old_player.serial
@@ -999,6 +1014,11 @@ class PokerTable:
         if not was_open: self.game.close()
 
     def movePlayerFrom(self, serial, to_game_id):
+        """
+        will remove the Player from the current game.
+
+        should be called on the table where the player is moved away.
+        """
         game = self.game
         player = game.getPlayer(serial)
         self.broadcast(PacketPokerTableMove(
