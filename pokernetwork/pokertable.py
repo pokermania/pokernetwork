@@ -57,27 +57,18 @@ class PokerAvatarCollection:
         """get a list of avatars with the given serial"""
         return self.serial2avatars.get(serial, [])
 
-    def set(self, serial, avatars):
-        self.log.debug("set %d %s", serial, avatars)
-        assert not serial in self.serial2avatars, \
-            "setting %d with %s would override %s" % (
-                serial,
-                str(avatars),
-                str(self.serial2avatars[serial])
-            )
-        self.serial2avatars[serial] = avatars[:]
-
-    def add(self, serial, avatar):
+    def add(self, avatar):
         """add an avatar to the collection"""
+        serial = avatar.getSerial()
         self.log.debug("add %d %s", serial, avatar)
         if serial not in self.serial2avatars:
             self.serial2avatars[serial] = []
         if avatar not in self.serial2avatars[serial]:
             self.serial2avatars[serial].append(avatar)
 
-    def remove(self, serial, avatar):
+    def remove(self, avatar):
         """remove an avatar from the collection"""
-        serial = avatar.serial
+        serial = avatar.getSerial()
         self.log.debug("remove %d %s", serial, avatar)
         assert avatar in self.serial2avatars[serial], "expected %d avatar in %s" % (
             serial,
@@ -822,12 +813,12 @@ class PokerTable:
                 avatar.getSerial(),
                 serial
             )
-        self.avatar_collection.remove(serial, avatar)
+        self.avatar_collection.remove(avatar)
         self.observers.append(avatar)
 
     def observer2seated(self, avatar):
         self.observers.remove(avatar)
-        self.avatar_collection.add(avatar.getSerial(), avatar)
+        self.avatar_collection.add(avatar)
 
     def quitPlayer(self, avatar, serial):
         if self.isSit(avatar):
@@ -1085,7 +1076,7 @@ class PokerTable:
         if not self.game.isSeated(avatar.getSerial()):
             self.observers.append(avatar)
         else:
-            self.avatar_collection.add(serial, avatar)
+            self.avatar_collection.add(avatar)
         #
         # If it turns out that the player is seated
         # at the table already, presumably because he
@@ -1205,7 +1196,7 @@ class PokerTable:
         if avatar in self.observers:
             self.observers.remove(avatar)
         else:
-            self.avatar_collection.remove(serial, avatar)
+            self.avatar_collection.remove(avatar)
         del avatar.tables[self.game.id]
 
         # despawn table if game is not running and nobody is connected

@@ -135,7 +135,7 @@ class PokerAvatar:
 
         if self.explain:
             self.explain.handleSerial(PacketSerial(serial = serial))
-        self.service.avatar_collection.add(serial, self)
+        self.service.avatar_collection.add(self)
         self.tourneyUpdates(serial)
         self.loginTableUpdates(serial)
     
@@ -153,12 +153,12 @@ class PokerAvatar:
 
         self.sendPacketVerbose(PacketSerial(serial = self.user.serial))
         if PacketPokerRoles.PLAY in self.roles:
-            self.service.avatar_collection.add(serial, self)
+            self.service.avatar_collection.add(self)
         self.log.debug("user %s/%d logged in", self.user.name, self.user.serial)
             
         if self.explain:
             self.explain.handleSerial(PacketSerial(serial = serial))
-        self.service.avatar_collection.add(serial, self)
+        self.service.avatar_collection.add(self)
             
         self.tourneyUpdates(serial)
         self.loginTableUpdates(serial)
@@ -203,7 +203,7 @@ class PokerAvatar:
     def logout(self):
         if self.user.serial:
             if PacketPokerRoles.PLAY in self.roles:
-                self.service.avatar_collection.remove(self.user.serial, self)
+                self.service.avatar_collection.remove(self)
             self.user.logout()
         
     def auth(self, packet):

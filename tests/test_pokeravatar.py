@@ -4304,8 +4304,12 @@ class PokerAvatarNoClientServerTestCase(unittest.TestCase):
         # pre-existing avatar
         #
         avatar_second = pokeravatar.PokerAvatar(service)
-        service.avatar_collection.add(serial, avatar_second)
-        
+        # It is only possible to be added to the collection if you
+        # logged in prevously, then you must have a serial
+        avatar_second.user.serial = serial
+        service.avatar_collection.add(avatar_second)
+        self.assertEquals([avatar_second], service.avatar_collection.get(serial))
+
         explain = PokerAvatarNoClientServerTestCase.MockExplain()
         saveExplain = avatar_first.explain
         avatar_first.explain = explain

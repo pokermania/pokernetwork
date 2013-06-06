@@ -459,7 +459,6 @@ class MockClient:
                 self.outfit = ""
         return MockPlayerInfo(self)
 
-
 # --------------------------------------------------------------------------------
 class MockClientBot(MockClient):
     def getName(self):
@@ -507,35 +506,49 @@ class MockClientWithExplain(MockClientWithRealJoin):
         return PokerAvatar.setMoney(self, table, amount)
     
 # --------------------------------------------------------------------------------
+class MockAvatar():
+    def __init__(self, serial):
+        self.serial = serial
+    def getSerial(self):
+        return self.serial
+
+
 class PokerAvatarCollectionTestCase(unittest.TestCase):
 
     def test01(self):
         avatar_collection = pokertable.PokerAvatarCollection(prefix = '')
         serial1 = 200
         serial2 = 400
+
         self.assertEquals([], avatar_collection.get(serial1))
-        avatar1 = "a1"
-        avatar2 = "a2"
-        avatars = [ avatar1, avatar2 ]
-        avatar_collection.set(serial1, avatars)
-        self.assertRaises(AssertionError, avatar_collection.set, serial1, avatars)
+    
+        avatar1a = MockAvatar(serial1)
+        avatar1b = MockAvatar(serial1)
+        avatar2 = MockAvatar(serial2)
+
+        avatars = [ avatar1a, avatar1b ]
+        for avatar in avatars:
+            avatar_collection.add(avatar)
+
         self.assertEquals(avatars, avatar_collection.get(serial1))
-        avatar_collection.remove(serial1, avatar1)
-        self.assertRaises(AssertionError, avatar_collection.remove, serial1, avatar1)
-        self.assertEquals([avatar2], avatar_collection.get(serial1))
-        avatar_collection.add(serial1, avatar2) # add twice is noop
-        self.assertEquals([[avatar2]], avatar_collection.values())
-        avatar_collection.add(serial1, avatar1)
-        self.assertEquals([avatar2, avatar1], avatar_collection.get(serial1))
-        avatar_collection.add(serial2, avatar1)
-        self.assertEquals([avatar1], avatar_collection.get(serial2))
-        avatar_collection.remove(serial2, avatar1)
+        avatar_collection.remove(avatar1a)
+        self.assertRaises(AssertionError, avatar_collection.remove, avatar1a)
+        self.assertEquals([avatar1b], avatar_collection.get(serial1))
+        avatar_collection.add(avatar1b) # add twice is noop
+        self.assertEquals([[avatar1b]], avatar_collection.values())
+        avatar_collection.add(avatar1a)
+
+        self.assertEquals([avatar1b, avatar1a], avatar_collection.get(serial1))
+        avatar_collection.add(avatar2)
+        self.assertEquals([avatar2], avatar_collection.get(serial2))
+        avatar_collection.remove(avatar2)
         self.assertEquals([], avatar_collection.get(serial2))
         
     def test02_isEmpty(self):
         avatar_collection = pokertable.PokerAvatarCollection(prefix = '')
         self.assertTrue(avatar_collection.isEmpty())
-        avatar_collection.set(100,['av1'])
+        avatar1 = MockAvatar(1)
+        avatar_collection.add(avatar1)
         self.assertFalse(avatar_collection.isEmpty())
 
 # --------------------------------------------------------------------------------

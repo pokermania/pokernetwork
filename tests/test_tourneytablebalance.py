@@ -219,7 +219,7 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         clients = {}
         for user_serial in self.user_serials:
             clients[user_serial] = ClientMockup(user_serial)
-            self.service.avatar_collection.add(user_serial, clients[user_serial])
+            self.service.avatar_collection.add(clients[user_serial])
             self.service.tourneyRegister(PacketPokerTourneyRegister(serial=user_serial, tourney_serial=tourney_serial))
 
         tourneys = self.service.tourneys.values()
@@ -264,7 +264,7 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         clients = {}
         for user_serial in self.user_serials:
             clients[user_serial] = ClientMockup(user_serial)
-            self.service.avatar_collection.add(user_serial, clients[user_serial])
+            self.service.avatar_collection.add(clients[user_serial])
             self.service.tourneyRegister(PacketPokerTourneyRegister(serial=user_serial, tourney_serial=tourney_serial))
 
         tourney = self.service.tourneys.values()[0]

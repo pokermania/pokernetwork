@@ -356,6 +356,12 @@ monitor_settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
     'mysql_command': config.test.mysql.command
 }
 
+class ClientMockupBase:
+    def __init__(self, serial):
+        self.serial == serial
+    def getSerial(self):
+        return self.serial
+
 class MonitorTestCase(unittest.TestCase):
 
     def destroyDb(self, *a):
@@ -1396,15 +1402,18 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
     def test01_auth_already_logged(self):
         class Client:
-            def __init__(self):
+            def __init__(self, serial):
                 self.roles = set(["role1"])
+                self.serial = serial
             def getName(self):
                 return "user1"
+            def getSerial(self):
+                return self.serial
 
         self.service.startService()
         self.service.poker_auth.auto_create_account = True
         (serial, _name, _privilege), _message = self.service.auth(PacketLogin.type,("user1", "password1"), set(["role1"]))
-        self.service.avatar_collection.add(serial, Client())
+        self.service.avatar_collection.add(Client(serial))
         (serial, name, _privilege), message = self.service.auth(PacketLogin.type,("user1", "password1"), set(["role1"]))
         self.assertEquals(None, message)
         self.assertEquals("user1", name)
@@ -1480,8 +1489,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         packet.count = 2
         self.assertEqual(PACKET_ERROR, self.service.cashOutCommit(packet).type)
 
-
-    class ClientMockup:
+    class ClientMockup(ClientMockupBase):
         def __init__(self, serial, testObject):
             self.via_satellite = 0
             self.serial = serial
@@ -1503,8 +1511,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.joinedTables.append(table)
             self.tables[table.game.id] = table
 
-        def getSerial(self):
-            return self.serial
 
         def sendPacket(self, packet):
             self.packets.append(packet)
@@ -1570,7 +1576,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         tourney = self.TourneyMockup()
         tourney.players = [2, self.user1_serial, 10]
         client = self.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(self.user1_serial, client)
+        self.service.avatar_collection.add(client)
         self.service.getTable = getTableMockup
         self.service.tourneyRemovePlayer(tourney, self.user1_serial)
         self.assertEquals(client.packet_end_tournament != None, True)
@@ -1592,7 +1598,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         tourney = self.TourneyMockup()
         tourney.rank = 2
         client = self.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(self.user1_serial, client)
+        self.service.avatar_collection.add(client)
         self.service.getTable = getTableMockup
         #TODO: needs a better fix
         self.service.tables.values()[0].game.serial2player[self.user1_serial] = 1
@@ -1874,7 +1880,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.createUsers()
 
         client1 = self.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(self.user1_serial, client1)
+        self.service.avatar_collection.add(client1)
         heads_up = [t for t in self.service.tourneys.values() if t.name=='sitngo2'][0]
         log_history.reset()
         self.service.tourneyRegister(PacketPokerTourneyRegister(
@@ -2313,8 +2319,10 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         self.assertTrue("not in user2tourney" in p.message)
     def test_coverDatabaseEvent(self):
         self.service = pokerservice.PokerService(self.settings)
-        class MockClient:
-            def __init__(mcSelf): mcSelf.errorPackets = []
+        class MockClient(ClientMockupBase):
+            def __init__(mcSelf, serial): 
+                mcSelf.errorPackets = []
+                mcSelf.serial = serial
             def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
         class MockPacket:
             def __init__(mpSelf):
@@ -2347,10 +2355,10 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
         oldDb = self.service.db
         self.service.db = MockDatabase(MockCursor)
                 
-        client = MockClient()
+        client = MockClient(423)
         tourney = MockTourney()
         self.service.avatar_collection = PokerAvatarCollection()
-        self.service.avatar_collection.add(423, client)
+        self.service.avatar_collection.add(client)
         self.service.tourneys = {865: tourney}
 
         # Not worth making this test cover dbevent, other tests do.  Here,
@@ -2409,7 +2417,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
         PokerServiceTestCaseBase.setUp(self, settingsFile)
         
-    class ClientMockup:
+    class ClientMockup(ClientMockupBase):
         def __init__(self, serial, testObject):
             self.serial = serial
             self.tableJoined = None
@@ -2431,7 +2439,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
         # One client (user1) has a Client logged in
         client1 = TourneyManagerTestCase.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(self.user1_serial, client1)
+        self.service.avatar_collection.add(client1)
         self.service.spawnTourney(schedule)
         log_history.reset()
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial, tourney_serial = tourney_serial))
@@ -2666,7 +2674,7 @@ class TourneyMovePlayerTestCase(PokerServiceTestCaseBase):
             self.avatar_collection = PokerAvatarCollection()
             self.testObj = testObject
 
-        def movePlayer(self, client, serial, to_game_id, reason = ""):
+        def movePlayer(self, serial, to_game_id, reason = ""):
             self.testObj.assertEquals(reason, PacketPokerTable.REASON_TOURNEY_MOVE)
 
     def test_ok(self):
@@ -3195,7 +3203,7 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
                 self.satellite_player_count = 10
                 self.satellite_registrations = []
 
-        class ClientMockup:
+        class ClientMockup(ClientMockupBase):
             def __init__(self, serial):
                 self.serial = serial
                 self.packets = []
@@ -3206,7 +3214,7 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
         client1 = ClientMockup(self.user1_serial)
-        self.service.avatar_collection.add(self.user1_serial, client1)
+        self.service.avatar_collection.add(client1)
         tournament = Tournament()
         tourney_serial, schedule = self.service.tourneys_schedule.items()[0]
         tournament.satellite_of = tourney_serial
@@ -3260,7 +3268,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
             else:
                 return True, 1, None
 
-    class ClientMockup:
+    class ClientMockup(ClientMockupBase):
         def __init__(self, serial, testObject):
             self.serial = serial
             self.packets = []
@@ -3277,7 +3285,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
         client1 = self.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(self.user1_serial, client1)
+        self.service.avatar_collection.add(client1)
 
         self.service.tourneys[1] = self.Tournament(serial=1, reason="")
         self.service.tourneys[2] = self.Tournament(serial=2, reason=pokertournament.TOURNEY_REBUY_ERROR_USER)
@@ -3342,7 +3350,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
     def setUp(self,settingsFile=settings_xml):
         PokerServiceTestCaseBase.setUp(self, settingsFile)
         
-    class ClientMockup:
+    class ClientMockup(ClientMockupBase):
         def __init__(self, serial, testObject):
             self.serial = serial
 #            self.tableJoined = None
@@ -3372,7 +3380,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
         client1 = self.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(self.user1_serial, client1)
+        self.service.avatar_collection.add(client1)
         tournament = Tournament()
         winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
@@ -3402,7 +3410,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
         client1 = self.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(self.user1_serial, client1)
+        self.service.avatar_collection.add(client1)
         tournament = Tournament()
         winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
@@ -3473,7 +3481,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
         client1 = self.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(self.user1_serial, client1)
+        self.service.avatar_collection.add(client1)
         tournament = Tournament()
         winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
@@ -3504,8 +3512,8 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         client1.tourneys = []
         client2 = self.ClientMockup(self.user2_serial, self)
         client2.tourneys = [1, 2]
-        self.service.avatar_collection.add(self.user1_serial, client1)
-        self.service.avatar_collection.add(self.user2_serial, client2)
+        self.service.avatar_collection.add(client1)
+        self.service.avatar_collection.add(client2)
         tournament = Tournament()
         winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
@@ -3550,7 +3558,7 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
         client1 = self.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(self.user1_serial, client1)
+        self.service.avatar_collection.add(client1)
         tournament = Tournament()
         winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
@@ -3590,9 +3598,9 @@ class TourneyFinishedTestCase(PokerServiceTestCaseBase):
         self.service.startService()
         self.createUsers()
         client1 = self.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(self.user1_serial, client1)
+        self.service.avatar_collection.add(client1)
         client2 = self.ClientMockup(self.user2_serial, self)
-        self.service.avatar_collection.add(self.user2_serial, client2)
+        self.service.avatar_collection.add(client2)
         tournament = Tournament()
         winner_serial = self.user1_serial
         tournament.winners = [ winner_serial ]
@@ -4663,6 +4671,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service = pokerservice.PokerService(self.settings)
         class MockClient:
             def sendPacketVerbose(mcSelf, pack): mcSelf.errorPacket = pack
+            def getSerial(mcSelf): return 42
         class MockPacket:
             def __init__(mpSelf):
                 mpSelf.serial = 42
@@ -4670,7 +4679,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
                 
         client = MockClient()
         self.service.avatar_collection = PokerAvatarCollection()
-        self.service.avatar_collection.add(42, client)
+        self.service.avatar_collection.add(client)
         self.service.tourneys = { }
 
         log_history.reset()
@@ -4732,6 +4741,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockClient:
             def __init__(mcSelf): mcSelf.errorPackets = []
             def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+            def getSerial(mcSelf): return 44
         class MockPacket:
             def __init__(mpSelf):
                 mpSelf.serial = 44
@@ -4745,7 +4755,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         client = MockClient()
         tourney = MockTourney()
         self.service.avatar_collection = PokerAvatarCollection()
-        self.service.avatar_collection.add(44, client)
+        self.service.avatar_collection.add(client)
         self.service.tourneys = { 99 : tourney }
 
         log_history.reset()
@@ -4767,6 +4777,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockClient:
             def __init__(mcSelf): mcSelf.errorPackets = []
             def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+            def getSerial(mcSelf): return 29
         class MockPacket:
             def __init__(mpSelf):
                 mpSelf.serial = 29
@@ -4783,7 +4794,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         client = MockClient()
         tourney = MockTourney()
         self.service.avatar_collection = PokerAvatarCollection()
-        self.service.avatar_collection.add(29, client)
+        self.service.avatar_collection.add(client)
         self.service.tourneys = { 123 : tourney }
 
         log_history.reset()
@@ -4805,6 +4816,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockClient:
             def __init__(mcSelf): mcSelf.errorPackets = []
             def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+            def getSerial(mcSelf): return 44
         class MockTourney:
             def __init__(self):
                 self.via_satellite = 1
@@ -4812,7 +4824,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         client = MockClient()
         tourney = MockTourney()
         self.service.avatar_collection = PokerAvatarCollection()
-        self.service.avatar_collection.add(44, client)
+        self.service.avatar_collection.add(client)
         self.service.tourneys = { 99 : tourney }
 
         self.failIf(self.service.tourneyRegister(PacketPokerTourneyRegister(serial = 44, tourney_serial = 99)))
@@ -4828,6 +4840,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockClient:
             def __init__(mcSelf): mcSelf.errorPackets = []
             def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+            def getSerial(mcSelf): return 194
         class MockPacket:
             def __init__(mpSelf):
                 mpSelf.serial = 194
@@ -4865,7 +4878,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         client = MockClient()
         tourney = MockTourney()
         self.service.avatar_collection = PokerAvatarCollection()
-        self.service.avatar_collection.add(194, client)
+        self.service.avatar_collection.add(client)
         self.service.tourneys = { 526 : tourney }
 
         log_history.reset()
@@ -4894,6 +4907,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockClient:
             def __init__(mcSelf): mcSelf.errorPackets = []
             def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+            def getSerial(mcSelf): return 194
         class MockPacket:
             def __init__(mpSelf):
                 mpSelf.serial = 194
@@ -4932,7 +4946,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         client = MockClient()
         tourney = MockTourney()
         self.service.avatar_collection = PokerAvatarCollection()
-        self.service.avatar_collection.add(194, client)
+        self.service.avatar_collection.add(client)
         self.service.tourneys = { 526 : tourney }
 
         log_history.reset()
@@ -4960,6 +4974,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockClient:
             def __init__(mcSelf): mcSelf.errorPackets = []
             def sendPacketVerbose(mcSelf, pack): mcSelf.errorPackets.append(pack)
+            def getSerial(mcSelf): return 423
         class MockPacket:
             def __init__(mpSelf):
                 mpSelf.serial = 423
@@ -4996,7 +5011,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         client = MockClient()
         tourney = MockTourney()
         self.service.avatar_collection = PokerAvatarCollection()
-        self.service.avatar_collection.add(423, client)
+        self.service.avatar_collection.add(client)
         self.service.tourneys = {865: tourney}
 
         # Not worth making this test cover dbevent, other tests do.  Here,
