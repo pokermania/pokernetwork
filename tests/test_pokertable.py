@@ -1630,10 +1630,15 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         a = self.createPlayer(1)
         a.getSerial = lambda: 0
         self.message = ""
-        def error(message):
-            self.message = message
-        self.table.error = error
-        self.table.seated2observer(a, 1)
+        log_history.reset()
+        exception_occurred = False
+        try:
+            self.table.seated2observer(a, 1)
+        except KeyError:
+            # We want a exception if there is an inconsitency
+            exception_occurred = True
+
+        self.assertTrue(exception_occurred)
         self.assertTrue(log_history.search("pokertable.seated2observer: avatar.user.serial (0) doesn't match serial argument (1)"))
     
 # -------------------------------------------------------------------
