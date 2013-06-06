@@ -54,6 +54,7 @@ class PokerAvatarCollection:
         self.prefix = prefix
 
     def get(self, serial):
+        """get a list of avatars with the given serial"""
         return self.serial2avatars.get(serial, [])
 
     def set(self, serial, avatars):
@@ -67,6 +68,7 @@ class PokerAvatarCollection:
         self.serial2avatars[serial] = avatars[:]
 
     def add(self, serial, avatar):
+        """add an avatar to the collection"""
         self.log.debug("add %d %s", serial, avatar)
         if serial not in self.serial2avatars:
             self.serial2avatars[serial] = []
@@ -74,6 +76,8 @@ class PokerAvatarCollection:
             self.serial2avatars[serial].append(avatar)
 
     def remove(self, serial, avatar):
+        """remove an avatar from the collection"""
+        serial = avatar.serial
         self.log.debug("remove %d %s", serial, avatar)
         assert avatar in self.serial2avatars[serial], "expected %d avatar in %s" % (
             serial,
@@ -84,12 +88,23 @@ class PokerAvatarCollection:
             del self.serial2avatars[serial]
 
     def values(self):
+        """
+        returns a list of avatarlists.
+
+        The avatarlists are grouped by their serials.
+        """
         return self.serial2avatars.values()
 
     def itervalues(self):
+        """
+        returns an iterator of avatarlists
+
+        The avatarlists are grouped by their serials.
+        """
         return self.serial2avatars.itervalues()
 
     def isEmpty(self):
+        """returns True if the the collection is empty"""
         return not bool(self.serial2avatars)
 
 
