@@ -1043,6 +1043,14 @@ class PokerTable:
         return True
 
     def joinPlayer(self, avatar, serial, reason=""):
+        """
+        will connect a player with a table
+
+        in case he is allready connected, this function will do nothing but
+        tell the avatar to send all packets that will be needed to resume a session.
+
+        otherwise he will be added to the observers or the avatar_collection first.
+        """
         #
         # Nothing to be done except sending all packets.
         # Useful in disconnected mode to resume a session.
