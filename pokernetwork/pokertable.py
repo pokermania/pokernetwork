@@ -1107,6 +1107,7 @@ class PokerTable:
         return True
 
     def seatPlayer(self, avatar, serial, seat):
+        """moves a player from the observers to a given seat on the table"""
         if not self.isJoined(avatar):
             self.log.error("player %d can't seat before joining", serial, refs=[('User', serial, int)])
             return False
