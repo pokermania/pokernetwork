@@ -2813,36 +2813,21 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
 
         table = self.service.getTable(gameId)
-        def forceFalse(self, amount, reason = ""):
-            return False
         originalJoin = table.joinPlayer
-        table.joinPlayer = forceFalse
+        table.joinPlayer = lambda self, amount, reason = "": False
 
         avatar.queuePackets()
-        avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(),
-                                                      game_id = gameId))
+        avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(), game_id = gameId))
         found = 0
         for packet in avatar.resetPacketsQueue():
-            # Note: the behavior below, tested in the "if", of returning
-            # an empty PacketTable() on error is deprecated, per
-            # documentation in pokerpackets.py.  This functionality is
-            # left in and supported for old clients.  The Error packet (in
-            # the elif below) is the proper way to test for an error
-            # return on PacketPokerTableJoin()
-            if packet.type == PACKET_POKER_TABLE:
-                found += 1
-                self.assertEquals(packet.id, 0)
-                self.assertEquals(packet.name, "noname")
-                self.assertEquals(packet.reason, PacketPokerTable.REASON_TABLE_JOIN)
-            elif packet.type == PACKET_POKER_ERROR:
+            if packet.type == PACKET_POKER_ERROR:
                 found += 1
                 self.assertEquals(packet.serial, client.getSerial())
                 self.assertEquals(packet.game_id, 0)
                 self.assertEquals(packet.other_type, PACKET_POKER_TABLE_JOIN)
                 self.assertEquals(packet.code, PacketPokerTableJoin.GENERAL_FAILURE)
-                self.failUnless(len(packet.message) > 0,
-                                "some message should be included")
-        self.assertEquals(found, 2)
+                self.failUnless(len(packet.message) > 0, "some message should be included")
+        self.assertEquals(found, 1)
 
         return (client, packet)
     # ------------------------------------------------------------------------
