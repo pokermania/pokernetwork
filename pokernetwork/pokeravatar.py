@@ -969,8 +969,8 @@ class PokerAvatar:
     # PacketTablePicker() do.  A secondary benefit is that it makes that
     # giant if statement in handlePacketLogic() above a bit smaller.
     # -------------------------------------------------------------------------
-    def performPacketPokerTableJoin(self, packet, table = None,
-                                    deprecatedEmptyTableBehavior = True,
+    def performPacketPokerTableJoin(
+                                    self, packet, table = None,
                                     requestorPacketType = PACKET_POKER_TABLE_JOIN,
                                     reason = PacketPokerTable.REASON_TABLE_JOIN):
         """Perform the operations that must occur when a
@@ -981,8 +981,6 @@ class PokerAvatar:
         if table:
             self.removeGamePacketsQueue(packet.game_id)
             if not table.joinPlayer(self, self.getSerial(), reason = reason):
-                if deprecatedEmptyTableBehavior:
-                    self.sendPacketVerbose(PacketPokerTable(reason = reason))
                 self.sendPacketVerbose(PacketPokerError(
                     code = PacketPokerTableJoin.GENERAL_FAILURE,
                     message = "Unable to join table for unknown reason",
