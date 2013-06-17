@@ -1259,6 +1259,11 @@ class PokerTable:
             return False
 
         amount = self.factory.buyInPlayer(avatar.getSerial(), self.game.id, self.currency_serial, max(amount, self.game.buyIn()))
+        avatar.sendPacketVerbose(PacketPokerBuyIn(
+                game_id = self.game.id,
+                serial = avatar.getSerial(),
+                amount = amount,
+            ))
         return avatar.setMoney(self, amount)
 
     def rebuyPlayerRequest(self, serial, amount):
