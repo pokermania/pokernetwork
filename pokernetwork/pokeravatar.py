@@ -173,7 +173,7 @@ class PokerAvatar:
         # seated at a known table.
         #
         for table in self.tables.values():
-            if table.possibleObserverLoggedIn(self, serial):
+            if table.possibleObserverLoggedIn(self):
                 game = table.game
                 self.sendPacketVerbose(PacketPokerPlayerCards(
                     game_id = game.id,
@@ -784,12 +784,6 @@ class PokerAvatar:
                     self.sendPacketVerbose(PacketPokerStart(game_id = game.id))
                 elif self.service.shutting_down:
                     self.log.inform("server shutting down")
-                elif table.owner != 0:
-                    if self.getSerial() != table.owner:
-                        self.log.inform("player %d tried to start a new game but is not the owner of the table", self.getSerial())
-                        self.sendPacketVerbose(PacketPokerStart(game_id = game.id))
-                    else:
-                        table.beginTurn()
                 else:
                     self.log.inform("player %d tried to start a new game but is not the owner of the table", self.getSerial())
 
@@ -808,14 +802,14 @@ class PokerAvatar:
                     self.log.inform("attempt to rebuy for player %d by player %d", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_CHAT:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    table.chatPlayer(self, packet.serial, packet.message[:128])
+                if self.getSerial() == packet.serial:
+                    table.chatPlayer(self, packet.message[:128])
                 else:
                     self.log.inform("attempt to chat for player %d by player %d", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_PLAYER_LEAVE:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    table.leavePlayer(self, packet.serial)
+                if self.getSerial() == packet.serial:
+                    table.leavePlayer(self)
                 else:
                     self.log.inform("attempt to leave for player %d by player %d", packet.serial, self.getSerial())
 
@@ -823,61 +817,61 @@ class PokerAvatar:
                 self.performPacketPokerSit(packet, table)
                 
             elif packet.type == PACKET_POKER_SIT_OUT:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    table.sitOutPlayer(self, packet.serial)
+                if self.getSerial() == packet.serial:
+                    table.sitOutPlayer(self)
                 else:
                     self.log.inform("attempt to sit out for player %d by player %d", packet.serial, self.getSerial())
                 
             elif packet.type == PACKET_POKER_AUTO_BLIND_ANTE:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    table.autoBlindAnte(self, packet.serial, True)
+                if self.getSerial() == packet.serial:
+                    table.autoBlindAnte(self, True)
                 else:
                     self.log.inform("attempt to set auto blind/ante for player %d by player %d", packet.serial, self.getSerial())
                 
             elif packet.type == PACKET_POKER_NOAUTO_BLIND_ANTE:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    table.autoBlindAnte(self, packet.serial, False)
+                if self.getSerial() == packet.serial:
+                    table.autoBlindAnte(self, False)
                 else:
                     self.log.inform("attempt to set auto blind/ante for player %d by player %d",packet.serial, self.getSerial())
             
             elif packet.type == PACKET_POKER_AUTO_MUCK:
-                if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.getPlayer(packet.serial):
+                if (self.getSerial() == packet.serial) and game.getPlayer(packet.serial):
                     game.autoMuck(packet.serial, packet.auto_muck)
                 else:
                     self.log.inform("attempt to set auto muck for player %d by player %d, or player is not in game", packet.serial, self.getSerial())
                 
             elif packet.type == PACKET_POKER_MUCK_ACCEPT:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    table.muckAccept(self, packet.serial)
+                if self.getSerial() == packet.serial:
+                    table.muckAccept(self)
                 else:
                     self.log.inform("attempt to accept muck for player %d by player %d", packet.serial, self.getSerial())
                     
             elif packet.type == PACKET_POKER_MUCK_DENY:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-                    table.muckDeny(self, packet.serial)
+                if self.getSerial() == packet.serial:
+                    table.muckDeny(self)
                 else:
                     self.log.inform("attempt to deny muck for player %d by player %d", packet.serial, self.getSerial())
                 
             elif packet.type == PACKET_POKER_AUTO_PLAY:
-                if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.getPlayer(packet.serial):
+                if (self.getSerial() == packet.serial) and game.getPlayer(packet.serial):
                     table.game.autoPlay(packet.serial, packet.auto_play)
                 else:
                     self.log.inform("attempt to set auto play for player %d by player %d, or player is not in game", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_BLIND:
-                if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.isPlaying(packet.serial):
+                if (self.getSerial() == packet.serial) and game.isPlaying(packet.serial):
                     game.blind(packet.serial)
                 else:
                     self.log.inform("attempt to pay the blind of player %d by player %d, or player is not not playing", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_WAIT_BIG_BLIND:
-                if self.getSerial() == packet.serial or self.getSerial() == table.owner:
+                if self.getSerial() == packet.serial:
                     game.waitBigBlind(packet.serial)
                 else:
                     self.log.inform("attempt to wait for big blind of player %d by player %d", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_ANTE:
-                if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.isPlaying(packet.serial):
+                if (self.getSerial() == packet.serial) and game.isPlaying(packet.serial):
                     game.ante(packet.serial)
                 else:
                     self.log.inform("attempt to pay the ante of player %d by player %d, or player is not not playing", packet.serial, self.getSerial())
@@ -886,31 +880,31 @@ class PokerAvatar:
                 table.broadcast(packet)
                 
             elif packet.type == PACKET_POKER_FOLD:
-                if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.isPlaying(packet.serial):
+                if (self.getSerial() == packet.serial) and game.isPlaying(packet.serial):
                     game.fold(packet.serial)
                 else:
                     self.log.inform("attempt to fold for player %d by player %d, or player is not not playing", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_CALL:
-                if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.isPlaying(packet.serial):
+                if (self.getSerial() == packet.serial) and game.isPlaying(packet.serial):
                     game.call(packet.serial)
                 else:
                     self.log.inform("attempt to call for player %d by player %d, or player is not not playing", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_RAISE:
-                if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.isPlaying(packet.serial):
+                if (self.getSerial() == packet.serial) and game.isPlaying(packet.serial):
                     game.callNraise(packet.serial, packet.amount)
                 else:
                     self.log.inform("attempt to raise for player %d by player %d, or player is not not playing", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_CHECK:
-                if (self.getSerial() == packet.serial or self.getSerial() == table.owner) and game.isPlaying(packet.serial):
+                if (self.getSerial() == packet.serial) and game.isPlaying(packet.serial):
                     game.check(packet.serial)
                 else:
                     self.log.inform("attempt to check for player %d by player %d, or player is not not playing", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_TABLE_QUIT:
-                table.quitPlayer(self, self.getSerial())
+                table.quitPlayer(self)
 
             table.update()
     
@@ -943,12 +937,12 @@ class PokerAvatar:
         
         elif packet.type == PACKET_QUIT:
             for table in self.tables.values():
-                table.quitPlayer(self, self.getSerial())
+                table.quitPlayer(self)
 
         elif packet.type == PACKET_LOGOUT:
             if self.isLogged():
                 for table in self.tables.values():
-                    table.quitPlayer(self, self.getSerial())
+                    table.quitPlayer(self)
                 self.logout()
             else:
                 self.sendPacketVerbose(PacketError(
@@ -980,7 +974,7 @@ class PokerAvatar:
             table = self.service.getTable(packet.game_id)
         if table:
             self.removeGamePacketsQueue(packet.game_id)
-            if not table.joinPlayer(self, self.getSerial(), reason = reason):
+            if not table.joinPlayer(self, reason=reason):
                 self.sendPacketVerbose(PacketPokerError(
                     code = PacketPokerTableJoin.GENERAL_FAILURE,
                     message = "Unable to join table for unknown reason",
@@ -1007,8 +1001,8 @@ class PokerAvatar:
                 other_type = PACKET_POKER_SEAT
             ))
             return False
-        elif self.getSerial() == packet.serial or self.getSerial() == table.owner:
-            if not table.seatPlayer(self, packet.serial, packet.seat):
+        elif self.getSerial() == packet.serial:
+            if not table.seatPlayer(self, packet.seat):
                 packet.seat = -1
             else:
                 packet.seat = game.getPlayer(packet.serial).seat
@@ -1036,8 +1030,8 @@ class PokerAvatar:
             return False
     # -------------------------------------------------------------------------
     def performPacketPokerSit(self, packet, table):
-        if self.getSerial() == packet.serial or self.getSerial() == table.owner:
-            table.sitPlayer(self, packet.serial)
+        if self.getSerial() == packet.serial:
+            table.sitPlayer(self)
             return True
         else:
             self.log.inform("attempt to sit back for player %d by player %d", packet.serial, self.getSerial())
@@ -1357,7 +1351,7 @@ class PokerAvatar:
         self.log.debug("connection lost for %s/%d", self.getName(), self.getSerial())
         self.blockLongPollDeferred()
         for table in self.tables.values():
-            table.disconnectPlayer(self, self.getSerial())
+            table.disconnectPlayer(self)
         self.logout()
         for game_id, restclient in self.game_id2rest_client.iteritems():
             restclient.cancel()
@@ -1396,33 +1390,6 @@ class PokerAvatar:
             return True
         else:
             return False
-
-    def sitPlayer(self, table, serial):
-        game = table.game
-        #
-        # It does not harm to sit if already sit and it
-        # resets the autoPlayer/wait_for flag.
-        #
-        if game.sit(serial) or game.isSit(serial):
-            table.broadcast(PacketPokerSit(
-                game_id = game.id,
-                serial = serial
-            ))
-
-    def sitOutPlayer(self, table, serial):
-        game = table.game
-        if table.isOpen():
-            if game.sitOutNextTurn(serial):
-                table.broadcast(PacketPokerSitOut(
-                    game_id = game.id,
-                    serial = serial
-                ))
-        else:
-            game.autoPlayer(serial)
-            table.broadcast(PacketPokerAutoFold(
-                game_id = game.id,
-                serial = serial
-            ))
 
     def autoBlindAnte(self, table, serial, auto):
         game = table.game
@@ -1477,7 +1444,7 @@ class PokerAvatar:
             PacketSetOption.AUTO_MUCK: (
                 ("AUTO_MUCK_WIN", "AUTO_MUCK_WIN", "AUTO_MUCK_WIN"),
                 table.game.autoMuck, (serial, value)),
-            PacketSetOption.AUTO_BLIND_ANTE: (("OFF", "ON"), table.autoBlindAnte, (self, serial, bool(value))),
+            PacketSetOption.AUTO_BLIND_ANTE: (("OFF", "ON"), table.autoBlindAnte, (self, bool(value))),
 
         }
 

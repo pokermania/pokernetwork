@@ -2430,69 +2430,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         log_history.reset()
         avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
         self.assertEquals(log_history.search('tried to start a new game but is not the owner of the table'), True)
-                          
-        # Coverage for the table owner is the player
-        avatar.service.shutting_down = False
-
-        table = self.service.getTable(gameId)
-        table.owner = client.getSerial()
-
-        avatar.resetPacketsQueue()
-        avatar.queuePackets()
-        log_history.reset()
-        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
-        found = 0
-        for packet in avatar.resetPacketsQueue():
-            self.assertEquals(packet.game_id, gameId)
-            if packet.type == PACKET_POKER_PLAYER_CHIPS:
-                # expect 2
-                found += 1
-            elif packet.type == PACKET_POKER_DEALER:
-                # expect 1
-                found += 1
-                self.assertEquals(packet.previous_dealer, -1)
-                self.assertEquals(packet.dealer, 1)
-            elif packet.type == PACKET_POKER_IN_GAME:
-                # expect 1
-                found += 1
-            elif packet.type == PACKET_POKER_POSITION:
-                # expect 4
-                found += 1
-            elif packet.type == PACKET_POKER_BLIND:
-                # expect 2 
-                found += 1
-            elif packet.type == PACKET_POKER_PLAYER_CARDS:
-                # expect 2 
-                found += 1
-            elif packet.type == PACKET_POKER_STATE:
-                # expect 1
-                found += 1
-            elif packet.type == PACKET_POKER_START:
-                # expect 1
-                found += 1
-            elif packet.type == PACKET_POKER_BET_LIMITS:
-                # expect 1
-                found += 1
-            else:
-                self.fail("Unexpected packet" + packet.__str__())
-
-        self.assertEquals(found, 15)
-        # This game start should "succeed" (but later fail due to game running) because 
-        #  the owner of the table is our player.
-        self.assertEqual(log_history.search("tried to start a new game while in game"), False)
-        self.assertEqual(log_history.search("No autodeal"), True)
-
-        # Following is coverage for when someone else owns the table
-
-        avatar.service.shutting_down = False
-
-        table = self.service.getTable(gameId)
-        table.owner = client.getSerial() - 3
-        avatar.queuePackets()
-        log_history.reset()
-        avatar.handlePacketLogic(PacketPokerStart(serial = client.getSerial(), game_id = gameId))
-        self.assertEqual(log_history.search("tried to start a new game while in game"), True)
-        self.assertEqual(log_history.search("No autodeal"), True)
     # ------------------------------------------------------------------------
     def test47_startPackets(self):
         def client(gameId):
@@ -2520,7 +2457,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
         table = self.service.getTable(gameId)
         seatNumber = id + 1
-        def forceFalse(client, serial, seat):
+        def forceFalse(client, seat):
             return False
         originalFunction = table.seatPlayer
         table.seatPlayer = forceFalse
@@ -2814,7 +2751,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
 
         table = self.service.getTable(gameId)
         originalJoin = table.joinPlayer
-        table.joinPlayer = lambda self, amount, reason = "": False
+        table.joinPlayer = lambda avatar, reason="": False
 
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerTableJoin(serial = client.getSerial(), game_id = gameId))

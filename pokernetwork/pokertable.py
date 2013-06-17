@@ -537,7 +537,7 @@ class PokerTable:
                 for serial, seat in quitters:  # @UnusedVariable
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     for avatar in self.avatar_collection.get(serial)[:]:
-                        self.seated2observer(avatar, serial)
+                        self.seated2observer(avatar)
 
     def cashGame_kickPlayerSittingOutTooLong(self, history):
         if self.tourney: return
@@ -773,7 +773,7 @@ class PokerTable:
         if self.isJoined(avatar):
             avatar.join(self, reason=PacketPokerTable.REASON_HAND_REPLAY)
         else:
-            self.joinPlayer(avatar, avatar.getSerial(), reason = PacketPokerTable.REASON_HAND_REPLAY)
+            self.joinPlayer(avatar, reason=PacketPokerTable.REASON_HAND_REPLAY)
         serial = avatar.getSerial()
         cache = createCache()
         packets, previous_dealer, errors = history2packets(history, self.game.id, -1, cache) #@UnusedVariable
@@ -806,13 +806,7 @@ class PokerTable:
     def isStationary(self):
         return self.game.isEndOrNull() and 'dealTimeout' not in self.timer_info
 
-    def seated2observer(self, avatar, serial):
-        if avatar.getSerial() != serial:
-            self.log.warn("pokertable.seated2observer: avatar.user.serial (%d) "
-                "doesn't match serial argument (%d)",
-                avatar.getSerial(),
-                serial
-            )
+    def seated2observer(self, avatar):
         self.avatar_collection.remove(avatar)
         self.observers.append(avatar)
 
@@ -820,7 +814,8 @@ class PokerTable:
         self.observers.remove(avatar)
         self.avatar_collection.add(avatar)
 
-    def quitPlayer(self, avatar, serial):
+    def quitPlayer(self, avatar):
+        serial = avatar.getSerial()
         if self.isSit(avatar):
             if self.isOpen():
                 self.game.sitOutNextTurn(serial)
@@ -834,7 +829,7 @@ class PokerTable:
             # If not on a closed table, stand up
             if self.isOpen():
                 if avatar.removePlayer(self, serial):
-                    self.seated2observer(avatar, serial)
+                    self.seated2observer(avatar)
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
                 else:
@@ -846,7 +841,7 @@ class PokerTable:
         if self.isJoined(avatar):
             #
             # The player is no longer connected to the table
-            self.destroyPlayer(avatar, serial)
+            self.destroyPlayer(avatar)
 
         return True
 
@@ -865,7 +860,7 @@ class PokerTable:
         self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
 
         for avatar in self.avatar_collection.get(serial)[:]:
-            self.seated2observer(avatar, serial)
+            self.seated2observer(avatar)
 
         self.broadcast(PacketPokerPlayerLeave(
             game_id = self.game.id,
@@ -873,14 +868,15 @@ class PokerTable:
             seat = seat
         ))
 
-    def disconnectPlayer(self, avatar, serial):
+    def disconnectPlayer(self, avatar):
+        serial = avatar.getSerial()
         if self.isSeated(avatar):
             self.game.getPlayer(serial).getUserData()['ready'] = True
             if self.isOpen():
                 #
                 # If not on a closed table, stand up.
                 if avatar.removePlayer(self, serial):
-                    self.seated2observer(avatar, serial)
+                    self.seated2observer(avatar)
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
                 else:
@@ -889,11 +885,12 @@ class PokerTable:
         if self.isJoined(avatar):
             #
             # The player is no longer connected to the table
-            self.destroyPlayer(avatar, serial)
+            self.destroyPlayer(avatar)
 
         return True
 
-    def leavePlayer(self, avatar, serial):
+    def leavePlayer(self, avatar):
+        serial = avatar.getSerial()
         if self.isSit(avatar):
             if self.isOpen():
                 self.game.sitOutNextTurn(serial)
@@ -904,7 +901,7 @@ class PokerTable:
             # If not on a closed table, stand up
             if self.isOpen():
                 if avatar.removePlayer(self, serial):
-                    self.seated2observer(avatar, serial)
+                    self.seated2observer(avatar)
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
                 else:
@@ -939,7 +936,7 @@ class PokerTable:
         old_player = self.game.getPlayer(serial).copy()
         self.movePlayerFrom(serial, to_game_id)
         for avatar in avatars:
-            self.destroyPlayer(avatar, serial)
+            self.destroyPlayer(avatar)
 
         other_table = self.factory.getTable(to_game_id)
         for avatar in avatars:
@@ -1035,14 +1032,14 @@ class PokerTable:
         )
         game.removePlayer(serial)
 
-    def possibleObserverLoggedIn(self, avatar, serial):
-        if not self.game.getPlayer(serial):
+    def possibleObserverLoggedIn(self, avatar):
+        if not self.game.getPlayer(avatar.getSerial()):
             return False
         self.observer2seated(avatar)
-        self.game.comeBack(serial)
+        self.game.comeBack(avatar.getSerial())
         return True
 
-    def joinPlayer(self, avatar, serial, reason=""):
+    def joinPlayer(self, avatar, reason=""):
         """
         will connect a player with a table
 
@@ -1051,6 +1048,7 @@ class PokerTable:
 
         otherwise he will be added to the observers or the avatar_collection first.
         """
+        serial = avatar.getSerial()
         #
         # Nothing to be done except sending all packets.
         # Useful in disconnected mode to resume a session.
@@ -1102,12 +1100,13 @@ class PokerTable:
             # it does not hurt to re-sit the avatar
             # but is needed for other clients to notice
             # the arrival
-            avatar.sitPlayer(self, serial)
+            self._sitPlayer(serial)
 
         return True
 
-    def seatPlayer(self, avatar, serial, seat):
+    def seatPlayer(self, avatar, seat):
         """moves a player from the observers to a given seat on the table"""
+        serial = avatar.getSerial()
         if not self.isJoined(avatar):
             self.log.error("player %d can't seat before joining", serial, refs=[('User', serial, int)])
             return False
@@ -1136,7 +1135,8 @@ class PokerTable:
         self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
         return True
 
-    def sitOutPlayer(self, avatar, serial):
+    def sitOutPlayer(self, avatar):
+        serial = avatar.getSerial()
         if not self.isSeated(avatar):
             self.log.warn("player %d can't sit out before getting a seat", serial, refs=[('User', serial, int)])
             return False
@@ -1144,10 +1144,25 @@ class PokerTable:
         # silently do nothing if already sit out
         if not self.isSit(avatar):
             return True
-        avatar.sitOutPlayer(self, serial)
+
+        game = self.game
+        if self.isOpen():
+            if game.sitOutNextTurn(serial):
+                self.broadcast(PacketPokerSitOut(
+                    game_id = game.id,
+                    serial = serial
+                ))
+        else:
+            game.autoPlayer(serial)
+            self.broadcast(PacketPokerAutoFold(
+                game_id = game.id,
+                serial = serial
+            ))
+
         return True
 
-    def chatPlayer(self, avatar, serial, message):
+    def chatPlayer(self, avatar, message):
+        serial = avatar.getSerial()
         if not self.isJoined(avatar):
             self.log.error("player %d can't chat before joining", serial, refs=[('User', serial, int)])
             return False
@@ -1164,11 +1179,11 @@ class PokerTable:
             if self.factory.chat_filter \
             else message
 
-    def autoBlindAnte(self, avatar, serial, auto):
+    def autoBlindAnte(self, avatar, auto):
         if not self.isSeated(avatar):
-            self.log.warn("player %d can't set auto blind/ante before getting a seat", serial, refs=[('User', serial, int)])
+            self.log.warn("player %d can't set auto blind/ante before getting a seat", avatar.getSerial(), refs=[('User', avatar.getSerial(), int)])
             return False
-        return avatar.autoBlindAnte(self, serial, auto)
+        return avatar.autoBlindAnte(self, avatar.getSerial(), auto)
 
     def autoRefill(self, serial, auto):
         if auto not in range(4):
@@ -1182,25 +1197,38 @@ class PokerTable:
         self.game.serial2player[serial].auto_rebuy = auto
         return True
 
-    def muckAccept(self, avatar, serial):
+    def muckAccept(self, avatar):
         if not self.isSeated(avatar):
-            self.log.warn("player %d can't accept muck before getting a seat", serial, refs=[('User', serial, int)])
+            self.log.warn("player %d can't accept muck before getting a seat", avatar.getSerial(), refs=[('User', avatar.getSerial(), int)])
             return False
-        return self.game.muck(serial, want_to_muck=True)
+        return self.game.muck(avatar.getSerial(), want_to_muck=True)
 
-    def muckDeny(self, avatar, serial):
+    def muckDeny(self, avatar):
         if not self.isSeated(avatar):
-            self.log.warn("player %d can't deny muck before getting a seat", serial)
+            self.log.warn("player %d can't deny muck before getting a seat", avatar.getSerial(), refs=[('User', avatar.getSerial(), int)])
             return False
-        return self.game.muck(serial, want_to_muck=False)
+        return self.game.muck(avatar.getSerial(), want_to_muck=False)
 
-    def sitPlayer(self, avatar, serial):
+    def sitPlayer(self, avatar):
         if not self.isSeated(avatar):
-            self.log.warn("player %d can't sit before getting a seat", serial)
+            self.log.warn("player %d can't sit before getting a seat", avatar.getSerial())
             return False
-        return avatar.sitPlayer(self, serial)
+        return self._sitPlayer(avatar.getSerial())
 
-    def destroyPlayer(self, avatar, serial):
+    def _sitPlayer(self, serial):
+        game = self.game
+        #
+        # It does not harm to sit if already sit and it
+        # resets the autoPlayer/wait_for flag.
+        #
+        if game.sit(serial) or game.isSit(serial):
+            self.broadcast(PacketPokerSit(
+                game_id = game.id,
+                serial = serial
+            ))
+
+    def destroyPlayer(self, avatar):
+        serial = avatar.getSerial()
         self.factory.joinedCountDecrease()
         if avatar in self.observers:
             self.observers.remove(avatar)

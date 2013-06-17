@@ -1905,7 +1905,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         d = defer.Deferred()
         def joinAll(status):
             table = self.service.tables.values()[0]
-            table.joinPlayer(client1, client1.getSerial())
+            table.joinPlayer(client1)
             return status
         
         def checkTourneys(status):

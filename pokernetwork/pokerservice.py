@@ -592,7 +592,7 @@ class PokerService(service.Service):
                     # it, since it is impossible establish new connections while
                     # shutting down
                     if avatar._queue_packets:
-                        table.quitPlayer(avatar,serial)
+                        table.quitPlayer(avatar)
                         
     
     def shutdown(self):
@@ -1222,7 +1222,7 @@ class PokerService(service.Service):
         avatars_seated = [avatar for avatar in self.avatar_collection.get(serial) if table.isSeated(avatar)]
         timeout_key = "%s_%s" % (tourney.serial,serial)
         for avatar in avatars_seated:
-            table.sitOutPlayer(avatar, serial)
+            table.sitOutPlayer(avatar)
 
         wait = 0 if now else max(0,int(self.delays.get('tourney_kick', 20)))
         

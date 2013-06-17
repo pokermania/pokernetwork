@@ -274,14 +274,14 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         def disconnectBrokeClients():
             for serial in user_serials_broke:
                 table = clients[serial].tables.itervalues().next()
-                table.disconnectPlayer(clients[serial], serial)
+                table.disconnectPlayer(clients[serial])
         
         def joinAll(status):
             self.assertEquals(pokertournament.TOURNAMENT_STATE_RUNNING, tourney.state)
             for game in tourney.games:
                 table = self.service.tables[game.id]
                 for serial in game.serial2player:
-                    table.joinPlayer(clients[serial], serial)
+                    table.joinPlayer(clients[serial])
                     table.update()
             return status
                         

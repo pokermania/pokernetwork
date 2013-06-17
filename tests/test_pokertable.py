@@ -412,18 +412,12 @@ class MockClient:
     def autoBlindAnte(self, table, serial, auto):
         table.game.getPlayer(serial).auto_blind_ante = auto
 
-    def sitPlayer(self, table, serial):
-        table.game.sit(serial)
-
     def addPlayer(self, table, seat):
         self.tables[table.game.id] = table
         if table.game.addPlayer(self.serial, seat):
             player = table.game.getPlayer(self.serial)
             player.setUserData(DEFAULT_PLAYER_USER_DATA.copy())
         return True
-
-    def sitOutPlayer(self, table, serial):
-        table.game.sitOutNextTurn(serial)
 
     def sendPacket(self, packet):
         self.log.debug("sendPacket: %s", packet)
@@ -482,7 +476,6 @@ class MockClientWithRealJoin(MockClient, PokerAvatar):
         PokerAvatar.join(self, table, reason)
 # --------------------------------------------------------------------------------
 class MockClientWithExplain(MockClientWithRealJoin):
-    sitPlayer = PokerAvatar.sitPlayer
     addPlayer = PokerAvatar.addPlayer
     
     def __init__(self,*args,**kw):
@@ -647,11 +640,11 @@ class PokerTableTestCaseBase(unittest.TestCase):
         self.clients[serial] = client
         if getReadyToPlay:
             client.reasonExpected = "MockCreatePlayerJoin"
-            self.assertEqual(True, table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
+            self.assertEqual(True, table.joinPlayer(client, reason="MockCreatePlayerJoin"))
             client.reasonExpected = ""
-            self.assertEqual(True, table.seatPlayer(client, serial, -1))
+            self.assertEqual(True, table.seatPlayer(client, -1))
             self.assertEqual(True, table.buyInPlayer(client, self.table.game.maxBuyIn()))
-            self.table.sitPlayer(client, serial)
+            self.table.sitPlayer(client)
         return client
     # -------------------------------------------------------------------
     def createBot(self, serial, getReadyToPlay=True, clientClass=MockClientBot, table=None):
@@ -783,26 +776,26 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEqual(False, self.table.isSerialObserver(1))
 
         # player5 can't sit because the table is full of 1-4...
-        self.assertEqual(False, self.table.seatPlayer(player[5], 5, -1))
+        self.assertEqual(False, self.table.seatPlayer(player[5], -1))
         # player5 still not an observer
         self.assertEqual(False, self.table.isSerialObserver(5))
 
-        self.assertEqual(True, self.table.joinPlayer(player[5], 5))
+        self.assertEqual(True, self.table.joinPlayer(player[5]))
         # player5 now an observer
         self.assertEqual(True, self.table.isSerialObserver(5))
         #  ... but player5 decides to set all sorts of things that she can't
         #      because she's still just an observer.
-        self.assertEqual(False, self.table.muckAccept(player[5], 5))
-        self.assertEqual(False, self.table.muckDeny(player[5], 5))
-        self.assertEqual(False, self.table.autoBlindAnte(player[5], 5, True))
+        self.assertEqual(False, self.table.muckAccept(player[5]))
+        self.assertEqual(False, self.table.muckDeny(player[5]))
+        self.assertEqual(False, self.table.autoBlindAnte(player[5], True))
         self.assertEqual(False, self.table.buyInPlayer(player[5], 0))
         self.assertEqual(False, self.table.rebuyPlayerRequestNow(5, 30))
 
         # player5 cannot sit out either because she isn't joined yet.
-        self.assertEqual(False, self.table.sitOutPlayer(player[5], 5))
+        self.assertEqual(False, self.table.sitOutPlayer(player[5]))
 
         # player1 leaves on his own...
-        self.assertEqual(True, self.table.leavePlayer(player[1], 1))
+        self.assertEqual(True, self.table.leavePlayer(player[1]))
 
         # ... which allows player5 to finally join legitimately and change
         # her settings.  However, she tries to sit in everyone else's
@@ -810,32 +803,32 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         # even buying, and then buys in for nothing, and thus must rebuy
 
         for p in self.table.game.playersAll():
-            self.assertEqual(False, self.table.seatPlayer(player[5], 5, p.seat))
+            self.assertEqual(False, self.table.seatPlayer(player[5], p.seat))
 
-        self.assertEqual(False, self.table.sitPlayer(player[5], 5))
+        self.assertEqual(False, self.table.sitPlayer(player[5]))
 
-        self.assertEqual(True, self.table.seatPlayer(player[5], 5, -1))
+        self.assertEqual(True, self.table.seatPlayer(player[5], -1))
         self.assertEqual(False, self.table.rebuyPlayerRequestNow(5, 2))
 
         self.assertEqual(True, self.table.buyInPlayer(player[5], 0))
 
         # ... but cannot sit down again
-        self.assertEqual(False, self.table.seatPlayer(player[5], 5, -1))
+        self.assertEqual(False, self.table.seatPlayer(player[5], -1))
 
-        self.assertEqual(None, self.table.muckAccept(player[5], 5))
-        self.assertEqual(None, self.table.muckDeny(player[5], 5))
-        self.assertEqual(None, self.table.autoBlindAnte(player[5], 5, True))
+        self.assertEqual(None, self.table.muckAccept(player[5]))
+        self.assertEqual(None, self.table.muckDeny(player[5]))
+        self.assertEqual(None, self.table.autoBlindAnte(player[5], True))
 
         self.assertEqual(True, self.table.rebuyPlayerRequest(5, self.table.game.buyIn()))
         # finally, player5 tries to join table 2, which isn't permitted since
         # we've set MockService.simultaneous to 1
-        self.assertEqual(False, self.table2.joinPlayer(player[5], 5))
+        self.assertEqual(False, self.table2.joinPlayer(player[5]))
     # -------------------------------------------------------------------
     def test08_2_brokenSeatFactory(self):
         player = self.createPlayer(1, False)
-        self.assertEqual(True, self.table.joinPlayer(player, 1))
+        self.assertEqual(True, self.table.joinPlayer(player))
         self.table.factory.seatPlayer = lambda a, b, c, d=None: False
-        self.assertEqual(False, self.table.seatPlayer(player, 1, -1))
+        self.assertEqual(False, self.table.seatPlayer(player, -1))
     # -------------------------------------------------------------------
     def test08_5_kick(self):
         """Test that kick works correctly"""
@@ -857,8 +850,8 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         player = self.createPlayer(4)
 
         # player4 sits out but tries it twice.
-        self.assertEqual(True, self.table.sitOutPlayer(player, 4))
-        self.assertEqual(True, self.table.sitOutPlayer(player, 4))
+        self.assertEqual(True, self.table.sitOutPlayer(player))
+        self.assertEqual(True, self.table.sitOutPlayer(player))
     # -------------------------------------------------------------------
     def test08_8_buyinOverMax(self):
         """Test that buyins over the maximum are refused"""
@@ -890,7 +883,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             x.addCallback(chatCatch)
             dl.append(x)
         
-        self.table.chatPlayer(self.clients[1], 1, "Hi, I am the One.")
+        self.table.chatPlayer(self.clients[1], "Hi, I am the One.")
         self.assertEquals(1, self.service.chat_messages[0][0])
         self.assertEquals(table1ID, self.service.chat_messages[0][1])
         self.assertEquals("Hi, I am the One.", self.service.chat_messages[0][2])
@@ -936,8 +929,8 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         """Test a disconnected player"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
         p9 = self.createPlayer(9, clientClass=MockClientWithTableDict)
-        self.table.disconnectPlayer(p1, 1)
-        self.table.disconnectPlayer(p9, 9)
+        self.table.disconnectPlayer(p1)
+        self.table.disconnectPlayer(p9)
     # -------------------------------------------------------------------
     def test14_closed_games(self):
         """Do typical operations act as expected when the game is closed?"""
@@ -945,7 +938,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         for ii in [1, 2, 3, 4]:
             player[ii] = self.createPlayer(ii)
         self.table.game.close()
-        self.table.quitPlayer(player[1], 1)
+        self.table.quitPlayer(player[1])
 
         # Leaving a closed table generates an error.  player[2] is going
         # to leave, we wait for the error packet to come back, and make
@@ -957,7 +950,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.failUnlessSubstring("annot leave", packet.message)
         deferredLeaveErrorWait.addCallback(checkReturnPacket)
 
-        self.table.leavePlayer(player[2], 2)
+        self.table.leavePlayer(player[2])
         return deferredLeaveErrorWait
     # -------------------------------------------------------------------
     def test16_autoMuckTimeoutPolicy(self):
@@ -1065,21 +1058,21 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     # -------------------------------------------------------------------
     def test20_quitting(self):
         p = self.createPlayer(1)
-        self.assertEquals(True, self.table.quitPlayer(p, 1))
+        self.assertEquals(True, self.table.quitPlayer(p))
         p = self.createPlayer(2, False, clientClass=MockClientWithTableDict)
-        self.assertEqual(True, self.table.joinPlayer(p, 2))
+        self.assertEqual(True, self.table.joinPlayer(p))
         p.tables[self.table.game.id] = self.table
-        self.assertEquals(True, self.table.quitPlayer(p, 2))
+        self.assertEquals(True, self.table.quitPlayer(p))
         # Special test: player 9's removePlayer always fails
         p = self.createPlayer(9)
-        self.assertEquals(True, self.table.quitPlayer(p, 9))
+        self.assertEquals(True, self.table.quitPlayer(p))
     # -------------------------------------------------------------------
     def test20_1_brokenLeaving(self):
         p = self.createPlayer(1)
-        self.assertEquals(True, self.table.leavePlayer(p, 1))
+        self.assertEquals(True, self.table.leavePlayer(p))
         # Special test: player 9's removePlayer always fails
         p = self.createPlayer(9)
-        self.assertEquals(True, self.table.leavePlayer(p, 9))
+        self.assertEquals(True, self.table.leavePlayer(p))
     # -------------------------------------------------------------------
     def test21_syncDatabase(self):
         """Test syncing the Database back to the MockService"""
@@ -1097,14 +1090,14 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     def test22_possibleObserverLoggedIn(self):
         """Test possibleObserverLoggedIn"""
         p = self.createPlayer(1)
-        self.table.disconnectPlayer(p, 1)
+        self.table.disconnectPlayer(p)
         p2 = self.createPlayer(2)
         # Player 1 is already at the table, so this should be meaningless:
-        self.table.possibleObserverLoggedIn(p, 1)
+        self.table.possibleObserverLoggedIn(p)
         # Player 2's object has been "lost", s owe created
         p2_reconnected = self.createPlayer(3, getReadyToPlay=False) 
-        self.table.joinPlayer(p2_reconnected, 3)
-        self.table.possibleObserverLoggedIn(p2_reconnected, 2)
+        self.table.joinPlayer(p2_reconnected)
+        self.table.possibleObserverLoggedIn(p2_reconnected)
     # -------------------------------------------------------------------
     def test23_broadcastingPlayerCards(self):
         """Test to make sure PokerPlayerCards are broadcasted correctly.  This
@@ -1159,8 +1152,8 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     # -------------------------------------------------------------------
     def test27_buyinFailures(self):
         p9 = self.createPlayer(9, False)
-        assert self.table.joinPlayer(p9, 9)
-        assert self.table.seatPlayer(p9, 9, -1)
+        assert self.table.joinPlayer(p9)
+        assert self.table.seatPlayer(p9, -1)
         assert self.table.buyInPlayer(p9, 10)
 
         p9.money = 0
@@ -1200,7 +1193,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         """Helper method used to check to for a join failed due to the
         maximum value."""
         log_history.reset()
-        self.table.joinPlayer(player, player.serial)
+        self.table.joinPlayer(player)
         self.checkFailedJoinDueToMax(player)
     # -------------------------------------------------------------------
     def test28_tooManyPlayers(self):
@@ -1216,7 +1209,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.assertEquals(self.table.factory.joined_count, 0)
 
         for ii in [ 1, 2, 3 ]:
-            self.table.joinPlayer(players[ii], players[ii].serial)
+            self.table.joinPlayer(players[ii])
             self.assertEqual(True, self.table.isJoined(players[ii]))
             self.assertEqual(players[ii].packets, [])
             self.assertEquals(self.table.factory.joined_count, ii)
@@ -1236,12 +1229,12 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             self.assertEquals(self.table.factory.joined_count, 0)
 
         for ii in [ 1, 2, 3 ]:
-            self.table.joinPlayer(players[ii], players[ii].serial)
+            self.table.joinPlayer(players[ii])
             self.assertEqual(True, self.table.isJoined(players[ii]))
             self.assertEqual(players[ii].packets, [])
             self.assertEquals(self.table.factory.joined_count, ii)
         self.assertEquals(log_history.get_all(), [])
-        self.assertEquals(True, self.table.leavePlayer(players[1], players[1].serial))
+        self.assertEquals(True, self.table.leavePlayer(players[1]))
 
         self.doJoinAndFailDueToMax(players[4])
         self.assertEquals(self.table.factory.joined_count, 3)
@@ -1257,12 +1250,12 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         for ii in [ 1, 2, 3 ]:
             players[ii] = self.createPlayer(ii, getReadyToPlay = True)
             self.assertEqual(True, self.table.isJoined(players[ii]))
-            self.assertEqual(players[ii].packets, [])
             self.assertEquals(self.table.factory.joined_count, ii)
         messages = log_history.get_all()
-        self.failUnlessSubstring('player 1 gets seat 1', messages[2])
-        self.failUnlessSubstring('player 2 gets seat 6', messages[5])
-        self.failUnlessSubstring('player 3 gets seat 3', messages[8])
+        messages_string = "\n".join(messages)
+        self.failUnlessSubstring('player 1 gets seat 1', messages_string)
+        self.failUnlessSubstring('player 2 gets seat 6', messages_string)
+        self.failUnlessSubstring('player 3 gets seat 3', messages_string)
         log_history.reset()
 
         for ii in [ 4, 5, 6 ]:
@@ -1272,19 +1265,19 @@ class PokerTableTestCase(PokerTableTestCaseBase):
 
         # leavePlayer turns an actual player into an observer, so they are still
         #  connected.  player 4 should still be unable to join.
-        self.assertEquals(True, self.table.leavePlayer(players[1], players[1].serial))
+        self.assertEquals(True, self.table.leavePlayer(players[1]))
         self.assertEquals(self.table.factory.joined_count, 3)
         self.doJoinAndFailDueToMax(players[4])
         self.assertEquals(self.table.factory.joined_count, 3)
         log_history.reset()
 
-        self.assertEquals(True, self.table.quitPlayer(players[2], 2))
+        self.assertEquals(True, self.table.quitPlayer(players[2]))
         log_history.search('[Server][PokerGame %d] removing player %d from game'
                       % (self.table.game.id, players[2].serial))
         log_history.reset()
         self.assertEquals(self.table.factory.joined_count, 2)
 
-        self.table.joinPlayer(players[4], players[4].serial)
+        self.table.joinPlayer(players[4])
         self.assertEqual(True, self.table.isJoined(players[4]))
         self.assertEquals(log_history.get_all(), [])
         self.assertEquals(self.table.factory.joined_count, 3)
@@ -1298,13 +1291,13 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         log_history.reset()
         self.assertEquals(self.table.factory.joined_count, 3)
 
-        self.assertEquals(True, self.table.disconnectPlayer(players[3], 3))
+        self.assertEquals(True, self.table.disconnectPlayer(players[3]))
         log_history.search('[Server][PokerGame %d] removing player %d from game'
                       % (self.table.game.id, players[3].serial))
         log_history.reset()
         self.assertEquals(self.table.factory.joined_count, 2)
 
-        self.table.joinPlayer(players[5], players[5].serial)
+        self.table.joinPlayer(players[5])
         self.assertEqual(True, self.table.isJoined(players[5]))
         self.assertEquals(log_history.get_all(), [])
         self.assertEquals(self.table.factory.joined_count, 3)
@@ -1370,8 +1363,8 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             updateTableStats.called = True
         updateTableStats.called = False
         self.table.factory.updateTableStats = updateTableStats
-        self.assertEquals(True, self.table.joinPlayer(player, 1))
-        self.assertEquals(True, self.table.seatPlayer(player, 1, 1))
+        self.assertEquals(True, self.table.joinPlayer(player))
+        self.assertEquals(True, self.table.seatPlayer(player, 1))
         self.assertEquals(True, updateTableStats.called)
     # -------------------------------------------------------------------
     def test33_leavePlayerUpdateTableStats(self):
@@ -1381,7 +1374,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         updateTableStats.called = False
         self.table.factory.updateTableStats = updateTableStats
         self.table.game.is_open = True
-        self.table.leavePlayer(player, 1)
+        self.table.leavePlayer(player)
         self.assertEquals(True, updateTableStats.called)
     # -------------------------------------------------------------------
     def test34_leavePlayerDelayedNoUpdateTableStats(self):
@@ -1391,7 +1384,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         updateTableStats.called = False
         self.table.factory.updateTableStats = updateTableStats
         self.table.game.is_open = False
-        self.table.leavePlayer(player, 1)
+        self.table.leavePlayer(player)
         self.assertEquals(False, updateTableStats.called)
     # -------------------------------------------------------------------
     def test35_quitPlayerUpdateTableStats(self):
@@ -1401,7 +1394,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         updateTableStats.called = False
         self.table.factory.updateTableStats = updateTableStats
         self.table.game.is_open = True
-        self.table.quitPlayer(player, 1)
+        self.table.quitPlayer(player)
         self.assertEquals(True, updateTableStats.called)
     # -------------------------------------------------------------------
     def test36_quitPlayerDelayedNoUpdateTableStats(self):
@@ -1411,7 +1404,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         updateTableStats.called = False
         self.table.factory.updateTableStats = updateTableStats
         self.table.game.is_open = False
-        self.table.quitPlayer(player, 1)
+        self.table.quitPlayer(player)
         self.assertEquals(False, updateTableStats.called)
     # -------------------------------------------------------------------
     def test37_disconnectPlayerUpdateTableStats(self):
@@ -1421,7 +1414,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         updateTableStats.called = False
         self.table.factory.updateTableStats = updateTableStats
         self.table.game.is_open = True
-        self.table.disconnectPlayer(player, 1)
+        self.table.disconnectPlayer(player)
         self.assertEquals(True, updateTableStats.called)
     # -------------------------------------------------------------------
     def test38_disconnectPlayerDelayedNoUpdateTableStats(self):
@@ -1431,7 +1424,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         updateTableStats.called = False
         self.table.factory.updateTableStats = updateTableStats
         self.table.game.is_open = False
-        self.table.disconnectPlayer(player, 1)
+        self.table.disconnectPlayer(player)
         self.assertEquals(False, updateTableStats.called)
     # -------------------------------------------------------------------
     def test39_kickPlayerUpdateTableStats(self):
@@ -1456,7 +1449,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
     def test40_destroy_table_with_observers(self):
         """Test table destruction with observers at the table"""
         p1 = self.createPlayer(1, clientClass=MockClientWithTableDict)
-        self.table.seated2observer(p1, 1)
+        self.table.seated2observer(p1)
         d = p1.waitFor(PACKET_POKER_TABLE_DESTROY)
         self.table.destroy()
         # Make sure we can't update once table is destroyed.
@@ -1498,6 +1491,9 @@ class PokerTableTestCase(PokerTableTestCaseBase):
 
         log_history.reset()
         self.table.game.state = GAME_STATE_MUCK
+        for ii in [1, 2, 3, 4]:
+            player[ii].packets= []
+
         self.table.scheduleAutoDeal()
 
         # No packets should be received if we tried to autodeal in
@@ -1625,21 +1621,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.syncDatabase = lambda history: None
         self.table.muckTimeoutTimer()
         self.assertEquals([], self.table.game.muckable_serials)
-    # -------------------------------------------------------------------
-    def test49_seated2observer_bug(self):
-        a = self.createPlayer(1)
-        a.getSerial = lambda: 0
-        self.message = ""
-        log_history.reset()
-        exception_occurred = False
-        try:
-            self.table.seated2observer(a, 1)
-        except KeyError:
-            # We want a exception if there is an inconsitency
-            exception_occurred = True
-
-        self.assertTrue(exception_occurred)
-        self.assertTrue(log_history.search("pokertable.seated2observer: avatar.user.serial (0) doesn't match serial argument (1)"))
     
 # -------------------------------------------------------------------
 
@@ -1753,7 +1734,7 @@ class PokerTableTestCaseWithPredefinedDecksAndNoAutoDeal(PokerTableTestCase):
         def join(table, reason = ""):
             player.joined = True
         player.join = join
-        self.assertEqual(True, self.table.joinPlayer(player, player.serial))
+        self.assertEqual(True, self.table.joinPlayer(player))
         self.failUnless(player.joined)
     # -------------------------------------------------------------------
     def test31_kickPlayerForMissingTooManyBlinds(self):
@@ -1816,11 +1797,11 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         client = clientClass(serial, self)
         self.clients[serial] = client
         client.reasonExpected = "MockTransientCreatePlayer"
-        table.joinPlayer(client, serial, reason = "MockTransientCreatePlayer")
+        table.joinPlayer(client, reason="MockTransientCreatePlayer")
         client.reasonExpected = ""
         if getReadyToPlay:
-            self.assertEqual(True, table.seatPlayer(client, serial, -1))
-            table.sitPlayer(client, serial)
+            self.assertEqual(True, table.seatPlayer(client, -1))
+            table.sitPlayer(client)
         return client
 
     # -------------------------------------------------------------------
@@ -1867,37 +1848,37 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         player[5] = self.createPlayer(5, False)
 
         # player5 can't sit because the table is full of 1-4...
-        self.assertEqual(False, self.table.seatPlayer(player[5], 5, -1))
+        self.assertEqual(False, self.table.seatPlayer(player[5], -1))
 
         #  ... but player5 decides to set all sorts of things that she can't
         #      because she's still just an observer.
-        self.assertEqual(False, self.table.muckAccept(player[5], 5))
-        self.assertEqual(False, self.table.muckDeny(player[5], 5))
-        self.assertEqual(False, self.table.autoBlindAnte(player[5], 5, True))
+        self.assertEqual(False, self.table.muckAccept(player[5]))
+        self.assertEqual(False, self.table.muckDeny(player[5]))
+        self.assertEqual(False, self.table.autoBlindAnte(player[5], True))
 
         self.assertEqual(False, self.table.rebuyPlayerRequest(5, 30))
 
         # player5 cannot sit out either because she isn't joined yet.
-        self.assertEqual(False, self.table.sitOutPlayer(player[5], 5))
+        self.assertEqual(False, self.table.sitOutPlayer(player[5]))
 
         # player1 leaves on his own...
-        self.assertEqual(True, self.table.leavePlayer(player[1], 1))
+        self.assertEqual(True, self.table.leavePlayer(player[1]))
 
         # ... which allows player5 to finally join legitimately and change
         # her settings.  However, she tries to sit out before getting the
         # seat, rebuy before even buying, and then buys in for nothing,
         # and thus must rebuy
 
-        self.assertEqual(True, self.table.seatPlayer(player[5], 5, -1))
+        self.assertEqual(True, self.table.seatPlayer(player[5], -1))
         self.assertEqual(False, self.table.rebuyPlayerRequest(5, 2))
 
         # this table is transient, so no one can buy in.
         self.assertEqual(False, self.table.buyInPlayer(player[5], 0))
 
         # I wonder if these should really return True rather than None?  -- bkuhn
-        self.assertEqual(None, self.table.muckAccept(player[5], 5))
-        self.assertEqual(None, self.table.muckDeny(player[5], 5))
-        self.assertEqual(None, self.table.autoBlindAnte(player[5], 5, True))
+        self.assertEqual(None, self.table.muckAccept(player[5]))
+        self.assertEqual(None, self.table.muckDeny(player[5]))
+        self.assertEqual(None, self.table.autoBlindAnte(player[5], True))
 
         self.assertEqual(False, self.table.rebuyPlayerRequest(5, self.table.game.maxBuyIn()))
 
@@ -1947,7 +1928,7 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         self.assertEquals(self.table.factory.joined_count, 3)
         
         self.assertEquals(log_history.get_all(), [])
-        self.assertEquals(True, self.table.leavePlayer(players[1], players[1].serial))
+        self.assertEquals(True, self.table.leavePlayer(players[1]))
 
         log_history.reset()
         players[4] = self.createPlayer(4, getReadyToPlay = False)
@@ -1966,12 +1947,12 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         for ii in [ 1, 2, 3 ]:
             players[ii] = self.createPlayer(ii, getReadyToPlay = True)
             self.assertEqual(True, self.table.isJoined(players[ii]))
-            self.assertEqual(players[ii].packets, [])
             self.assertEquals(self.table.factory.joined_count, ii)
         messages = log_history.get_all()
-        self.failUnlessSubstring('player 1 gets seat 1', messages[2])
-        self.failUnlessSubstring('player 2 gets seat 6', messages[5])
-        self.failUnlessSubstring('player 3 gets seat 3', messages[8])
+        messages_string = "\n".join(messages)
+        self.failUnlessSubstring('player 1 gets seat 1', messages_string)
+        self.failUnlessSubstring('player 2 gets seat 6', messages_string)
+        self.failUnlessSubstring('player 3 gets seat 3', messages_string)
         log_history.reset()
         self.assertEquals(self.table.factory.joined_count, 3)
 
@@ -1983,17 +1964,17 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
 
         # leavePlayer turns an actual player into an observer, so they are still
         #  connected.  player 4 should still be unable to join.
-        self.assertEquals(True, self.table.leavePlayer(players[1], players[1].serial))
+        self.assertEquals(True, self.table.leavePlayer(players[1]))
         self.doJoinAndFailDueToMax(players[4])
         log_history.reset()
         self.assertEquals(self.table.factory.joined_count, 3)
 
-        self.assertEquals(True, self.table.quitPlayer(players[2], 2))
+        self.assertEquals(True, self.table.quitPlayer(players[2]))
         log_history.search('[Server][PokerGame %d] removing player %d from game'
                       % (self.table.game.id, players[2].serial))
         log_history.reset()
         self.assertEquals(self.table.factory.joined_count, 2)
-        self.table.joinPlayer(players[4], players[4].serial)
+        self.table.joinPlayer(players[4])
         self.assertEqual(True, self.table.isJoined(players[4]))
         self.assertEquals(log_history.get_all(), [])
         self.assertEquals(self.table.factory.joined_count, 3)
@@ -2007,13 +1988,13 @@ class PokerTableTestCaseTransient(PokerTableTestCase):
         log_history.reset()
         self.assertEquals(self.table.factory.joined_count, 3)
 
-        self.assertEquals(True, self.table.disconnectPlayer(players[3], 3))
+        self.assertEquals(True, self.table.disconnectPlayer(players[3]))
         log_history.search('[Server][PokerGame %d] removing player %d from game'
                       % (self.table.game.id, players[3].serial))
         log_history.reset()
         self.assertEquals(self.table.factory.joined_count, 2)
 
-        self.table.joinPlayer(players[5], players[5].serial)
+        self.table.joinPlayer(players[5])
         self.assertEqual(True, self.table.isJoined(players[5]))
         self.assertEquals(log_history.get_all(), [])
         self.assertEquals(self.table.factory.joined_count, 3)
@@ -2083,11 +2064,11 @@ class PokerTableRejoinTestCase(PokerTableTestCaseBase):
         player2 = self.createPlayer(2)
         
         def quitPlayer(x):
-            self.table.quitPlayer(player1, 1)
+            self.table.quitPlayer(player1)
             self.assertEquals(True, self.table.game.serial2player[1].isAuto())
         def joinPlayer(x):
             d = player1.waitFor(PACKET_POKER_PLAYER_ARRIVE)
-            self.table.joinPlayer(player1, 1)
+            self.table.joinPlayer(player1)
             return d
         def checkAutoFlag(x):
             playerArrive1 = [p for p in player1.packets if p.type == PACKET_POKER_PLAYER_ARRIVE and p.serial == 1]
@@ -2118,10 +2099,10 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             client.setExplain(PacketPokerExplain.ALL)
-            self.assertEqual(True, self.table.joinPlayer(client, serial, reason="MockCreatePlayerJoin"))
-            self.assertEqual(True, self.table.seatPlayer(client, serial, -1))
+            self.assertEqual(True, self.table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            self.assertEqual(True, self.table.seatPlayer(client, -1))
             self.assertEqual(True, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
-            self.table.sitPlayer(client, serial)
+            self.table.sitPlayer(client)
             self.table.game.noAutoBlindAnte(serial)
             
         for serial,client in clients.iteritems():
@@ -2154,10 +2135,10 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             # client.setExplain(PacketPokerExplain.ALL)
-            self.assertEqual(True, table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
-            self.assertEqual(True, table.seatPlayer(client, serial, -1))
+            self.assertEqual(True, table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            self.assertEqual(True, table.seatPlayer(client, -1))
             self.assertEqual(True, table.buyInPlayer(client, table.game.maxBuyIn()))
-            table.sitPlayer(client, serial)
+            table.sitPlayer(client)
             table.game.noAutoBlindAnte(serial)
 
         for serial,client in clients.iteritems():
@@ -2197,17 +2178,17 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         table.update = lambda: newUpdate(table)
         def sitIn(serial):
             client = clients[serial]
-            table.seatPlayer(client, serial, -1)
+            table.seatPlayer(client, -1)
             table.buyInPlayer(client, table.game.maxBuyIn())
             table.game.noAutoBlindAnte(serial)
-            table.sitPlayer(client, serial)
+            table.sitPlayer(client)
             table.update()
             
         for serial in (1,2,3):
             clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             client.setExplain(PacketPokerExplain.REST)
-            table.joinPlayer(client,serial)
+            table.joinPlayer(client)
             
         for serial in (1,2):
             sitIn(serial)
@@ -2269,17 +2250,17 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             
         def sitIn(serial):
             client = clients[serial]
-            table.seatPlayer(client, serial, -1)
+            table.seatPlayer(client, -1)
             table.buyInPlayer(client, table.game.maxBuyIn())
             table.game.noAutoBlindAnte(serial)
-            table.sitPlayer(client, serial)
+            table.sitPlayer(client)
             table.update()
             
         for serial in player_list:
             clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             client.setExplain(PacketPokerExplain.REST)
-            table.joinPlayer(client,serial)
+            table.joinPlayer(client)
         for serial in player_list:
             sitIn(serial)
 
@@ -2289,7 +2270,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         
         def secondGame(packet):
             table.game.fold(103); table.update() # is ignored
-            table.leavePlayer(clients[103], 103)
+            table.leavePlayer(clients[103])
             table.game.blind(104); table.update()
             table.game.blind(103); table.update() # is ignored
             table.game.blind(105); table.update()
@@ -2387,16 +2368,16 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
 
         def sitIn(serial):
             client = clients[serial]
-            table.seatPlayer(client, serial, -1)
+            table.seatPlayer(client, -1)
             table.buyInPlayer(client, table.game.maxBuyIn())
             table.game.noAutoBlindAnte(serial)
-            table.sitPlayer(client, serial)
+            table.sitPlayer(client)
             table.update()
 
         for serial in player_list:
             clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False)
             client.service = self.service
-            table.joinPlayer(client,serial)
+            table.joinPlayer(client)
         for serial in player_list:
             sitIn(serial)
 
@@ -2466,10 +2447,10 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         
         def sitIn(serial):
             client = clients[serial]
-            table.seatPlayer(client, serial, -1)
+            table.seatPlayer(client, -1)
             table.buyInPlayer(client, table.game.maxBuyIn())
             table.game.noAutoBlindAnte(serial)
-            table.sitPlayer(client, serial)
+            table.sitPlayer(client)
             table.update()
 
         clients = {}
@@ -2478,17 +2459,17 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             client.setExplain(PacketPokerExplain.REST)
-            table.joinPlayer(client,serial)
+            table.joinPlayer(client)
         for serial in player_list:
             sitIn(serial)
-        table.sitOutPlayer(table.avatar_collection.get(85562)[0] , 85562)
+        table.sitOutPlayer(table.avatar_collection.get(85562)[0])
 
         def game2(packet):
             table.game.blind(85554); table.update()
-            table.leavePlayer(clients[85562], 85562)
+            table.leavePlayer(clients[85562])
             table.game.blind(55742); table.update()
             table.game.check(85554); table.update() # ignored
-            table.leavePlayer(clients[85554], 85554)
+            table.leavePlayer(clients[85554])
             table.destroy()
 
         def game1(packet):
@@ -2502,7 +2483,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             table.game.fold(85554); table.update()
             d2 = clients[85554].waitFor(PACKET_POKER_BLIND_REQUEST)
             d2.addCallback(game2)
-            table.sitPlayer(clients[85562], 85562) ; table.update()
+            table.sitPlayer(clients[85562]) ; table.update()
             table.scheduleAutoDeal()
             return d2
             
@@ -2548,13 +2529,13 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             client.service = self.service
             if explain:
                 client.setExplain(PacketPokerExplain.ALL)
-            self.assertTrue(table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
-            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, pos))
             self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
             table.game.noAutoBlindAnte(serial)
             if should_sit:
                 clients[serial] = client
-                table.sitPlayer(client, serial)
+                table.sitPlayer(client)
             table.update()
         
         #
@@ -2578,26 +2559,26 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         clients_all[52392] = client = self.createPlayer(52392, getReadyToPlay=False, clientClass=MockClientWithExplain)
         client.service = self.service
         client.setExplain(PacketPokerExplain.ALL)
-        self.assertTrue(table.joinPlayer(client, serial, reason  = "MockCreatePlayerJoin"))
+        self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
         
         def firstGame(packet):
             #
             # 49610 joins again
             clients[49610] = clients_all[49610]
             s_sit.append(49610)
-            self.assertFalse(table.seatPlayer(clients[49610], 49610, -1))
+            self.assertFalse(table.seatPlayer(clients[49610], -1))
             table.game.noAutoBlindAnte(49610)
-            table.sitPlayer(clients[49610], 49610)
+            table.sitPlayer(clients[49610])
             table.update()
             #
             # get a seat for 52392
-            self.assertTrue(table.seatPlayer(clients_all[52392], 52392, 3))
+            self.assertTrue(table.seatPlayer(clients_all[52392], 3))
             self.assertTrue(table.buyInPlayer(clients_all[52392], table.game.maxBuyIn()))
             table.game.noAutoBlindAnte(52392)
             table.update()
             table.game.blind(38108); table.update()
             table.game.blind(73933); table.update()
-            table.quitPlayer(clients_all[31464], 31464); table.update()
+            table.quitPlayer(clients_all[31464]); table.update()
             joinAndSeat(31464, True, -1,True)
             
         table.scheduleAutoDeal()
@@ -2640,13 +2621,13 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             client.service = self.service
             if explain:
                 client.setExplain(PacketPokerExplain.REST)
-            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
-            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, pos))
             self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
             table.game.noAutoBlindAnte(serial)
             if should_sit:
                 clients[serial] = client
-                table.sitPlayer(client, serial)
+                table.sitPlayer(client)
             table.update()
         
         #
@@ -2668,9 +2649,9 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         def firstGame(packet):
             clients[40712] = clients_all[40712]
             s_sit.append(40712)
-            self.assertFalse(table.seatPlayer(clients[40712], 40712, -1))
+            self.assertFalse(table.seatPlayer(clients[40712], -1))
             table.game.noAutoBlindAnte(40712)
-            table.sitPlayer(clients[40712], 40712)
+            table.sitPlayer(clients[40712])
             table.update()
             table.game.blind(106548); table.update()
             table.game.blind(61615)
@@ -2711,13 +2692,13 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             client.service = self.service
             if explain:
                 client.setExplain(PacketPokerExplain.REST)
-            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
-            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, pos))
             self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
             table.game.noAutoBlindAnte(serial)
             if should_sit:
                 clients[serial] = client
-                table.sitPlayer(client, serial)
+                table.sitPlayer(client)
             table.update()
         
         for pos,serial in enumerate(s_all):
@@ -2738,7 +2719,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         def firstGame(packet):
             # player 95972 rebuys and sits in
             table.rebuyPlayerRequest(95972, 0)
-            table.sitPlayer(clients_all[95972], 95972)
+            table.sitPlayer(clients_all[95972])
             clients[95972] = clients_all[95972]
             table.update()
             
@@ -2757,7 +2738,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             table.update()
             
             # the new player leaves again
-            table.disconnectPlayer(clients_all[152688],152688)
+            table.disconnectPlayer(clients_all[152688])
             
             # another player times out
             table.timer_info["playerTimeout"].cancel()
@@ -2797,13 +2778,13 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             client.service = self.service
             if explain:
                 client.setExplain(PacketPokerExplain.REST)
-            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
-            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, pos))
             self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
             table.game.noAutoBlindAnte(serial)
             if should_sit:
                 clients[serial] = client
-                table.sitPlayer(client, serial)
+                table.sitPlayer(client)
             table.update()
 
         
@@ -2826,7 +2807,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             #
             # rebuy of 155411
             table.rebuyPlayerRequest(155411, 0)
-            table.sitPlayer(clients_all[155411], 155411)
+            table.sitPlayer(clients_all[155411])
             clients[155411] = clients_all[155411]
             table.update()
             
@@ -2835,7 +2816,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             game.blind(155411); table.update()
             
             # 155397 disconnects
-            table.disconnectPlayer(clients_all[155397], 155397)
+            table.disconnectPlayer(clients_all[155397])
             
             game.callNraise(154625, game.serial2player[154625].money)
             # 155397 joins again
@@ -2894,21 +2875,21 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             if explain: client.setExplain(PacketPokerExplain.REST)
-            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
-            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, pos))
             self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
             table.game.noAutoBlindAnte(serial)
             if should_sit:
                 clients[serial] = client
-                table.sitPlayer(client, serial)
+                table.sitPlayer(client)
             table.update()
 
         def joinAgain(serial, pos, explain=True):
             clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             if explain: client.setExplain(PacketPokerExplain.REST)
-            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
-            self.assertTrue(table.seatPlayer(client, serial, pos))
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            self.assertTrue(table.seatPlayer(client, pos))
             self.assertTrue(table.buyInPlayer(client, table.game.maxBuyIn()))
             
         for pos,serial in enumerate(s_all):
@@ -2940,10 +2921,10 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             # 
             # 
             # players 29047,114305 sit in again
-            table.seatPlayer(clients_all[29047], 29047, -1)
-            table.sitPlayer(clients_all[29047], 29047)
-            table.seatPlayer(clients_all[114305], 114305, -1)
-            table.sitPlayer(clients_all[114305], 114305)
+            table.seatPlayer(clients_all[29047], -1)
+            table.sitPlayer(clients_all[29047])
+            table.seatPlayer(clients_all[114305], -1)
+            table.sitPlayer(clients_all[114305])
             
             # blinds
             game.blind(105398); table.update()
@@ -2953,7 +2934,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             log_history.reset()
             
             # player 102475 leaves
-            table.leavePlayer(clients_all[102475], 102475); table.update()
+            table.leavePlayer(clients_all[102475]); table.update()
             joinAndSeat(102475, True, -1); table.update()
             
             game.check(114305); table.update()
@@ -3016,13 +2997,13 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             if explain: client.setExplain(PacketPokerExplain.REST)
-            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
-            if table.seatPlayer(client, serial, pos):
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            if table.seatPlayer(client, pos):
                 self.assertTrue(table.buyInPlayer(client, game.maxBuyIn()))
                 table.game.noAutoBlindAnte(serial)
                 if should_sit:
                     clients[serial] = client
-                    table.sitPlayer(client, serial)
+                    table.sitPlayer(client)
             table.update()
             
             
@@ -3046,7 +3027,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         def firstGame(packet):
             # player rebuys
             table.rebuyPlayerRequest(158428, game.buyIn()); table.update()
-            table.sitPlayer(clients_all[158428], 158428); table.update()
+            table.sitPlayer(clients_all[158428]); table.update()
             
             # players join later
             s_all.append(73780); od_order.append(73780)
@@ -3116,13 +3097,13 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             if explain: client.setExplain(PacketPokerExplain.REST)
-            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
-            if table.seatPlayer(client, serial, pos):
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            if table.seatPlayer(client, pos):
                 self.assertTrue(table.buyInPlayer(client, game.buyIn()))
                 table.game.noAutoBlindAnte(serial)
                 if should_sit:
                     clients[serial] = client
-                    table.sitPlayer(client, serial)
+                    table.sitPlayer(client)
             table.update()
             
             
@@ -3141,8 +3122,8 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         def firstGame(packet):
             # player rebuys
             table.rebuyPlayerRequest(100, game.maxBuyIn()); table.update()
-            table.seatPlayer(clients[100], 100, -1); table.update()
-            table.sitPlayer(clients[100], 100); table.update()
+            table.seatPlayer(clients[100], -1); table.update()
+            table.sitPlayer(clients[100]); table.update()
             game.blind(300); table.update()
             game.blind(400); table.update()
             game.callNraise(100, 500); table.update()
@@ -3219,13 +3200,13 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             if explain: client.setExplain(PacketPokerExplain.REST)
-            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
-            if table.seatPlayer(client, serial, pos):
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            if table.seatPlayer(client, pos):
                 self.assertTrue(table.buyInPlayer(client, game.buyIn()))
                 table.game.noAutoBlindAnte(serial)
                 if should_sit:
                     clients[serial] = client
-                    table.sitPlayer(client, serial)
+                    table.sitPlayer(client)
             table.update()
             
         def checkExplainMoney():
@@ -3257,14 +3238,14 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             joinAndSeat(160227, True, -1)
             
             clients[160038] = clients_all[160038]
-            table.sitPlayer(clients_all[160038], 160038)
+            table.sitPlayer(clients_all[160038])
             table.update()
             
             game.blind(158434); table.update()
             
             clients[69931] = clients_all[69931]
             table.rebuyPlayerRequestNow(69931, game.buyIn())
-            table.sitPlayer(clients[69931],69931)
+            table.sitPlayer(clients[69931])
             table.update()
             
             game.blind(160383); table.update()
@@ -3327,13 +3308,13 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             clients_all[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             if explain: client.setExplain(PacketPokerExplain.REST)
-            self.assertTrue(table.joinPlayer(client, serial, reason = "MockCreatePlayerJoin"))
-            if table.seatPlayer(client, serial, pos):
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            if table.seatPlayer(client, pos):
                 self.assertTrue(table.buyInPlayer(client, game.buyIn()))
                 game.noAutoBlindAnte(serial)
                 if should_sit:
                     clients[serial] = client
-                    table.sitPlayer(client, serial)
+                    table.sitPlayer(client)
             table.update()
         
         for pos,serial in enumerate(s_all):
