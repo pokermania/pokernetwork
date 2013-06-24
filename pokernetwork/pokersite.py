@@ -266,14 +266,6 @@ class PokerSite(server.Site):
     def __init__(self, settings, resource, **kwargs):
         server.Site.__init__(self, resource, **kwargs)
         self.displayTracebacks = settings.headerGet("/server/@display_tracebacks") == "yes"
-        cookieTimeout = settings.headerGetInt("/server/@cookie_timeout")
-        if cookieTimeout > 0:
-            self.cookieTimeout = cookieTimeout
-        else:
-            self.cookieTimeout = 1200
-        sessionTimeout = settings.headerGetInt("/server/@session_timeout")
-        if sessionTimeout > 0:
-            self.sessionFactory.sessionTimeout = sessionTimeout
         self.memcache = None
         self.pipes = [
             _import(path.content ).rest_filter
@@ -316,7 +308,7 @@ class PokerSite(server.Site):
             session_resthost = self.memcache.get(session.uid)
             is_new_or_same_resthost = not session_resthost or session_resthost == self.resthost
             if is_new_or_same_resthost:
-                self.memcache.set(session.uid, self.resthost, time = self.cookieTimeout)
+                self.memcache.set(session.uid, self.resthost, time=0)
         return True
         
     def updateSession(self, session):
@@ -331,7 +323,7 @@ class PokerSite(server.Site):
             # because it is how each poker server is informed that
             # a given user is logged in
             #
-            self.memcache.set(session.auth, str(serial), time = self.cookieTimeout)
+            self.memcache.set(session.auth, str(serial), time=0)
 
     def logoutSession(self,session):
         session_resthost = self.memcache.get(session.uid)
