@@ -604,16 +604,12 @@ class PokerSiteTestCase(PokerSiteBase):
         site = pokersite.PokerSite(settings, pokersite.PokerResource(service))
         site.memcache = pokermemcache.MemcacheMockup.Client(['127.0.0.1:11211'])
         self.assertEqual(['127.0.0.1:11211'], [str(s) for s in site.memcache.servers])
-        self.assertEqual(60, site.sessionFactory.sessionTimeout)
-        self.assertEqual(120, site.cookieTimeout)
 
     def test02_init_default(self):
-        sessionTimeout = pokersite.PokerSite.sessionFactory.sessionTimeout
         service = PokerServiceMockup()
         site = pokersite.PokerSite(self.settings, pokersite.PokerResource(service))
         site.memcache = pokermemcache.MemcacheMockup.Client([])
         self.assertEqual([ ], site.memcache.servers)
-        self.assertEqual(sessionTimeout, site.sessionFactory.sessionTimeout)
 
     def test03_01_getSession(self):
         """
@@ -699,7 +695,6 @@ class PokerSiteTestCase(PokerSiteBase):
         session.avatar.user.serial = serial
         self.site.updateSession(session)
         self.assertEquals(serial, int(self.site.memcache.get(session.auth)))
-        self.assertEquals(self.site.cookieTimeout, self.site.memcache.expiration[session.auth])
         
     def test04_updateSession_logout(self):
         """
@@ -715,7 +710,6 @@ class PokerSiteTestCase(PokerSiteBase):
         session.avatar.tables[1] = 'table'
         self.site.updateSession(session)
         self.assertEquals(serial, int(self.site.memcache.get(session.auth)))
-        self.assertEquals(self.site.cookieTimeout, self.site.memcache.expiration[session.auth])
         #
         # logout
         #
