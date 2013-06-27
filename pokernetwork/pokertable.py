@@ -636,8 +636,6 @@ class PokerTable:
                 if self.tourney.state != pokertournament.TOURNAMENT_STATE_RUNNING:
                     self.log.debug("Not autodealing %d because in tournament state %s", self.game.id, self.tourney.state)
                     return False
-        if not self.allReadyToPlay():
-            return False
         elif not self.autodeal_temporary:
             #
             # Do not auto deal a table where there are only temporary
