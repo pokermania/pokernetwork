@@ -514,33 +514,16 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         tables = self.service.listTables('my', serial)
         self.assertEqual(1, len(tables))
         self.assertEqual(tables[0]['serial'], TABLE1)
-    def test02_currency(self):
-        tables = self.service.listTables('50', 0)
-        self.assertEqual(0, len(tables))
-        tables = self.service.listTables('1', 0)
+    def test02_filter(self):
+        tables = self.service.listTables('filter -m50', 0)
+        self.assertEqual(7, len(tables))
+        tables = self.service.listTables('filter -m250', 0)
         self.assertEqual(4, len(tables))
-        tables = self.service.listTables('2', 0)
+        tables = self.service.listTables('filter -m250 -M1000', 0)
+        self.assertEqual(0, len(tables))
+        tables = self.service.listTables('filter -M1000', 0)
         self.assertEqual(3, len(tables))
-    def test03_currency_and_variant(self):
-        tables = self.service.listTables('1\tfakevariant', 0)
-        self.assertEqual(0, len(tables))
-        tables = self.service.listTables('2\tfakevariant', 0)
-        self.assertEqual(0, len(tables))
-        tables = self.service.listTables('1\tholdem', 0)
-        self.assertEqual(4, len(tables))
-        tables = self.service.listTables('2\tholdem', 0)
-        self.assertEqual(2, len(tables))
-        tables = self.service.listTables('1\t7stud', 0)
-        self.assertEqual(0, len(tables))
-        tables = self.service.listTables('2\t7stud', 0)
-        self.assertEqual(1, len(tables))
-    def test04_variant(self):
-        tables = self.service.listTables('\tfakevariant', 0)
-        self.assertEqual(0, len(tables))
-        tables = self.service.listTables('\tholdem', 0)
-        self.assertEqual(6, len(tables))
-        tables = self.service.listTables('\t7stud', 0)
-        self.assertEqual(1, len(tables))
+
     def test05_all(self):
         tables = self.service.listTables('', 0)
         self.assertEqual(7, len(tables))
@@ -553,15 +536,6 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
                       "Limit HE 10-max 2/4", "Limit HE 6-max 2/4", "Stud 8-max 2/4" ]:
             tables = self.service.listTables(name, 0)
             self.assertEqual(1, len(tables))
-    def test07_marked(self):
-        tables = self.service.listTables('marked', 0)
-        self.assertEqual(7, len(tables))
-        self.assertEqual(tables[0]['player_seated'], 0)
-        
-        tables = self.service.listTables('marked', 1)
-        self.assertEqual(7, len(tables))
-        self.assertEqual(tables[0]['player_seated'], 1)
-        
     def test08_currency_and_variant_and_bettingStructure(self):
         tables = self.service.searchTables(1, 'fakevariant', 'fakebetting')
         self.assertEqual(0, len(tables))
@@ -798,29 +772,6 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
                     for betting in [ None, '', '1-2_20-200_limit', '100-200_2000-20000_no-limit' ]:
                         tables = self.service.searchTables(currencySerial, variant, betting, ii)
                         self.assertEqual(0, len(tables))
-        self.assertEquals(log_history.get_all(), [])
-    def test11_tooMany(self):
-
-        log_history.reset()
-        tables = self.service.listTables('\tholdem\t', 0)
-        self.assertEqual(6, len(tables))
-        self.assertEquals(log_history.get_all(), ["Following listTables() criteria query_string has more parameters than expected, ignoring third one and beyond in: \tholdem\t"])
-    def test12_currencySerialIsNotAnInteger(self):
-
-        log_history.reset()
-        tables = self.service.listTables("hithere\t", 0)
-        self.assertEqual(0, len(tables))
-        self.assertEquals(log_history.get_all(), ["listTables(): currency_serial parameter must be an integer, instead was: hithere"])
-    def test14_sqlInjectionInParametersShouldNotWork(self):
-
-        log_history.reset()
-        tables = self.service.listTables("\tholdem'; DELETE from tables WHERE variant = 'holdem", 0)
-        self.assertEqual(0, len(tables))
-        self.assertEquals(log_history.get_all(), [])
-
-        log_history.reset()
-        tables = self.service.listTables("\tholdem", 0)
-        self.assertEqual(6, len(tables))
         self.assertEquals(log_history.get_all(), [])
 
 #####################################################################

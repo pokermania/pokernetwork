@@ -1980,96 +1980,45 @@ class PokerService(service.Service):
            documentation.  It works as follows:
 
                0. If query_string is the empty string, or exactly 'all', then
-                  all tables in the system are returned.
-
-               1. If query_string is 'marked', then all tables in the system are
-                  returned, and the table objects contain a player_seated
-                  attribute that is set to 1 if the player is currently
-                  seated at that table (otherwise the attribute is set 
-                  to 0).
+                  all tables in the system are returned. If the string is exactly 'all'
+                  it will not be filtered by the current resthost.
                   
-               2. If query_string is 'my', then all tables that player identified
+               1. If query_string is 'my', then all tables that player identified
                   by the argument, 'serial', has joined are returned.
 
-               3. If query_string (a) contains *no* TAB (\t) characters AND (b)
-                  contains any non-numeric characters (aka is a string of
-                  letters, optionally with numbers, with no tabs), then it
-                  assumed to be a specific table name, and only table(s)
-                  with the specific name exactly equal to the string are
-                  returned.
+               2. If the query_string starts with "filter" there are a few possible parameters
+                    "-f" show full tables (default, hide full tables)
+                    "-m{min buy-in}" e.g. "-m100", it is important that no space is added between
+                        the m and the value
+                    "-M{max buy-in}" e.g. "-M1000", the capital M is used for the max buy-in
 
-               4. Otherwise, query_string is interpreted as a tab-separated
-                  group of criteria for selecting which tables to be
-                  returned, which mimics the 'string' input given in a
-                  PacketPokerTableSelect() (this method was written
-                  primarily to service that packet).  Two rules to keep in
-                  mind when constructing the query_string:
-
-                     (a) If any field is the empty string (i.e., nothing
-                         between the tab characters for that field), then
-                         the given criterion is not used for table
-                         selection.
-
-                     (b) If the second field is left completely off (by
-                         simply having fewer than the maximum tab
-                         characters) are treated as if they were present
-                         but empty strings (i.e., they are not used as a
-                         criterion for table selection).
-
-                     (c) Any additional fields are ignored, but an error
-                         message is generated.
-
-                  The tab-separated query string currently accepts two fields:
-                         "currency_serial\tvariant"
+               3. Otherwise it is assumed to be a specific table name, and only table(s)
+                  with the specific name exactly equal to the string are returned.
            """
-
+        default_query =\
+        """ SELECT
+                t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
+                t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
+                c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
+            FROM tables AS t
+            INNER JOIN tableconfigs AS c
+                ON c.serial = t.tableconfig_serial
+        """
         query_suffix = " ORDER BY t.players desc, t.serial"
         if self.resthost_serial and query_string != 'all': 
             query_suffix = (" AND t.resthost_serial = %d" % self.resthost_serial) + query_suffix
         
-        criteria = query_string.split("\t")
         cursor = self.db.cursor(DictCursor)
         if query_string == '' or query_string == 'all':
-            cursor.execute(
-                """ SELECT
-                        t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
-                        t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
-                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
-                    FROM tables AS t
-                    INNER JOIN tableconfigs AS c
-                        ON c.serial = t.tableconfig_serial
-                    WHERE 1
-                """ + query_suffix
-            )
+            cursor.execute( default_query + "WHERE 1" + query_suffix )
 
         elif query_string == 'my':
             cursor.execute(
-                """ SELECT
-                        t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
-                        t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
-                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
-                    FROM user2table AS u2t
-                    INNER JOIN tables AS t
-                        ON t.serial = u2t.table_serial
-                    INNER JOIN tableconfigs AS c
-                        ON c.serial = t.tableconfig_serial
-                    WHERE u2t.user_serial = %s
-                """ + query_suffix,
-                serial
-            )
-        elif query_string == 'marked':
-            cursor.execute(
-                """ SELECT
-                        t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
-                        t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
-                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial,
-                        IF(u2t.user_serial IS NULL,0,1) AS player_seated
-                    FROM tables AS t
-                    INNER JOIN tableconfigs AS c
-                        ON c.serial = t.tableconfig_serial
-                    LEFT JOIN user2table u2t
-                        ON u2t.table_serial=t.serial AND u2t.user_serial = %s
-                    WHERE 1
+                default_query + \
+                """
+                INNER JOIN user2table AS u2t
+                    ON t.serial = u2t.table_serial
+                WHERE u2t.user_serial = %s
                 """ + query_suffix,
                 serial
             )
@@ -2090,88 +2039,23 @@ class PokerService(service.Service):
                 # return []
                 print "ERR %r" % query_string
 
-            sql_select = """ SELECT
-                    t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
-                    t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
-                    c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
-                FROM tables AS t
-                INNER JOIN tableconfigs AS c
-                    ON c.serial = t.tableconfig_serial
-                WHERE """
+            sql_select = default_query
 
             where_clauses = []
             if show_full_tables:
                 where_clauses.append(" t.players < c.seats")
 
-            min_max= []
             if min_buy_in:
                 where_clauses.append("SUBSTRING_INDEX(SUBSTRING_INDEX(c.betting_structure, '_', 2), '-', -1)+0 >= %d" % min_buy_in) # max
             if max_buy_in:
                 where_clauses.append("SUBSTRING_INDEX(SUBSTRING_INDEX(c.betting_structure, '-', 2), '_', -1)+0 <= %d" % max_buy_in)
-            # if min_max:
-            #     where_clauses.append("( %s )" % " OR ".join(min_max))
-            sql_select += " AND ".join(where_clauses)
+
+            sql_select += " WHERE %s" % " AND ".join(where_clauses)
             sql_select += "\nGROUP BY c.name, t.players"
+            cursor.execute(sql_select + query_suffix)
 
-        cursor.execute(sql_select + query_suffix)
-
-
-
-        elif re.match("^[0-9]+$", query_string):
-            cursor.execute(
-                """ SELECT
-                        t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
-                        t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
-                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
-                    FROM tables AS t
-                    INNER JOIN tableconfigs AS c
-                        ON c.serial = t.tableconfig_serial
-                    WHERE c.currency_serial =  %s
-                """ + query_suffix,
-                query_string
-            )
-        elif len(criteria) > 1:
-            # Next, unpack the various possibilities in the tab-separated
-            # criteria, starting with everything set to None.  This is to
-            # setup the defaults to be None when we call the helper
-            # function.
-            whereValues = {'currency_serial': None, 'variant': None}
-            
-            if len(criteria) == 2:
-                whereValues['currency_serial'], whereValues['variant'] = criteria
-            else:
-                self.log.error("Following listTables() criteria query_string "
-                    "has more parameters than expected, ignoring third one and beyond in: %s",
-                    query_string
-                )
-                whereValues['currency_serial'], whereValues['variant'] = criteria[:2]
-            # Next, do some minor format verification for those values that are
-            # supposed to be integers.
-            if whereValues['currency_serial'] != None and whereValues['currency_serial'] != '':
-                if not re.match("^[0-9]+$", whereValues['currency_serial']):
-                    self.log.error(
-                        "listTables(): currency_serial parameter must be an integer, instead was: %s"
-                        % whereValues['currency_serial']
-                    )
-                    cursor.close()
-                    return []
-                else:
-                    whereValues['currency_serial'] = int(whereValues['currency_serial'])
-            cursor.close()
-            return self.searchTables(whereValues['currency_serial'], whereValues['variant'], None, None)
         else:
-            cursor.execute(
-                """ SELECT
-                        t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
-                        t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
-                        c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
-                    FROM tables AS t
-                    INNER JOIN tableconfigs AS c
-                        ON c.serial = t.tableconfig_serial
-                    WHERE name =  %s
-                """ + query_suffix,
-                query_string
-            )
+            cursor.execute( default_query + "WHERE name =  %s " + query_suffix, query_string )
 
         result = cursor.fetchall()
         cursor.close()
