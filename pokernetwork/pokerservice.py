@@ -2073,6 +2073,50 @@ class PokerService(service.Service):
                 """ + query_suffix,
                 serial
             )
+        elif query_string.startswith("filter"):
+            params = query_string.split()
+            min_buy_in = max_buy_in = show_full_tables = None
+            try:
+                for param in params[1:]:
+                    if param.startswith("-m"):
+                        min_buy_in = int(param[2:])
+                    elif param.startswith("-M"):
+                        max_buy_in = int(param[2:])
+                    if param == "-f":
+                        show_full_tables = True
+            except ValueError:
+                # self.log.error("Following listTables() query_string is malformed %r" % query_string)
+                # cursor.close()
+                # return []
+                print "ERR %r" % query_string
+
+            sql_select = """ SELECT
+                    t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
+                    t.players, t.observers, t.waiting, c.player_timeout, c.muck_timeout, c.currency_serial,
+                    c.name, c.variant, c.betting_structure, c.skin, t.tourney_serial
+                FROM tables AS t
+                INNER JOIN tableconfigs AS c
+                    ON c.serial = t.tableconfig_serial
+                WHERE """
+
+            where_clauses = []
+            if show_full_tables:
+                where_clauses.append(" t.players < c.seats")
+
+            min_max= []
+            if min_buy_in:
+                where_clauses.append("SUBSTRING_INDEX(SUBSTRING_INDEX(c.betting_structure, '_', 2), '-', -1)+0 >= %d" % min_buy_in) # max
+            if max_buy_in:
+                where_clauses.append("SUBSTRING_INDEX(SUBSTRING_INDEX(c.betting_structure, '-', 2), '_', -1)+0 <= %d" % max_buy_in)
+            # if min_max:
+            #     where_clauses.append("( %s )" % " OR ".join(min_max))
+            sql_select += " AND ".join(where_clauses)
+            sql_select += "\nGROUP BY c.name, t.players"
+
+        cursor.execute(sql_select + query_suffix)
+
+
+
         elif re.match("^[0-9]+$", query_string):
             cursor.execute(
                 """ SELECT
