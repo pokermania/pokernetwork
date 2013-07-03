@@ -1059,7 +1059,7 @@ class PokerTable:
         # Next, test to see if we have reached the server-wide maximum for
         # seated/observing players.
         if not self.game.isSeated(avatar.getSerial()) and self.factory.joinedCountReachedMax():
-            self.log.crit("joinPlayer: %d cannot join game %d because the server is full", serial, self.game.id)
+            self.log.inform("joinPlayer: %d cannot join game %d because the server is full", serial, self.game.id)
             avatar.sendPacketVerbose(PacketPokerError(
                 game_id = self.game.id,
                 serial = serial,
@@ -1072,7 +1072,7 @@ class PokerTable:
         # Next, test to see if joining this table will cause the avatar to
         # exceed the maximum permitted by the server.
         if len(avatar.tables) >= self.factory.simultaneous:
-            self.log.crit("joinPlayer: %d seated at %d tables (max %d)" % (serial, len(avatar.tables), self.factory.simultaneous))
+            self.log.inform("joinPlayer: %d seated at %d tables (max %d)" % (serial, len(avatar.tables), self.factory.simultaneous))
             return False
 
         #
