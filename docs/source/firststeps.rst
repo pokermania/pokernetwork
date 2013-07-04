@@ -24,6 +24,7 @@ The Packets that will be sent are C-Structs. For information about the packet by
 
 For example: ``('game_id', 0, 'I'),`` means *game_id* is an Integer. Given the Packet.format_info from the packets.py:
 ::
+
     'I': {'pack': lambda data: pack('!I', data),
           'unpack': lambda block: ( block[4:], int(unpack('!I', block[:4])[0]) ),
           'calcsize': lambda data: 4,
@@ -183,7 +184,7 @@ What to expect while participating in a hand ?
 
 
 What to send after receiving :class:`PACKET_POKER_SELF_IN_POSITION <pokerpackets.clientpackets.PacketPokerSelfInPosition>` (only in Explainmode)?
------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 | :class:`PACKET_POKER_CALL <pokerpackets.networkpackets.PacketPokerCall>`
 | :class:`PACKET_POKER_RAISE <pokerpackets.networkpackets.PacketPokerRaise>`
@@ -191,7 +192,7 @@ What to send after receiving :class:`PACKET_POKER_SELF_IN_POSITION <pokerpackets
 | :class:`PACKET_POKER_CHECK <pokerpackets.networkpackets.PacketPokerCheck>`
 
 What to send after receiving :class:`PACKET_POKER_MUCK_REQUEST <pokerpackets.networkpackets.PacketPokerMuckRequest>` ?
---------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------
 
 | :class:`PACKET_POKER_MUCK_ACCEPT <pokerpackets.networkpackets.PacketPokerMuckAccept>` or
 | :class:`PACKET_POKER_MUCK_DENY <pokerpackets.networkpackets.PacketPokerMuckDeny>`
@@ -205,7 +206,7 @@ How to list tournaments ?
 | :class:`PACKET_POKER_TOURNEY_SELECT <pokerpackets.networkpackets.PacketPokerTourneySelect>`
 
 What to expect in response to :class:`PACKET_POKER_TOURNEY_SELECT <pokerpackets.networkpackets.PacketPokerTourneySelect>` ? 
------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
 
 | :class:`PACKET_POKER_TOURNEY_LIST <pokerpackets.networkpackets.PacketPokerTourneyList>` containing
   :class:`PACKET_POKER_TOURNEY <pokerpackets.networkpackets.PacketPokerTourney>` packets
@@ -216,7 +217,7 @@ How to list players registered in a tournament ?
 | :class:`PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST <pokerpackets.networkpackets.PacketPokerTourneyRequestPlayersList>`
 
 What to expect in response to :class:`PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST <pokerpackets.networkpackets.PacketPokerTourneyRequestPlayersList>` ? 
--------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 | :class:`PACKET_POKER_TOURNEY_PLAYERS_LIST <pokerpackets.networkpackets.PacketPokerTourneyPlayersList>`
   
@@ -226,7 +227,7 @@ How to register to a tournament ?
 | :class:`PACKET_POKER_TOURNEY_REGISTER <pokerpackets.networkpackets.PacketPokerTourneyRegister>`
 
 What to expect in response to :class:`PACKET_POKER_TOURNEY_REGISTER <pokerpackets.networkpackets.PacketPokerTourneyRegister>` ? 
--------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
 
 | :class:`PACKET_POKER_TOURNEY_REGISTER <pokerpackets.networkpackets.PacketPokerTourneyRegister>` if success (the same that was sent)
 | :class:`PACKET_ERROR <pokerpackets.packets.PacketError>` if failure
@@ -237,13 +238,13 @@ How to unregister to a tournament ?
 | :class:`PACKET_POKER_TOURNEY_UNREGISTER <pokerpackets.networkpackets.PacketPokerTourneyUnregister>`
 
 What to expect in response to :class:`PACKET_POKER_TOURNEY_UNREGISTER <pokerpackets.networkpackets.PacketPokerTourneyUnregister>` ? 
----------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------
 
 | :class:`PACKET_POKER_TOURNEY_UNREGISTER <pokerpackets.networkpackets.PacketPokerTourneyUnregister>` if success (the same that was sent)
 | :class:`PACKET_ERROR <pokerpackets.packets.PacketError>` if failure
 
 What is sent to the tournament player that was busted out of a tournament (or is the winner) ? 
-----------------------------------------------------------------
+----------------------------------------------------------------------------------------------
 
 | :class:`PACKET_POKER_TOURNEY_RANK <pokerpackets.networkpackets.PacketPokerTourneyRank>`
 
@@ -256,7 +257,7 @@ What should the client expect when moved to another table during a tournament ?
 -------------------------------------------------------------------------------
 
 | :class:`PACKET_POKER_TABLE_MOVE <pokerpackets.networkpackets.PacketPokerTableMove>` (or :class:`PACKET_POKER_PLAYER_LEAVE <pokerpackets.networkpackets.PacketPokerPlayerLeave>` if explain mode)
-(and :class:`PACKET_POKER_SEATS <pokerpackets.networkpackets.PacketPokerSeats>` if explain mode)
+| (and :class:`PACKET_POKER_SEATS <pokerpackets.networkpackets.PacketPokerSeats>` if explain mode)
 
 How to instruct the server to wait for the client before dealing the next hand ? 
 --------------------------------------------------------------------------------
