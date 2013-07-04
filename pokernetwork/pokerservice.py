@@ -1233,11 +1233,11 @@ class PokerService(service.Service):
 
         if wait: self.timer_remove_player[timeout_key] = reactor.callLater(wait, self.tourneyRemovePlayer, tourney, serial)
         else: self.tourneyRemovePlayer(tourney, serial)
-
+    
     def tourneyRemovePlayer(self, tourney, serial):
         self.log.debug('remove now tourney(%d) serial(%d)', tourney.serial, serial)
         # the following line causes an IndexError if the player is not in any game. this is a good thing. 
-        table = (t for t in self.tables.itervalues() if t.tourney is tourney and serial in t.game.serial2player).next()
+        table = self.getTourneyTable(tourney, serial)
         table.kickPlayer(serial)
         tourney.finallyRemovePlayer(serial)
         
@@ -1260,6 +1260,7 @@ class PokerService(service.Service):
                 )
                 for avatar in avatars:
                     avatar.sendPacketVerbose(packet)
+            self.databaseEvent(event = PacketPokerMonitorEvent.RANK, param1 = serial, param2 = tourney.serial, param3 = rank)
             cursor.execute(
                 "UPDATE user2tourney " \
                 "SET rank = %s, table_serial = -1 " \
@@ -2937,6 +2938,9 @@ class PokerService(service.Service):
 
     def getTable(self, game_id):
         return self.tables.get(game_id, False)
+
+    def getTourneyTable(self, tourney, serial):
+        return (t for t in self.tables.itervalues() if t.tourney is tourney and serial in t.game.serial2player).next()
 
     def cleanupCrashedTables(self):
         c = self.db.cursor()

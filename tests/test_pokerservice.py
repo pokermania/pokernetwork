@@ -1444,7 +1444,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         def __init__(self, serial, testObject):
             self.via_satellite = 0
             self.serial = serial
-            self.packet_end_tournament = None
             self.packets = []
             self.tables = {}
             self.joinedTables = []
@@ -1452,10 +1451,6 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self._queue_packets = []
 
         def sendPacketVerbose(self, packet):
-            # packet_end_tournament was an expected field by some tests
-            # when I got here so I left it as is but added my own packet
-            # list for my own tests.
-            self.packet_end_tournament = packet
             self.packets.append(packet)
 
         def join(self, table, reason = ""):
@@ -1467,11 +1462,19 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.packets.append(packet)
 
 
+    class GameMockup:
+        def __init__(self):
+            self.id = None
+            
     class TableMockup:
         def __init__(self):
             self.serial = None
+            self.game = PokerServiceTestCase.GameMockup()
+            
         def kickPlayer(self, serial):
             self.kick_player = serial
+        def isStationary(self):
+            return False
 
     class TourneyMockup:
         def __init__(self):
@@ -1498,68 +1501,76 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             return False
 
 
-    # FIXME needs to be changed because prizes are not given on removal but on tourney end
-    def xtest09_endOfTournamentsNotInPlayers(self):
+    def test09_tourneyRemovePlayer(self):
         self.service.startService()
         self.createUsers()
-
-        table = self.TableMockup()
-        kickplayer = None
-        def getTableMockup(game_id):
-            return table
 
         tourney = self.TourneyMockup()
+        table = self.TableMockup()
+        self.service.getTourneyTable = lambda *a, **kw: table
         self.service.client = self.ClientMockup(self.user1_serial, self)
-        self.service.getTable = getTableMockup
         self.service.tourneyRemovePlayer(tourney, self.user1_serial)
-        self.assertEquals(self.service.client.packet_end_tournament == None, True)
-
-    # FIXME needs to be changed because prizes are not given on removal but on tourney end
-    def xtest10_endOfTournamentsNoPrize(self):
+        
+    def test10_endOfTournamentsNoPrize(self):
         self.service.startService()
         self.createUsers()
 
         table = self.TableMockup()
-        kickplayer = None
-        def getTableMockup( game_id):
-            return table
-
         tourney = self.TourneyMockup()
         tourney.players = [2, self.user1_serial, 10]
         client = self.ClientMockup(self.user1_serial, self)
+        self.service.getTourneyTable = lambda *a, **kw: table
+        
         self.service.avatar_collection.add(client)
-        self.service.getTable = getTableMockup
         self.service.tourneyRemovePlayer(tourney, self.user1_serial)
-        self.assertEquals(client.packet_end_tournament != None, True)
-        self.assertEquals(client.packet_end_tournament.serial == tourney.serial, True)
-        self.assertEquals(client.packet_end_tournament.money == 0, True)
-        self.assertEquals(client.packet_end_tournament.rank == 10, True)
-        self.assertEquals(client.packet_end_tournament.players == 3, True)
+        
+        packet_end_tournament = client.packets[-1]
+        self.assertEquals(packet_end_tournament != None, True)
+        self.assertEquals(packet_end_tournament.serial == tourney.serial, True)
+        self.assertEquals(packet_end_tournament.money == 0, True)
+        self.assertEquals(packet_end_tournament.rank == 10, True)
+        self.assertEquals(packet_end_tournament.players == 3, True)
 
-    # FIXME needs to be changed because prizes are not given on removal but on tourney end
-    def xtest11_endOfTournamentsPrize(self):
+    def test11_endOfTournamentsPrize(self):
         self.service.startService()
         self.createUsers()
 
         table = self.TableMockup()
-        kickplayer = None
-        def getTableMockup( game_id):
-            return table
-
         tourney = self.TourneyMockup()
         tourney.rank = 2
         client = self.ClientMockup(self.user1_serial, self)
+        self.service.getTourneyTable = lambda *a, **kw: table
+        
         self.service.avatar_collection.add(client)
-        self.service.getTable = getTableMockup
-        #TODO: needs a better fix
-        self.service.tables.values()[0].game.serial2player[self.user1_serial] = 1
         self.service.tourneyRemovePlayer(tourney, self.user1_serial)
-        self.assertEquals(client.packet_end_tournament != None, True)
-        self.assertEquals(client.packet_end_tournament.serial == tourney.serial, True)
-        self.assertEquals(client.packet_end_tournament.money == 20, True)
-        self.assertEquals(client.packet_end_tournament.rank == 2, True)
-        self.assertEquals(client.packet_end_tournament.players == 3, True)
+        
+        packet_end_tournament = client.packets[-1]
+        self.assertEquals(packet_end_tournament != None, True)
+        self.assertEquals(packet_end_tournament.serial == tourney.serial, True)
+        self.assertEquals(packet_end_tournament.money == 20, True)
+        self.assertEquals(packet_end_tournament.rank == 2, True)
+        self.assertEquals(packet_end_tournament.players == 3, True)
 
+    def test12_endOfTournamentRankEvent(self):
+        self.service.startService()
+        self.createUsers()
+
+        tourney = self.TourneyMockup()
+        table = self.TableMockup()
+        
+        events = []
+        def monitor(service, event): events.append(event)
+        
+        self.service.getTourneyTable = lambda *a, **kw: table
+        self.service.monitor_plugins = [monitor]
+        tourney.rank = 99
+        self.service.tourneyRemovePlayer(tourney, self.user1_serial)
+        
+        event = events[0]
+        self.assertEqual(event.param1,self.user1_serial)
+        self.assertEqual(event.param2, tourney.serial)
+        self.assertEqual(event.param3, tourney.rank)
+        
     def test13_checkTourneysSchedule_spawn_regular(self):
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
         pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.5
