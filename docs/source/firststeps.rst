@@ -278,13 +278,15 @@ What should the client expect when a tournament break begins/ends?
 What are the values that the currency_serial can contain?
 ----------------------------------------------------------
 
-=== ====================================
- 1  User Chips
- 2  Tourney Chips (bank roll of with 
-    this serial should be hidden from
-    the player.)
- 3  User Gold
-=== ====================================
+=============== ====================================
+currency_serial description
+=============== ====================================
+       1        User Chips
+       2        Tourney Chips (bank roll of with 
+                this serial should be hidden from
+                the player.)
+       3        User Gold
+=============== ====================================
 
 How can I get the blinds / buy-ins for cashgames?
 -------------------------------------------------
