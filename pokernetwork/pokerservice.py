@@ -2025,7 +2025,8 @@ class PokerService(service.Service):
             )
         elif query_string.startswith("filter"):
             params = query_string.split()
-            min_buy_in = max_buy_in = show_full_tables = None
+            min_buy_in = max_buy_in = None
+            hide_full_tables = True
             try:
                 for param in params[1:]:
                     if param.startswith("-m"):
@@ -2033,7 +2034,7 @@ class PokerService(service.Service):
                     elif param.startswith("-M"):
                         max_buy_in = int(param[2:])
                     if param == "-f":
-                        show_full_tables = True
+                        hide_full_tables = False
             except ValueError:
                 # self.log.error("Following listTables() query_string is malformed %r" % query_string)
                 # cursor.close()
@@ -2043,7 +2044,7 @@ class PokerService(service.Service):
             sql_select = default_query
 
             where_clauses = []
-            if show_full_tables:
+            if hide_full_tables == True:
                 where_clauses.append(" t.players < c.seats")
 
             if min_buy_in:
