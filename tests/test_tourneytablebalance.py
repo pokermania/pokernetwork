@@ -145,6 +145,9 @@ class ClientMockup:
         self.deferred = defer.Deferred()
         self.type = type
         return self.deferred
+    
+    def getName(self):
+        return 'ClientMockup_%s' % self.serial
 
 class TourneyTableBalanceTestCase(unittest.TestCase):
 
