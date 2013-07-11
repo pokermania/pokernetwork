@@ -274,3 +274,15 @@ What should the client expect when a tournament break begins/ends?
 
 | :class:`POKER_TABLE_TOURNEY_BREAK_BEGIN <pokerpackets.networkpackets.PacketPokerTableTourneyBreakBegin>`
 | :class:`POKER_TABLE_TOURNEY_BREAK_DONE <pokerpackets.networkpackets.PacketPokerTableTourneyBreakDone>`
+
+What are the values that the currency_serial can contain?
+----------------------------------------------------------
+
+=== ====================================
+ 1  User Chips
+ 2  Tourney Chips (bank roll of with 
+    this serial should be hidden from
+    the player.)
+ 3  User Gold
+=== ====================================
+ 
