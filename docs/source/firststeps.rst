@@ -285,4 +285,10 @@ What are the values that the currency_serial can contain?
     the player.)
  3  User Gold
 === ====================================
- 
+
+How can I get the blinds / buy-ins for cashgames?
+=================================================
+
+You can look at the name of the betting structure. The betting_structure has a naming convention::
+
+    <small blind>-<big_blind>_<min buy_in>-<max buy_in>_<something>
