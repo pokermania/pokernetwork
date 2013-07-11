@@ -1504,7 +1504,7 @@ class PokerService(service.Service):
                 message = "Tournament %d does not exist" % tourney_serial
             )
         tourney = self.tourneys[tourney_serial]
-        players = [(self.getName(serial),-1,0) for serial in tourney.players]
+        players = [(name,-1,0) for name in tourney.players.itervalues()]
         return PacketPokerTourneyPlayersList(tourney_serial = tourney_serial, players = players)
 
     def tourneyStats(self):
@@ -1514,7 +1514,7 @@ class PokerService(service.Service):
         cursor.execute("SELECT COUNT(*) FROM user2tourney WHERE rank = -1")
         players = int(cursor.fetchone()[0])
         cursor.close()
-        return ( players, tourneys )
+        return (players, tourneys)
     
     def tourneyPlayerStats(self, tourney_serial, user_serial):
         tourney = self.tourneys.get(tourney_serial,None)
@@ -1679,6 +1679,7 @@ class PokerService(service.Service):
         # Notify success
         for avatar in avatars:
             avatar.sendPacketVerbose(packet)
+            
         tourney.register(serial,self.getName(serial))
         return True
 
@@ -1697,14 +1698,14 @@ class PokerService(service.Service):
             return PacketError(
                 other_type = PACKET_POKER_TOURNEY_UNREGISTER,
                 code = PacketPokerTourneyUnregister.NOT_REGISTERED,
-                message = "Player %d is not registered in tournament %d " % ( serial, tourney_serial ) 
+                message = "Player %d is not registered in tournament %d " % (serial, tourney_serial) 
             )
 
         if not tourney.canUnregister(serial):
             return PacketError(
                 other_type = PACKET_POKER_TOURNEY_UNREGISTER,
                 code = PacketPokerTourneyUnregister.TOO_LATE,
-                message = "It is too late to unregister player %d from tournament %d " % ( serial, tourney_serial ) 
+                message = "It is too late to unregister player %d from tournament %d " % (serial, tourney_serial) 
             )
 
         cursor = self.db.cursor()
@@ -1873,9 +1874,7 @@ class PokerService(service.Service):
                 message = "Player %d did not participate in hand %d" % ( serial, hand_serial ) 
             )
 
-        serial2name = {}
-        for player_serial in player_list:
-            serial2name[player_serial] = self.getName(player_serial)
+        serial2name = dict(self.getNames(player_list))
         #
         # Filter out the pocket cards that do not belong to player "serial"
         #
@@ -2484,7 +2483,7 @@ class PokerService(service.Service):
     def isTemporaryUser(self,serial):
         return bool(
             self.temporary_serial_min <= serial <= self.temporary_serial_max or 
-            re.match(self.temporary_users_pattern,self.getName(serial))
+            re.match(self.temporary_users_pattern, self.getName(serial))
         )
         
     def getUserInfo(self, serial):
@@ -2720,20 +2719,25 @@ class PokerService(service.Service):
         return True
 
     def getName(self, serial):
+        """Returns the name to the given serial"""
+        avatars = self.avatar_collection.get(serial)
+        return avatars[0].getName() if avatars else self.getNameFromDatabase(serial)
+    
+    def getNameFromDatabase(self, serial):
         if serial == 0:
             return "anonymous"
 
         cursor = self.db.cursor()
-        sql = ( "SELECT name FROM users WHERE serial = " + str(serial) )
-        cursor.execute(sql)
+        sql = "SELECT name FROM users WHERE serial = %s"
+        cursor.execute(sql, (serial,))
         if cursor.rowcount != 1:
             self.log.error("getName(%d) expected one row got %d", serial, cursor.rowcount)
             return "UNKNOWN"
         (name,) = cursor.fetchone()
         cursor.close()
         return name
-    
-    def getNames(self,serials):
+        
+    def getNames(self, serials):
         cursor = self.db.cursor()
         sql = "SELECT serial,name FROM users WHERE serial IN (%s)"
         params = ", ".join("%d" % serial for serial in set(serials) if serial > 0)
@@ -2741,7 +2745,7 @@ class PokerService(service.Service):
         ret = cursor.fetchall()
         cursor.close()
         return ret
-    
+
     def getTableAutoDeal(self):
         return self.settings.headerGet("/server/@autodeal") == "yes"
     

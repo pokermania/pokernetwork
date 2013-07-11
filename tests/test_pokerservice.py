@@ -199,6 +199,7 @@ class MockCursorBase:
         cursorSelf.counts = {}
         cursorSelf.acceptedStatements = acceptList
         cursorSelf.row = ()
+        cursorSelf.rows = ()
         for cntType in cursorSelf.acceptedStatements:
             cursorSelf.counts[cntType] = 0 
     def close(cursorSelf):
@@ -246,8 +247,14 @@ class MockCursorBase:
         cursorSelf.statementActions(sql, statement)
         cursorSelf._executed = sql
         return cursorSelf.rowcount
-    def fetchone(cursorSelf): return cursorSelf.row
-    def fetchall(cursorSelf): return [cursorSelf.row] if cursorSelf.row else [] 
+    def fetchone(cursorSelf): 
+        return cursorSelf.rows[0] if cursorSelf.rows else cursorSelf.row
+    
+    def fetchall(cursorSelf):
+        if cursorSelf.rows: return cursorSelf.rows
+        elif cursorSelf.row: return [cursorSelf.row]
+        else: return []
+         
     def __iter__(cursorSelf):
         def i():
             if False:
@@ -358,9 +365,13 @@ monitor_settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
 
 class ClientMockupBase:
     def __init__(self, serial):
-        self.serial == serial
+        self.serial = serial
+        
     def getSerial(self):
         return self.serial
+    
+    def getName(self):
+        return 'ClientMockup_%s' % self.serial
 
 class MonitorTestCase(unittest.TestCase):
 
@@ -1457,9 +1468,11 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.joinedTables.append(table)
             self.tables[table.game.id] = table
 
-
         def sendPacket(self, packet):
             self.packets.append(packet)
+            
+        def getName(self):
+            return 'ClientMockup_%s' % self.serial
 
 
     class GameMockup:
@@ -4538,16 +4551,16 @@ class PokerServiceCoverageTests(unittest.TestCase):
         self.service.db = MockDatabase(MockCursor)
 
         class MockTourney:
-            def __init__(mtSelf): mtSelf.players = [ 5, 6, 0 ]
+            def __init__(mtSelf): 
+                mtSelf.players = dict((serial,'Mock_%s' % serial) for serial in (5,6,0))
 
         self.service.tourneys = { 77: MockTourney() }
 
         log_history.reset()
         pack = self.service.tourneyPlayersList(77)
-        self.assertEquals(pack.players, [('joe', -1, 0), ('UNKNOWN', -1, 0), ('anonymous', -1, 0)])
+        self.assertEquals(set(pack.players), {('Mock_5', -1, 0), ('Mock_6', -1, 0), ('Mock_0', -1, 0)})
         self.assertEquals(pack.type, PACKET_POKER_TOURNEY_PLAYERS_LIST)
         self.assertEquals(pack.tourney_serial, 77)
-        self.assertEquals(log_history.get_all(), ['getName(6) expected one row got 0'])
 
         self.service.db = oldDb
     def test18_tourneyStats_sqlFails(self):
@@ -5193,7 +5206,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         def mockLoseNotVisible(cardSelf): cardSelf.cards = -1
         PokerCards.loseNotVisible = mockLoseNotVisible
         saveFunc = PokerCards.loseNotVisible
-        acceptList = ["SELECT description FROM hands WHERE ", "SELECT name FROM users WHERE serial = "]
+        acceptList = ["SELECT description FROM hands WHERE ", "SELECT serial,name FROM users WHERE serial IN "]
         class MockCursor(MockCursorBase):
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, acceptList)
@@ -5211,11 +5224,8 @@ class PokerServiceCoverageTests(unittest.TestCase):
                         '("neither", [], { 113 : PokerCards("AsAh"),' '\n' \
                         '222 : PokerCards("KsKd") }),' '\n' \
                         ']',)
-                else:
-                    userSerial =  int(sql[len(statement):])
-                    if userSerial == 113: cursorSelf.row = ("Doyle Brunson",)
-                    elif userSerial == 222: cursorSelf.row = ("Stu Unger",)
-                    else: self.fail("unknown user serial %d" % userSerial)
+                elif statement == "SELECT serial,name FROM users WHERE serial IN ":
+                    cursorSelf.rows = [(113,'Doyle Brunson'), (222,'Stu Unger')]
 
         self.service = pokerservice.PokerService(self.settings)
 
