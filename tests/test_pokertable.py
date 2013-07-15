@@ -344,7 +344,7 @@ class MockService:
         return bool(
             self.temporary_serial_min <= serial <= self.temporary_serial_max or 
             re.match(self.temporary_users_pattern,self.getName(serial))
-        )        
+        )
         
             
 class MockClient:

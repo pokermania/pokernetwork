@@ -863,6 +863,7 @@ class PokerService(service.Service):
                 'rebuy_delay': schedule['rebuy_delay'],
                 'add_on': schedule['add_on'],
                 'add_on_delay': schedule['add_on_delay'],
+                'inactive_delay': schedule['inactive_delay'],
                 'start_time': schedule['start_time'],
                 'via_satellite': schedule['via_satellite'],
                 'satellite_of': schedule['satellite_of'],
@@ -1231,15 +1232,15 @@ class PokerService(service.Service):
                 self.timer_remove_player[timeout_key].cancel()
             del self.timer_remove_player[timeout_key]
 
-        if wait: self.timer_remove_player[timeout_key] = reactor.callLater(wait, self.tourneyRemovePlayer, tourney, serial)
-        else: self.tourneyRemovePlayer(tourney, serial)
+        if wait: self.timer_remove_player[timeout_key] = reactor.callLater(wait, self.tourneyRemovePlayer, tourney, serial, now)
+        else: self.tourneyRemovePlayer(tourney, serial, now)
     
-    def tourneyRemovePlayer(self, tourney, serial):
+    def tourneyRemovePlayer(self, tourney, serial, now=False):
         self.log.debug('remove now tourney(%d) serial(%d)', tourney.serial, serial)
         # the following line causes an IndexError if the player is not in any game. this is a good thing. 
         table = self.getTourneyTable(tourney, serial)
         table.kickPlayer(serial)
-        tourney.finallyRemovePlayer(serial)
+        tourney.finallyRemovePlayer(serial, now)
         
         cursor = self.db.cursor()
         try:
