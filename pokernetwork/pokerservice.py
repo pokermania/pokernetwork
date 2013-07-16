@@ -1283,7 +1283,11 @@ class PokerService(service.Service):
         # 2 players in the tourney (if there is only 1 player left, the finishHandler will be
         # called in any case).
         tourney.need_balance = True
-        if table.isStationary() and len(tourney.winners) < tourney.registered - 1:
+        if (
+            table.isStationary() and 
+            len(tourney.winners) < tourney.registered and 
+            tourney.state not in (TOURNAMENT_STATE_COMPLETE, TOURNAMENT_STATE_CANCELED)
+        ):
             self.tourneyFinishHandler(tourney, table.game.id)
 
     def tourneySatelliteLookup(self, tourney):
