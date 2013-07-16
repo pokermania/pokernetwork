@@ -452,6 +452,9 @@ class MockClient:
                 self.url = "http://fake"
                 self.outfit = ""
         return MockPlayerInfo(self)
+    
+    def buyOutPlayer(self, table, serial):
+        pass
 
 # --------------------------------------------------------------------------------
 class MockClientBot(MockClient):
