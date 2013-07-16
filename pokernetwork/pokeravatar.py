@@ -1390,7 +1390,12 @@ class PokerAvatar:
             return True
         else:
             return False
-
+        
+    def buyOutPlayer(self, table, serial):
+        game = table.game
+        money = game.receiveBuyOut(serial)
+        return money
+        
     def autoBlindAnte(self, table, serial, auto):
         game = table.game
         if game.isTournament():

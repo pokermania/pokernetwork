@@ -374,6 +374,9 @@ class PokerTable:
             elif event_type == "rebuy":
                 pass
 
+            elif event_type == "buyOut":
+                pass
+                                
             elif event_type == "player_list":
                 pass
 
@@ -481,7 +484,7 @@ class PokerTable:
             event_type = event[0]
             if event_type in (
                 'all-in', 'wait_for','blind_request',
-                'muck','finish', 'leave','rebuy'
+                'muck','finish', 'leave','rebuy', 'buyOut'
             ):
                 pass
 
@@ -508,7 +511,7 @@ class PokerTable:
                 'call', 'check', 'fold',
                 'raise', 'canceled', 'position',
                 'blind', 'ante', 'player_list',
-                'rake', 'end', 'sit', 'sitOut',
+                'rake', 'end', 'sit', 'sitOut'
             ):
                 new_history.append(event)
 
@@ -904,6 +907,8 @@ class PokerTable:
                     self.seated2observer(avatar)
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     self.factory.updateTableStats(self.game, len(self.observers), len(self.waiting))
+                elif avatar.buyOutPlayer(self, serial):
+                    self.factory.buyOutPlayer(serial, self.game.id, self.currency_serial)
                 else:
                     self.update()
             else:
@@ -1281,6 +1286,8 @@ class PokerTable:
                     serial = avatar.getSerial(),
                     other_type = PACKET_POKER_REBUY
                 ))
+        else:
+            self.game.comeBack(serial)
         return retval
 
     def _rebuyPlayerRequestNow(self, serial, amount):

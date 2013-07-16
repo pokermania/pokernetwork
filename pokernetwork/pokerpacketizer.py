@@ -214,7 +214,16 @@ def history2packets(history, game_id, previous_dealer, cache):
                 serial = serial,
                 amount = amount
             ))
-
+        
+        elif event_type == "buyOut":
+            serial, _money, bet = event[1:]
+            packets.append(PacketPokerPlayerChips(
+                game_id = game_id,
+                serial = serial,
+                money = 0,
+                bet = bet
+            ))
+            
         elif event_type == "leave":
             quitters = event[1]
             for (serial, seat) in quitters:
