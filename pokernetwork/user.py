@@ -27,7 +27,7 @@ from re import match
 from pokerpackets.networkpackets import PacketPokerSetAccount
 
 NAME_LENGTH_MAX = 50
-NAME_LENGTH_MIN = 5
+NAME_LENGTH_MIN = 3
 
 PASSWORD_LENGTH_MAX = 15
 PASSWORD_LENGTH_MIN = 5

@@ -102,7 +102,7 @@ class PokerUserTestCase(unittest.TestCase):
 
         # Empty string.
         self.assertEquals(userClass.checkName(""),
-                          (False, mylimits.NAME_TOO_SHORT, 'login name must be at least 5 characters long'))
+                          (False, mylimits.NAME_TOO_SHORT, 'login name must be at least 3 characters long'))
 
 
         # First, loops to test length only.  All generated strings should be valid
@@ -120,7 +120,7 @@ class PokerUserTestCase(unittest.TestCase):
                 name = first
                 while len(name) < userClass.NAME_LENGTH_MIN:
                     self.assertEquals(userClass.checkName(name),
-                                      (False, mylimits.NAME_TOO_SHORT, 'login name must be at least 5 characters long'))
+                                      (False, mylimits.NAME_TOO_SHORT, 'login name must be at least 3 characters long'))
                     name += cc
                 while len(name) <= userClass.NAME_LENGTH_MAX:
                     self.assertEquals(userClass.checkName(name), (True, None, None))
