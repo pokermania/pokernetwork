@@ -570,8 +570,10 @@ class PokerClientProtocol(UGAMEClientProtocol):
                     self.log.inform("This seat is busy")
                 else:
                     if game.isTournament():
-                        self.sendPacket(PacketPokerSit(serial = self.getSerial(),
-                                                       game_id = game.id))
+                        self.sendPacket(PacketPokerSit(
+                            serial = self.getSerial(), 
+                            game_id = game.id
+                        ))
 
             elif packet.type == PACKET_POKER_MUCK_REQUEST:                
                 if packet.game_id != self.getCurrentGameId():
@@ -592,8 +594,7 @@ class PokerClientProtocol(UGAMEClientProtocol):
         games = self.factory.getGameIds()
         if exclude:
             games.remove(exclude)
-        return PacketPokerCurrentGames(game_ids = games,
-                                       count = len(games))
+        return PacketPokerCurrentGames(game_ids = games, count = len(games))
     
     def connectionLost(self, reason):
         if self.factory.crashing:

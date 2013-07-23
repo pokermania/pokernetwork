@@ -1317,7 +1317,7 @@ class PokerTable:
             return False
 
         if self.tourney:
-            self.log.error("player %d cannot use PacketPokerRebuy to rebuy during tourney")
+            self.log.error("player %d cannot use PacketPokerRebuy to rebuy during tourney", serial)
             return False
 
         if not self.game.rebuy(serial, amount):
@@ -1434,13 +1434,13 @@ class PokerTable:
         return packet
 
 
-    def _gameCallbackEndTurn(self,game_id,game_type,*args):
+    def _gameCallbackEndTurn(self, game_id, game_type, *args):
         if game_type == 'end':
             self.endTurn()
             if self.tourney:
                 self.tourneyEndTurn()
 
-    def _gameCallbackTourneyUpdateStats(self,game_id,game_type,*args):
+    def _gameCallbackTourneyUpdateStats(self, game_id, game_type, *args):
         if game_type == 'end':
             self.tourneyUpdateStats()
 
