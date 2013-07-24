@@ -306,6 +306,12 @@ What is a dead amount in PacketPokerBlind?
 
 After you joining a table it is possible a user would have to wait till the big blind is moving to his place before he can actually play. The default behaviour is to pay a late blind instead and you can usualy play the next round (Except your seat is between the dealer and the big blind). It is possible to wait for big blind if a :class:`POKER_WAIT_BIG_BLIND <pokerpackets.networkpackets.PacketPokerWaitBigBlind>` is sent. 
 
-If the table is too full the player is forced to pay a **dead** amount directly into the pot and the normal **blind** to his bet. This done, because other wise player could occupy a seat without playing.
+If the table is too full the player is forced to pay a **dead** amount directly into the pot and the normal **blind** to his bet.
 
-It is not guaranteed that the can player will acually until the big blind will move to his seat.
+======= ========== ====== ====== =====
+  Big    Late Dead        Small
+User A  User B     User C User D Pot
+   100         100      0     50    50
+======= ========== ====== ====== =====
+
+Remember the dead blind goes directly to the pot so *Player C* would still have to call 100 not 150.
