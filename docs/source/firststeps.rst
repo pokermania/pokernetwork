@@ -294,3 +294,18 @@ How can I get the blinds / buy-ins for cashgames?
 You can look at the name of the betting structure. The betting_structure has a naming convention::
 
     <small blind>-<big_blind>_<min buy_in>-<max buy_in>_<something>
+
+
+What to do after a PacketPokerBlindRequest?
+-------------------------------------------
+
+When you get a :class:`PACKET_POKER_BLIND_REQUEST <pokerpackets.networkpackets.PacketPokerBlindRequest>` you get all the information how much you should pay. It is possible, that you need to pay a **blind** and a **dead**. Both values are just for your information. You should answer with a :class:`PACKET_POKER_BLIND <pokerpackets.networkpackets.PacketPokerBlind>` with just your serial filled. The server will know the correckt values and will charge you those. After this every one on this table get a :class:`PACKET_POKER_BLIND <pokerpackets.networkpackets.PacketPokerBlind>` with the **blind** amount and maybe a **dead** amount.
+
+What is a dead amount in PacketPokerBlind?
+------------------------------------------
+
+After you joining a table it is possible a user would have to wait till the big blind is moving to his place before he can actually play. The default behaviour is to pay a late blind instead and you can usualy play the next round (Except your seat is between the dealer and the big blind). It is possible to wait for big blind if a :class:`POKER_WAIT_BIG_BLIND <pokerpackets.networkpackets.PacketPokerWaitBigBlind>` is sent. 
+
+If the table is too full the player is forced to pay a **dead** amount directly into the pot and the normal **blind** to his bet. This done, because other wise player could occupy a seat without playing.
+
+It is not guaranteed that the can player will acually until the big blind will move to his seat.
