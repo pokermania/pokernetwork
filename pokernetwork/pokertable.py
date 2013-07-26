@@ -623,8 +623,8 @@ class PokerTable:
 
     def serialsWaitingForRebuy(self):
         serials = \
-            {serial for (serial, amount) in self.rebuy_stack} | \
-            {p.serial for p in self.game.playersAll() if p.auto_refill or p.auto_rebuy}
+            set(serial for (serial, amount) in self.rebuy_stack) | \
+            set(p.serial for p in self.game.playersAll() if p.auto_refill or p.auto_rebuy)
         return list(serials)
     
     def shouldAutoDeal(self):
