@@ -143,8 +143,6 @@ class PokerTable:
         self.game.setBettingStructure(description["betting_structure"])
         self.game.setMaxPlayers(int(description["seats"]))
         self.game.forced_dealer_seat = int(description.get("forced_dealer_seat", -1))
-        self.game.registerCallback(self._gameCallbackEndTurn)
-        self.game.registerCallback(self._gameCallbackTourneyUpdateStats)
         self.skin = description.get("skin") or "default"
         self.currency_serial = int(description.get("currency_serial", 0))
         self.playerTimeout = int(description.get("player_timeout", 60))
@@ -267,7 +265,7 @@ class PokerTable:
             for player in self.game.playersAll():
                 player.getUserData()['ready'] = True
 
-    def endTurn(self):
+    def rebuyAllPlayers(self):
         for serial, amount in self.rebuy_stack:
             self.rebuyPlayerRequestNow(serial, amount)
 
@@ -537,32 +535,33 @@ class PokerTable:
                 )
             elif event_type == "leave":
                 quitters = event[1]
-                for serial, seat in quitters:  # @UnusedVariable
+                for serial, _seat in quitters:
                     self.factory.leavePlayer(serial, self.game.id, self.currency_serial)
                     for avatar in self.avatar_collection.get(serial)[:]:
                         self.seated2observer(avatar)
 
-    def cashGame_kickPlayerSittingOutTooLong(self, history):
-        if self.tourney: return
-        finished = False
+    def _eventInHistory(self, history, event_type):
         # Go through the history backwards, as the finish event is found at the end
         for event in reversed(history):
-            if event[0] == "finish":
-                finished = True
-                break
-        if finished:
+            if event[0] == event_type:
+                return True
+        return False
+    
+    def kickPlayerSittingOutTooLong(self, history):
+        if self.tourney: return
+        if self._eventInHistory(history, "finish"):
             for player in self.game.playersAll():
                 if player.getMissedRoundCount() >= self.max_missed_round:
                     self.kickPlayer(player.serial)
-
-    def tourneyEndTurn(self):
+                    
+    def tourneyEndTurn(self, history):
         if not self.tourney: return
-        for event in self.game.historyGet()[self.history_index:]:
-            if event[0] == "end":
-                self.factory.tourneyEndTurn(self.tourney, self.game.id)
+        if self._eventInHistory(history, "end"):
+            return self.factory.tourneyEndTurn(self.tourney, self.game.id)
 
-    def tourneyUpdateStats(self):
-        if self.tourney:
+    def tourneyUpdateStats(self, history):
+        if not self.tourney: return
+        if self._eventInHistory(history, "end"):
             self.factory.tourneyUpdateStats(self.tourney, self.game.id)
 
     def autoDeal(self):
@@ -582,6 +581,10 @@ class PokerTable:
                             player.serial
                         )
                         avatar.bugous_processing_hand = True
+        #
+        # Rebuy all players now, if they issued a rebuy or are auto-rebuying               
+        self.rebuyAllPlayers()
+        
         if self.shouldAutoDeal():
             self.beginTurn()
             self.update()
@@ -618,6 +621,12 @@ class PokerTable:
                 avatar.sendPacket(packet)
         return True
 
+    def serialsWaitingForRebuy(self):
+        serials = \
+            {serial for (serial, amount) in self.rebuy_stack} | \
+            {p.serial for p in self.game.playersAll() if p.auto_refill or p.auto_rebuy}
+        return list(serials)
+    
     def shouldAutoDeal(self):
         if self.factory.shutting_down:
             self.log.debug("Not autodealing because server is shutting down")
@@ -631,7 +640,7 @@ class PokerTable:
         if self.game.state == pokergame.GAME_STATE_MUCK:
             self.log.debug("Not autodealing %d because game is in muck state", self.game.id)
             return False
-        if self.game.sitCount() < 2:
+        if self.game.sitCount() < 2 and not self.serialsWaitingForRebuy():
             self.log.debug("Not autodealing %d because less than 2 players willing to play", self.game.id)
             return False
         if self.game.isTournament():
@@ -726,12 +735,16 @@ class PokerTable:
                 packets = [self.getBetLimits()] + packets
             if len(packets) > 0:
                 self.broadcast(packets)
-            self.tourneyEndTurn()
 
             if self.canBeDespawned():
                 self.factory.despawnTable(self.game.id)
+            
             if self.isValid():
-                self.cashGame_kickPlayerSittingOutTooLong(history_tail)
+                self.kickPlayerSittingOutTooLong(history_tail)
+                self.tourneyEndTurn(history_tail)
+                
+            if self.isValid():                
+                self.tourneyUpdateStats(history_tail)
                 self.scheduleAutoDeal()
         finally:
             if history_len != len(history):
@@ -1102,9 +1115,8 @@ class PokerTable:
 
         if came_back:
             #
-            # it does not hurt to re-sit the avatar
-            # but is needed for other clients to notice
-            # the arrival
+            # It does not hurt to re-sit the avatar but it
+            # is needed for other clients to notice the arrival
             self._sitPlayer(serial)
 
         return True
@@ -1191,13 +1203,13 @@ class PokerTable:
         return avatar.autoBlindAnte(self, avatar.getSerial(), auto)
 
     def autoRefill(self, serial, auto):
-        if auto not in range(4):
+        if auto not in (PacketSetOption.OFF, PacketSetOption.AUTO_REFILL_MIN, PacketSetOption.AUTO_REFILL_MAX, PacketSetOption.AUTO_REFILL_BEST):
             return False
         self.game.serial2player[serial].auto_refill = auto
         return True
 
     def autoRebuy(self, serial, auto):
-        if auto not in range(4):
+        if auto not in (PacketSetOption.OFF, PacketSetOption.AUTO_REBUY_MIN, PacketSetOption.AUTO_REBUY_MAX, PacketSetOption.AUTO_REBUY_BEST):
             return False
         self.game.serial2player[serial].auto_rebuy = auto
         return True
@@ -1233,7 +1245,6 @@ class PokerTable:
             ))
 
     def destroyPlayer(self, avatar):
-        serial = avatar.getSerial()
         self.factory.joinedCountDecrease()
         if avatar in self.observers:
             self.observers.remove(avatar)
@@ -1274,8 +1285,8 @@ class PokerTable:
     def rebuyPlayerRequest(self, serial, amount):
         if self.game.isRebuyPossible():
             return self.rebuyPlayerRequestNow(serial, amount)
-
-        self.rebuy_stack.append((serial, amount))
+        else:
+            self.rebuy_stack.append((serial, amount))
 
     def rebuyPlayerRequestNow(self, serial, amount):
         retval = self._rebuyPlayerRequestNow(serial, amount)
@@ -1286,8 +1297,13 @@ class PokerTable:
                     serial = avatar.getSerial(),
                     other_type = PACKET_POKER_REBUY
                 ))
-        else:
+        if retval is None:
+            for avatar in self.avatar_collection.get(serial):
+                self.leavePlayer(avatar)
+            
+        if retval:
             self.game.comeBack(serial)
+            self.game.sit(serial)
         return retval
 
     def _rebuyPlayerRequestNow(self, serial, amount):
@@ -1309,12 +1325,11 @@ class PokerTable:
             self.log.warn("player %d can't bring more money to the table", serial, refs=[('User', serial, int)])
             return False
         
-
         amount = self.factory.buyInPlayer(serial, self.game.id, self.currency_serial, amount)
 
         if amount == 0:
             self.log.warn("player %d is broke and cannot rebuy", serial)
-            return False
+            return None
 
         if self.tourney:
             self.log.error("player %d cannot use PacketPokerRebuy to rebuy during tourney", serial)
@@ -1433,16 +1448,6 @@ class PokerTable:
             )
         return packet
 
-
-    def _gameCallbackEndTurn(self, game_id, game_type, *args):
-        if game_type == 'end':
-            self.endTurn()
-            if self.tourney:
-                self.tourneyEndTurn()
-
-    def _gameCallbackTourneyUpdateStats(self, game_id, game_type, *args):
-        if game_type == 'end':
-            self.tourneyUpdateStats()
 
     def _initLockCheck(self):
         self._lock_check = LockCheck(20 * 60, self._warnLock)

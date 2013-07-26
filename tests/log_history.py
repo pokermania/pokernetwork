@@ -39,6 +39,17 @@ class Log(object):
     def get_all_refs(self):
         return ['%s: %s' % (m.refs, m.formated) for m in self.output]
 
+    def print_all(self):
+        refs = self.get_all()
+        self.reset()
+        print '\n'.join(refs)
+        
+    def print_all_refs(self):
+        refs = self.get_all_refs()
+        self.reset()
+        print '\n'.join(refs)
+    
+
     def search(self, needle):
         for m in self.output:
             if needle in m.formated:

@@ -2338,16 +2338,19 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
 
     def test54_autorebuy_off(self):
         return self._test54_autorebuy("normal")
+    
     def test54_autorebuy(self):
         return self._test54_autorebuy("rebuy")
+    
     def test54_autorefill_off(self):
         return self._test54_autorebuy("refill")
+    
     def test54_autorefill_2(self):
         return self._test54_autorebuy("refill2")
 
     def _test54_autorebuy(self, mode="normal"):
         table = self.table9
-
+        game = table.game
         player_list = [101, 102, 103]
         clients = {}
 
@@ -2367,13 +2370,13 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         decks.append(cards)
         decks.append(cards)
 
-        table.game.shuffler = PokerPredefinedDecks(decks)
+        game.shuffler = PokerPredefinedDecks(decks)
 
         def sitIn(serial):
             client = clients[serial]
             table.seatPlayer(client, -1)
-            table.buyInPlayer(client, table.game.maxBuyIn())
-            table.game.noAutoBlindAnte(serial)
+            table.buyInPlayer(client, game.maxBuyIn())
+            game.noAutoBlindAnte(serial)
             table.sitPlayer(client)
             table.update()
 
@@ -2391,51 +2394,54 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
 
         def secondGame(packet):
             if mode == "normal":
-                assert False, "There should be no second hand"
-            if mode == "rebuy":
-                assert 103 in table.game.serialsInGame()
-                assert 102 in table.game.serialsInGame()
-                assert table.game.serial2player[102].money == table.game.buyIn()
-            if mode == "refill":
-                assert 103 in table.game.serialsInGame()
-                assert 102 in table.game.serialsInGame()
-                assert table.game.serial2player[102].money == table.game.maxBuyIn()
-            if mode == "refill2":
-                assert 103 in table.game.serialsInGame()
-                assert 102 in table.game.serialsInGame()
-                assert table.game.serial2player[102].money == table.game.maxBuyIn()
+                return # "There is no second hand"
+            elif mode == "rebuy":
+                assert 103 in game.serialsInGame()
+                assert 102 in game.serialsInGame()
+                assert game.serial2player[102].money == game.buyIn()
+            elif mode == "refill":
+                assert 103 in game.serialsInGame()
+                assert 102 in game.serialsInGame()
+                assert game.serial2player[102].money == game.maxBuyIn()
+            elif mode == "refill2":
+                assert 103 in game.serialsInGame()
+                assert 102 in game.serialsInGame()
+                assert game.serial2player[102].money == game.maxBuyIn()
             table.destroy()
-            return
 
         def firstGame(packet):
-            table.game.blind(102); table.update()
-            table.game.blind(103); table.update()
-            table.game.call(101); table.update()
+            log_history.reset()
 
-            table.game.call(102); table.update()
-            table.game.check(103); table.update()
+            game.blind(102); table.update()
+            game.blind(103); table.update()
+            game.call(101); table.update()
 
-            raise_amount = 10000000000000
-            if mode == "refill2":
-                raise_amount = table.game.serial2player[102].money / 2
-            table.game.callNraise(102, raise_amount); table.update()
-            table.game.call(103); table.update()
-            table.game.call(101); table.update()
-            while table.game.isRunning():
-                table.game.check(table.game.getSerialInPosition())
+            game.call(102); table.update()
+            game.check(103); table.update()
+
+            raise_amount = game.serial2player[102].money
+            if mode == "refill2": raise_amount /= 2
+            
+            game.callNraise(102, raise_amount); table.update()
+            game.call(103); table.update()
+            game.call(101); table.update()
+            while game.isRunning():
+                game.check(game.getSerialInPosition())
 
             if mode == "normal":
                 return
-            d2 = clients[103].waitFor(PACKET_POKER_BLIND_REQUEST)
-            d2.addCallback(secondGame)
+            d = clients[103].waitFor(PACKET_POKER_START)
             table.scheduleAutoDeal()
-            return d2
+            return d
 
-        d1 = clients[102].waitFor(PACKET_POKER_BLIND_REQUEST)
-        d1.addCallback(firstGame)
+        d = clients[102].waitFor(PACKET_POKER_BLIND_REQUEST)
+        d.addCallback(firstGame)
+        d.addCallback(secondGame)
+        
+        
         table.game.forced_dealer_seat = 0
         table.scheduleAutoDeal()
-        return d1
+        return d
 
     def test54_serial2delta(self):
         class MockLockCheck(object):
