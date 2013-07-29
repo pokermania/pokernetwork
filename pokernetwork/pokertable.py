@@ -851,7 +851,7 @@ class PokerTable:
                 else:
                     self.update()
             else:
-                avatar.log.inform("cannot quit a closed table, request ignored")
+                # cannot quit a closed table, request ignored
                 return False
 
         if self.isJoined(avatar):
