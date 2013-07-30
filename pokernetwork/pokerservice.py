@@ -1237,6 +1237,7 @@ class PokerService(service.Service):
     
     def tourneyRemovePlayer(self, tourney, serial, now=False):
         self.log.debug('remove now tourney(%d) serial(%d)', tourney.serial, serial)
+        #
         # the following line causes an IndexError if the player is not in any game. this is a good thing. 
         table = self.getTourneyTable(tourney, serial)
         table.kickPlayer(serial)
@@ -2999,7 +3000,7 @@ class PokerService(service.Service):
         try:
             c.execute("DELETE FROM tables WHERE serial = %s", (table.game.id,))
             if c.rowcount != 1:
-                self.log.warn("tourneyDestroyGameActual: deleted %d rows expected 1: %s", c.rowcount, c._executed)
+                self.log.warn("deleteTableEntry: deleted %d rows expected 1: %s", c.rowcount, c._executed)
         finally:
             c.close()
 

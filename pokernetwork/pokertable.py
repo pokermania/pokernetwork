@@ -319,7 +319,6 @@ class PokerTable:
             keys = self.game.serial2player.keys()
             self.log.debug("broadcast%s %s ", keys, packet)
             for serial in keys:
-                #
                 # player may be in game but disconnected.
                 for avatar in self.avatar_collection.get(serial):
                     avatar.sendPacket(private2public(packet, serial))
@@ -556,12 +555,12 @@ class PokerTable:
                     
     def tourneyEndTurn(self, history):
         if not self.tourney: return
-        if self._eventInHistory(history, "end"):
+        if self._eventInHistory(history, "finish"):
             return self.factory.tourneyEndTurn(self.tourney, self.game.id)
 
     def tourneyUpdateStats(self, history):
         if not self.tourney: return
-        if self._eventInHistory(history, "end"):
+        if self._eventInHistory(history, "finish"):
             self.factory.tourneyUpdateStats(self.tourney, self.game.id)
 
     def autoDeal(self):
@@ -590,7 +589,6 @@ class PokerTable:
             self.update()
 
     def autoDealCheck(self, autodeal_check, delta):
-        self.log.debug("autoDealCheck")
         self.cancelDealTimeout()
         if autodeal_check > delta:
             self.log.debug("Autodeal for %d scheduled in %f seconds", self.game.id, delta)
@@ -621,11 +619,12 @@ class PokerTable:
                 avatar.sendPacket(packet)
         return True
 
-    def serialsWaitingForRebuy(self):
+    def serialsWillingToPlay(self):
         serials = \
             set(serial for (serial, amount) in self.rebuy_stack) | \
-            set(p.serial for p in self.game.playersAll() if p.auto_refill or p.auto_rebuy)
-        return list(serials)
+            set(p.serial for p in self.game.playersAll() if p.auto_refill or p.auto_rebuy) | \
+            set(self.game.serialsSit())
+        return serials
     
     def shouldAutoDeal(self):
         if self.factory.shutting_down:
@@ -640,7 +639,7 @@ class PokerTable:
         if self.game.state == pokergame.GAME_STATE_MUCK:
             self.log.debug("Not autodealing %d because game is in muck state", self.game.id)
             return False
-        if self.game.sitCount() < 2 and not self.serialsWaitingForRebuy():
+        if len(self.serialsWillingToPlay()) < 2:
             self.log.debug("Not autodealing %d because less than 2 players willing to play", self.game.id)
             return False
         if self.game.isTournament():

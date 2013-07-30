@@ -31,7 +31,6 @@ from config import config
 from log_history import log_history
 
 import libxml2
-from string import split
 import time
 
 from tests import testclock
@@ -158,7 +157,7 @@ class MockService:
             
     def __init__(self, settings):
         self.settings = settings
-        self.dirs = split(settings.headerGet("/server/path"))
+        self.dirs = settings.headerGet("/server/path").split()
         self.simultaneous = 1
         self.shutting_down = False
         self.hand_serial = 0

@@ -25,6 +25,18 @@ class TestLoggingHandler(BaseHandler):
             formated = format % args if args else format
         ))
 
+class PrintLoggingHandler(TestLoggingHandler):
+    
+    def __init__(self):
+        TestLoggingHandler.__init__(self)
+        self.set_level(10)
+    
+    def record(self, severity, name, refs, format, *a, **kw):
+        ret = TestLoggingHandler.record(self, severity, name, refs, format, *a, **kw)
+        last_message = log_history.output[-1]
+        print '%s: %s' % (last_message.refs, last_message.formated)
+        return ret
+    
 class Log(object):
 
     def __init__(self):
@@ -58,7 +70,3 @@ class Log(object):
 
 log_history = Log()
 root_logger.add_handler(TestLoggingHandler())
-
-
-
-

@@ -29,8 +29,6 @@
 #  Johan Euphrosine <proppy@aminche.com> (2008)
 #  Henry Precheur <henry@precheur.org> (2004)
 
-from string import join
-
 from twisted.internet import reactor, defer
 from pokernetwork.util.trace import format_exc
 
@@ -1138,7 +1136,7 @@ class PokerAvatar:
         self.roles.add(packet.roles)
         return PacketPokerRoles(
             serial = packet.serial,
-            roles = join(self.roles, " ")
+            roles = " ".join(self.roles)
         )
             
     def getPlayerInfo(self):
