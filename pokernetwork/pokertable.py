@@ -1031,6 +1031,7 @@ class PokerTable:
         player.bot = old_player.isBot()
         player.auto = old_player.isAuto()
         player.auto_policy = old_player.auto_policy
+        player.action_issued = old_player.action_issued
         if not was_open: self.game.close()
 
     def movePlayerFrom(self, serial, to_game_id):

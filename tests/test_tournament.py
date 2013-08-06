@@ -25,6 +25,8 @@ import sys
 import re
 from os import path
 import random
+from pokerengine.pokergame import GAME_STATE_BLIND_ANTE, GAME_STATE_END,\
+    GAME_STATE_MUCK, GAME_STATE_NULL
 
 TESTS_PATH = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(TESTS_PATH, ".."))
@@ -285,7 +287,11 @@ class MockClient(PokerAvatar):
         reactor.callLater(0, self._issueAction, table.game.id, action)
 
     def filterPosition(self, packet):
-        return packet.type == PACKET_POKER_POSITION and packet.serial == self.getSerial()
+        if not hasattr(packet, 'game_id'): return False
+        game_state = self.tables[packet.game_id].game.state
+        return game_state not in (GAME_STATE_BLIND_ANTE, GAME_STATE_END, GAME_STATE_MUCK, GAME_STATE_NULL) \
+            and packet.type == PACKET_POKER_POSITION \
+            and packet.serial == self.getSerial()
     
     def _chooseAction(self, packet):
         rand = random.random()
@@ -294,7 +300,7 @@ class MockClient(PokerAvatar):
         
     def _issueAction(self, game_id, action):
         if game_id not in self.tables:
-            # print '_issueAction - not in tables - serial: %d, game_id: %d' % (serial, game_id)
+            print '_issueAction - not in tables - serial: %d, game_id: %d' % (self.getSerial(), game_id)
             return
         
         table = self.tables[game_id]
@@ -308,8 +314,10 @@ class MockClient(PokerAvatar):
 
         if not game.isRunning():
             # can happen if only one player is active
-            # print '_issueAction - game is not running - serial: %d, game_id: %d, state: %s' % (serial, game_id, game.state)
+            print '_issueAction - game is not running - serial: %d, game_id: %d, state: %s' % (serial, game_id, game.state)
             return
+        
+        print '_issueAction - serial: %d, game_id: %d, state: %s, action: %s' % (serial, game_id, game.state, action)
         
         if action == 'call':
             game.call(serial)
@@ -317,6 +325,7 @@ class MockClient(PokerAvatar):
             game.callNraise(serial, 0)
         elif action == 'allin':
             game.callNraise(serial, 2**31)
+            
         table.update()
 
                         
@@ -475,6 +484,43 @@ class TournamentTestCase(unittest.TestCase):
         self.service.tourneyDeal(tourney)
         
         return dl
+    
+    def testOnlyOneAction(self):
+        '''one player does one action. he should win the tourney.'''
+        
+        self.createTourney(players_quota=8, players_min=8, seats_per_game=4, inactive_delay=1000)
+        tourney, clients = self.tourney, self.clients
+        tourney.changeState(TOURNAMENT_STATE_RUNNING)
+
+        serial = 1
+        client_online = clients[serial]
+        table_online = None
+        
+        dl = []
+        for client in clients.itervalues():
+            client.registerHandler(PACKET_POKER_TOURNEY_RANK, client.handleRank)
+            dl.append(client.finished)
+        dl = DeferredList(dl)
+        
+        for game_id,game in tourney.id2game.items():
+            if serial in game.serial2player:
+                table_online = self.service.tables[game_id]
+                break
+        
+        def handleOneCall(packet):
+            client_online.handlePosition(packet)
+            client_online._handlers.pop()
+            
+        client_online._chooseAction = lambda packet: 'call'
+        client_online.registerHandler(client_online.filterPosition, handleOneCall)
+        
+        def checkForRank(res): self.assertEquals(tourney.winners[0], client_online.getSerial())
+        dl.addCallback(checkForRank)
+        
+        table_online.joinPlayer(client_online)
+        table_online.update()
+        
+        return dl        
         
         
 # --------------------------------------------------------------------------------
