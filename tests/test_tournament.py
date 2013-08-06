@@ -287,7 +287,7 @@ class MockClient(PokerAvatar):
         reactor.callLater(0, self._issueAction, table.game.id, action)
 
     def filterPosition(self, packet):
-        if not hasattr(packet, 'game_id'): return False
+        if not hasattr(packet, 'game_id') or packet.game_id not in self.tables: return False
         game_state = self.tables[packet.game_id].game.state
         return game_state not in (GAME_STATE_BLIND_ANTE, GAME_STATE_END, GAME_STATE_MUCK, GAME_STATE_NULL) \
             and packet.type == PACKET_POKER_POSITION \
@@ -300,7 +300,7 @@ class MockClient(PokerAvatar):
         
     def _issueAction(self, game_id, action):
         if game_id not in self.tables:
-            print '_issueAction - not in tables - serial: %d, game_id: %d' % (self.getSerial(), game_id)
+            # print '_issueAction - not in tables - serial: %d, game_id: %d' % (self.getSerial(), game_id)
             return
         
         table = self.tables[game_id]
@@ -309,15 +309,15 @@ class MockClient(PokerAvatar):
         player = game.serial2player.get(serial, None)
         
         if player is None:
-            print '_issueAction - player is None - serial: %d, game_id: %d' % (serial, game_id)
+            # print '_issueAction - player is None - serial: %d, game_id: %d' % (serial, game_id)
             return
 
         if not game.isRunning():
             # can happen if only one player is active
-            print '_issueAction - game is not running - serial: %d, game_id: %d, state: %s' % (serial, game_id, game.state)
+            # print '_issueAction - game is not running - serial: %d, game_id: %d, state: %s' % (serial, game_id, game.state)
             return
         
-        print '_issueAction - serial: %d, game_id: %d, state: %s, action: %s' % (serial, game_id, game.state, action)
+        # print '_issueAction - serial: %d, game_id: %d, state: %s, action: %s' % (serial, game_id, game.state, action)
         
         if action == 'call':
             game.call(serial)
