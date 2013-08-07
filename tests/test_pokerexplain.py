@@ -962,8 +962,10 @@ class PokerExplainTestCase(unittest.TestCase):
         game.player_list = [player_serial]
         self.explain.moveBet2Player = lambda game: ['moveBet2Player']
         game_actions = []
+        game.inGameCount = lambda: 2
         game.isSingleUncalledBet = lambda side_pots: game_actions.append('isSingleUncalledBet') or True
         game.state = pokergame.GAME_STATE_FLOP
+        
         self.assertTrue(self.explain.explain(PacketPokerState(game_id = game_id, string = pokergame.GAME_STATE_END)))
         self.assertEqual('moveBet2Player', self.explain.forward_packets[1])
 

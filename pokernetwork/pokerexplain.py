@@ -577,16 +577,16 @@ class PokerExplain:
                     game.blindAnteRoundEnd()
                 if packet.string == "end" and game.state != "null":
                     game.endState()
-                elif game.inGameCount() < 2:
-                    # The game has probably ended, and we get now more state packets, than we expect
-                    # we can ignore them
-                    return True
-
                 #
                 # A state change is received at the begining of each
                 # betting round. No state change is received when
                 # reaching showdown or otherwise terminating the hand.
-                if game.isFirstRound():
+                if game.inGameCount() < 2 and game.betsEqual():
+                    #
+                    # do nothing, the actual game already finished. we will 
+                    # receive a PacketPokerState 'end' eventually.
+                    pass
+                elif game.isFirstRound():
                     game.initRound()
                 else:
                     if not self.no_display_packets:
@@ -611,7 +611,7 @@ class PokerExplain:
                             serial = player.serial,
                             cards = cards)
                         )
-                if ( packet.string != "end" and not game.isBlindAnteRound() ):
+                if packet.string != "end" and not game.isBlindAnteRound():
                     if not self.no_display_packets:
                         forward_packets.extend(self.updateBetLimit(game))
                     forward_packets.append(PacketPokerBeginRound(game_id = game.id))
@@ -620,7 +620,7 @@ class PokerExplain:
                     self.log.error("state = %s, expected %s instead ", game.state, packet.string)
 
 
-            ( serial_in_position, position_is_obsolete ) = game.position_info
+            serial_in_position, position_is_obsolete = game.position_info
             if game.isRunning():
                 #
                 # Build position related packets
@@ -665,12 +665,12 @@ class PokerExplain:
                         )
                     serial_in_position = 0
             position_is_obsolete = False
-            game.position_info = [ serial_in_position, position_is_obsolete ]
+            game.position_info = [serial_in_position, position_is_obsolete]
             #
             # Build dealer messages
             # Skip state = end because information is missing and will be received by the next packet (WIN)
             if not (packet.type == PACKET_POKER_STATE and packet.string == "end"):
-                (subject, messages) = history2messages(game, game.historyGet()[game.history_index:], serial2name = lambda serial: self.serial2name(game, serial))
+                subject, messages = history2messages(game, game.historyGet()[game.history_index:], serial2name = lambda serial: self.serial2name(game, serial))
                 game.history_index = len(game.historyGet())
                 if messages:
                     message = "".join("Dealer: %s\n" % line for line in messages)

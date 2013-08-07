@@ -597,7 +597,7 @@ class PokerTableTestCaseBase(unittest.TestCase):
             'currency_serial': 0
         })
         self.table9 = pokertable.PokerTable(self.service, table9ID, {
-            'name': "table3",
+            'name': "table9",
             'variant': "holdem",
             'betting_structure': "1-2_20-200_no-limit",
             'seats': 9,
@@ -2095,33 +2095,35 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         PokerTableTestCaseBase.setUp(self, ServiceClass = MockServiceWithLadder)
         
     def test50_fold_immediately(self):
+        table = self.table
+        game = table.game
+        
         serials = [1,2]
         clients = {}
+        
         for serial in serials:
             clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
             client.service = self.service
             client.setExplain(PacketPokerExplain.ALL)
-            self.assertEqual(True, self.table.joinPlayer(client, reason="MockCreatePlayerJoin"))
-            self.assertEqual(True, self.table.seatPlayer(client, -1))
-            self.assertEqual(True, self.table.buyInPlayer(client, self.table.game.maxBuyIn()))
-            self.table.sitPlayer(client)
-            self.table.game.noAutoBlindAnte(serial)
+            self.assertEqual(True, table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            self.assertEqual(True, table.seatPlayer(client, -1))
+            self.assertEqual(True, table.buyInPlayer(client, game.maxBuyIn()))
+            table.sitPlayer(client)
+            game.noAutoBlindAnte(serial)
             
         for serial,client in clients.iteritems():
-            client.setMoney(self.table,10)
+            client.setMoney(table, 1)
         
-        self.table.scheduleAutoDeal()
+        table.scheduleAutoDeal()
         
         def payBlinds(packet):
-            self.table.game.blind(2,10)
-            self.table.update()
-            self.table.game.blind(1,10)
-            self.table.update()
+            game.blind(2); table.update()
+            game.blind(1); table.update()
             
             # game is finished by now in the PokerGameServer, but
             # the changes are not propageted to the PokerGameClients until 
             # we update the table
-            self.assertTrue(self.table.game.isEndOrNull())
+            self.assertTrue(game.isEndOrNull())
             
         d = clients[1].waitFor(PACKET_POKER_BLIND_REQUEST)
         d.addCallback(payBlinds)
@@ -3350,7 +3352,64 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
         table.scheduleAutoDeal()
         log_history.reset()
         return d1
-                
+    
+    def test_allInDuringBlind(self):
+        table = pokertable.PokerTable(self.service, 1111, {
+            'name': "table11",
+            'variant': "holdem",
+            'betting_structure': "10-20_200-2000_no-limit",
+            'seats': 9,
+            'player_timeout' : 6, 
+            'muck_timeout' : 1,
+            'currency_serial': 0
+        })
+        
+        game = table.game
+        table.factory.buyInPlayer = lambda serial, table_id, currency_serial, amount: amount
+        
+        serials = [1,2]
+        clients = {}
+
+        def joinAndSeat(serial, should_sit, pos, explain=False):
+            clients[serial] = client = self.createPlayer(serial, getReadyToPlay=False, clientClass=MockClientWithExplain)
+            client.service = self.service
+            if explain: client.setExplain(PacketPokerExplain.REST)
+            self.assertTrue(table.joinPlayer(client, reason="MockCreatePlayerJoin"))
+            if table.seatPlayer(client, pos):
+                self.assertTrue(table.buyInPlayer(client, game.buyIn()))
+                game.noAutoBlindAnte(serial)
+                if should_sit:
+                    clients[serial] = client
+                    table.sitPlayer(client)
+            table.update()
+        
+        joinAndSeat(1, True, -1, True)
+        joinAndSeat(2, True, -1, False)
+            
+        game.dealer_seat = 0
+        game.first_turn = False
+        
+        for serial in serials:
+            game.serial2player[serial].missed_blind = None
+        
+        # player 2 has less money than the big blind. he will go all-in
+        game.serial2player[2].money = game.bigBlind() - 1
+        clients[1].explain.games.getGame(game.id).serial2player[2].money = game.bigBlind() - 1
+        
+        def firstGame(packet):
+            game.blind(1); table.update()
+            
+            game.blind(2); table.update()
+            self.assertTrue(game.serial2player[2].isAllIn())
+            
+            game.call(1); table.update()
+            self.assertTrue(game.isEndOrNull())
+            
+        d1 = clients[serials[0]].waitFor(PACKET_POKER_START)
+        d1.addCallback(firstGame)
+        d1.addCallback(lambda res: table.destroy())
+        table.scheduleAutoDeal()
+        return d1
         
 # --------------------------------------------------------------------------------
 
