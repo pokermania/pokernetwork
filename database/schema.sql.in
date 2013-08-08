@@ -65,11 +65,10 @@ CREATE TABLE currencies (
 DROP TABLE IF EXISTS hands;
 CREATE TABLE hands (
   `serial` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `name` varchar(32) DEFAULT NULL,
-  description text NOT NULL,
   game_id int(10) DEFAULT NULL,
   tourney_serial int(10) DEFAULT NULL,
+  created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  description text NOT NULL,
   PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
