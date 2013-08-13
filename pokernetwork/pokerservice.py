@@ -34,6 +34,7 @@ import locale
 import gettext
 import libxml2
 
+
 try:
     from collections import OrderedDict
 except ImportError:
@@ -85,6 +86,7 @@ from pokernetwork.user import User
 from pokernetwork import pokercashier
 from pokernetwork import pokernetworkconfig
 from pokernetwork import pokermemcache
+from pokernetwork import pokerpacketizer
 from pokerauth import get_auth_instance
 from datetime import date
 
@@ -351,7 +353,7 @@ class PokerService(service.Service):
             player_timeout * max_players * len_rounds,
             self._warnLock
         )
-
+        
     def loadTableConfig(self, serial):
         c = self.db.cursor()
         try:
@@ -907,6 +909,7 @@ class PokerService(service.Service):
         tourney.callback_remove_player = self.tourneyRemovePlayerLater
         tourney.callback_cancel = self.tourneyCancel
         tourney.callback_reenter_game = self.tourneyReenterGame
+        tourney.callback_rebuy_payment = self.tourneyRebuyPayment
         tourney.callback_rebuy = self.tourneyRebuy
         if schedule_serial not in self.schedule2tourneys:
             self.schedule2tourneys[schedule_serial] = []
@@ -1213,10 +1216,7 @@ class PokerService(service.Service):
 
     def tourneyReenterGame(self, tourney_serial, serial):
         self.log.debug('tourneyReenterGame tourney_serial(%d) serial(%d)', tourney_serial, serial)
-        timeout_key = "%s_%s" % (tourney_serial,serial)
-        timer = self.timer_remove_player[timeout_key]
-        if timer.active(): timer.cancel()
-        del self.timer_remove_player[timeout_key]
+        self.tourneyRemovePlayerTimer(tourney_serial, serial)
 
     def tourneyRemovePlayerLater(self, tourney, game_id, serial, now=False):
         table = self.getTable(game_id)
@@ -1237,9 +1237,18 @@ class PokerService(service.Service):
     
     def tourneyRemovePlayer(self, tourney, serial, now=False):
         self.log.debug('remove now tourney(%d) serial(%d)', tourney.serial, serial)
-        #
+        
+        # if the player issued a rebuy, he will be removed at some later point in time
+        if tourney.isRebuying(serial):
+            return
+
+        # delete the timer_remove_player entry
+        if not now:
+            self.tourneyRemovePlayerTimer(tourney.serial, serial)
+        
         # the following line causes an IndexError if the player is not in any game. this is a good thing. 
         table = self.getTourneyTable(tourney, serial)
+        
         table.kickPlayer(serial)
         tourney.finallyRemovePlayer(serial, now)
         
@@ -1286,6 +1295,12 @@ class PokerService(service.Service):
         if not now and table.isStationary():
             self.tourneyFinishHandler(tourney, table.game.id)
 
+    def tourneyRemovePlayerTimer(self, tourney_serial, serial):
+        timeout_key = "%s_%s" % (tourney_serial,serial)
+        timer = self.timer_remove_player[timeout_key]
+        if timer.active(): timer.cancel()
+        del self.timer_remove_player[timeout_key]
+    
     def tourneySatelliteLookup(self, tourney):
         if tourney.satellite_of == 0:
             return (0, None)
@@ -1785,8 +1800,8 @@ class PokerService(service.Service):
             for avatar in avatars:
                 avatar.sendPacketVerbose(packet)
 
-
-    def tourneyRebuy(self, tournament, serial, table_id, player_chips, tourney_chips):
+    
+    def tourneyRebuyPayment(self, tournament, serial, table_serial, player_chips, tourney_chips):
         """decrements the bank money of a player
         amount is the number of chips which the player has to pay to get a new set of tourney chips
 
@@ -1809,7 +1824,7 @@ class PokerService(service.Service):
                "AND user2money.user_serial = %s " \
                "AND user2money.currency_serial = %s " \
                "AND user2money.amount >= %s",
-               (tourney_chips, player_chips, serial, table_id, serial, tournament.serial, serial, currency_serial, player_chips)
+               (tourney_chips, player_chips, serial, table_serial, serial, tournament.serial, serial, currency_serial, player_chips)
             )
 
             if cursor.rowcount not in (0,3): 
@@ -1821,30 +1836,46 @@ class PokerService(service.Service):
         finally:
             cursor.close();
 
-    def tourneyRebuyRequest(self, packet):
-        """handle the tourney rebuy request
-        exchange user chips to tourney chips if it is valid for the tourney
-        """
-        # see pokeravater for the explanation why a packet given as a parameter
-        tourney = self.tourneys.get(packet.tourney_serial)
+    def tourneyRebuyRequest(self, tourney_serial, serial):
+        tourney = self.tourneys.get(tourney_serial)
+        table = self.getTourneyTable(tourney, serial)
         
         if tourney is None:
-            self.log.warn("tourney_serial %d does not exist" % packet.tourney_serial)
-            return PacketPokerTourneyRebuy.OTHER_ERROR, None
+            self.log.warn("tourney_serial %d does not exist" % tourney_serial)
+            return False, None
 
-        success, game_id, reason = tourney.rebuy(packet.serial)
-
-        if success:
-            return None, game_id
+        success, error = tourney.rebuyPlayerRequest(table.game.id, serial)
+        return success, pokerpacketizer.tourneyErrorToPacketError(error) if error else 0
+    
+    def tourneyRebuy(self, tournament, serial, table_serial, success, error):
+        if not success:
+            timeout_key = "%s_%s" % (tournament.serial,serial)
+            timer = self.timer_remove_player.get(timeout_key, None)
+            if not timer or not timer.active():
+                # timer is not there anymore or was already called
+                self.tourneyRemovePlayer(tournament, serial, now=True)
+            
+        if not error:
+            packet = PacketPokerTourneyRebuy(
+                serial = serial,
+                game_id = table_serial,
+                tourney_serial = tournament.serial,
+            )
         else:
-            return {
-                TOURNEY_REBUY_ERROR_USER: PacketPokerTourneyRebuy.REBUY_LIMIT_EXEEDED,
-                TOURNEY_REBUY_ERROR_TIMEOUT: PacketPokerTourneyRebuy.REBUY_TIMEOUT_EXEEDED,
-                TOURNEY_REBUY_ERROR_MONEY: PacketPokerTourneyRebuy.NOT_ENOUGH_MONEY,
-                TOURNEY_REBUY_ERROR_OTHER: PacketPokerTourneyRebuy.OTHER_ERROR,
-            }.get(reason, PacketPokerTourneyRebuy.OTHER_ERROR), game_id
-
-
+            packet = PacketError(
+                serial = packet.serial,
+                other_type = PACKET_POKER_TOURNEY_REBUY,
+                code = pokerpacketizer.tourneyErrorToPacketError(error) if error else 0                                 
+            )
+            
+        table = self.tables[table_serial]
+        avatars = table.avatar_collection.get(serial)
+        
+        for avatar in avatars:
+            avatar.sendPacket(packet)
+            
+        table.update()
+    
     def createHand(self, game_id, tourney_serial=None):
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO hands (description, game_id, tourney_serial) VALUES ('[]', %s, %s)",
@@ -2954,7 +2985,7 @@ class PokerService(service.Service):
         return self.tables.get(game_id, False)
 
     def getTourneyTable(self, tourney, serial):
-        return (t for t in self.tables.itervalues() if t.tourney is tourney and serial in t.game.serial2player).next()
+        return next(t for t in self.tables.itervalues() if t.tourney is tourney and serial in t.game.serial2player)
 
     def cleanupCrashedTables(self):
         c = self.db.cursor()

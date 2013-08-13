@@ -626,25 +626,6 @@ class PokerAvatar:
                 self.sendPacketVerbose(tourneyInfo)
             return
         
-        elif packet.type == PACKET_POKER_TOURNEY_REBUY:
-            if self.getSerial() == packet.serial:
-                # the packet is directly passed to the service, so that the service could 
-                # return the correct error codes. Otherwise the we would need to import 
-                # pokerservice to know all the reasons for the failure. 
-                error_code, game_id = self.service.tourneyRebuyRequest(packet)
-                if not error_code:
-                    self.service.getTable(game_id).update()
-                else:
-                    self.sendPacketVerbose(PacketError(
-                        serial = packet.serial,
-                        other_type = PACKET_POKER_TOURNEY_REBUY,
-                        code = error_code
-                    ))
-            else:
-                self.log.inform("attempt to rebuy for player %d by player %d", packet.serial, self.getSerial())
-
-            
-
         elif packet.type == PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST:
             self.sendPacketVerbose(self.service.tourneyPlayersList(packet.tourney_serial))
             return
@@ -900,6 +881,20 @@ class PokerAvatar:
                     game.check(packet.serial)
                 else:
                     self.log.inform("attempt to check for player %d by player %d, or player is not not playing", packet.serial, self.getSerial())
+
+            elif packet.type == PACKET_POKER_TOURNEY_REBUY:
+                if self.getSerial() == packet.serial:
+                    success, error = self.service.tourneyRebuyRequest(packet.tourney_serial, packet.serial)
+                    if success:
+                        self.sendPacketVerbose(PacketAck())
+                    else:
+                        self.sendPacketVerbose(PacketError(
+                            serial = packet.serial,
+                            other_type = PACKET_POKER_TOURNEY_REBUY,
+                            code = error
+                        ))
+                else:
+                    self.log.inform("attempt to rebuy for player %d by player %d", packet.serial, self.getSerial())
 
             elif packet.type == PACKET_POKER_TABLE_QUIT:
                 table.quitPlayer(self)

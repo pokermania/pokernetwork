@@ -276,7 +276,7 @@ class PokerTable:
                 self.rebuyPlayerRequestNow(player.serial, self._getPrefferedRebuyAmount(player.auto_rebuy))
             if player.auto_refill != PacketSetOption.OFF:
                 self.rebuyPlayerRequestNow(player.serial, self._getPrefferedRebuyAmount(player.auto_refill))
-
+                
     def _getPrefferedRebuyAmount(self, value):
         if value == PacketSetOption.AUTO_REBUY_BEST:
             return self.game.bestBuyIn()

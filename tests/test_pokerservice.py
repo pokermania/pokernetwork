@@ -1512,6 +1512,9 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
 
         def tourneyEnd(self, *args, **kw):
             return False
+        
+        def isRebuying(self, serial):
+            return False
 
 
     def test09_tourneyRemovePlayer(self):
@@ -1522,7 +1525,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         table = self.TableMockup()
         self.service.getTourneyTable = lambda *a, **kw: table
         self.service.client = self.ClientMockup(self.user1_serial, self)
-        self.service.tourneyRemovePlayer(tourney, self.user1_serial)
+        self.service.tourneyRemovePlayer(tourney, self.user1_serial, True)
         
     def test10_endOfTournamentsNoPrize(self):
         self.service.startService()
@@ -1535,7 +1538,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.getTourneyTable = lambda *a, **kw: table
         
         self.service.avatar_collection.add(client)
-        self.service.tourneyRemovePlayer(tourney, self.user1_serial)
+        self.service.tourneyRemovePlayer(tourney, self.user1_serial, True)
         
         packet_end_tournament = client.packets[-1]
         self.assertEquals(packet_end_tournament != None, True)
@@ -1555,7 +1558,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.getTourneyTable = lambda *a, **kw: table
         
         self.service.avatar_collection.add(client)
-        self.service.tourneyRemovePlayer(tourney, self.user1_serial)
+        self.service.tourneyRemovePlayer(tourney, self.user1_serial, True)
         
         packet_end_tournament = client.packets[-1]
         self.assertEquals(packet_end_tournament != None, True)
@@ -1577,7 +1580,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.service.getTourneyTable = lambda *a, **kw: table
         self.service.monitor_plugins = [monitor]
         tourney.rank = 99
-        self.service.tourneyRemovePlayer(tourney, self.user1_serial)
+        self.service.tourneyRemovePlayer(tourney, self.user1_serial, True)
         
         event = events[0]
         self.assertEqual(event.param1,self.user1_serial)
@@ -3229,6 +3232,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
 
     class GameMock:
         buy_in = 10;
+        
     class Tournament:
         def __init__(self, serial, reason=""):
             self.reason = reason
@@ -3256,25 +3260,6 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
         def sendPacketVerbose(self, packet):
             self.packets.append(packet)
 
-    def test_rebuy_request(self):
-        self.service.startService()
-        self.createUsers()
-        client1 = self.ClientMockup(self.user1_serial, self)
-        self.service.avatar_collection.add(client1)
-
-        self.service.tourneys[1] = self.Tournament(serial=1, reason="")
-        self.service.tourneys[2] = self.Tournament(serial=2, reason=pokertournament.TOURNEY_REBUY_ERROR_USER)
-        self.service.tourneys[3] = self.Tournament(serial=3, reason=pokertournament.TOURNEY_REBUY_ERROR_TIMEOUT)
-        self.service.tourneys[4] = self.Tournament(serial=4, reason=pokertournament.TOURNEY_REBUY_ERROR_MONEY)
-        self.service.tourneys[5] = self.Tournament(serial=5, reason=pokertournament.TOURNEY_REBUY_ERROR_OTHER)
-
-        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=1))[0], None)
-        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=2))[0], PacketPokerTourneyRebuy.REBUY_LIMIT_EXEEDED)
-        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=3))[0], PacketPokerTourneyRebuy.REBUY_TIMEOUT_EXEEDED)
-        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=4))[0], PacketPokerTourneyRebuy.NOT_ENOUGH_MONEY)
-        self.assertEqual(self.service.tourneyRebuyRequest(PacketPokerTourneyRebuy(serial=1, tourney_serial=5))[0], PacketPokerTourneyRebuy.OTHER_ERROR)
-
-
     def test_rebuy(self):
         self.service.startService()
         cursor = self.service.db.cursor()
@@ -3284,7 +3269,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
         tournament = self.Tournament(serial=1)
 
         # The expected money is added on the table and the rebuy_count is incremented
-        self.assertEqual(self.service.tourneyRebuy(tournament, serial=1337807, table_id=2, player_chips=300, tourney_chips=700), 700)
+        self.assertEqual(self.service.tourneyRebuyPayment(tournament, serial=1337807, table_serial=2, player_chips=300, tourney_chips=700), 700)
         cursor.execute("SELECT amount FROM user2money WHERE user_serial = 1337807")
         self.assertEqual(cursor.fetchone()[0], 100)
         cursor.execute("SELECT money FROM user2table WHERE user_serial = 1337807")
@@ -3294,7 +3279,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
         self.assertEqual(cursor.fetchone()[0], 1)
         
         # the second run should fail because we have not enough money left.
-        self.assertEqual(self.service.tourneyRebuy(tournament, serial=1337807, table_id=2, player_chips=300, tourney_chips=700), 0)
+        self.assertEqual(self.service.tourneyRebuyPayment(tournament, serial=1337807, table_serial=2, player_chips=300, tourney_chips=700), 0)
         cursor.execute("SELECT amount FROM user2money WHERE user_serial = 1337807")
         self.assertEqual(cursor.fetchone()[0], 100)
         cursor.execute("SELECT money FROM user2table WHERE user_serial = 1337807")
@@ -3313,7 +3298,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
 
         tournament = self.Tournament(serial=1)
 
-        self.assertEqual(self.service.tourneyRebuy(tournament, serial=1337807, table_id=2, player_chips=300, tourney_chips=700), 0)
+        self.assertEqual(self.service.tourneyRebuyPayment(tournament, serial=1337807, table_serial=2, player_chips=300, tourney_chips=700), 0)
         cursor.execute("SELECT money FROM user2table WHERE user_serial = 1337807")
         self.assertEqual(cursor.fetchone()[0], 10)
         

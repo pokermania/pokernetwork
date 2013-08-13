@@ -1,6 +1,7 @@
 from pokerengine.pokercards import PokerCards
 from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
+from pokerengine.pokertournament import TOURNAMENT_REBUY_ERROR_USER, TOURNAMENT_REBUY_ERROR_TIMEOUT, TOURNAMENT_REBUY_ERROR_MONEY, TOURNAMENT_REBUY_ERROR_OTHER
 
 def createCache():
     return {"board": PokerCards(), "pockets": {}}
@@ -279,3 +280,12 @@ def private2public(packet, serial):
     else:
         return packet
 
+
+def tourneyErrorToPacketError(tourney_rebuy_error):
+    return {
+        TOURNAMENT_REBUY_ERROR_USER: PacketPokerTourneyRebuy.REBUY_LIMIT_EXEEDED,
+        TOURNAMENT_REBUY_ERROR_TIMEOUT: PacketPokerTourneyRebuy.REBUY_TIMEOUT_EXEEDED,
+        TOURNAMENT_REBUY_ERROR_MONEY: PacketPokerTourneyRebuy.NOT_ENOUGH_MONEY,
+        TOURNAMENT_REBUY_ERROR_OTHER: PacketPokerTourneyRebuy.OTHER_ERROR,
+    }[tourney_rebuy_error]
+    
