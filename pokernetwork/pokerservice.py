@@ -1836,45 +1836,45 @@ class PokerService(service.Service):
         finally:
             cursor.close();
 
+    def tourneySerialsRebuying(self, tournament, game_id):
+        return tournament.serialsRebuying(game_id)
+    
     def tourneyRebuyRequest(self, tourney_serial, serial):
         tourney = self.tourneys.get(tourney_serial)
-        table = self.getTourneyTable(tourney, serial)
         
         if tourney is None:
             self.log.warn("tourney_serial %d does not exist" % tourney_serial)
             return False, None
 
+        table = self.getTourneyTable(tourney, serial)
         success, error = tourney.rebuyPlayerRequest(table.game.id, serial)
         return success, pokerpacketizer.tourneyErrorToPacketError(error) if error else 0
     
+    def tourneyRebuyAllPlayers(self, tournament, game_id):
+        tournament.rebuyAllPlayers(game_id)
+        
     def tourneyRebuy(self, tournament, serial, table_serial, success, error):
+        table = self.tables[table_serial]
+        
         if not success:
-            timeout_key = "%s_%s" % (tournament.serial,serial)
+            timeout_key = "%s_%s" % (tournament.serial, serial)
             timer = self.timer_remove_player.get(timeout_key, None)
             if not timer or not timer.active():
                 # timer is not there anymore or was already called
                 self.tourneyRemovePlayer(tournament, serial, now=True)
-            
-        if not error:
-            packet = PacketPokerTourneyRebuy(
-                serial = serial,
-                game_id = table_serial,
-                tourney_serial = tournament.serial,
-            )
-        else:
+        
             packet = PacketError(
-                serial = packet.serial,
+                serial = serial,
                 other_type = PACKET_POKER_TOURNEY_REBUY,
                 code = pokerpacketizer.tourneyErrorToPacketError(error) if error else 0                                 
             )
             
-        table = self.tables[table_serial]
-        avatars = table.avatar_collection.get(serial)
-        
-        for avatar in avatars:
-            avatar.sendPacket(packet)
-            
-        table.update()
+            avatars = table.avatar_collection.get(serial)
+            for avatar in avatars:
+                avatar.sendPacket(packet)
+                
+        else:
+            table.update()
     
     def createHand(self, game_id, tourney_serial=None):
         cursor = self.db.cursor()
