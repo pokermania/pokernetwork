@@ -1,0 +1,454 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pokerpackets.packets &mdash; poker-network 2.2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="top" title="poker-network 2.2.5 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">poker-network 2.2.5 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pokerpackets.packets</h1><div class="highlight"><pre>
+<span class="c">#</span>
+<span class="c"># Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary &lt;loic@dachary.org&gt;</span>
+<span class="c"># Copyright (C) 2004, 2005, 2006 Mekensleep &lt;licensing@mekensleep.com&gt;</span>
+<span class="c">#                                24 rue vieille du temple, 75004 Paris</span>
+<span class="c">#</span>
+<span class="c"># This software&#39;s license gives you freedom; you can copy, convey,</span>
+<span class="c"># propagate, redistribute and/or modify this program under the terms of</span>
+<span class="c"># the GNU Affero General Public License (AGPL) as published by the Free</span>
+<span class="c"># Software Foundation (FSF), either version 3 of the License, or (at your</span>
+<span class="c"># option) any later version of the AGPL published by the FSF.</span>
+<span class="c">#</span>
+<span class="c"># This program is distributed in the hope that it will be useful, but</span>
+<span class="c"># WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero</span>
+<span class="c"># General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU Affero General Public License</span>
+<span class="c"># along with this program in a file in the toplevel directory called</span>
+<span class="c"># &quot;AGPLv3&quot;.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c">#</span>
+<span class="c"># Authors:</span>
+<span class="c">#  Loic Dachary &lt;loic@dachary.org&gt;</span>
+<span class="c">#  Henry Precheur &lt;henry@precheur.org&gt; (2004)</span>
+<span class="c">#</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">struct</span> <span class="kn">import</span> <span class="n">Struct</span>
+
+<span class="kn">from</span> <span class="nn">pokerpackets</span> <span class="kn">import</span> <span class="n">log</span> <span class="k">as</span> <span class="n">packets_log</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">packets_log</span><span class="o">.</span><span class="n">get_child</span><span class="p">(</span><span class="s">&#39;packets&#39;</span><span class="p">)</span>
+
+<span class="n">name2type</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">type2type_id</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">type_id2type</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">PacketFactory</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">PacketNames</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="n">PACKET_NONE</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="k">def</span> <span class="nf">find</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return first item in sequence where f(item) == True.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">f</span><span class="p">(</span><span class="n">item</span><span class="p">):</span> <span class="k">return</span> <span class="n">item</span>
+
+
+<span class="kn">import</span> <span class="nn">simplejson</span>
+<span class="k">class</span> <span class="nc">JSON</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    JSON implementation used for packet en/decoding</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">simplejson</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">(</span><span class="n">ensure_ascii</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">separators</span><span class="o">=</span><span class="p">(</span><span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="s">&#39;:&#39;</span><span class="p">))</span>
+    <span class="n">decoder</span> <span class="o">=</span> <span class="n">simplejson</span><span class="o">.</span><span class="n">JSONDecoder</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;encode an object, returning a utf8 encoded string (not a unicode string!)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="Packet"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.Packet">[docs]</a><span class="k">class</span> <span class="nc">Packet</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">     Packet base class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">JSON</span> <span class="o">=</span> <span class="n">JSON</span><span class="p">()</span>
+
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">PACKET_NONE</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span> <span class="o">=</span> <span class="n">kw</span>
+            
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">(</span><span class="si">%d</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">_d</span><span class="p">,</span> <span class="n">_t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+            <span class="n">string</span> <span class="o">+=</span> <span class="s">&quot; </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">string</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span> <span class="ow">is</span> <span class="n">other</span><span class="o">.</span><span class="n">__class__</span> <span class="ow">and</span> \
+            <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">_default</span><span class="p">,</span> <span class="n">_s_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">info</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">infoDeclare</span><span class="p">(</span><span class="n">dictionary</span><span class="p">,</span> <span class="n">packet_type</span><span class="p">,</span> <span class="n">base_type</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="c"># setup dictionary</span>
+        <span class="k">if</span> <span class="s">&#39;type2type_id&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span> <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;type2type_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="s">&#39;type_id2type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span> <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;type_id2type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="s">&#39;name2type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span> <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;name2type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="s">&#39;PacketFactory&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span> <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;PacketFactory&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">PACKET_NONE</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;PacketFactory&#39;</span><span class="p">]:</span> <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;PacketFactory&#39;</span><span class="p">][</span><span class="n">PACKET_NONE</span><span class="p">]</span> <span class="o">=</span> <span class="n">Packet</span>
+        <span class="k">if</span> <span class="s">&#39;PacketNames&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">:</span> <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;PacketNames&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">PACKET_NONE</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;PacketNames&#39;</span><span class="p">]:</span> <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;PacketNames&#39;</span><span class="p">][</span><span class="n">PACKET_NONE</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;NONE&quot;</span>
+
+        <span class="c"># setup _type</span>
+        <span class="n">packet_type</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">_s_type</span> <span class="ow">in</span> <span class="n">packet_type</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">packet_type</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+
+        <span class="c"># binpack info</span>
+        <span class="n">packet_type</span><span class="o">.</span><span class="n">_binarypack_info</span> <span class="o">=</span> <span class="p">[(</span><span class="n">attr</span><span class="p">,</span> <span class="n">s_type</span><span class="p">)</span> <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">_default</span><span class="p">,</span> <span class="n">s_type</span> <span class="ow">in</span> <span class="n">packet_type</span><span class="o">.</span><span class="n">info</span> <span class="k">if</span> <span class="n">s_type</span> <span class="o">!=</span> <span class="s">&#39;no net&#39;</span><span class="p">]</span>
+
+        <span class="c"># fast pack</span>
+        <span class="n">struct_format</span> <span class="o">=</span> <span class="s">&#39;!BH&#39;</span>
+        <span class="n">attr_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">attr</span><span class="p">,</span> <span class="n">default</span><span class="p">,</span> <span class="n">s_type</span> <span class="ow">in</span> <span class="n">packet_type</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+
+            <span class="c"># skip &#39;no net&#39; attributes</span>
+            <span class="k">if</span> <span class="n">s_type</span> <span class="o">==</span> <span class="s">&#39;no net&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c"># break if type is not fixed length and no other evaluation is needed</span>
+            <span class="k">if</span> <span class="n">s_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;B&#39;</span><span class="p">,</span> <span class="s">&#39;H&#39;</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">,</span> <span class="s">&#39;Q&#39;</span><span class="p">):</span>
+                <span class="k">break</span>
+
+            <span class="c"># </span>
+            <span class="n">struct_format</span> <span class="o">+=</span> <span class="n">s_type</span>
+            <span class="n">attr_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">attr_names</span><span class="p">:</span>
+                <span class="n">fast_struct</span> <span class="o">=</span> <span class="n">Struct</span><span class="p">(</span><span class="n">struct_format</span><span class="p">)</span>
+                <span class="n">fast_struct_size</span> <span class="o">=</span> <span class="n">fast_struct</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">3</span> <span class="c"># 3 is the size of the packet head</span>
+                <span class="n">packet_type</span><span class="o">.</span><span class="n">_binarypack_fast_pack</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">fast_struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span>
+                    <span class="n">index</span><span class="p">,</span>
+                    <span class="n">fast_struct_size</span><span class="p">,</span>
+                    <span class="o">*</span><span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attr_names</span><span class="p">]</span>
+                <span class="p">)</span>
+
+        <span class="c"># insert type into dictionary</span>
+        <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;type2type_id&#39;</span><span class="p">][</span><span class="n">packet_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;type_id2type&#39;</span><span class="p">][</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">packet_type</span>
+        <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;name2type&#39;</span><span class="p">][</span><span class="n">packet_type</span><span class="o">.</span><span class="n">__name__</span><span class="p">]</span> <span class="o">=</span> <span class="n">packet_type</span>
+        <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;PacketNames&#39;</span><span class="p">][</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;PacketFactory&#39;</span><span class="p">][</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">packet_type</span>
+        <span class="n">dictionary</span><span class="p">[</span><span class="s">&#39;PACKET_&#39;</span> <span class="o">+</span> <span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+</div>
+<div class="viewcode-block" id="PacketString"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketString">[docs]</a><span class="k">class</span> <span class="nc">PacketString</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Packet containing a single string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;string&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">),</span>
+    <span class="p">)</span>
+                           </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketString</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;STRING&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c"># 1 #</span>
+
+
+<div class="viewcode-block" id="PacketInt"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketInt">[docs]</a><span class="k">class</span> <span class="nc">PacketInt</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Packet containing an unsigned integer value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+    <span class="p">)</span>
+    </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketInt</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;INT&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="c"># 2 #</span>
+
+
+<div class="viewcode-block" id="PacketError"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketError">[docs]</a><span class="k">class</span> <span class="nc">PacketError</span><span class="p">(</span><span class="n">Packet</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Packet describing an error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">Packet</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="ne">Exception</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+       <span class="p">(</span><span class="s">&#39;message&#39;</span><span class="p">,</span> <span class="s">&#39;no message&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">),</span>
+       <span class="p">(</span><span class="s">&#39;code&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span> <span class="p">),</span>
+       <span class="p">(</span><span class="s">&#39;other_type&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">),</span>
+    <span class="p">)</span>
+    
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketError</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;ERROR&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="c"># 3 #</span>
+
+
+<span class="k">class</span> <span class="nc">PacketAck</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="s">&quot;&quot;</span>
+
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketAck</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;ACK&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="c"># 4 #</span>
+
+
+<span class="k">class</span> <span class="nc">PacketPing</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="s">&quot;&quot;</span>
+
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPing</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;PING&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span> <span class="c"># 5 #</span>
+
+
+<div class="viewcode-block" id="PacketSerial"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketSerial">[docs]</a><span class="k">class</span> <span class="nc">PacketSerial</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ========================================================================================</span>
+<span class="sd">    Semantics   the serial number of the authenticated user</span>
+<span class="sd">                associated to the client after a PacketLogin</span>
+<span class="sd">                was sent. This packet is sent to the client</span>
+<span class="sd">                after the PacketAuthOk acknowledging the success</span>
+<span class="sd">                of the authentication.</span>
+<span class="sd">    Direction   server =&gt; client</span>
+<span class="sd">    serial      the unique number associated to the user.</span>
+<span class="sd">    =========== ========================================================================================    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;serial&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+    <span class="p">)</span>
+    </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketSerial</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;SERIAL&quot;</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span> <span class="c"># 6 #</span>
+
+
+<div class="viewcode-block" id="PacketQuit"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketQuit">[docs]</a><span class="k">class</span> <span class="nc">PacketQuit</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Client tells the server it will leave</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketQuit</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;QUIT&quot;</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span> <span class="c"># 7  #</span>
+
+
+<div class="viewcode-block" id="PacketAuthOk"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketAuthOk">[docs]</a><span class="k">class</span> <span class="nc">PacketAuthOk</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ========================================================================================</span>
+<span class="sd">    Semantics   authentication request succeeded.</span>
+<span class="sd">    Direction   server =&gt; client</span>
+<span class="sd">    =========== ========================================================================================    &quot;&quot;&quot;</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketAuthOk</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;AUTH_OK&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span> <span class="c"># 8 #</span>
+
+
+<div class="viewcode-block" id="PacketAuthRefused"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketAuthRefused">[docs]</a><span class="k">class</span> <span class="nc">PacketAuthRefused</span><span class="p">(</span><span class="n">PacketError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    ============ =======================================================================================</span>
+<span class="sd">    Semantics    authentication request was refused by the server.</span>
+<span class="sd">    Direction    server =&gt; client</span>
+<span class="sd">    message      human readable reason for the authentication failure</span>
+<span class="sd">    code         machine readable code matching the human readable message</span>
+<span class="sd">                 the list of which can be found in the PacketPokerSetAccount</span>
+<span class="sd">                 packet definition</span>
+<span class="sd">    other_type   the type of the packet that triggered the authentication</span>
+<span class="sd">                 error, i.e. :class:`PACKET_LOGIN &lt;pokerpackets.packets.PacketLogin&gt;`</span>
+<span class="sd">    ============ =======================================================================================    &quot;&quot;&quot;</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketAuthRefused</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;AUTH_REFUSED&quot;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span> <span class="c"># 9 #</span>
+
+
+<div class="viewcode-block" id="PacketLogin"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketLogin">[docs]</a><span class="k">class</span> <span class="nc">PacketLogin</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ========================================================================================</span>
+<span class="sd">    Semantics   authentify user &quot;name&quot; with &quot;password&quot;.</span>
+<span class="sd">    Direction   server &lt;= client</span>
+
+<span class="sd">                If the user/password combination is valid, the</span>
+<span class="sd">                PacketAuthOk packet will be sent back to the client,</span>
+<span class="sd">                immediately followed by the PacketSerial packet that</span>
+<span class="sd">                holds the serial number of the user.</span>
+
+<span class="sd">                If the user/password combination is invalid, the</span>
+<span class="sd">                PacketAuthRefused packet will be sent back to the client.</span>
+<span class="sd">                If the user is already logged in, a PacketError is sent</span>
+<span class="sd">                with code set to PacketLogin.LOGGED.</span>
+<span class="sd">    name        valid user name as a string</span>
+<span class="sd">    password    matching password string</span>
+<span class="sd">    =========== ========================================================================================    &quot;&quot;&quot;</span>
+
+    <span class="n">LOGGED</span> <span class="o">=</span> <span class="mi">1</span>
+    
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="s">&#39;unknown&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;password&#39;</span><span class="p">,</span> <span class="s">&#39;unknown&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">),</span>
+    <span class="p">)</span>
+    </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketLogin</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;LOGIN&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="c"># 10 #</span>
+
+
+<div class="viewcode-block" id="PacketAuth"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketAuth">[docs]</a><span class="k">class</span> <span class="nc">PacketAuth</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ========================================================================================</span>
+<span class="sd">    Semantics   authentify user with &quot;auth&quot; token.</span>
+<span class="sd">    Direction   server &lt;= client</span>
+
+<span class="sd">                If the auth string is valid, the</span>
+<span class="sd">                PacketAuthOk packet will be sent back to the client,</span>
+<span class="sd">                immediately followed by the PacketSerial packet that</span>
+<span class="sd">                holds the serial number of the user.</span>
+
+<span class="sd">                If the auth string is invalid, the</span>
+<span class="sd">                PacketAuthRefused packet will be sent back to the client.</span>
+<span class="sd">                If the user is already logged in, a PacketError is sent</span>
+<span class="sd">                with code set to PacketAuth.LOGGED.</span>
+<span class="sd">    auth        valid user auth hash as a string</span>
+<span class="sd">    =========== ========================================================================================    &quot;&quot;&quot;</span>
+    <span class="n">LOGGED</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;auth&#39;</span><span class="p">,</span> <span class="s">&#39;unknown&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">),</span>
+    <span class="p">)</span>
+    </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketAuth</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;AUTH&quot;</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span> <span class="c"># 25 #</span>
+
+
+<div class="viewcode-block" id="PacketAuthRequest"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketAuthRequest">[docs]</a><span class="k">class</span> <span class="nc">PacketAuthRequest</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Packet to ask authentification from the client</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketAuthRequest</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;AUTH_REQUEST&quot;</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span> <span class="c"># 11  #</span>
+
+
+<div class="viewcode-block" id="PacketList"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketList">[docs]</a><span class="k">class</span> <span class="nc">PacketList</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Packet containing a list of packets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;packets&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;pl&#39;</span><span class="p">),</span>
+    <span class="p">)</span>
+    </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketList</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;LIST&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span> <span class="c"># 12 #</span>
+
+
+<div class="viewcode-block" id="PacketLogout"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketLogout">[docs]</a><span class="k">class</span> <span class="nc">PacketLogout</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Login out</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">NOT_LOGGED_IN</span> <span class="o">=</span> <span class="mi">1</span>
+    </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketLogout</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;LOGOUT&quot;</span><span class="p">,</span> <span class="mi">13</span><span class="p">)</span> <span class="c"># 13 #</span>
+
+
+<span class="k">class</span> <span class="nc">PacketBootstrap</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="s">&quot;&quot;</span>
+
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketBootstrap</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;BOOTSTRAP&quot;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span> <span class="c"># 14  #</span>
+
+
+<div class="viewcode-block" id="PacketProtocolError"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketProtocolError">[docs]</a><span class="k">class</span> <span class="nc">PacketProtocolError</span><span class="p">(</span><span class="n">PacketError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Client protocol version does not match server protocol version.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketProtocolError</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;PROTOCOL_ERROR&quot;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span> <span class="c"># 15 #</span>
+
+
+<div class="viewcode-block" id="PacketMessage"><a class="viewcode-back" href="../../packets.html#pokerpackets.packets.PacketMessage">[docs]</a><span class="k">class</span> <span class="nc">PacketMessage</span><span class="p">(</span><span class="n">PacketString</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    server =&gt; client</span>
+<span class="sd">    Informative messages</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketMessage</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;MESSAGE&quot;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span> <span class="c"># 16 #</span>
+
+<span class="n">_TYPES</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">39</span><span class="p">)</span>
+
+<span class="c">### !!!!!! NO SERIAL &gt;= 50 !!!!!! ####</span>
+
+<span class="c">#</span>
+<span class="c"># only export things starting with Packet or PACKET_</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&#39;Packet|PACKET_&#39;</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="s">&#39;type2type_id&#39;</span><span class="p">,</span> <span class="s">&#39;type_id2type&#39;</span><span class="p">,</span> <span class="s">&#39;name2type&#39;</span><span class="p">]</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">poker-network 2.2.5 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Pokermania.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

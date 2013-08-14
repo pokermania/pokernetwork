@@ -1,0 +1,517 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>First Steps &mdash; poker-network 2.2.5 documentation</title>
+    
+    <link rel="stylesheet" href="_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/sidebar.js"></script>
+    <link rel="top" title="poker-network 2.2.5 documentation" href="index.html" />
+    <link rel="next" title="Packet definitions" href="packets.html" />
+    <link rel="prev" title="Welcome to poker-network’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="packets.html" title="Packet definitions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to poker-network’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">poker-network 2.2.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="first-steps">
+<h1>First Steps<a class="headerlink" href="#first-steps" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="connect-to-the-pokerserver">
+<h2>Connect to the Pokerserver<a class="headerlink" href="#connect-to-the-pokerserver" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="typical-start">
+<h3>Typical Start<a class="headerlink" href="#typical-start" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>handshake</li>
+<li>authenticate</li>
+<li>get tables</li>
+<li>user actions</li>
+</ol>
+</div>
+<div class="section" id="handshake">
+<h3>Handshake<a class="headerlink" href="#handshake" title="Permalink to this headline">¶</a></h3>
+<p>Open a TCP connection to the poker service. You will receive a line like <cite>CGI 002.200\n</cite>. You have to respond with your protocol version number with the same format <cite>CGI &lt;major&gt;.&lt;minor&gt;\n</cite>. If the versions differ the connection is closed immediately. After the connection is opend you must not use any delimiter for the packets.</p>
+<p>It is a standard TCP connection.</p>
+<p>The Packets that will be sent are C-Structs. For information about the packet byte order or size you should take a look at <strong>Packet.format_info</strong> from <a class="reference external" href="https://github.com/pokermania/poker-network/blob/master/poker-packets/pokerpackets/packets.py#L412">packets.py</a>. Here you will get the information how the <strong>Packet.info</strong> tuple transformed to the standard C-Struct representation (see <cite>python docu &lt;http://docs.python.org/2/library/struct.html#byte-order-size-and-alignment&gt;</cite> for more information)</p>
+<p>For example: <tt class="docutils literal"><span class="pre">('game_id',</span> <span class="pre">0,</span> <span class="pre">'I'),</span></tt> means <em>game_id</em> is an Integer. Given the Packet.format_info from the packets.py:</p>
+<div class="highlight-python"><pre>'I': {'pack': lambda data: pack('!I', data),
+      'unpack': lambda block: ( block[4:], int(unpack('!I', block[:4])[0]) ),
+      'calcsize': lambda data: 4,
+      },</pre>
+</div>
+<p>You can see it is packed as an unsigned integer in network (big-endian) byte order with a size of 4 byte.</p>
+</div>
+<div class="section" id="authenticate">
+<h3>Authenticate<a class="headerlink" href="#authenticate" title="Permalink to this headline">¶</a></h3>
+<p>The Login must be done with the <cite>Social-API</cite>. There you will get the auth token.
+Then you need to send a <a class="reference internal" href="packets.html#pokerpackets.packets.PacketAuth" title="pokerpackets.packets.PacketAuth"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_AUTH</span></tt></a>.</p>
+</div>
+<div class="section" id="get-tables">
+<h3>Get tables<a class="headerlink" href="#get-tables" title="Permalink to this headline">¶</a></h3>
+<p>This list will include all basic information about the tables (including names, free seats, ...)</p>
+<p>Send a <tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TABLE_SELECT</span></tt> to get <tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TABLE_LIST</span></tt> which contains a list of  <tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TABLE</span></tt>.</p>
+<p>You can get the buy in for the table from the betting structure.</p>
+</div>
+<div class="section" id="user-actions">
+<h3>User Actions<a class="headerlink" href="#user-actions" title="Permalink to this headline">¶</a></h3>
+<p>Set your <tt class="docutils literal"><span class="pre">roles</span></tt> to <tt class="docutils literal"><span class="pre">PLAY</span></tt> with a <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerSetRole" title="pokerpackets.networkpackets.PacketPokerSetRole"><tt class="xref py py-class docutils literal"><span class="pre">PacketPokerSetRole</span></tt></a>.</p>
+<p>After you chose a table and want to sit down, check the FAQ section <a class="reference internal" href="#sit"><em>How to sit at a cash game table ?</em></a>.</p>
+<p>During a hand are <a class="reference internal" href="#hand"><em>this packets</em></a> possible.</p>
+</div>
+<div class="section" id="explain-or-no-explain">
+<h3>Explain or no explain<a class="headerlink" href="#explain-or-no-explain" title="Permalink to this headline">¶</a></h3>
+<p>Theoretically it is possible to ask the pokerserver for more packages. Therfore you could send an <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerExplain" title="pokerpackets.networkpackets.PacketPokerExplain"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_EXPLAIN</span></tt></a>.</p>
+<p>It would be much better if the client could work without explains since it reduces the performance impact to the server.</p>
+<p>Look at the <a class="reference external" href="https://github.com/pokermania/poker-network/blob/master/poker-network/pokernetwork/pokerexplain.py#L270">implementation</a> on github for an idea how it could be done.</p>
+</div>
+</div>
+<div class="section" id="faq">
+<h2>FAQ.<a class="headerlink" href="#faq" title="Permalink to this headline">¶</a></h2>
+<p>When the client send packets, the reply packets sent by the
+server are listed in the packet documentation.</p>
+<div class="section" id="cash-games">
+<h3>Cash Games<a class="headerlink" href="#cash-games" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="how-to-tell-the-server-that-the-client-is-alive-every-10-seconds">
+<h4>How to tell the server that the client is alive every 10 seconds ?<a class="headerlink" href="#how-to-tell-the-server-that-the-client-is-alive-every-10-seconds" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line-block">
+<div class="line">If and only if the client does not send any packet during
+more than 10 sec, you must send a <tt class="xref py py-class docutils literal"><span class="pre">PACKET_PING</span></tt></div>
+<div class="line"><br /></div>
+</div>
+<div class="line"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_PING</span></tt></div>
+</div>
+</div>
+<div class="section" id="how-to-cash-in">
+<h4>How to cash in ?<a class="headerlink" href="#how-to-cash-in" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerCashIn" title="pokerpackets.networkpackets.PacketPokerCashIn"><tt class="xref py py-class docutils literal"><span class="pre">POKER_CASH_IN</span></tt></a></p>
+</div>
+<div class="section" id="how-to-sit-at-a-cash-game-table">
+<span id="sit"></span><h4>How to sit at a cash game table ?<a class="headerlink" href="#how-to-sit-at-a-cash-game-table" title="Permalink to this headline">¶</a></h4>
+<p>Send:</p>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTableJoin" title="pokerpackets.networkpackets.PacketPokerTableJoin"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TABLE_JOIN</span></tt></a></div>
+</div>
+<p>if it was successfull you will get:</p>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTable" title="pokerpackets.networkpackets.PacketPokerTable"><tt class="xref py py-class docutils literal"><span class="pre">POKER_TABLE</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerBuyInLimits" title="pokerpackets.networkpackets.PacketPokerBuyInLimits"><tt class="xref py py-class docutils literal"><span class="pre">POKER_BUY_IN_LIMITS</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerBatchMode" title="pokerpackets.networkpackets.PacketPokerBatchMode"><tt class="xref py py-class docutils literal"><span class="pre">POKER_BATCH_MODE</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerSeats" title="pokerpackets.networkpackets.PacketPokerSeats"><tt class="xref py py-class docutils literal"><span class="pre">POKER_SEATS</span></tt></a></div>
+<div class="line">... and anything that happend during this hand allready</div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerStreamMode" title="pokerpackets.networkpackets.PacketPokerStreamMode"><tt class="xref py py-class docutils literal"><span class="pre">POKER_STREAM_MODE</span></tt></a></div>
+</div>
+<p>After that you need to choose a seat, pay your buy in. It is recommended that you activate auto blind ante, since the player has to pay them. If you want to manage the blind by yourself you need to watch for PACKET_POKER_BUY_IN_REQUEST packets. And last but not least you have to sit to indicate that you are ready to play.</p>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerSeat" title="pokerpackets.networkpackets.PacketPokerSeat"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_SEAT</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerBuyIn" title="pokerpackets.networkpackets.PacketPokerBuyIn"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_BUY_IN</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerAutoBlindAnte" title="pokerpackets.networkpackets.PacketPokerAutoBlindAnte"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_AUTO_BLIND_ANTE</span></tt></a> (optional)</div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerSit" title="pokerpackets.networkpackets.PacketPokerSit"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_SIT</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="how-to-quickly-get-to-a-cash-game-table-that-fits-certain-criteria">
+<h4>How to quickly get to a cash game table that fits certain criteria?<a class="headerlink" href="#how-to-quickly-get-to-a-cash-game-table-that-fits-certain-criteria" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTablePicker" title="pokerpackets.networkpackets.PacketPokerTablePicker"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TABLE_PICKER</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="how-to-leave-a-cash-game-table">
+<h4>How to leave a cash game table ?<a class="headerlink" href="#how-to-leave-a-cash-game-table" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTableQuit" title="pokerpackets.networkpackets.PacketPokerTableQuit"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TABLE_QUIT</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-to-expect-when-watching-a-table">
+<h4>What to expect when watching a table ?<a class="headerlink" href="#what-to-expect-when-watching-a-table" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerPlayerArrive" title="pokerpackets.networkpackets.PacketPokerPlayerArrive"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_PLAYER_ARRIVE</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerPlayerStats" title="pokerpackets.networkpackets.PacketPokerPlayerStats"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_PLAYER_STATS</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerPlayerChips" title="pokerpackets.networkpackets.PacketPokerPlayerChips"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_PLAYER_CHIPS</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerSit" title="pokerpackets.networkpackets.PacketPokerSit"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_SIT</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerSitOut" title="pokerpackets.networkpackets.PacketPokerSitOut"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_SIT_OUT</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerChat" title="pokerpackets.networkpackets.PacketPokerChat"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_CHAT</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerPlayerLeave" title="pokerpackets.networkpackets.PacketPokerPlayerLeave"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_PLAYER_LEAVE</span></tt></a></div>
+<div class="line">PACKET_POKER_REBUY</div>
+</div>
+</div>
+<div class="section" id="what-to-expect-at-all-times">
+<h4>What to expect at all times ?<a class="headerlink" href="#what-to-expect-at-all-times" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerMessage" title="pokerpackets.networkpackets.PacketPokerMessage"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_MESSAGE</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="how-do-i-get-the-list-of-tournaments">
+<h4>How do I get the list of tournaments ?<a class="headerlink" href="#how-do-i-get-the-list-of-tournaments" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneySelect" title="pokerpackets.networkpackets.PacketPokerTourneySelect"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_SELECT</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="how-do-i-get-the-list-of-players-registered-in-a-tournament">
+<h4>How do I get the list of players registered in a tournament ?<a class="headerlink" href="#how-do-i-get-the-list-of-players-registered-in-a-tournament" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyRequestPlayersList" title="pokerpackets.networkpackets.PacketPokerTourneyRequestPlayersList"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-to-expect-while-a-hand-is-being-played">
+<span id="hand"></span><h4>What to expect while a hand is being played ?<a class="headerlink" href="#what-to-expect-while-a-hand-is-being-played" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerInGame" title="pokerpackets.networkpackets.PacketPokerInGame"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_IN_GAME</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerDealer" title="pokerpackets.networkpackets.PacketPokerDealer"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_DEALER</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerStart" title="pokerpackets.networkpackets.PacketPokerStart"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_START</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerCanceled" title="pokerpackets.networkpackets.PacketPokerCanceled"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_CANCELED</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerState" title="pokerpackets.networkpackets.PacketPokerState"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_STATE</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerPosition" title="pokerpackets.networkpackets.PacketPokerPosition"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_POSITION</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerBlind" title="pokerpackets.networkpackets.PacketPokerBlind"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_BLIND</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerAnte" title="pokerpackets.networkpackets.PacketPokerAnte"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_ANTE</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerCall" title="pokerpackets.networkpackets.PacketPokerCall"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_CALL</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerRaise" title="pokerpackets.networkpackets.PacketPokerRaise"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_RAISE</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerFold" title="pokerpackets.networkpackets.PacketPokerFold"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_FOLD</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerCheck" title="pokerpackets.networkpackets.PacketPokerCheck"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_CHECK</span></tt></a></div>
+<div class="line"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_RAKE</span></tt></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerWin" title="pokerpackets.networkpackets.PacketPokerWin"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_WIN</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-to-expect-while-participating-in-a-hand">
+<h4>What to expect while participating in a hand ?<a class="headerlink" href="#what-to-expect-while-participating-in-a-hand" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerBlindRequest" title="pokerpackets.networkpackets.PacketPokerBlindRequest"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_BLIND_REQUEST</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerAnteRequest" title="pokerpackets.networkpackets.PacketPokerAnteRequest"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_ANTE_REQUEST</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerMuckRequest" title="pokerpackets.networkpackets.PacketPokerMuckRequest"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_MUCK_REQUEST</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.clientpackets.PacketPokerSelfInPosition" title="pokerpackets.clientpackets.PacketPokerSelfInPosition"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_SELF_IN_POSITION</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.clientpackets.PacketPokerSelfLostPosition" title="pokerpackets.clientpackets.PacketPokerSelfLostPosition"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_SELF_LOST_POSITION</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-to-send-after-receiving-packet-poker-self-in-position-only-in-explainmode">
+<h4>What to send after receiving <a class="reference internal" href="packets.html#pokerpackets.clientpackets.PacketPokerSelfInPosition" title="pokerpackets.clientpackets.PacketPokerSelfInPosition"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_SELF_IN_POSITION</span></tt></a> (only in Explainmode)?<a class="headerlink" href="#what-to-send-after-receiving-packet-poker-self-in-position-only-in-explainmode" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerCall" title="pokerpackets.networkpackets.PacketPokerCall"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_CALL</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerRaise" title="pokerpackets.networkpackets.PacketPokerRaise"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_RAISE</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerFold" title="pokerpackets.networkpackets.PacketPokerFold"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_FOLD</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerCheck" title="pokerpackets.networkpackets.PacketPokerCheck"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_CHECK</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-to-send-after-receiving-packet-poker-muck-request">
+<h4>What to send after receiving <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerMuckRequest" title="pokerpackets.networkpackets.PacketPokerMuckRequest"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_MUCK_REQUEST</span></tt></a> ?<a class="headerlink" href="#what-to-send-after-receiving-packet-poker-muck-request" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerMuckAccept" title="pokerpackets.networkpackets.PacketPokerMuckAccept"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_MUCK_ACCEPT</span></tt></a> or</div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerMuckDeny" title="pokerpackets.networkpackets.PacketPokerMuckDeny"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_MUCK_DENY</span></tt></a></div>
+</div>
+</div>
+</div>
+<div class="section" id="tournaments">
+<h3>Tournaments<a class="headerlink" href="#tournaments" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="how-to-list-tournaments">
+<h4>How to list tournaments ?<a class="headerlink" href="#how-to-list-tournaments" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneySelect" title="pokerpackets.networkpackets.PacketPokerTourneySelect"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_SELECT</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-to-expect-in-response-to-packet-poker-tourney-select">
+<h4>What to expect in response to <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneySelect" title="pokerpackets.networkpackets.PacketPokerTourneySelect"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_SELECT</span></tt></a> ?<a class="headerlink" href="#what-to-expect-in-response-to-packet-poker-tourney-select" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyList" title="pokerpackets.networkpackets.PacketPokerTourneyList"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_LIST</span></tt></a> containing
+<tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY</span></tt> packets</div>
+</div>
+</div>
+<div class="section" id="how-to-list-players-registered-in-a-tournament">
+<h4>How to list players registered in a tournament ?<a class="headerlink" href="#how-to-list-players-registered-in-a-tournament" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyRequestPlayersList" title="pokerpackets.networkpackets.PacketPokerTourneyRequestPlayersList"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-to-expect-in-response-to-packet-poker-tourney-request-players-list">
+<h4>What to expect in response to <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyRequestPlayersList" title="pokerpackets.networkpackets.PacketPokerTourneyRequestPlayersList"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST</span></tt></a> ?<a class="headerlink" href="#what-to-expect-in-response-to-packet-poker-tourney-request-players-list" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyPlayersList" title="pokerpackets.networkpackets.PacketPokerTourneyPlayersList"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_PLAYERS_LIST</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="how-to-register-to-a-tournament">
+<h4>How to register to a tournament ?<a class="headerlink" href="#how-to-register-to-a-tournament" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyRegister" title="pokerpackets.networkpackets.PacketPokerTourneyRegister"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_REGISTER</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-to-expect-in-response-to-packet-poker-tourney-register">
+<h4>What to expect in response to <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyRegister" title="pokerpackets.networkpackets.PacketPokerTourneyRegister"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_REGISTER</span></tt></a> ?<a class="headerlink" href="#what-to-expect-in-response-to-packet-poker-tourney-register" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyRegister" title="pokerpackets.networkpackets.PacketPokerTourneyRegister"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_REGISTER</span></tt></a> if success (the same that was sent)</div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.packets.PacketError" title="pokerpackets.packets.PacketError"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_ERROR</span></tt></a> if failure</div>
+</div>
+</div>
+<div class="section" id="how-to-unregister-to-a-tournament">
+<h4>How to unregister to a tournament ?<a class="headerlink" href="#how-to-unregister-to-a-tournament" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyUnregister" title="pokerpackets.networkpackets.PacketPokerTourneyUnregister"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_UNREGISTER</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-to-expect-in-response-to-packet-poker-tourney-unregister">
+<h4>What to expect in response to <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyUnregister" title="pokerpackets.networkpackets.PacketPokerTourneyUnregister"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_UNREGISTER</span></tt></a> ?<a class="headerlink" href="#what-to-expect-in-response-to-packet-poker-tourney-unregister" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyUnregister" title="pokerpackets.networkpackets.PacketPokerTourneyUnregister"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_UNREGISTER</span></tt></a> if success (the same that was sent)</div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.packets.PacketError" title="pokerpackets.packets.PacketError"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_ERROR</span></tt></a> if failure</div>
+</div>
+</div>
+<div class="section" id="what-is-sent-to-the-tournament-player-that-was-busted-out-of-a-tournament-or-is-the-winner">
+<h4>What is sent to the tournament player that was busted out of a tournament (or is the winner) ?<a class="headerlink" href="#what-is-sent-to-the-tournament-player-that-was-busted-out-of-a-tournament-or-is-the-winner" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyRank" title="pokerpackets.networkpackets.PacketPokerTourneyRank"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_RANK</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-is-sent-to-the-player-when-the-tournament-starts">
+<h4>What is sent to the player when the tournament starts ?<a class="headerlink" href="#what-is-sent-to-the-player-when-the-tournament-starts" title="Permalink to this headline">¶</a></h4>
+<p>#TODO</p>
+</div>
+<div class="section" id="what-should-the-client-expect-when-moved-to-another-table-during-a-tournament">
+<h4>What should the client expect when moved to another table during a tournament ?<a class="headerlink" href="#what-should-the-client-expect-when-moved-to-another-table-during-a-tournament" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTableMove" title="pokerpackets.networkpackets.PacketPokerTableMove"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TABLE_MOVE</span></tt></a> (or <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerPlayerLeave" title="pokerpackets.networkpackets.PacketPokerPlayerLeave"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_PLAYER_LEAVE</span></tt></a> if explain mode)</div>
+<div class="line">(and <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerSeats" title="pokerpackets.networkpackets.PacketPokerSeats"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_SEATS</span></tt></a> if explain mode)</div>
+</div>
+</div>
+<div class="section" id="how-to-instruct-the-server-to-wait-for-the-client-before-dealing-the-next-hand">
+<h4>How to instruct the server to wait for the client before dealing the next hand ?<a class="headerlink" href="#how-to-instruct-the-server-to-wait-for-the-client-before-dealing-the-next-hand" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerProcessingHand" title="pokerpackets.networkpackets.PacketPokerProcessingHand"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_PROCESSING_HAND</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="how-to-tell-the-server-that-the-client-has-finished-displaying-the-current-hand-and-can-deal-the-next-one">
+<h4>How to tell the server that the client has finished displaying the current hand and can deal the next one ?<a class="headerlink" href="#how-to-tell-the-server-that-the-client-has-finished-displaying-the-current-hand-and-can-deal-the-next-one" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerReadyToPlay" title="pokerpackets.networkpackets.PacketPokerReadyToPlay"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_READY_TO_PLAY</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-should-the-client-expect-when-a-tournament-break-begins-ends">
+<h4>What should the client expect when a tournament break begins/ends?<a class="headerlink" href="#what-should-the-client-expect-when-a-tournament-break-begins-ends" title="Permalink to this headline">¶</a></h4>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTableTourneyBreakBegin" title="pokerpackets.networkpackets.PacketPokerTableTourneyBreakBegin"><tt class="xref py py-class docutils literal"><span class="pre">POKER_TABLE_TOURNEY_BREAK_BEGIN</span></tt></a></div>
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTableTourneyBreakDone" title="pokerpackets.networkpackets.PacketPokerTableTourneyBreakDone"><tt class="xref py py-class docutils literal"><span class="pre">POKER_TABLE_TOURNEY_BREAK_DONE</span></tt></a></div>
+</div>
+</div>
+<div class="section" id="what-are-the-values-that-the-currency-serial-can-contain">
+<h4>What are the values that the currency_serial can contain?<a class="headerlink" href="#what-are-the-values-that-the-currency-serial-can-contain" title="Permalink to this headline">¶</a></h4>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="71%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">currency_serial</th>
+<th class="head">description</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>1</td>
+<td>User Chips</td>
+</tr>
+<tr class="row-odd"><td>2</td>
+<td>Tourney Chips (bank roll of with
+this serial should be hidden from
+the player.)</td>
+</tr>
+<tr class="row-even"><td>3</td>
+<td>User Gold</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="how-can-i-get-the-blinds-buy-ins-for-cashgames">
+<h4>How can I get the blinds / buy-ins for cashgames?<a class="headerlink" href="#how-can-i-get-the-blinds-buy-ins-for-cashgames" title="Permalink to this headline">¶</a></h4>
+<p>You can look at the name of the betting structure. The betting_structure has a naming convention:</p>
+<div class="highlight-python"><pre>&lt;small blind&gt;-&lt;big_blind&gt;_&lt;min buy_in&gt;-&lt;max buy_in&gt;_&lt;something&gt;</pre>
+</div>
+</div>
+<div class="section" id="what-to-do-after-a-packetpokerblindrequest">
+<h4>What to do after a PacketPokerBlindRequest?<a class="headerlink" href="#what-to-do-after-a-packetpokerblindrequest" title="Permalink to this headline">¶</a></h4>
+<p>When you get a <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerBlindRequest" title="pokerpackets.networkpackets.PacketPokerBlindRequest"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_BLIND_REQUEST</span></tt></a> you get all the information how much you should pay. It is possible, that you need to pay a <strong>blind</strong> and a <strong>dead</strong>. Both values are just for your information. You should answer with a <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerBlind" title="pokerpackets.networkpackets.PacketPokerBlind"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_BLIND</span></tt></a> with just your serial filled. The server will know the correckt values and will charge you those. After this every one on this table get a <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerBlind" title="pokerpackets.networkpackets.PacketPokerBlind"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_BLIND</span></tt></a> with the <strong>blind</strong> amount and maybe a <strong>dead</strong> amount.</p>
+</div>
+<div class="section" id="what-is-a-dead-amount-in-packetpokerblind">
+<h4>What is a dead amount in PacketPokerBlind?<a class="headerlink" href="#what-is-a-dead-amount-in-packetpokerblind" title="Permalink to this headline">¶</a></h4>
+<p>After you joining a table it is possible a user would have to wait till the big blind is moving to his place before he can actually play. The default behaviour is to pay a late blind instead and you can usualy play the next round (Except your seat is between the dealer and the big blind). It is possible to wait for big blind if a <a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerWaitBigBlind" title="pokerpackets.networkpackets.PacketPokerWaitBigBlind"><tt class="xref py py-class docutils literal"><span class="pre">POKER_WAIT_BIG_BLIND</span></tt></a> is sent.</p>
+<p>If the table is too full the player is forced to pay a <strong>dead</strong> amount directly into the pot and the normal <strong>blind</strong> to his bet.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="29%" />
+<col width="18%" />
+<col width="18%" />
+<col width="15%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Big</td>
+<td>Late Dead</td>
+<td>&nbsp;</td>
+<td>Small</td>
+<td>&nbsp;</td>
+</tr>
+<tr class="row-even"><td>User A</td>
+<td>User B</td>
+<td>User C</td>
+<td>User D</td>
+<td>Pot</td>
+</tr>
+<tr class="row-odd"><td>100</td>
+<td>100</td>
+<td>0</td>
+<td>50</td>
+<td>50</td>
+</tr>
+</tbody>
+</table>
+<p>Remember the dead blind goes directly to the pot so <em>Player C</em> would still have to call 100 not 150.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">First Steps</a><ul>
+<li><a class="reference internal" href="#connect-to-the-pokerserver">Connect to the Pokerserver</a><ul>
+<li><a class="reference internal" href="#typical-start">Typical Start</a></li>
+<li><a class="reference internal" href="#handshake">Handshake</a></li>
+<li><a class="reference internal" href="#authenticate">Authenticate</a></li>
+<li><a class="reference internal" href="#get-tables">Get tables</a></li>
+<li><a class="reference internal" href="#user-actions">User Actions</a></li>
+<li><a class="reference internal" href="#explain-or-no-explain">Explain or no explain</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#faq">FAQ.</a><ul>
+<li><a class="reference internal" href="#cash-games">Cash Games</a><ul>
+<li><a class="reference internal" href="#how-to-tell-the-server-that-the-client-is-alive-every-10-seconds">How to tell the server that the client is alive every 10 seconds ?</a></li>
+<li><a class="reference internal" href="#how-to-cash-in">How to cash in ?</a></li>
+<li><a class="reference internal" href="#how-to-sit-at-a-cash-game-table">How to sit at a cash game table ?</a></li>
+<li><a class="reference internal" href="#how-to-quickly-get-to-a-cash-game-table-that-fits-certain-criteria">How to quickly get to a cash game table that fits certain criteria?</a></li>
+<li><a class="reference internal" href="#how-to-leave-a-cash-game-table">How to leave a cash game table ?</a></li>
+<li><a class="reference internal" href="#what-to-expect-when-watching-a-table">What to expect when watching a table ?</a></li>
+<li><a class="reference internal" href="#what-to-expect-at-all-times">What to expect at all times ?</a></li>
+<li><a class="reference internal" href="#how-do-i-get-the-list-of-tournaments">How do I get the list of tournaments ?</a></li>
+<li><a class="reference internal" href="#how-do-i-get-the-list-of-players-registered-in-a-tournament">How do I get the list of players registered in a tournament ?</a></li>
+<li><a class="reference internal" href="#what-to-expect-while-a-hand-is-being-played">What to expect while a hand is being played ?</a></li>
+<li><a class="reference internal" href="#what-to-expect-while-participating-in-a-hand">What to expect while participating in a hand ?</a></li>
+<li><a class="reference internal" href="#what-to-send-after-receiving-packet-poker-self-in-position-only-in-explainmode">What to send after receiving <tt class="docutils literal"><span class="pre">PACKET_POKER_SELF_IN_POSITION</span></tt> (only in Explainmode)?</a></li>
+<li><a class="reference internal" href="#what-to-send-after-receiving-packet-poker-muck-request">What to send after receiving <tt class="docutils literal"><span class="pre">PACKET_POKER_MUCK_REQUEST</span></tt> ?</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tournaments">Tournaments</a><ul>
+<li><a class="reference internal" href="#how-to-list-tournaments">How to list tournaments ?</a></li>
+<li><a class="reference internal" href="#what-to-expect-in-response-to-packet-poker-tourney-select">What to expect in response to <tt class="docutils literal"><span class="pre">PACKET_POKER_TOURNEY_SELECT</span></tt> ?</a></li>
+<li><a class="reference internal" href="#how-to-list-players-registered-in-a-tournament">How to list players registered in a tournament ?</a></li>
+<li><a class="reference internal" href="#what-to-expect-in-response-to-packet-poker-tourney-request-players-list">What to expect in response to <tt class="docutils literal"><span class="pre">PACKET_POKER_TOURNEY_REQUEST_PLAYERS_LIST</span></tt> ?</a></li>
+<li><a class="reference internal" href="#how-to-register-to-a-tournament">How to register to a tournament ?</a></li>
+<li><a class="reference internal" href="#what-to-expect-in-response-to-packet-poker-tourney-register">What to expect in response to <tt class="docutils literal"><span class="pre">PACKET_POKER_TOURNEY_REGISTER</span></tt> ?</a></li>
+<li><a class="reference internal" href="#how-to-unregister-to-a-tournament">How to unregister to a tournament ?</a></li>
+<li><a class="reference internal" href="#what-to-expect-in-response-to-packet-poker-tourney-unregister">What to expect in response to <tt class="docutils literal"><span class="pre">PACKET_POKER_TOURNEY_UNREGISTER</span></tt> ?</a></li>
+<li><a class="reference internal" href="#what-is-sent-to-the-tournament-player-that-was-busted-out-of-a-tournament-or-is-the-winner">What is sent to the tournament player that was busted out of a tournament (or is the winner) ?</a></li>
+<li><a class="reference internal" href="#what-is-sent-to-the-player-when-the-tournament-starts">What is sent to the player when the tournament starts ?</a></li>
+<li><a class="reference internal" href="#what-should-the-client-expect-when-moved-to-another-table-during-a-tournament">What should the client expect when moved to another table during a tournament ?</a></li>
+<li><a class="reference internal" href="#how-to-instruct-the-server-to-wait-for-the-client-before-dealing-the-next-hand">How to instruct the server to wait for the client before dealing the next hand ?</a></li>
+<li><a class="reference internal" href="#how-to-tell-the-server-that-the-client-has-finished-displaying-the-current-hand-and-can-deal-the-next-one">How to tell the server that the client has finished displaying the current hand and can deal the next one ?</a></li>
+<li><a class="reference internal" href="#what-should-the-client-expect-when-a-tournament-break-begins-ends">What should the client expect when a tournament break begins/ends?</a></li>
+<li><a class="reference internal" href="#what-are-the-values-that-the-currency-serial-can-contain">What are the values that the currency_serial can contain?</a></li>
+<li><a class="reference internal" href="#how-can-i-get-the-blinds-buy-ins-for-cashgames">How can I get the blinds / buy-ins for cashgames?</a></li>
+<li><a class="reference internal" href="#what-to-do-after-a-packetpokerblindrequest">What to do after a PacketPokerBlindRequest?</a></li>
+<li><a class="reference internal" href="#what-is-a-dead-amount-in-packetpokerblind">What is a dead amount in PacketPokerBlind?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to poker-network&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="packets.html"
+                        title="next chapter">Packet definitions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/firststeps.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="packets.html" title="Packet definitions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to poker-network’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">poker-network 2.2.5 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Pokermania.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>

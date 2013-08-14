@@ -1,0 +1,656 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pokerpackets.clientpackets &mdash; poker-network 2.2.5 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/pydoctheme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.2.5',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/sidebar.js"></script>
+    <link rel="top" title="poker-network 2.2.5 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">poker-network 2.2.5 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for pokerpackets.clientpackets</h1><div class="highlight"><pre>
+<span class="c">#</span>
+<span class="c"># Copyright (C) 2006, 2007, 2008, 2009 Loic Dachary &lt;loic@dachary.org&gt;</span>
+<span class="c">#</span>
+<span class="c"># This software&#39;s license gives you freedom; you can copy, convey,</span>
+<span class="c"># propagate, redistribute and/or modify this program under the terms of</span>
+<span class="c"># the GNU Affero General Public License (AGPL) as published by the Free</span>
+<span class="c"># Software Foundation (FSF), either version 3 of the License, or (at your</span>
+<span class="c"># option) any later version of the AGPL published by the FSF.</span>
+<span class="c">#</span>
+<span class="c"># This program is distributed in the hope that it will be useful, but</span>
+<span class="c"># WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero</span>
+<span class="c"># General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU Affero General Public License</span>
+<span class="c"># along with this program in a file in the toplevel directory called</span>
+<span class="c"># &quot;AGPLv3&quot;.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="c">#</span>
+<span class="c"># Which packets describe where the chips go ?</span>
+<span class="c">#</span>
+<span class="c"># PACKET_POKER_CHIPS_PLAYER2BET</span>
+<span class="c"># PACKET_POKER_CHIPS_BET2POT</span>
+<span class="c"># PACKET_POKER_CHIPS_POT2PLAYER</span>
+<span class="c"># PACKET_POKER_CHIPS_BET2PLAYER</span>
+<span class="c"># PACKET_POKER_CHIPS_POT_MERGE</span>
+<span class="c">#</span>
+<span class="kn">from</span> <span class="nn">pokerpackets.packets</span> <span class="kn">import</span> <span class="n">Packet</span><span class="p">,</span> <span class="n">type2type_id</span><span class="p">,</span> <span class="n">type_id2type</span><span class="p">,</span> <span class="n">name2type</span><span class="p">,</span> <span class="n">PacketNames</span><span class="p">,</span> <span class="n">PacketFactory</span>
+<span class="kn">from</span> <span class="nn">pokerpackets.networkpackets</span> <span class="kn">import</span> <span class="n">PacketPokerCards</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="n">PacketPokerPosition</span><span class="p">,</span> <span class="n">PacketPokerSit</span><span class="p">,</span> <span class="n">PacketPokerSitOut</span>
+
+<div class="viewcode-block" id="PacketPokerBestCards"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerBestCards">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerBestCards</span><span class="p">(</span><span class="n">PacketPokerCards</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   ordered list  of five &quot;bestcards&quot; hand for</span>
+<span class="sd">                player &quot;serial&quot; in game &quot;game_id&quot; that won the &quot;side&quot;</span>
+<span class="sd">                side of the pot. The &quot;board&quot;, if not empty, is the list</span>
+<span class="sd">                of community cards at showdown. Also provides the</span>
+<span class="sd">                &quot;cards&quot; of the player.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    cards       list of integers describing the player cards::</span>
+
+<span class="sd">                       2h/00  2d/13  2c/26  2s/39</span>
+<span class="sd">                       3h/01  3d/14  3c/27  3s/40</span>
+<span class="sd">                       4h/02  4d/15  4c/28  4s/41</span>
+<span class="sd">                       5h/03  5d/16  5c/29  5s/42</span>
+<span class="sd">                       6h/04  6d/17  6c/30  6s/43</span>
+<span class="sd">                       7h/05  7d/18  7c/31  7s/44</span>
+<span class="sd">                       8h/06  8d/19  8c/32  8s/45</span>
+<span class="sd">                       9h/07  9d/20  9c/33  9s/46</span>
+<span class="sd">                       Th/08  Td/21  Tc/34  Ts/47</span>
+<span class="sd">                       Jh/09  Jd/22  Jc/35  Js/48</span>
+<span class="sd">                       Qh/10  Qd/23  Qc/36  Qs/49</span>
+<span class="sd">                       Kh/11  Kd/24  Kc/37  Ks/50</span>
+<span class="sd">                       Ah/12  Ad/25  Ac/38  As/51</span>
+<span class="sd">    bestcards   list of integers describing the winning combination cards:</span>
+<span class="sd">    board       list of integers describing the community cards:</span>
+<span class="sd">    hand        readable string of the name best hand</span>
+<span class="sd">    besthand    0 if it&#39;s not the best hand and 1 if it&#39;s the best hand</span>
+<span class="sd">                best hand is the hand that win the most money</span>
+<span class="sd">    serial      integer uniquely identifying a player.</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketPokerCards</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span> <span class="p">(</span><span class="s">&quot;side&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="s">&quot;hand&quot;</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="s">&quot;bestcards&quot;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;Bl&#39;</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="s">&quot;board&quot;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;Bl&#39;</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="s">&quot;besthand&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">),</span>
+                                     <span class="p">)</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerBestCards</span><span class="p">,</span> <span class="n">PacketPokerCards</span><span class="p">,</span> <span class="s">&#39;POKER_BEST_CARDS&#39;</span><span class="p">,</span> <span class="mi">170</span><span class="p">)</span> <span class="c"># 0xaa # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerPotChips"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerPotChips">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerPotChips</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   the &quot;bet&quot; put in the &quot;index&quot; pot of the &quot;game_id&quot; game.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    context     this packet is sent at least each time the pot index is</span>
+<span class="sd">                updated.</span>
+<span class="sd">    bet         list of pairs ( chip_value, chip_count ).</span>
+<span class="sd">    index       integer uniquely identifying a side pot in the range [0,10[</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span> <span class="p">(</span><span class="s">&quot;game_id&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s">&quot;index&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">),</span>
+                           <span class="p">(</span><span class="s">&quot;bet&quot;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;c&#39;</span><span class="p">),</span>
+                           <span class="p">)</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerPotChips</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&#39;POKER_POT_CHIPS&#39;</span><span class="p">,</span> <span class="mi">171</span><span class="p">)</span> <span class="c"># 0xab # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerBetLimit"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerBetLimit">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerBetLimit</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   a raise must be at least &quot;min&quot; and most &quot;max&quot;.</span>
+<span class="sd">                A call means wagering an amount of &quot;call&quot;. The suggested</span>
+<span class="sd">                step to slide between &quot;min&quot; and &quot;max&quot; is &quot;step&quot;. The step</span>
+<span class="sd">                is guaranteed to be an integral divisor of &quot;call&quot;. The</span>
+<span class="sd">                player would be allin for the amount &quot;allin&quot;. The player</span>
+<span class="sd">                would match the pot if betting &quot;pot&quot;.</span>
+<span class="sd">    Context     this packet is issued each time a position change</span>
+<span class="sd">                occurs.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    min         the minimum amount of a raise.</span>
+<span class="sd">    max         the maximum amount of a raise.</span>
+<span class="sd">    step        a hint for sliding in the [min, max] interval.</span>
+<span class="sd">    call        the amount of a call.</span>
+<span class="sd">    allin       the amount for which the player goes allin.</span>
+<span class="sd">    pot         the amount in the pot.</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketPokerId</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span> <span class="p">(</span><span class="s">&quot;min&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+                                  <span class="p">(</span><span class="s">&quot;max&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+                                  <span class="p">(</span><span class="s">&quot;step&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+                                  <span class="p">(</span><span class="s">&quot;call&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+                                  <span class="p">(</span><span class="s">&quot;allin&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+                                  <span class="p">(</span><span class="s">&quot;pot&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+                                  <span class="p">)</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerBetLimit</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&#39;POKER_BET_LIMIT&#39;</span><span class="p">,</span> <span class="mi">173</span><span class="p">)</span> <span class="c"># 0xad # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<span class="k">class</span> <span class="nc">PacketPokerSitRequest</span><span class="p">(</span><span class="n">PacketPokerSit</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerSitRequest</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_SIT_REQUEST&quot;</span><span class="p">,</span> <span class="mi">174</span><span class="p">)</span> <span class="c"># 0xae # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerPlayerNoCards"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerPlayerNoCards">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerPlayerNoCards</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   the player &quot;serial&quot; has no cards in game &quot;game_id&quot;.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    Context     inferred at showdown.</span>
+<span class="sd">    serial      integer uniquely identifying a player.</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerPlayerNoCards</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_PLAYER_NO_CARDS&quot;</span><span class="p">,</span> <span class="mi">175</span><span class="p">)</span> <span class="c"># 0xaf # %SEQ%</span>
+
+<span class="c">######################################## </span>
+
+<div class="viewcode-block" id="PacketPokerChipsPlayer2Bet"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerChipsPlayer2Bet">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerChipsPlayer2Bet</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   move &quot;chips&quot; from the player &quot;serial&quot; money chip stack</span>
+<span class="sd">                to the bet chip stack.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    chips       list of pairs ( chip_value, chip_count ).</span>
+<span class="sd">    serial      integer uniquely identifying a player.</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketPokerId</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;chips&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;c&#39;</span> <span class="p">),</span>
+        <span class="p">)</span>
+    </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerChipsPlayer2Bet</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&#39;POKER_CHIPS_PLAYER2BET&#39;</span><span class="p">,</span> <span class="mi">176</span><span class="p">)</span> <span class="c"># 0xb0 # %SEQ%</span>
+
+<span class="c">######################################## </span>
+
+<div class="viewcode-block" id="PacketPokerChipsBet2Pot"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerChipsBet2Pot">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerChipsBet2Pot</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   move &quot;chips&quot; from the player &quot;serial&quot; bet chip stack</span>
+<span class="sd">                to the &quot;pot&quot; pot.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    Context     the pot index is by definition in the range [0,9] because</span>
+<span class="sd">                it starts at 0 and because there cannot be more pots than players.</span>
+<span class="sd">                The creation of side pots is inferred by the client when a player</span>
+<span class="sd">                is all-in and it is guaranteed that pots are numbered sequentially.</span>
+<span class="sd">    pot         the pot index in the range [0,9].</span>
+<span class="sd">    chips       list of integers counting the number of chips to move.</span>
+<span class="sd">                The value of each chip is, respectively::</span>
+
+<span class="sd">                     1 2 5 10 20 25 50 100 250 500 1000 2000 5000.</span>
+<span class="sd">    serial      integer uniquely identifying a player.</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketPokerId</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;chips&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;c&#39;</span> <span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;pot&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span> <span class="p">),</span>
+        <span class="p">)</span>
+    </div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerChipsBet2Pot</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&#39;POKER_CHIPS_BET2POT&#39;</span><span class="p">,</span> <span class="mi">177</span><span class="p">)</span> <span class="c"># 0xb1 # %SEQ%</span>
+
+<span class="c">######################################## Display packet</span>
+
+<div class="viewcode-block" id="PacketPokerChipsPot2Player"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerChipsPot2Player">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerChipsPot2Player</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   move &quot;chips&quot; from the pot &quot;pot&quot; to the player &quot;serial&quot;</span>
+<span class="sd">                money chip stack. The string &quot;reason&quot; explains why these chips</span>
+<span class="sd">                are granted to the player. If reason is &quot;win&quot;, it means the player</span>
+<span class="sd">                won the chips either because all other players folded or because</span>
+<span class="sd">                he had the best hand at showdown. If reason is &quot;uncalled&quot;, it means</span>
+<span class="sd">                the chips are returned to him because no other player was will or</span>
+<span class="sd">                able to call his wager. If reason is &quot;left-over&quot;, it means the chips</span>
+<span class="sd">                are granted to him because there was an odd chip while splitting the pot.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    Context     the pot index is by definition in the range [0,9] because</span>
+<span class="sd">                it starts at 0 and because there cannot be more pots than players.</span>
+<span class="sd">                The creation of side pots is inferred by the client when a player</span>
+<span class="sd">                is all-in and it is guaranteed that pots are numbered sequentially.</span>
+<span class="sd">    reason      may be one of &quot;win&quot;, &quot;uncalled&quot;, &quot;left-over&quot;</span>
+<span class="sd">    pot         the pot index in the range [0,9].</span>
+<span class="sd">    chips       list of integers counting the number of chips to move.</span>
+<span class="sd">                The value of each chip is, respectively::</span>
+
+<span class="sd">                     1 2 5 10 20 25 50 100 250 500 1000 2000 5000.</span>
+<span class="sd">    serial      integer uniquely identifying a player.</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketPokerId</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;chips&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;c&#39;</span> <span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;pot&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s">&#39;b&#39;</span> <span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;reason&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span> <span class="p">),</span>
+        <span class="p">)</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerChipsPot2Player</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&#39;POKER_CHIPS_POT2PLAYER&#39;</span><span class="p">,</span> <span class="mi">178</span><span class="p">)</span> <span class="c"># 0xb2 # %SEQ%</span>
+
+<span class="c">######################################## Display packet</span>
+
+<div class="viewcode-block" id="PacketPokerChipsPotMerge"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerChipsPotMerge">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerChipsPotMerge</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    ============= ====================================================================================================================================================================================</span>
+<span class="sd">    Semantics     merge the pots whose indexes are listed in</span>
+<span class="sd">                  &quot;sources&quot; into a single pot at index &quot;destination&quot; in game &quot;game_id&quot;.</span>
+<span class="sd">    Direction     client &lt;=&gt; client</span>
+<span class="sd">    Context       when generating PACKET_POKER_CHIPS_POT2PLAYER packets, if</span>
+<span class="sd">                  multiple packet can be avoided by merging pots (e.g. when one player</span>
+<span class="sd">                  wins all the pots).</span>
+<span class="sd">    destination   a pot index in the range [0,9].</span>
+<span class="sd">    sources       list of pot indexes in the range [0,9].</span>
+<span class="sd">    game_id       integer uniquely identifying a game.</span>
+<span class="sd">    ============= ====================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketPokerId</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;sources&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;Bl&#39;</span> <span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;destination&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;B&#39;</span> <span class="p">),</span>
+        <span class="p">)</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerChipsPotMerge</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&#39;POKER_CHIPS_POT_MERGE&#39;</span><span class="p">,</span> <span class="mi">179</span><span class="p">)</span> <span class="c"># 0xb3 # %SEQ%</span>
+
+<span class="c">######################################## Display packet</span>
+
+<div class="viewcode-block" id="PacketPokerChipsPotReset"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerChipsPotReset">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerChipsPotReset</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   all pots for game &quot;game_id&quot; are set to zero.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    Context     it is inferred after a :class:`PACKET_POKER_TABLE &lt;pokerpackets.networkpackets.PacketPokerTable&gt;` or a</span>
+<span class="sd">                :class:`PACKET_POKER_START &lt;pokerpackets.networkpackets.PacketPokerStart&gt;` packet is sent by the server. It is inferred</span>
+<span class="sd">                after the pot is distributed (i.e. after the game terminates</span>
+<span class="sd">                because a :class:`PACKET_POKER_WIN &lt;pokerpackets.networkpackets.PacketPokerWin&gt;` or :class:`PACKET_POKER_CANCELED &lt;pokerpackets.networkpackets.PacketPokerCanceled&gt;` is received).</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerChipsPotReset</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_CHIPS_POT_RESET&quot;</span><span class="p">,</span> <span class="mi">180</span><span class="p">)</span> <span class="c"># 0xb4 # %SEQ%</span>
+
+<span class="c">######################################## Display packet</span>
+
+<div class="viewcode-block" id="PacketPokerChipsBet2player"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerChipsBet2player">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerChipsBet2player</span><span class="p">(</span><span class="n">PacketPokerChipsPlayer2Bet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;chips move from bet to player&quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerChipsBet2player</span><span class="p">,</span> <span class="n">PacketPokerChipsPlayer2Bet</span><span class="p">,</span> <span class="s">&quot;POKER_CHIPS_BET2PLAYER&quot;</span><span class="p">,</span> <span class="mi">181</span><span class="p">)</span> <span class="c"># 0xb5 # %SEQ%</span>
+
+<span class="c">######################################## Display packet</span>
+
+<div class="viewcode-block" id="PacketPokerEndRound"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerEndRound">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerEndRound</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   closes a betting round for game &quot;game_id&quot;.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    Context     inferred at the end of a sequence of packet related to</span>
+<span class="sd">                a betting round. Paying the blind / ante is not considered a</span>
+<span class="sd">                betting round. This packet is sent when the client side</span>
+<span class="sd">                knows that the round is finished but before the corresponding</span>
+<span class="sd">                packet (:class:`PACKET_POKER_STATE &lt;pokerpackets.networkpackets.PacketPokerState&gt;`) has been received from the server.</span>
+
+<span class="sd">                It will be followed by the :class:`POKER_BEGIN_ROUND &lt;pokerpackets.clientpackets.PacketPokerBeginRound&gt;` packet, either</span>
+<span class="sd">                immediately if the server has no delay between betting rounds</span>
+<span class="sd">                or later if the server waits a few seconds between two betting</span>
+<span class="sd">                rounds.</span>
+
+<span class="sd">                It is not inferred at the end of the last betting round.</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerEndRound</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_END_ROUND&quot;</span><span class="p">,</span> <span class="mi">182</span><span class="p">)</span> <span class="c"># 0xb6 # %SEQ%</span>
+
+<span class="c">######################################## Display packet</span>
+
+<div class="viewcode-block" id="PacketPokerDealCards"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerDealCards">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerDealCards</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =============== ==================================================================================================================================================================================</span>
+<span class="sd">    Semantics       deal &quot;numberOfCards&quot; down cards for each player listed</span>
+<span class="sd">                    in &quot;serials&quot; in game &quot;game_id&quot;.</span>
+<span class="sd">    Direction       client &lt;=&gt; client</span>
+<span class="sd">    Context         inferred after the beginning of a betting round (i.e.</span>
+<span class="sd">                    after the :class:`PACKET_POKER_STATE &lt;pokerpackets.networkpackets.PacketPokerState&gt;` packet is received) and after</span>
+<span class="sd">                    the chips involved in the previous betting round have been</span>
+<span class="sd">                    sorted (i.e. after PACKET_POKER_CHIPS_BET2POT packets are</span>
+<span class="sd">                    inferred). Contrary to the :class:`PACKET_POKER_PLAYER_CARDS &lt;pokerpackets.networkpackets.PacketPokerPlayerCards&gt;`,</span>
+<span class="sd">                    this packet is only sent if cards must be dealt. It</span>
+<span class="sd">                    is guaranteed that this packet will always occur before</span>
+<span class="sd">                    the :class:`PACKET_POKER_PLAYER_CARDS &lt;pokerpackets.networkpackets.PacketPokerPlayerCards&gt;` that specify the cards to</span>
+<span class="sd">                    be dealt and that these packets will follow immediately</span>
+<span class="sd">                    after it (no other packet will be inserted between this packet</span>
+<span class="sd">                    and the first :class:`PACKET_POKER_PLAYER_CARDS &lt;pokerpackets.networkpackets.PacketPokerPlayerCards&gt;`). It is also guaranteed</span>
+<span class="sd">                    that exactly one :class:`PACKET_POKER_PLAYER_CARDS &lt;pokerpackets.networkpackets.PacketPokerPlayerCards&gt;` will occur for each</span>
+<span class="sd">                    serial listed in &quot;serials&quot;.</span>
+<span class="sd">    numberOfCards   number of cards to be dealt.</span>
+<span class="sd">    serials         integers uniquely identifying players.</span>
+<span class="sd">    game_id         integer uniquely identifying a game.</span>
+<span class="sd">    =============== ==================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketPokerId</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;numberOfCards&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;serials&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;Il&#39;</span><span class="p">),</span>
+        <span class="p">)</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerDealCards</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&#39;POKER_DEAL_CARDS&#39;</span><span class="p">,</span> <span class="mi">184</span><span class="p">)</span> <span class="c"># 0xb8 # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerSelfInPosition"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerSelfInPosition">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerSelfInPosition</span><span class="p">(</span><span class="n">PacketPokerPosition</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   the player authenticated for this connection</span>
+<span class="sd">                is in position. Otherwise identical to :class:`PACKET_POKER_POSITION &lt;pokerpackets.networkpackets.PacketPokerPosition&gt;`.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerSelfInPosition</span><span class="p">,</span> <span class="n">PacketPokerPosition</span><span class="p">,</span> <span class="s">&quot;POKER_SELF_IN_POSITION&quot;</span><span class="p">,</span> <span class="mi">187</span><span class="p">)</span> <span class="c"># 0xbb # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerSelfLostPosition"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerSelfLostPosition">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerSelfLostPosition</span><span class="p">(</span><span class="n">PacketPokerPosition</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   the player authenticated for this connection</span>
+<span class="sd">                is in position. Otherwise identical to :class:`PACKET_POKER_POSITION &lt;pokerpackets.networkpackets.PacketPokerPosition&gt;`.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerSelfLostPosition</span><span class="p">,</span> <span class="n">PacketPokerPosition</span><span class="p">,</span> <span class="s">&quot;POKER_SELF_LOST_POSITION&quot;</span><span class="p">,</span> <span class="mi">188</span><span class="p">)</span> <span class="c"># 0xbc # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerHighestBetIncrease"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerHighestBetIncrease">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerHighestBetIncrease</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =================================== ==============================================================================================================================================================</span>
+<span class="sd">    Semantics                           a wager was made in game &quot;game_id&quot; that increases</span>
+<span class="sd">                                        the highest bet amount.</span>
+<span class="sd">    Direction                           client &lt;=&gt; client</span>
+<span class="sd">    Context                             Inferred whenever a wager is made that changes</span>
+<span class="sd">                                        the highest bet (live blinds are considered a wager, antes are not). </span>
+
+<span class="sd">                                        Inferred once per blindAnte round when the</span>
+<span class="sd">                                        first big blind is posted. It is therefore guaranteed not to be posted</span>
+<span class="sd">                                        if a game is canceled because noone wanted to pay the big blind, even</span>
+<span class="sd">                                        if someone already posted the small blind. In all other betting rounds it</span>
+<span class="sd">                                        is inferred for each raise.</span>
+<span class="sd">    game_id                             integer uniquely identifying a game.</span>
+<span class="sd">    =================================== ==============================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerHighestBetIncrease</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_HIGHEST_BET_INCREASE&quot;</span><span class="p">,</span> <span class="mi">189</span><span class="p">)</span> <span class="c"># 0xbd # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerPlayerWin"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerPlayerWin">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerPlayerWin</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   the player &quot;serial&quot; win.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    Context     when a PacketPokerWin arrive from server. The packet is generated</span>
+<span class="sd">                from PACKET_PLAYER_WIN. For each player that wins something a packet</span>
+<span class="sd">                PlayerWin is generated.</span>
+<span class="sd">    serial      integer uniquely identifying a player.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerPlayerWin</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_PLAYER_WIN&quot;</span><span class="p">,</span> <span class="mi">190</span><span class="p">)</span> <span class="c"># 0xbe # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerBeginRound"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerBeginRound">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerBeginRound</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   opens a betting round for game &quot;game_id&quot;.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    Context     inferred when the client knows that a betting round will</span>
+<span class="sd">                begin although it does not yet received information from the server to</span>
+<span class="sd">                initialize it. Paying the blind / ante is not considered a betting</span>
+<span class="sd">                round. It follows the :class:`POKER_END_ROUND &lt;pokerpackets.clientpackets.PacketPokerEndRound&gt;` packet, either</span>
+<span class="sd">                immediatly if the server has no delay between betting rounds</span>
+<span class="sd">                or later if the server waits a few seconds between two betting</span>
+<span class="sd">                rounds.</span>
+
+<span class="sd">                Example applied to holdem::</span>
+
+<span class="sd">                             state</span>
+
+<span class="sd">                             blind     END</span>
+<span class="sd">                    BEGIN    preflop   END</span>
+<span class="sd">                    BEGIN    flop      END</span>
+<span class="sd">                    BEGIN    turn      END</span>
+<span class="sd">                    BEGIN    river</span>
+<span class="sd">                             end</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerBeginRound</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_BEGIN_ROUND&quot;</span><span class="p">,</span> <span class="mi">197</span><span class="p">)</span> <span class="c"># 0xc5 # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerCurrentGames"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerCurrentGames">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerCurrentGames</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   &quot;game_ids&quot; contains the the list of games to </span>
+<span class="sd">                which the client is connected. &quot;count&quot; is the length of</span>
+<span class="sd">                the &quot;game_ids&quot; list.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    Context     inferred when the client receives a :class:`POKER_TABLE &lt;pokerpackets.networkpackets.PacketPokerTable&gt;` packet (for</span>
+<span class="sd">                instance, a :class:`POKER_TABLE &lt;pokerpackets.networkpackets.PacketPokerTable&gt;` packet is sent to the client when a</span>
+<span class="sd">                POKER_TABLE_JOIN was sent to the server).  The list of game ids</span>
+<span class="sd">                contains the id matching the :class:`POKER_TABLE &lt;pokerpackets.networkpackets.PacketPokerTable&gt;` packet that was just</span>
+<span class="sd">                received.</span>
+
+<span class="sd">                Note to applications embedding the poker-network python library:</span>
+<span class="sd">                When not in the context of a :class:`POKER_EXPLAIN &lt;pokerpackets.networkpackets.PacketPokerExplain&gt;` server mode,</span>
+<span class="sd">                the packet is also inferred as a side effect of the</span>
+<span class="sd">                PokerExplain.packetsTableQuit method that is called by the application</span>
+<span class="sd">                when the user decides to leave the table.</span>
+<span class="sd">    game_ids    integers uniquely identifying a game.</span>
+<span class="sd">    count       length of game_ids.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;game_ids&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;Il&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;count&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">),</span>
+        <span class="p">)</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerCurrentGames</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;POKER_CURRENT_GAMES&quot;</span><span class="p">,</span> <span class="mi">198</span><span class="p">)</span> <span class="c"># 0xc6 # %SEQ%</span>
+
+<span class="c">######################################## Display packet</span>
+
+<span class="k">class</span> <span class="nc">PacketPokerEndRoundLast</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerEndRoundLast</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_END_ROUND_LAST&quot;</span><span class="p">,</span> <span class="mi">199</span><span class="p">)</span> <span class="c"># 0xc7 # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<span class="k">class</span> <span class="nc">PacketPokerSitOutNextTurn</span><span class="p">(</span><span class="n">PacketPokerSitOut</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerSitOutNextTurn</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_SIT_OUT_NEXT_TURN&quot;</span><span class="p">,</span> <span class="mi">201</span><span class="p">)</span> <span class="c"># 0xc9 # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<span class="k">class</span> <span class="nc">PacketPokerShowdown</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketPokerId</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;showdown_stack&#39;</span><span class="p">,</span> <span class="p">{},</span> <span class="s">&#39;j&#39;</span><span class="p">),</span>
+        <span class="p">)</span>
+
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerShowdown</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_SHOWDOWN&quot;</span><span class="p">,</span> <span class="mi">204</span><span class="p">)</span> <span class="c"># 0xcc # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<span class="k">class</span> <span class="nc">PacketPokerClientPlayerChips</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;game_id&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;serial&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;bet&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;c&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s">&#39;money&#39;</span><span class="p">,</span> <span class="p">[],</span> <span class="s">&#39;c&#39;</span><span class="p">),</span>
+        <span class="p">)</span>
+
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerClientPlayerChips</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;POKER_CLIENT_PLAYER_CHIPS&quot;</span><span class="p">,</span> <span class="mi">205</span><span class="p">)</span> <span class="c"># 0xcd # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerAllinShowdown"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerAllinShowdown">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerAllinShowdown</span><span class="p">(</span><span class="n">Packet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   the game &quot;game_id&quot; will automatically go to showdown</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    Context     when all players are all-in, the board cards will be</span>
+<span class="sd">                dealt automatically. The :class:`POKER_ALLIN_SHOWDOWN &lt;pokerpackets.clientpackets.PacketPokerAllinShowdown&gt;` packet is created</span>
+<span class="sd">                as soon as such a situation is detected. The client can chose</span>
+<span class="sd">                to behave differently, for instance to postpone the display of</span>
+<span class="sd">                the board cards until after the muck phase of the game.</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span> <span class="p">(</span> <span class="s">&#39;game_id&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span> <span class="p">)</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerAllinShowdown</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;POKER_ALLIN_SHOWDOWN&quot;</span><span class="p">,</span> <span class="mi">209</span><span class="p">)</span> <span class="c"># 0xd1 # %SEQ%</span>
+
+<span class="c">########################################</span>
+
+<div class="viewcode-block" id="PacketPokerPlayerHandStrength"><a class="viewcode-back" href="../../packets.html#pokerpackets.clientpackets.PacketPokerPlayerHandStrength">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerPlayerHandStrength</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;\</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    Semantics   &quot;hand&quot; is the human-readable description of the best</span>
+<span class="sd">                possible poker hand the player (represented by &quot;serial&quot;) can currently</span>
+<span class="sd">                make in current hand being played in game, &quot;game_id&quot;.  This</span>
+<span class="sd">                description includes only &#39;made&#39; poker hands, not draws or potential</span>
+<span class="sd">                hands.  This description will be sent in the the language of the</span>
+<span class="sd">                players currently set locale (see PacketPokerSetLocale()), or &quot;en.US&quot;</span>
+<span class="sd">                if no translation is available.</span>
+<span class="sd">    Direction   client &lt;=&gt; client</span>
+<span class="sd">    Context     inferred on each street.</span>
+<span class="sd">    serial      integer uniquely identifying a player.</span>
+<span class="sd">    game_id     integer uniquely identifying a game.</span>
+<span class="sd">    hand        readable player best hand.</span>
+<span class="sd">    =========== ======================================================================================================================================================================================</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketPokerId</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s">&#39;hand&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="s">&#39;s&#39;</span><span class="p">),</span>
+        <span class="p">)</span>
+</div>
+<span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerPlayerHandStrength</span><span class="p">,</span> <span class="n">PacketPokerId</span><span class="p">,</span> <span class="s">&quot;POKER_PLAYER_HAND_STRENGTH&quot;</span><span class="p">,</span> <span class="mi">210</span><span class="p">)</span> <span class="c"># 0xd2 # %SEQ%</span>
+
+<span class="n">_TYPES</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">170</span><span class="p">,</span><span class="mi">254</span><span class="p">)</span>
+
+<span class="c">#</span>
+<span class="c"># only export things starting with Packet or PACKET_</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">&#39;Packet|PACKET_&#39;</span><span class="p">,</span><span class="n">n</span><span class="p">)]</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">poker-network 2.2.5 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Pokermania.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+    </div>
+  </body>
+</html>
