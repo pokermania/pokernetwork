@@ -699,31 +699,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEquals(False, self.table.scheduleAutoDeal())
 
     # -------------------------------------------------------------------
-    def test01_8_testClientsBogusPokerProcessingHand(self):
-        """Test specific situation in autodeal when poker clients send a Processing Hand before a Ready To Play"""
-        player = {}
-        for ii in [1, 2, 3, 4]:
-            player[ii] = self.createPlayer(ii)
-        self.table.processingHand(1)
-        self.table.scheduleAutoDeal()
-        threeGetsStart = self.clients[3].waitFor(PACKET_POKER_START)
-        def checkValues(value):
-            log_history.search('Player 1 marked as having a bugous PokerProcessingHand protocol')
-            self.failUnless(player[1].bugous_processing_hand, "1 should have bugous_processing_hand")
-            for ii in [ 2, 3, 4]:
-                self.failIf(
-                    player[ii].bugous_processing_hand,
-                    "%d should not have bugous_processing_hand" % ii
-                )
-
-        threeGetsStart.addCallback(checkValues)
-
-        log_history.reset()
-        return defer.DeferredList([
-            self.clients[2].waitFor(PACKET_POKER_START),
-            threeGetsStart
-        ])
-    # -------------------------------------------------------------------
     def test02_autodeal_check(self):
         self.createPlayer(1)
         self.table.processingHand(1)

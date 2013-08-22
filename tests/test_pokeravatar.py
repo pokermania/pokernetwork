@@ -2363,10 +2363,8 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         dl.addCallback(self.loseConnectionAnte, gameId)
         return dl
     # ------------------------------------------------------------------------
-    def processingHand(self, (client, packet), id, gameId, isBugous=False ):
+    def processingHand(self, (client, packet), id, gameId):
         avatar = self.service.avatars[id]
-
-        avatar.bugous_processing_hand = isBugous
 
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerProcessingHand(serial = client.getSerial(), game_id = gameId))
@@ -2374,7 +2372,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_ERROR:
                 count += 1
-                self.assertEquals(isBugous, True)
                 self.assertEquals(packet.other_type, PACKET_POKER_PROCESSING_HAND)
                 self.assertEquals(packet.serial, client.getSerial())
                 self.assertEquals(packet.game_id, 4)
@@ -2382,7 +2379,6 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                 self.assertEquals(packet.code, 0)
             if packet.type == PACKET_ACK:
                 count += 1
-                self.assertEquals(isBugous, False)
         self.assertEquals(count, 1)
         return (client, packet)
     # ------------------------------------------------------------------------
@@ -2397,7 +2393,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         d.addCallback(self.buyInTable, 0, 4, 100)
         d.addCallback(self.sitTable, 0, 4)
         d.addCallback(self.processingHand, 0, 4)
-        d.addCallback(self.processingHand, 0, 4, True)
+        d.addCallback(self.processingHand, 0, 4)
         return d
     # ------------------------------------------------------------------------
     def variousStartPackets(self, (client, packet), id, gameId ):

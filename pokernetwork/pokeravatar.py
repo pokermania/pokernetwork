@@ -67,7 +67,6 @@ class PokerAvatar:
         self.warnedPacketExcess = False
         self.tourneys = []
         self.setExplain(0)
-        self.bugous_processing_hand = False
         self.noqueuePackets()
         self._block_longpoll_deferred = False
         self._longpoll_deferred = None
