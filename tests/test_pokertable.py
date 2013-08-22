@@ -344,7 +344,11 @@ class MockService:
             self.temporary_serial_min <= serial <= self.temporary_serial_max or 
             re.match(self.temporary_users_pattern,self.getName(serial))
         )
-        
+    def tourneySerialsRebuying(self, tournament, game_id):
+        return set()
+
+    def tourneyRebuyAllPlayers(self, tournament, game_id):
+        pass
             
 class MockClient:
     log = log.get_child('MockClient')
