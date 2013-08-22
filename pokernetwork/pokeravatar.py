@@ -743,14 +743,7 @@ class PokerAvatar:
 
             elif packet.type == PACKET_POKER_PROCESSING_HAND:
                 if self.getSerial() == packet.serial:
-                    if not self.bugous_processing_hand:
-                        self.sendPacketVerbose(table.processingHand(packet.serial))
-                    else:
-                        self.sendPacketVerbose(PacketPokerError(
-                            game_id = game.id,
-                            serial = self.getSerial(),
-                            other_type = PACKET_POKER_PROCESSING_HAND
-                        ))
+                    self.sendPacketVerbose(table.processingHand(packet.serial))
                 else:
                     self.log.inform("attempt to set processing hand for player %d by player %d",
                         packet.serial,

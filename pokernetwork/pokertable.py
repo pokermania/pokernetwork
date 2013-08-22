@@ -579,11 +579,10 @@ class PokerTable:
             for player in self.game.playersAll():
                 if player.getUserData()['ready'] == False:
                     for avatar in self.avatar_collection.get(player.serial):
-                        self.log.debug(
-                            "Player %d marked as having a bugous PokerProcessingHand protocol",
+                        self.log.inform(
+                            "Player %d missed timeframe for PokerReadyToPlay",
                             player.serial
                         )
-                        avatar.bugous_processing_hand = True
         #
         # Rebuy all players now, if they issued a rebuy or are auto-rebuying
         if not self.transient:
