@@ -1416,6 +1416,13 @@ class PokerAvatar:
         serial = self.getSerial()
         self.log.inform("setOption, serial %r, game_id %r, option_id %r, value %r" % (serial, game_id, option_id, value))
         table = self.tables.get(game_id)
+        if table is None:
+            self.sendPacketVerbose(PacketError(
+                other_type=PACKET_SET_OPTION,
+                code=PacketSetOption.ERROR_TABLE_NOT_FOUND,
+                message="Table not found"
+            ))
+            return False
         # PacketSetOption.AUTO_REFILL
 
         lookup = {
@@ -1425,16 +1432,20 @@ class PokerAvatar:
             #
             # if the value is part of the given_values, the fuction is called with the arguements
             PacketSetOption.AUTO_REFILL: (
-                ("OFF", "AUTO_REBUY_MIN", "AUTO_REBUY_BEST", "AUTO_REBUY_MAX"),
+                ("OFF", "AUTO_REFILL_MIN", "AUTO_REFILL_BEST", "AUTO_REFILL_MAX"),
                 table.autoRefill, (serial, value)),
             PacketSetOption.AUTO_REBUY: (
                 ("OFF", "AUTO_REBUY_MIN", "AUTO_REBUY_BEST", "AUTO_REBUY_MAX"),
                 table.autoRebuy, (serial, value)),
-            PacketSetOption.AUTO_PLAY: (("OFF", "ON"), table.game.autoPlay, (serial, value)),
+            # PacketSetOption.AUTO_PLAY: (
+            #     ("OFF", "ON"),
+            #     table.game.autoPlay, (serial, value)),
             PacketSetOption.AUTO_MUCK: (
                 ("AUTO_MUCK_WIN", "AUTO_MUCK_WIN", "AUTO_MUCK_WIN"),
                 table.game.autoMuck, (serial, value)),
-            PacketSetOption.AUTO_BLIND_ANTE: (("OFF", "ON"), table.autoBlindAnte, (self, bool(value))),
+            PacketSetOption.AUTO_BLIND_ANTE: (
+                ("OFF", "ON"),
+                table.autoBlindAnte, (self, bool(value))),
 
         }
 
