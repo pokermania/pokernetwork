@@ -1485,7 +1485,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         log_history.search("Not autodealing %d because game is in muck state" % self.table.game.id)
     # -------------------------------------------------------------------
     def test44_muckTimeoutTimer_hollowedOutGameWithMuckableSerials(self):
-        from pokerengine.pokergame import GAME_STATE_MUCK
+        from pokerengine.pokergame import GAME_STATE_MUCK, GAME_STATE_END
         class MockGame():
             def __init__(mgSelf):
                 mgSelf.muckable_serials = [ 1, 2 ]
@@ -1506,6 +1506,8 @@ class PokerTableTestCase(PokerTableTestCaseBase):
             def betLimits(mgSelf): return (0, 0)
             def getChipUnit(mgSelf): return 1
             def roundCap(mgSelf): return 1
+            def isEndOrMuck(mgSelf): return mgSelf.state in (GAME_STATE_MUCK, GAME_STATE_END)
+            def playersAll(mgSelf): return mgSelf.serial2player.values()
 
         self.table.timer_info["muckTimeout"] = None
         origGame = self.table.game
@@ -2386,7 +2388,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
             elif mode == "refill2":
                 assert 103 in game.serialsInGame()
                 assert 102 in game.serialsInGame()
-                assert game.serial2player[102].money == game.maxBuyIn()
+                assert game.serial2player[102].money == game.maxBuyIn(), "[%s] game.serial2player[102].money == game.maxBuyIn() (%s != %s)" % (game.state, game.serial2player[102].money, game.maxBuyIn())
             table.destroy()
 
         def firstGame(packet):
