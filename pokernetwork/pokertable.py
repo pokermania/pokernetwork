@@ -174,7 +174,7 @@ class PokerTable:
         self.update_recursion = False
 
         self.bet_limits = None
-
+        self.rebuy_happend_allready = None
         # Lock Checker
         self._initLockCheck()
 
@@ -265,7 +265,27 @@ class PokerTable:
             for player in self.game.playersAll():
                 player.getUserData()['ready'] = True
 
+    def rebuyPlayersOnes(self):
+        if self.rebuy_happend_allready == self.game.hand_serial: return
+
+        if not self.game.isEndOrMuck():
+            return False
+
+        self.rebuy_happend_allready = self.game.hand_serial
+        #
+        # Rebuy all players now, if they issued a rebuy or are auto-rebuying.
+        # We need to do it before we decide if we will autodeal the next round.
+        # Otherwise it is possible, that we will not process it an the next round will
+        # not be dealt.
+        if not self.transient:
+            self.rebuyAllPlayers()
+        else:
+            self.tourneyRebuyAllPlayers()
+
+        return True
+
     def rebuyAllPlayers(self):
+        self.log.inform("rebuy all players now")
         for serial, amount in self.rebuy_stack:
             self.rebuyPlayerRequestNow(serial, amount)
 
@@ -276,7 +296,7 @@ class PokerTable:
                 self.rebuyPlayerRequestNow(player.serial, self._getPrefferedRebuyAmount(player.auto_rebuy))
             if player.auto_refill != PacketSetOption.OFF:
                 self.rebuyPlayerRequestNow(player.serial, self._getPrefferedRebuyAmount(player.auto_refill))
-                
+
     def _getPrefferedRebuyAmount(self, value):
         if value == PacketSetOption.AUTO_REBUY_BEST:
             return self.game.bestBuyIn()
@@ -569,6 +589,7 @@ class PokerTable:
 
     def autoDeal(self):
         self.cancelDealTimeout()
+        self.rebuyPlayersOnes()
         if not self.allReadyToPlay():
             #
             # All avatars that fail to send a PokerReadyToPlay packet
@@ -583,12 +604,6 @@ class PokerTable:
                             "Player %d missed timeframe for PokerReadyToPlay",
                             player.serial
                         )
-        #
-        # Rebuy all players now, if they issued a rebuy or are auto-rebuying
-        if not self.transient:
-            self.rebuyAllPlayers()
-        else:
-            self.tourneyRebuyAllPlayers()
         
         if self.shouldAutoDeal():
             self.beginTurn()
@@ -731,6 +746,8 @@ class PokerTable:
         self.update_recursion = True
         if not self.isValid():
             return "not valid"
+
+        self.rebuyPlayersOnes()
 
         history = self.game.historyGet()
         history_len = len(history)
