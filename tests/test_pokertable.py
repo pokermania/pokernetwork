@@ -718,7 +718,6 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.assertEquals(1, dealTimeout.cancelled)
         self.assertEquals(False, "dealTimeout" in self.table.timer_info)
     # -------------------------------------------------------------------
-    @attr("og_now")
     def test03_scheduleAutoDeal_should_not_call_beginTurn(self):
         gen = (e for e in (True, False))
         def shouldAutoDealNew():
