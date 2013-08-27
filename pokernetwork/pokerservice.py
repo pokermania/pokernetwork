@@ -1829,9 +1829,9 @@ class PokerService(service.Service):
 
             if cursor.rowcount not in (0,3): 
                 self.log.warn("modified %d rows (expected 3): %s", cursor.rowcount, cursor._executed)
-                return 0
+                return -1
             
-            return tourney_chips if cursor.rowcount == 3 else 0
+            return tourney_chips if cursor.rowcount == 3 else -1
         
         finally:
             cursor.close();
