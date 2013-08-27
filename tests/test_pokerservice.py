@@ -3279,7 +3279,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
         self.assertEqual(cursor.fetchone()[0], 1)
         
         # the second run should fail because we have not enough money left.
-        self.assertEqual(self.service.tourneyRebuyPayment(tournament, serial=1337807, table_serial=2, player_chips=300, tourney_chips=700), 0)
+        self.assertEqual(self.service.tourneyRebuyPayment(tournament, serial=1337807, table_serial=2, player_chips=300, tourney_chips=700), -1)
         cursor.execute("SELECT amount FROM user2money WHERE user_serial = 1337807")
         self.assertEqual(cursor.fetchone()[0], 100)
         cursor.execute("SELECT money FROM user2table WHERE user_serial = 1337807")
@@ -3298,7 +3298,7 @@ class TourneyRebuyTestCase(PokerServiceTestCaseBase):
 
         tournament = self.Tournament(serial=1)
 
-        self.assertEqual(self.service.tourneyRebuyPayment(tournament, serial=1337807, table_serial=2, player_chips=300, tourney_chips=700), 0)
+        self.assertEqual(self.service.tourneyRebuyPayment(tournament, serial=1337807, table_serial=2, player_chips=300, tourney_chips=700), -1)
         cursor.execute("SELECT money FROM user2table WHERE user_serial = 1337807")
         self.assertEqual(cursor.fetchone()[0], 10)
         
