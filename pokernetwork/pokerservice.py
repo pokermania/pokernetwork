@@ -2055,6 +2055,20 @@ class PokerService(service.Service):
                 """ + query_suffix,
                 serial
             )
+        elif query_string == 'mytourneys':
+            cursor.execute(""" SELECT
+                        ta.serial, ta.resthost_serial, tourn.seats_per_game as seats, ta.average_pot, ta.hands_per_hour, ta.percent_flop,
+                        ta.players, ta.observers, ta.waiting, tourn.player_timeout, 0 AS muck_timeout, tourn.currency_serial,
+                        tourn.name, tourn.variant, tourn.betting_structure, tourn.skin, ta.tourney_serial
+                    FROM tables AS ta
+                    INNER JOIN user2table AS u2t
+                        ON ta.serial = u2t.table_serial
+                    INNER JOIN tourneys AS tourn
+                        ON tourn.serial = ta.tourney_serial
+                    WHERE u2t.user_serial = %s ORDER BY ta.players desc, ta.serial
+                """,
+                serial
+            )
         elif query_string.startswith("filter"):
             params = query_string.split()
             min_buy_in = max_buy_in = None
