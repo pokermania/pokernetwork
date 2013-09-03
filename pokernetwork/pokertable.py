@@ -285,7 +285,7 @@ class PokerTable:
         return True
 
     def rebuyAllPlayers(self):
-        self.log.inform("rebuy all players now")
+        self.log.debug("rebuy all players now")
         for serial, amount in self.rebuy_stack:
             self.rebuyPlayerRequestNow(serial, amount)
 
