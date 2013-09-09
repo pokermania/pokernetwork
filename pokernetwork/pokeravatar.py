@@ -890,6 +890,17 @@ class PokerAvatar:
 
             elif packet.type == PACKET_POKER_TABLE_QUIT:
                 table.quitPlayer(self)
+            elif packet.type == PACKET_POKER_UPDATE_MONEY:
+                self.log.error("got: %s", str(packet))
+                if len(packet.serials) != len(packet.chips):
+                    return
+                    # TODO send Error
+                player_money = zip(packet.serials, packet.chips)
+                if not table.updatePlayersMoney(player_money, absolute_values=packet.absolute):
+                    # do not return here, since it is possible, that something has changed
+                    pass
+                    # TODO send not Balanced Error
+                # sendAck
 
             table.update()
     

@@ -265,6 +265,98 @@ class PokerTable:
             for player in self.game.playersAll():
                 player.getUserData()['ready'] = True
 
+    def updatePlayersMoney(self, serials_chips, absolute_values=True):
+        """\
+            Warning! This function call will kill the current hand, if it is running
+            right now. Every person will fold. If some players are allready
+            all-in, or broke, they will get some money so they will not get kicked
+            out of the game. Afterwards the players money is added.
+
+            In case of an Error, False will be returned. It is possible that
+            some players have money updated.
+
+            If everything was ok, True will be returned.
+
+            =================== ======================================================================
+            serials_chips       is a list of tuples: [(serial, money), (serial, money), ...]
+                                (you can reduce the the probability of errors when you use all
+                                player serials that are sitting on the table)
+
+                                It is important that absolute amounts must be positive or 0. And
+                                relative amounts must not result in a negative value. Otherwise an
+                                Error will be returned and the money of this player will not be
+                                changed.
+            absolute_values     will define if the chips value is an absolute or an relative value.
+                                Absolute vaules are less likely to produce errors. The default value
+                                is True, for an absolute interpretation.
+            =================== ======================================================================
+        """
+        game = self.game
+        serials = [s for s,c in serials_chips]
+        if not game.isEndOrNull():
+            # We need to force end this game:
+            # check if the game would end if we just fold:
+            broke_players = [p for p in game.playersAll() if p.money == 0]
+            if broke_players:
+                if len([p for p in broke_players if p.serial in serials]) != len(broke_players):
+                    self.log.error("updatePlayersMoney: there are broke players, that have not a specified money amount")
+                    return False
+
+                # if absolute_values:
+                for player in broke_players:
+                    # We will save those players from getting kicked out of the game
+                    # since we will give them an absolute amount of money in the end
+                    player.money = 1
+
+            loop_counter = 0
+            while not game.isEndOrNull():
+                loop_counter += 1
+                if loop_counter > len(game.serial2player): 
+                    self.log.error("updatePlayersMoney: Infinity Loop, game could not be ended")
+                    return False
+                game.fold(game.getSerialInPosition())
+
+        cursor = self.factory.db.cursor()
+        try:
+            error = False
+            ## game is stopped, now we can transfer the money
+            for serial, chips in serials_chips:
+                player = game.getPlayer(serial)
+                if not player:
+                    error = True
+                    self.log.error("updatePlayersMoney: player %d does not exist", serial)
+                    continue
+                if absolute_values or player in broke_players:
+                    if chips < 0:
+                        error = True
+                        self.log.error("updatePlayersMoney: player %d cannot get a negative amount of chips (%d)", serial, chips)
+                        # eleminate the discrepance of player.money and the database value again
+                        if player in broke_players: player.money = 0
+                        continue
+                    new_chips = chips
+                else:
+                    new_chips = player.money + chips
+                    if new_chips < 0:
+                        error = True
+                        self.log.error(
+                            "updatePlayersMoney: player %d cannot get a negative amount of new_chips (%d), old_chips (%d), relative (%d)",
+                            serial, new_chips, player.money, chips
+                        )
+                        # eleminate the discrepance of player.money and the database value again
+                        if player in broke_players: player.money = 0
+                        continue
+                player.money = new_chips
+
+                sql = "UPDATE user2table SET money = %s WHERE user_serial = %s AND table_serial = %s"
+                params = (player.money, player.serial, game.id)
+                cursor.execute(sql, params)
+            return not error
+        finally:
+            cursor.close()
+
+
+
+
     def rebuyPlayersOnes(self):
         if self.rebuy_happend_allready == self.game.hand_serial: return
 
