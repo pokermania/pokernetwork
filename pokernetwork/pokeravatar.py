@@ -715,9 +715,28 @@ class PokerAvatar:
         elif packet.type == PACKET_POKER_TABLE_PICKER:
             self.performPacketPokerTablePicker(packet)
             return
+        elif packet.type == PACKET_POKER_UPDATE_MONEY:
+            self.log.inform("got: %s", str(packet))
+            # this packet is not handled with other table packets since this action will most likley
+            # be requested by an admin useres that has not joined yet to the table
+            if packet.game_id not in self.service.tables:
+                self.log.error("PACKET_POKER_UPDATE_MONEY: table does not exist")
+                return
+                # TODO send Error
+            table = self.service.tables[packet.game_id]
+            if len(packet.serials) != len(packet.chips):
+                return
+                # TODO send Error
+            player_money = zip(packet.serials, packet.chips)
+            if not table.updatePlayersMoney(player_money, absolute_values=packet.absolute):
+                # do not return here, since it is possible, that something has changed
+                self.log.error("something went wrong while updating player money for game %d, %r", packet.game_id, player_money)
+                pass
+                # TODO send not Balanced Error
+            self.sendPacketVerbose(PacketAck())
+            table.update()
 
         table = self.packet2table(packet)
-        
         if packet.type == PACKET_POKER_HAND_REPLAY:
             if not table or table.game.hand_serial != packet.serial or table.game.isEndOrNull():
                 self.handReplay(packet.game_id, packet.serial)
@@ -890,17 +909,6 @@ class PokerAvatar:
 
             elif packet.type == PACKET_POKER_TABLE_QUIT:
                 table.quitPlayer(self)
-            elif packet.type == PACKET_POKER_UPDATE_MONEY:
-                self.log.error("got: %s", str(packet))
-                if len(packet.serials) != len(packet.chips):
-                    return
-                    # TODO send Error
-                player_money = zip(packet.serials, packet.chips)
-                if not table.updatePlayersMoney(player_money, absolute_values=packet.absolute):
-                    # do not return here, since it is possible, that something has changed
-                    pass
-                    # TODO send not Balanced Error
-                # sendAck
 
             table.update()
     
