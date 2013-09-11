@@ -1359,7 +1359,7 @@ class PokerTable:
         # It does not harm to sit if already sit and it
         # resets the autoPlayer/wait_for flag.
         #
-        if game.isSit(serial) or game.sit(serial):
+        if game.sit(serial) or game.isSit(serial):
             self.broadcast(PacketPokerSit(
                 game_id = game.id,
                 serial = serial
