@@ -2099,7 +2099,7 @@ class PokerService(service.Service):
                 where_clauses.append("SUBSTRING_INDEX(SUBSTRING_INDEX(c.betting_structure, '-', 2), '_', -1)+0 <= %d" % max_buy_in)
 
             sql_select += " WHERE %s" % " AND ".join(where_clauses)
-            sql_select += "\nGROUP BY c.name, t.players * RAND()"
+            sql_select += "\nGROUP BY c.name, t.players * RAND(), c.betting_structure "
             cursor.execute(sql_select + query_suffix)
 
         else:
