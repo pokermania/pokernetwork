@@ -1423,6 +1423,9 @@ class PokerService(service.Service):
             
         return calls
     
+    #TODO kill me! the implementation is pure hell, PacketPokerTourneyManager is a
+    # dummy without attributes AND it's most likely not used since ages (pre binary protocol for shure)
+    # so please make shure it's not used and beat it to death with a rusty hammer
     def tourneyManager(self, tourney_serial):
         packet = PacketPokerTourneyManager()
         packet.tourney_serial = tourney_serial
