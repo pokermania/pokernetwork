@@ -649,15 +649,8 @@ class PokerService(service.Service):
             plugin(self, event)
 
     def stats(self, query):
-        cursor = self.db.cursor()
-        cursor.execute("SELECT MAX(serial) FROM hands")
-        (hands,) = cursor.fetchone()
-        cursor.close()
         return PacketPokerStats(
-            players = len(self.avatars),
-            hands = 0 if hands is None else int(hands),
-            bytesin = 0,  # TODO evaluate if and how to log traffic
-            bytesout = 0,
+            players = len(self.avatars)
         )
 
     def createAvatar(self):
@@ -759,7 +752,6 @@ class PokerService(service.Service):
         for tourney in filter(lambda tourney: tourney.sit_n_go == 'y', self.tourneys.values()):
             if tourney.state == TOURNAMENT_STATE_REGISTERING and tourney.last_registered is not None and now - tourney.last_registered > self.sng_timeout:
                 tourney.changeState(TOURNAMENT_STATE_CANCELED)
-                #TODO: kick humans
 
         # Respawning sit'n'go tournaments
         for schedule in filter(lambda schedule: schedule['respawn'] == 'y' and schedule['sit_n_go'] == 'y', self.tourneys_schedule.values()):
