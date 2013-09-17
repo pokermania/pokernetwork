@@ -1525,15 +1525,6 @@ class PokerService(service.Service):
         players = [(name,-1,0) for name in tourney.players.itervalues()]
         return PacketPokerTourneyPlayersList(tourney_serial = tourney_serial, players = players)
 
-    def tourneyStats(self):
-        cursor = self.db.cursor()
-        cursor.execute("SELECT COUNT(*) FROM tourneys WHERE state in ( %s, %s )", ( TOURNAMENT_STATE_RUNNING, TOURNAMENT_STATE_REGISTERING ))
-        tourneys = int(cursor.fetchone()[0])
-        cursor.execute("SELECT COUNT(*) FROM user2tourney WHERE rank = -1")
-        players = int(cursor.fetchone()[0])
-        cursor.close()
-        return (players, tourneys)
-    
     def tourneyPlayerStats(self, tourney_serial, user_serial):
         tourney = self.tourneys.get(tourney_serial,None)
         if tourney is None:

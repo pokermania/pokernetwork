@@ -612,12 +612,9 @@ class PokerAvatar:
             return
 
         if packet.type == PACKET_POKER_TOURNEY_SELECT:
-            (playerCount, tourneyCount) = self.service.tourneyStats()
             tourneys = self.service.tourneySelect(packet.string)
             
             self.sendPacketVerbose(PacketPokerTourneyList(
-                players = playerCount,
-                tourneys = tourneyCount,
                 packets = [PacketPokerTourney(**tourney) for tourney in tourneys]
             ))
             tourneyInfo = self.service.tourneySelectInfo(packet, tourneys)
