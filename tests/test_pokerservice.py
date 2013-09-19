@@ -4543,7 +4543,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         log_history.reset()
         pack = self.service.tourneyPlayersList(77)
-        self.assertEquals(set(pack.players), {('Mock_5', -1, 0), ('Mock_6', -1, 0), ('Mock_0', -1, 0)})
+        self.assertEquals(set(pack.players), set([('Mock_5', -1, 0), ('Mock_6', -1, 0), ('Mock_0', -1, 0)]))
         self.assertEquals(pack.type, PACKET_POKER_TOURNEY_PLAYERS_LIST)
         self.assertEquals(pack.tourney_serial, 77)
 
