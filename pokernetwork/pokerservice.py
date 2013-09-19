@@ -1177,7 +1177,9 @@ class PokerService(service.Service):
 
     def tourneyDestroyGameActual(self, game):
         table = self.getTable(game.id)
+        tourney = table.tourney
         table.destroy()
+        self.tourneyUpdateStats(tourney,game.id)
 
     def tourneyDestroyGame(self, tourney, game):
         wait = int(self.delays.get('extra_wait_tourney_finish', 0))

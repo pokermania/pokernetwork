@@ -3592,19 +3592,8 @@ class BreakTestCase(PokerServiceTestCaseBase):
                     'SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money'
                 ])
         self.MockCursor = MockCursor
-        
-    class MockTable:
-        def __init__(self):
-            self.message = None
-            self.type = None
-            self.destroyCalled = 0
-
-        def broadcastMessage(self, message_type, message):
-            self.type = message_type
-            self.message = message
-
-        def scheduleAutoDeal(self):
-            self.autodeal = 1
+    class MockStats(object):
+        def update(self, game_id): pass
 
     class Tournament:
         def __init__(self):
@@ -3613,6 +3602,22 @@ class BreakTestCase(PokerServiceTestCaseBase):
             self.start_time = 1
             self.sit_n_go = 'n'
             self.id2game = {}
+            self.stats = BreakTestCase.MockStats()
+    class MockTable:
+        def __init__(self):
+            self.avatar_collection = PokerAvatarCollection()
+            self.message = None
+            self.type = None
+            self.destroyCalled = 0
+            self.tourney = BreakTestCase.Tournament()
+
+        def broadcastMessage(self, message_type, message):
+            self.type = message_type
+            self.message = message
+
+        def scheduleAutoDeal(self):
+            self.autodeal = 1
+
     
     
     def test01_0_tourneyIsRelevant(self):
@@ -3824,7 +3829,9 @@ class BreakTestCase(PokerServiceTestCaseBase):
         tableDestroyDeferred = defer.Deferred()
         class MockTable:
             def __init__(self):
+                self.avatar_collection = PokerAvatarCollection()
                 self.destroyCalled = 0
+                self.tourney = BreakTestCase.Tournament()
             def destroy(table):
                 self.assertEquals(testclock._seconds_value - self.secondsStart  >= waitMin, True)
                 self.assertEquals(testclock._seconds_value - self.secondsStart  <= waitMax, True)
@@ -5214,6 +5221,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
         class MockTable:
             def __init__(mtSelf):
                 mtSelf.game = MockGame()
+                self.avatar_collection = PokerAvatarCollection()
                 mtSelf.tourney = None
 
         self.service.eventTable(MockTable())
