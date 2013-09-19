@@ -4163,7 +4163,7 @@ class PokerServiceCoverageTests(unittest.TestCase):
 
         pack = self.service.stats("THIS ARG IS IGNORED")
         self.assertEquals(pack.players, 3)
-        self.assertEquals(pack.hands, 8)
+        self.assertEquals(pack.hands, 0)
         self.assertEquals(pack.bytesin, 0)
         self.assertEquals(pack.bytesout, 0)
         self.service.db = oldDb
