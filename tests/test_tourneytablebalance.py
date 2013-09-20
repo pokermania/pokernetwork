@@ -25,6 +25,9 @@
 # Authors:
 #  Bradley M. Kuhn <bkuhn@ebb.org>
 #
+
+from nose.twistedtools import reactor, deferred
+
 import sys, os
 from os import path
 
@@ -171,9 +174,11 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
 #        self.service.verbose = 0
 #        self.service.verbose = 4
     # ----------------------------------------------------------------
+    @deferred()
     def tearDown(self):
         self.db.close()
-        for t in self.service.tables.values(): t.destroy()
+        if hasattr(self.service, 'tables'):
+            for t in self.service.tables.values(): t.destroy()
         d = self.service.stopService()
         d.addCallback(lambda x: self.destroyDb())
         return d
@@ -190,6 +195,7 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
             (self.user_serials[user_number-1], _name, _privilege), _message = self.service.auth(PACKET_LOGIN, ("user%d" % user_number, "password%d" % user_number), "role1")
         cursor.close()
     # ----------------------------------------------------------------
+    @deferred()
     def test01_sixPlayersTourney5PerTable(self):
         """test01_sixPlayersTourney5PerTable
 
@@ -242,8 +248,10 @@ class TourneyTableBalanceTestCase(unittest.TestCase):
         reactor.callLater(3, d.callback, True)
 
         return d
-    
+
+    @deferred()
     def test02(self):
+        "lawl"
         pokerservice.UPDATE_TOURNEYS_SCHEDULE_DELAY = 1
         pokerservice.CHECK_TOURNEYS_SCHEDULE_DELAY = 0.1
         
