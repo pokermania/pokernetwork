@@ -1474,6 +1474,8 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         def getName(self):
             return 'ClientMockup_%s' % self.serial
 
+    class MockStats(object):
+        def update(self, game_id): pass
 
     class GameMockup:
         def __init__(self):
@@ -1498,6 +1500,14 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.players = [0, 2, 4]
             self.prize = [10,20,30]
             self.rank = 10
+            self.stats = PokerServiceTestCase.MockStats()
+        def isRebuying(self, serial):
+            return False
+        def prizes(self):
+            return self.prize
+        def finallyRemovePlayer(*args, **kw): pass
+        def getRank(self, serial): return self.rank
+    class MockTable:
         def getRank(self, serial):
             return self.rank
 
