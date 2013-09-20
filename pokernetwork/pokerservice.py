@@ -1278,6 +1278,7 @@ class PokerService(service.Service):
             if cursor.rowcount != 1:
                 self.log.error("modified %d rows (expected 1): %s", cursor.rowcount, cursor._executed)
             self.tourneySatelliteSelectPlayer(tourney, serial, rank)
+            self.tourneyUpdateStats(tourney,0)
         finally:
             cursor.close()
         
