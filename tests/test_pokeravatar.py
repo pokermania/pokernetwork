@@ -2001,7 +2001,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
                     assert p.name.find("sitngo") >= 0 or  p.name.find("egular")
                     assert p.name.find("registering") >= 0 or  p.name.find("announced")
                     count += 1
-                self.assertEquals(count, 2)
+                self.assertEquals(count, 1)
         return (client, packet)
     # ------------------------------------------------------------------------
     def test35_tourneys(self):

@@ -1540,7 +1540,7 @@ class PokerService(service.Service):
         tourney_sql = \
             "SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys " \
             "LEFT JOIN user2tourney ON (tourneys.serial = user2tourney.tourney_serial) " \
-            "WHERE (state != 'complete' OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))) " % self.remove_completed
+            "WHERE (state not in ('complete', 'canceled') OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))) " % self.remove_completed
         schedule_sql = "SELECT * FROM tourneys_schedule AS tourneys WHERE respawn = 'n' AND active = 'y'"
         sql = ''
         if len(criterion) > 1:
@@ -1556,8 +1556,10 @@ class PokerService(service.Service):
         schedule_sql += sql
         tourney_sql += " GROUP BY tourneys.serial"
         cursor.execute(tourney_sql)
+        self.log.debug("tourneySelect: %d %s" % (cursor.rowcount, cursor._executed,))
         result = cursor.fetchall()
         cursor.execute(schedule_sql)
+        self.log.debug("tourneySelect: %d %s" % (cursor.rowcount, cursor._executed,))
         result += cursor.fetchall()
         cursor.close()
         return result
