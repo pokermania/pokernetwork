@@ -1761,7 +1761,7 @@ class PokerService(service.Service):
         if more than one player is registered, players_min and quota is set to the
         amount of the currently registered players.
         '''
-        now = seconds()
+        now = int(seconds())
         cursor = self.db.cursor()
         try:
             cursor.execute(
