@@ -2322,7 +2322,7 @@ class TourneyUnregisterTestCase(PokerServiceTestCaseBase):
             def isRegistered(mtSelf, serial):
                 self.assertEquals(serial, 423)
                 return True
-            def canUnregister(mtSelf, serial):
+            def canUnregister(mtSelf, serial, force=False):
                 self.assertEquals(serial, 423)
                 return True
             def unregister(mtSelf, serial):

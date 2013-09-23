@@ -223,6 +223,9 @@ class MockService(PokerService):
         table = self.spawnTable(self._table_id, **description)
         table.owner = owner
         return table
+
+    def isTemporaryUser(self, serial):
+        return False
     
 class MockClient(PokerAvatar):
     log = log.get_child('MockClient')

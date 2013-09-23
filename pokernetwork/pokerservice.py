@@ -90,6 +90,8 @@ from pokernetwork import pokerpacketizer
 from pokerauth import get_auth_instance
 from datetime import date
 
+CANCEL_INACTIVE_TOURNEY_TIMEOUT = 60 * 60 * 3
+INACTIVE_TOURNEY_CANCEL_POLL_DEALAY = 60 * 5
 UPDATE_TOURNEYS_SCHEDULE_DELAY = 2 * 60
 CHECK_TOURNEYS_SCHEDULE_DELAY = 60
 DELETE_OLD_TOURNEYS_DELAY = 1 * 60 * 60
@@ -343,6 +345,8 @@ class PokerService(service.Service):
         self.poker_auth.SetLevel(PACKET_POKER_SET_ACCOUNT, User.ADMIN)
         service.Service.startService(self)
         self.down = False
+
+        self.timer['cancel_inactive_tourneys'] = reactor.callLater(INACTIVE_TOURNEY_CANCEL_POLL_DEALAY, self.cancelInactiveTourneys)
 
         # Setup Lock Check
         self._lock_check_running = LockChecks(5 * 60 * 60, self._warnLock)
@@ -604,6 +608,7 @@ class PokerService(service.Service):
         self.cancelTimer('messages')
         self.cancelTimers('tourney_breaks')
         self.cancelTimers('tourney_delete_route')
+        self.cancelTimers('cancel_inactive_tourneys')
 
         if self.resthost_serial: self.setResthostOnShuttingDown()
         self.shutdownGames()
@@ -894,6 +899,7 @@ class PokerService(service.Service):
         tourney.satellite_of = self.tourneySatelliteLookup(tourney)[0]
         tourney.satellite_player_count = int(tourney_map['satellite_player_count'])
         tourney.satellite_registrations = []
+        tourney._kickme_after = seconds() + CANCEL_INACTIVE_TOURNEY_TIMEOUT
         tourney.callback_new_state = self.tourneyNewState
         tourney.callback_create_game = self.tourneyCreateTable
         tourney.callback_game_filled = self.tourneyGameFilled
@@ -904,6 +910,7 @@ class PokerService(service.Service):
         tourney.callback_reenter_game = self.tourneyReenterGame
         tourney.callback_rebuy_payment = self.tourneyRebuyPayment
         tourney.callback_rebuy = self.tourneyRebuy
+        tourney.callback_user_action = self.tourneyIndicateUserAction
         if schedule_serial not in self.schedule2tourneys:
             self.schedule2tourneys[schedule_serial] = []
         self.schedule2tourneys[schedule_serial].append(tourney)
@@ -1002,6 +1009,7 @@ class PokerService(service.Service):
             else:
                 self.tourneyResumeAndDeal(tourney)
         elif old_state == TOURNAMENT_STATE_REGISTERING and new_state == TOURNAMENT_STATE_RUNNING:
+            tourney._kickme_after = seconds() + CANCEL_INACTIVE_TOURNEY_TIMEOUT
             self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_START, param1 = tourney.serial)            
             reactor.callLater(0.01, self.tourneyBroadcastStart, tourney.serial)
             #
@@ -1692,7 +1700,7 @@ class PokerService(service.Service):
         tourney.register(serial,self.getName(serial))
         return True
 
-    def tourneyUnregister(self, packet):
+    def tourneyUnregister(self, packet, force=False):
         serial = packet.serial
         tourney_serial = packet.tourney_serial
         if tourney_serial not in self.tourneys:
@@ -1710,7 +1718,7 @@ class PokerService(service.Service):
                 message = "Player %d is not registered in tournament %d " % (serial, tourney_serial) 
             )
 
-        if not tourney.canUnregister(serial):
+        if not tourney.canUnregister(serial, force):
             return PacketError(
                 other_type = PACKET_POKER_TOURNEY_UNREGISTER,
                 code = PacketPokerTourneyUnregister.TOO_LATE,
@@ -1777,16 +1785,18 @@ class PokerService(service.Service):
         tourney.updateRunning()
         return PacketAck()
 
-    def tourneyCancel(self, tourney):
+    def tourneyCancel(self, tourney, force=False):
         players = list(tourney.players.iterkeys())
         self.log.debug("tourneyCancel: %s", players)
         self.databaseEvent(event = PacketPokerMonitorEvent.TOURNEY_CANCELED, param1 = tourney.serial)
         for serial in players:
             avatars = self.avatar_collection.get(serial)
+            if force:
+                self.tourneyRemovePlayer(tourney, serial, now=True)
             packet = self.tourneyUnregister(PacketPokerTourneyUnregister(
                 tourney_serial = tourney.serial,
                 serial = serial
-            ))
+            ), force)
             if packet.type == PACKET_ERROR:
                 self.log.debug("tourneyCancel: %s", packet)
             for avatar in avatars:
@@ -1868,6 +1878,21 @@ class PokerService(service.Service):
         else:
             table.update()
     
+    def tourneyIndicateUserAction(self, tournament, serial):
+        if not self.isTemporaryUser(serial):
+            tournament._kickme_after = seconds() + CANCEL_INACTIVE_TOURNEY_TIMEOUT
+            self.log.warn("tourneyIndicateUserAction: %s, new kickmeafter %s", serial, tournament._kickme_after)
+
+    def cancelInactiveTourneys(self):
+        now = seconds()
+        self.log.debug("cancelInactiveTourneys:")
+        for tourney in self.tourneys.values():
+            if tourney.state == TOURNAMENT_STATE_RUNNING and now > tourney._kickme_after:
+                self.log.inform("cancelInactiveTourneys: force cancel tourney %s", tourney.serial)
+                tourney.changeState(TOURNAMENT_STATE_CANCELED, force=True)
+
+        self.timer['cancel_inactive_tourneys'] = reactor.callLater(INACTIVE_TOURNEY_CANCEL_POLL_DEALAY, self.cancelInactiveTourneys)
+
     def createHand(self, game_id, tourney_serial=None):
         cursor = self.db.cursor()
         cursor.execute("INSERT INTO hands (description, game_id, tourney_serial) VALUES ('[]', %s, %s)",
