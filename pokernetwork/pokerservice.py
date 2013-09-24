@@ -1881,7 +1881,7 @@ class PokerService(service.Service):
     def tourneyIndicateUserAction(self, tournament, serial):
         if not self.isTemporaryUser(serial):
             tournament._kickme_after = seconds() + CANCEL_INACTIVE_TOURNEY_TIMEOUT
-            self.log.warn("tourneyIndicateUserAction: %s, new kickmeafter %s", serial, tournament._kickme_after)
+            self.log.debug("tourneyIndicateUserAction: %s, new kickmeafter %s", serial, tournament._kickme_after)
 
     def cancelInactiveTourneys(self):
         now = seconds()
