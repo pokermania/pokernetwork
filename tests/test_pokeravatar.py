@@ -64,6 +64,11 @@ from pokerpackets.clientpackets import *
 from pokernetwork.pokertable import PokerAvatarCollection
 from pokernetwork.pokerrestclient import PokerRestClient
 
+try:
+    from nose.plugins.attrib import attr
+except ImportError, e:
+    def attr(fn): return fn
+
 class ConstantDeckShuffler:
     def shuffle(self, what):
         what[:] = [
@@ -187,13 +192,13 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
                 'betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, start_time, ' \
                 'register_time, respawn, respawn_interval) ' \
                 'VALUES (1, "sitngo2", "Sit and Go 2 players, Holdem", "Sit and Go 2 players", "2", "holdem", "level-15-30-no-limit", ' \
-                '"2", 1, "3000", "0", "y", "0", "0", "y", "0");',None),
+                '"2", 1, "3000", "0", "y", "0", "0", "y", "60");',None),
                 ('INSERT INTO tourneys_schedule (resthost_serial, name, description_short, description_long, players_quota, variant, ' \
                 'betting_structure, seats_per_game, currency_serial, buy_in, rake, sit_n_go, breaks_interval, ' \
                 'rebuy_delay, add_on, add_on_delay, start_time, register_time, respawn, respawn_interval, players_min) ' \
                 'VALUES (1, "regular1", "Holdem No Limit Freeroll", "Holdem No Limit Freeroll", "1000", "holdem", "level-001", "10", ' \
                 '1, "0", "0", "n", "60", "30", "1", "60", unix_timestamp(now() + INTERVAL 2 MINUTE), unix_timestamp(now() - ' \
-                'INTERVAL 1 HOUR), "n", "0", 3);', None),
+                'INTERVAL 1 HOUR), "n", "60", 3);', None),
             ),
             user=config.test.mysql.root_user.name,
             password=config.test.mysql.root_user.password,
@@ -1993,17 +1998,18 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
         avatar = self.service.avatars[id]
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerTourneySelect(string = ""))
+        count = 0
         for packet in avatar.resetPacketsQueue():
             if packet.type == PACKET_POKER_TOURNEY_LIST:
-                count = 0
                 for p in packet.packets:
                     self.assert_(hasattr(p, 'schedule_serial'))
                     assert p.name.find("sitngo") >= 0 or  p.name.find("egular")
-                    assert p.name.find("registering") >= 0 or  p.name.find("announced")
+                    # assert p.name.find("registering") >= 0 or  p.name.find("announced")
                     count += 1
-                self.assertEquals(count, 1)
+        self.assertEquals(count, 2)
         return (client, packet)
     # ------------------------------------------------------------------------
+    @attr("og-now")
     def test35_tourneys(self):
         """Test sending the set poker account packet."""
         self.createClients(1)

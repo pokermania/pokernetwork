@@ -1543,35 +1543,141 @@ class PokerService(service.Service):
         return PacketPokerTourneyPlayerStats(**stats)
     
     def tourneySelect(self, query_string):
-        cursor = self.db.cursor(DictCursor)
-        criterion = query_string.split("\t")
-        tourney_sql = \
-            "SELECT tourneys.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys " \
-            "LEFT JOIN user2tourney ON (tourneys.serial = user2tourney.tourney_serial) " \
-            "WHERE (state not in ('complete', 'canceled') OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL %d HOUR))) " % self.remove_completed
-        schedule_sql = "SELECT * FROM tourneys_schedule AS tourneys WHERE respawn = 'n' AND active = 'y'"
-        sql = ''
-        if len(criterion) > 1:
-            ( currency_serial, tourney_type ) = criterion
-            sit_n_go = 'y' if tourney_type == 'sit_n_go' else 'n'
-            if currency_serial:
-                sql += " AND tourneys.currency_serial = %s AND sit_n_go = '%s'" % (currency_serial, sit_n_go)
-            else:
-                sql += " AND sit_n_go = '%s'" % sit_n_go
-        elif query_string != '':
-            sql = " AND name = '%s'" % query_string
-        tourney_sql += sql
-        schedule_sql += sql
-        tourney_sql += " GROUP BY tourneys.serial"
-        cursor.execute(tourney_sql)
-        self.log.debug("tourneySelect: %d %s" % (cursor.rowcount, cursor._executed,))
-        result = cursor.fetchall()
-        cursor.execute(schedule_sql)
-        self.log.debug("tourneySelect: %d %s" % (cursor.rowcount, cursor._executed,))
-        result += cursor.fetchall()
-        cursor.close()
-        return result
+        """ tourneySelect() takes one argument:
+                query_string: a string that describes how the tourneys should be filtered
 
+            1. If the string is empty, all tourneys are returned that are not completed
+                or finished less than one hour agoi.
+            2. If the string starts with filter, the string is splited at white space and 
+                are interpreted as arguments as follows:
+                    "-no-sng" will just show regular tourneys
+                    "-sng" will just show sit and gos (ignoring strip poker games and challenges)
+                    "-p<MINIMUM MINUTES>" e.g. -p5 sets the lower time limit to 5 minutes ago (defaul 0)
+                    "-n<MAXIMUM MINUTES>" e.g. -n60 sets the upper time limit to one hour (default to 1440 =24h)
+
+                    the time limit is used to find tournes that start between those minutes or start to
+                    register between those values.
+                    "-limit<MAX TOURNEYS>" limit the returned packets to this value
+            3. Otherwise the tourneys with the name of the query_string are returned
+        """
+        cursor = self.db.cursor(DictCursor)
+        try:
+            criterion = query_string.split()
+            if not criterion:
+                criterion = ["__all__"]
+            tourney_sql = \
+                "SELECT t.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys AS t " \
+                "LEFT JOIN user2tourney ON (t.serial = user2tourney.tourney_serial) WHERE " 
+            schedule_sql = "SELECT * FROM tourneys_schedule AS t WHERE "
+            job = 'both'
+
+            now = seconds()
+            parameters = {
+                "currency_serial": 1,
+                "min_time": now,
+                "max_time": now+24*3600,
+                "limit": None
+            }
+            if criterion[0] == "filter":
+                pass
+            elif criterion[0] == "__all__":
+                cursor.execute(tourney_sql + "(state != 'complete' OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL 1 HOUR))) GROUP BY t.serial")
+                return cursor.fetchall()
+            else:
+                cursor.execute(tourney_sql + "(state != 'complete' OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL 1 HOUR))) AND name = %s", (query_string))
+                return cursor.fetchall()
+
+            try:
+                for option in criterion[1:]:
+                    if option.startswith("-no-sng"):
+                        job = "tourneys"
+                    elif option.startswith("-sng"):
+                        job = "sng"
+                    elif option.startswith("-p"):
+                        _seconds = int(option[2:])*60
+                        parameters["min_time"] = now - _seconds
+                    elif option.startswith("-n"):
+                        _seconds = int(option[2:])*60
+                        parameters["max_time"] = now + _seconds
+                    elif option.startswith("-limit"):
+                        parameters["limit"] = int(option[6:])
+            except Exception as e:
+                self.log.error("tourneySelect: can't handle query_string:%r")
+                return []
+
+            # getSchedules (Tourneys that will start registerin in ... minutes)
+            # TODO: We need to catch all tourneys that are available to register now
+            ret = []
+            if job in ("both", "tourneys"):
+                where_clause = lex("""
+                    t.active = 'y' AND
+                    t.respawn = 'n' AND
+                    t.currency_serial = %(currency_serial)s AND
+                    t.sit_n_go = 'n' AND
+                    t.register_time BETWEEN %(min_time)s AND %(max_time)s
+                    GROUP BY t.serial ORDER BY register_time
+                """)
+                self.log.warn(schedule_sql + where_clause % parameters)
+                cursor.execute(schedule_sql + where_clause, parameters)
+                ret.extend(cursor.fetchall())
+
+                where_clause = lex("""
+                    t.active = 'y' AND
+                    t.respawn = 'y' AND
+                    t.currency_serial = %(currency_serial)s AND
+                    t.sit_n_go = 'n' AND
+                    t.respawn_interval > 0
+                    GROUP BY t.serial ORDER BY register_time 
+                """)
+
+                self.log.warn(schedule_sql + where_clause % parameters)
+                cursor.execute(schedule_sql + where_clause, parameters)
+                tourneys_schedules_respawn = cursor.fetchall()
+
+                for schedule in tourneys_schedules_respawn:
+                    if (schedule["start_time"] is not None and schedule["start_time"] < now):
+                        time_delta = max(0, (1 + (now-schedule["start_time"]))//(schedule["respawn_interval"])) * schedule["respawn_interval"]
+                        schedule["start_time"] += time_delta
+                        schedule["register_time"] += time_delta
+
+                    if (schedule.register_time is not None and schedule.register_time >= parameters["min_time"] and schedule.register_time <= parameters["max_time"]):
+                        ret.append(schedule)
+
+            # getTourneys (that are in registering/running/break/breakt wait, or ended x min ago)
+            # sng stuff
+            sng_y = lex("""
+                t.sit_n_go="y" AND
+                t.bailor_serial=0 AND
+                t.state NOT IN ("complete","canceled","aborted","moved") AND
+                t.name NOT LIKE "Strippoker%%"
+            """)
+            # $crit->addBetweenCondition('t.start_time', strtotime('-3 hours'), $tsInterval['max']);
+            sng_n =  lex("""
+                t.sit_n_go="n" AND (
+                    t.state NOT IN ("complete","canceled","aborted") OR
+                    (t.state = "complete" AND t.finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL 12 HOUR))
+                ) AND 
+                t.currency_serial = 1 AND
+                t.start_time BETWEEN %(min_time)s AND %(max_time)s
+            """)
+            # even if we want to select all tourneys and sngs, we still don't want to select challenges or Strippoker games
+            sng_both = " (%s) OR (%s) " % (sng_y, sng_n)
+
+            sql = {
+                'sng': sng_y,
+                'tourneys': sng_n,
+                'both': sng_both
+            }[job]
+
+
+            self.log.warn(tourney_sql + sql%parameters)
+            cursor.execute(tourney_sql + sql, parameters)
+            ret.extend(cursor.fetchall())
+            ret = [e for e in ret if e['serial'] is not None]
+            tourneys_schedules = sorted(ret, key=lambda x:(x.get("register_time"),x["start_time"]))
+            return tourneys_schedules[:parameters["limit"]]
+        finally:
+            cursor.close()
     def tourneySelectInfo(self, packet, tourneys):
         if self.tourney_select_info:
             return self.tourney_select_info(self, packet, tourneys)
@@ -2044,7 +2150,7 @@ class PokerService(service.Service):
 
                3. Otherwise it is assumed to be a specific table name, and only table(s)
                   with the specific name exactly equal to the string are returned.
-           """
+        """
         default_query =\
         """ SELECT
                 t.serial, t.resthost_serial, c.seats, t.average_pot, t.hands_per_hour, t.percent_flop,
@@ -2103,6 +2209,7 @@ class PokerService(service.Service):
                 # cursor.close()
                 # return []
                 print "ERR %r" % query_string
+                # TODO: add Errorhandling!
 
             sql_select = default_query
 
