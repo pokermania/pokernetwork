@@ -63,7 +63,7 @@ except :
 from zope.interface import Interface
 from zope.interface import implements
 
-from MySQLdb.cursors import DictCursor
+from pokernetwork.util.sql import TimingDictCursor as DictCursor
 
 from twisted.python import components
 

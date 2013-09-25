@@ -26,7 +26,7 @@
 import os
 from os.path import exists
 import MySQLdb
-from MySQLdb.cursors import DictCursor
+from pokernetwork.util.sql import TimingCursor, TimingDictCursor
 import subprocess
 
 from pokernetwork import log as network_log
@@ -52,7 +52,8 @@ class PokerDatabase:
                 port = int(self.parameters.get("port", '3306')),
                 user = self.parameters["user"],
                 passwd = self.parameters["password"],
-                db = self.parameters["name"]
+                db = self.parameters["name"],
+                cursorclass = TimingCursor
             )
             self.log.debug("MySQL server version is %s", self.db.get_server_info())
         except Exception, login_exception:
@@ -63,7 +64,8 @@ class PokerDatabase:
                     host = self.parameters["host"],
                     port = int(self.parameters.get("port", '3306')),
                     user = self.parameters["root_user"],
-                    passwd = self.parameters["root_password"]
+                    passwd = self.parameters["root_password"],
+                    cursorclass = TimingCursor
                 )
                 self.log.inform("MySQL server version is %s", db.get_server_info())
                 if int(db.get_server_info().split('.')[0]) < 5:
@@ -113,7 +115,8 @@ class PokerDatabase:
                 port = int(self.parameters.get("port", '3306')),
                 user = self.parameters["user"],
                 passwd = self.parameters["password"],
-                db = self.parameters["name"]
+                db = self.parameters["name"],
+                cursorclass = TimingCursor
             )
 
         self.log.debug("Database connection to %s/%s open", self.parameters['host'], self.parameters['name'])
@@ -127,7 +130,7 @@ class PokerDatabase:
 
     def getVersionFromDatabase(self):
         try:
-            cursor = self.cursor(DictCursor)
+            cursor = self.cursor(TimingDictCursor)
             cursor.execute("SELECT * FROM server")
             row = cursor.fetchone()
             version = row['version']
