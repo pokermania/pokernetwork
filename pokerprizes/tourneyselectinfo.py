@@ -19,7 +19,7 @@
 # "AGPLv3".  If not, see <http://www.gnu.org/licenses/>.
 #
 from pokerprizes.prizes import PokerPrizes
-from pokernetwork.util.sql import TimingDictCursor as DictCursor
+from MySQLdb.cursors import DictCursor
 from pokerpackets.networkpackets import PacketPokerTourneyInfo
 
 class Handle(PokerPrizes):

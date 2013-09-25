@@ -1,32 +1,3 @@
-from pokernetwork.util import log as util_log
-log = util_log.get_child('sql')
-
-from pokernetwork.util.timer import Timer
-from MySQLdb.cursors import Cursor, DictCursor
-
-SLOW_QUERY_THRESHOLD = .1
-
-class TimingCursor(Cursor):
-
-    def execute(self, query, args=None, threshold=None):
-        with Timer() as t:
-            ret = super(TimingCursor, self).execute(query, args)
-
-        if t.interval > (threshold or SLOW_QUERY_THRESHOLD):
-            log.warn("slow query (%f sec): %s", t.interval, self._executed)
-
-        return ret
-
-class TimingDictCursor(DictCursor):
-
-    def execute(self, query, args=None, threshold=None):
-        with Timer() as t:
-            ret = super(TimingDictCursor, self).execute(query, args)
-
-        if t.interval > (threshold or SLOW_QUERY_THRESHOLD):
-            log.warn("slow query (%f sec): %s", t.interval, self._executed)
-
-        return ret
 
 def lex(a, __cache={}):
     try:

@@ -65,7 +65,7 @@ currencyclient.CurrencyClient = currencyclient.FakeCurrencyClient
 from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
 from pokernetwork.pokertable  import PokerAvatarCollection
-from pokernetwork.util.sql import TimingDictCursor as DictCursor
+from MySQLdb.cursors import DictCursor
 
 from pokerpackets import binarypack
 
