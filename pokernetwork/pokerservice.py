@@ -1584,7 +1584,7 @@ class PokerService(service.Service):
                 cursor.execute(tourney_sql + "(state != 'complete' OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL 1 HOUR))) GROUP BY t.serial")
                 return cursor.fetchall()
             else:
-                cursor.execute(tourney_sql + "(state != 'complete' OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL 1 HOUR))) AND name = %s  GROUP BY t.serial", (query_string))
+                cursor.execute(tourney_sql + "(state NOT IN ('complete', 'canceled') OR (state = 'complete' AND finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL 1 HOUR))) AND name = %s  GROUP BY t.serial", (query_string))
                 return cursor.fetchall()
 
             try:
