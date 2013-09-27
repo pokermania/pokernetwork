@@ -3587,7 +3587,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
         
         class MockCursor(MockCursorBase):
             def statementActions(cursorSelf, sql, statement):
-                if statement == 'SELECT resthost_serial FROM tourneys':
+                if statement == 'SELECT TRUE FROM tourneys':
                     cursorSelf.rowcount = 1
                     cursorSelf.row = ['0']
                 elif statement == 'SELECT user_serial,table_serial,currency_serial FROM pokertables,user2table':
@@ -3597,7 +3597,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
             def __init__(cursorSelf):
                 MockCursorBase.__init__(cursorSelf, self, [
                     'UPDATE tourneys SET state',
-                    'SELECT resthost_serial FROM tourneys',
+                    'SELECT TRUE FROM tourneys',
                     'DELETE FROM tables WHERE serial =',
                     'SELECT t.serial, c.currency_serial, u2t.user_serial, u2t.money'
                 ])
