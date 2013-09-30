@@ -1853,7 +1853,10 @@ class PokerService(service.Service):
         for serial in players:
             avatars = self.avatar_collection.get(serial)
             if force:
+                table = self.getTourneyTable(tourney, serial)
                 self.tourneyRemovePlayer(tourney, serial, now=True)
+                for avatar in avatars:
+                    table.quitPlayer(avatar)
             packet = self.tourneyUnregister(PacketPokerTourneyUnregister(
                 tourney_serial = tourney.serial,
                 serial = serial
