@@ -1000,7 +1000,7 @@ class PokerAvatar:
                     message = "Unable to join table for unknown reason",
                     other_type = requestorPacketType,
                     serial = self.getSerial(),
-                    game_id = 0
+                    game_id = packet.game_id
                 ))
             else:
                 player = table.game.getPlayer(self.getSerial())
