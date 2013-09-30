@@ -2114,11 +2114,20 @@ class PokerService(service.Service):
                 c.execute(
                     default_query + \
                     """ INNER JOIN user2table AS u2t
-                            ON ta.serial = u2t.table_serial
+                            ON t.serial = u2t.table_serial
+                        WHERE u2t.user_serial = %s
+                    """ + query_suffix,
+                    serial
+                )
+            elif query_string == 'mytourneys':
+                c.execute(
+                    default_query + \
+                    """ INNER JOIN user2table AS u2t
+                            ON t.serial = u2t.table_serial
                         INNER JOIN tourneys AS tourn
-                            ON tourn.serial = ta.tourney_serial
-                        WHERE u2t.user_serial = %s ORDER BY ta.players desc, ta.serial
-                    """,
+                            ON tourn.serial = t.tourney_serial
+                        WHERE u2t.user_serial = %s
+                    """ + query_suffix,
                     serial
                 )
             elif query_string.startswith("filter"):
