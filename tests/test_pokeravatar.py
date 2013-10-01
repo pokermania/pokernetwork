@@ -2762,7 +2762,7 @@ class PokerAvatarTestCase(PokerAvatarTestCaseBaseClass):
             if packet.type == PACKET_POKER_ERROR:
                 found += 1
                 self.assertEquals(packet.serial, client.getSerial())
-                self.assertEquals(packet.game_id, 0)
+                self.assertEquals(packet.game_id, gameId)
                 self.assertEquals(packet.other_type, PACKET_POKER_TABLE_JOIN)
                 self.assertEquals(packet.code, PacketPokerTableJoin.GENERAL_FAILURE)
                 self.failUnless(len(packet.message) > 0, "some message should be included")
