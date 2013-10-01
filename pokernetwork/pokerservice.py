@@ -2149,10 +2149,8 @@ class PokerService(service.Service):
                         if param == "-f":
                             hide_full_tables = False
                 except ValueError:
-                    # self.log.error("Following listTables() query_string is malformed %r" % query_string)
-                    # return []
-                    print "ERR %r" % query_string
-                    # TODO: add Errorhandling!
+                    self.log.inform("Following listTables() query_string is malformed %r", query_string)
+                    return []
 
                 sql_select = default_query
 
