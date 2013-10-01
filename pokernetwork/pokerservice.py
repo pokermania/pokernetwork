@@ -1944,7 +1944,6 @@ class PokerService(service.Service):
 
     def cancelInactiveTourneys(self):
         now = seconds()
-        self.log.debug("cancelInactiveTourneys:")
         for tourney in self.tourneys.values():
             if tourney.state == TOURNAMENT_STATE_RUNNING and now > tourney._kickme_after:
                 self.log.inform("cancelInactiveTourneys: force cancel tourney %s", tourney.serial)
