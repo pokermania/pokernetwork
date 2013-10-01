@@ -2123,8 +2123,12 @@ class PokerService(service.Service):
                 )
             elif query_string == 'mytourneys':
                 c.execute(
-                    default_query + \
-                    """ INNER JOIN user2table AS u2t
+                    """ SELECT
+                            t.serial, t.resthost_serial, tourn.seats_per_game as seats, t.average_pot, t.hands_per_hour, t.percent_flop,
+                            t.players, t.observers, t.waiting, tourn.player_timeout, 0 AS muck_timeout, tourn.currency_serial,
+                            tourn.name, tourn.variant, tourn.betting_structure, tourn.skin, t.tourney_serial
+                        FROM tables AS t
+                        INNER JOIN user2table AS u2t
                             ON t.serial = u2t.table_serial
                         INNER JOIN tourneys AS tourn
                             ON tourn.serial = t.tourney_serial
