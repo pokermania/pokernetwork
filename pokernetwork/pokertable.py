@@ -1198,7 +1198,7 @@ class PokerTable:
         # Next, test to see if we have reached the server-wide maximum for
         # seated/observing players.
         if not self.game.isSeated(avatar.getSerial()) and self.factory.joinedCountReachedMax():
-            self.log.inform("joinPlayer: %d cannot join game %d because the server is full", serial, self.game.id)
+            self.log.warn("joinPlayer: %d cannot join game %d because the server is full", serial, self.game.id)
             avatar.sendPacketVerbose(PacketPokerError(
                 game_id = self.game.id,
                 serial = serial,
