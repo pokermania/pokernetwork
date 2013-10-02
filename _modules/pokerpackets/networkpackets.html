@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -834,30 +836,10 @@
 <span class="sd">    Semantics   request the list of tables matching the &quot;string&quot; constraint.</span>
 <span class="sd">                The answer is a possibly empty :class:`PACKET_POKER_TABLE_LIST &lt;pokerpackets.networkpackets.PacketPokerTableList&gt;` packet.</span>
 <span class="sd">    Direction   server &lt;=  client</span>
-<span class="sd">    string      </span>
-<span class="sd">                1. </span>
-<span class="sd">                    If string is empty &quot;&quot; or &quot;all&quot; then all tables are returned. (If string is all even tables from other resthosts are returned)</span>
-
-<span class="sd">                2.</span>
-<span class="sd">                    If string is &quot;my&quot; all tables are returned where the player identified by serial have joined the table.</span>
-
-<span class="sd">                3.</span>
-<span class="sd">                    If the string starts with &quot;filter&quot; </span>
-
-<span class="sd">                    - full tables will be not be transmitted, </span>
-<span class="sd">                    - empty tables with the same name will only be returned once</span>
-
-<span class="sd">                    You can filter the list further by adding the following (seperated with spaces):</span>
-
-<span class="sd">                    - &quot;-m&lt;min buy-in&gt;&quot; to indicate the minimum buy-in the player want to pay (to filter out every table where the maximum buy-in is less than this value.)</span>
-<span class="sd">                    - &quot;-M&lt;max buy-in&gt;&quot; to indicate the maximum buy-in the player want to pay. (Mind the capital M)</span>
-<span class="sd">                    - &quot;-f&quot; to force that full tables will be shown</span>
-
-<span class="sd">                    If the player want to get only tables where he has to pay a buy-in between 1000 and 3000 (both sides included) the string would be like: &quot;filter -m1000 -M3000&quot;</span>
-
-<span class="sd">                4.</span>
-<span class="sd">                    If nothing from above matches, it is asumed, that that the string is the exact name of a table</span>
-
+<span class="sd">    string      currency&lt;tabulation&gt;variant</span>
+<span class="sd">                Examples: 1 holdem selects all holdem tables using this currency</span>
+<span class="sd">                The specials value &quot;my&quot; restricts the search to the tables</span>
+<span class="sd">                in which the player id attached to the connection is playing.</span>
 <span class="sd">    =========== =======================================================================================================================================================================================================</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 </div>
@@ -1103,8 +1085,7 @@
 <span class="sd">                hand the server will wait until the end of the turn to relay the</span>
 <span class="sd">                packet to other players involved in the same hand. A player is allowed</span>
 <span class="sd">                to leave in the middle of the game but the server hides this to the</span>
-<span class="sd">                other players. If a player leaves using this packet, all money the player</span>
-<span class="sd">                did not already bet will be transferred back to his bankroll immediately.</span>
+<span class="sd">                other players.</span>
 <span class="sd">    serial      integer uniquely identifying a player.</span>
 <span class="sd">    game_id     integer uniquely identifying a game.</span>
 <span class="sd">    seat        the seat left in the range [0,9]</span>
@@ -1422,6 +1403,9 @@
 <span class="sd">    Context     the server always sends a :class:`PACKET_POKER_POSITION &lt;pokerpackets.networkpackets.PacketPokerPosition&gt;` before</span>
 <span class="sd">                sending this packet. The client may send this packet after</span>
 <span class="sd">                receiving a :class:`PACKET_POKER_BLIND_REQUEST &lt;pokerpackets.networkpackets.PacketPokerBlindRequest&gt;`.</span>
+<span class="sd">    Note        the amount may be lower than requested by the betting structure</span>
+<span class="sd">                when in tournament. Ring games will refuse a player to enter the with</span>
+<span class="sd">                less than the required amount for blind or/and antes.</span>
 <span class="sd">    Note        the amount may be lower than requested by the betting structure</span>
 <span class="sd">                when in tournament. Ring games will refuse a player to enter the with</span>
 <span class="sd">                less than the required amount for blind or/and antes.</span>
@@ -2078,12 +2062,16 @@
 <span class="sd">    Direction   server &lt;= client</span>
 <span class="sd">    Context     should be sent by the client immediately after receiving</span>
 <span class="sd">                the :class:`POKER_START &lt;pokerpackets.networkpackets.PacketPokerStart&gt;` packet.</span>
-<span class="sd">    Note        When this packet was send, the server will wait for the player until </span>
-<span class="sd">                a :class:`PACKET_POKER_PROCESSING_HAND &lt;pokerpackets.networkpackets.PacketPokerProcessingHand&gt;`</span>
-<span class="sd">                was send. Keep in mind, that the server will wait with the hand he is currently processing,</span>
-<span class="sd">                The first and the best option is to send this packet right after the </span>
-<span class="sd">                beginning of the hand.</span>
-
+<span class="sd">    Note        because of a race condition, it will not work as expected</span>
+<span class="sd">                if the game plays too fast. For instance, if the hand finishes</span>
+<span class="sd">                before the packet :class:`POKER_PROCESSING_HAND &lt;pokerpackets.networkpackets.PacketPokerProcessingHand&gt;` is received by the server.</span>
+<span class="sd">                This will typically happen the first time a player gets a seat at the</span>
+<span class="sd">                table.</span>
+<span class="sd">    Note        because of a race condition, it will not work as expected</span>
+<span class="sd">                if the game plays too fast. For instance, if the hand finishes</span>
+<span class="sd">                before the packet :class:`POKER_PROCESSING_HAND &lt;pokerpackets.networkpackets.PacketPokerProcessingHand&gt;` is received by the server.</span>
+<span class="sd">                This will typically happen the first time a player gets a seat at the</span>
+<span class="sd">                table.</span>
 <span class="sd">    serial      integer uniquely identifying a player.</span>
 <span class="sd">    game_id     integer uniquely identifying a game.</span>
 <span class="sd">    =========== =======================================================================================================================================================================================================</span>
@@ -2482,18 +2470,10 @@
     
     <span class="c">####</span>
     <span class="c"># A tournament has been canceled</span>
-    <span class="c"># param1 = tourney serial</span>
+    <span class="c"># param 1 = tourney serial</span>
     <span class="c">#</span>
     <span class="n">TOURNEY_CANCELED</span> <span class="o">=</span> <span class="mi">11</span>
 
-    <span class="c">###</span>
-    <span class="c"># A user gets a rank in a tournament </span>
-    <span class="c"># param1 = user serial</span>
-    <span class="c"># param2 = tourney serial</span>
-    <span class="c"># param3 = rank</span>
-    <span class="c">#</span>
-    <span class="n">RANK</span> <span class="o">=</span> <span class="mi">12</span>
-    
     <span class="n">info</span> <span class="o">=</span> <span class="n">Packet</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
         <span class="p">(</span><span class="s">&#39;event&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="s">&#39;param1&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
@@ -2732,7 +2712,6 @@
 <span class="sd">    chips_max                 the amount of chips the highest ranked player has</span>
 <span class="sd">    player_chips_max_serial   the serial of the currently leading player</span>
 <span class="sd">    player_chips_max_name     the name of the currently leading player</span>
-<span class="sd">    table_count               the number of tables that are currently engaged in the tourney</span>
 <span class="sd">    ========================= =========================================================================================================================================================================================</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">PacketSerial</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
@@ -2743,7 +2722,6 @@
             <span class="p">(</span><span class="s">&#39;chips_max&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="s">&#39;Q&#39;</span><span class="p">),</span>
             <span class="p">(</span><span class="s">&#39;player_chips_max_serial&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="s">&#39;I&#39;</span><span class="p">),</span>
             <span class="p">(</span><span class="s">&#39;player_chips_max_name&#39;</span><span class="p">,</span><span class="s">&#39;noname&#39;</span><span class="p">,</span><span class="s">&#39;s&#39;</span><span class="p">),</span>
-            <span class="p">(</span><span class="s">&#39;table_count&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="s">&#39;I&#39;</span><span class="p">),</span>
             <span class="p">)</span>
     </div>
 <span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerTourneyPlayerStats</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;POKER_TOURNEY_PLAYER_STATS&quot;</span><span class="p">,</span> <span class="mi">158</span><span class="p">)</span> <span class="c"># 0x9e # %SEQ%</span>
@@ -2854,15 +2832,15 @@
 <span class="n">Packet</span><span class="o">.</span><span class="n">infoDeclare</span><span class="p">(</span><span class="nb">globals</span><span class="p">(),</span> <span class="n">PacketPokerPlayerStats</span><span class="p">,</span> <span class="n">Packet</span><span class="p">,</span> <span class="s">&quot;POKER_PLAYER_STATS&quot;</span><span class="p">,</span> <span class="mi">161</span><span class="p">)</span> <span class="c"># 161 # 0xa1 # %SEQ%</span>
 
 <span class="c">########################################</span>
-<div class="viewcode-block" id="PacketPokerTourneyRebuy"><a class="viewcode-back" href="../../packets.html#pokerpackets.networkpackets.PacketPokerTourneyRebuy">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerTourneyRebuy</span><span class="p">(</span><span class="n">PacketPokerId</span><span class="p">):</span>
+<div class="viewcode-block" id="PacketPokerTourneyRebuy"><a class="viewcode-back" href="../../packets.html#pokerpackets.networkpackets.PacketPokerTourneyRebuy">[docs]</a><span class="k">class</span> <span class="nc">PacketPokerTourneyRebuy</span><span class="p">(</span><span class="n">PacketSerial</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;\</span>
-<span class="sd">    ================= =================================================================================================================================================================================================    </span>
-<span class="sd">    Semantics         When a client wants to rebuy during a tourney he sends this packet.</span>
-<span class="sd">    Direction         client =&gt; server</span>
-<span class="sd">    serial            integer uniquely identifying a player.</span>
-<span class="sd">    game_id           integer uniquely identifying a game.</span>
-<span class="sd">    tourney_serial    integer uniquely identifying a tourney.</span>
-<span class="sd">    ================= =================================================================================================================================================================================================    </span>
+<span class="sd">    Semantics: When a client wants to rebuy during a tourney he sends this packet.</span>
+
+<span class="sd">    Direction: client =&gt; server</span>
+
+
+<span class="sd">    serial: user_serial</span>
+<span class="sd">    tourney_serial: serial of the tourney</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">NOT_ENOUGH_MONEY</span> <span class="o">=</span> <span class="mi">1</span>
@@ -2870,7 +2848,7 @@
     <span class="n">REBUY_LIMIT_EXEEDED</span> <span class="o">=</span> <span class="mi">4</span>
     <span class="n">OTHER_ERROR</span> <span class="o">=</span> <span class="mi">8</span>
 
-    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketPokerId</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">PacketSerial</span><span class="o">.</span><span class="n">info</span> <span class="o">+</span> <span class="p">(</span>
         <span class="p">(</span><span class="s">&#39;tourney_serial&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s">&#39;I&#39;</span><span class="p">),</span>
     <span class="p">)</span>
 </div>
@@ -3166,7 +3144,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2012, Pokermania.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

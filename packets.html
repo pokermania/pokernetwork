@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -13,7 +15,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
+        URL_ROOT:    '',
         VERSION:     '2.2.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -1707,10 +1709,11 @@ client at the end of each turn.</td>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Semantics</td>
-<td>When a client wants to rebuy during a tourney he sends this packet.</td>
+<td>When a client wants to rebuy during a tourney he sends this packet.
+The server sends this packet as a response, when a rebuy has successfully taken place.</td>
 </tr>
 <tr class="row-even"><td>Direction</td>
-<td>client =&gt; server</td>
+<td>client &lt;=&gt; server</td>
 </tr>
 <tr class="row-odd"><td>serial</td>
 <td>integer uniquely identifying a player.</td>
@@ -1775,23 +1778,33 @@ the constraint, the list will be empty.</td>
 <td>server &lt;=  client</td>
 </tr>
 <tr class="row-odd"><td>string</td>
-<td><ol class="first arabic simple">
-<li>empty string selects all tournaments</li>
-<li>a string that contains no tabulation selects
-the tournament with the same name</li>
-<li>a string with a tabulation selects all tournaments
-of a given type (sit&amp;go or regular) that can be played
-using a given currency. The string before the tabulation
-is the name of the currency, the string after the tabulation
-distinguishes between sit&amp;go and regular.</li>
-</ol>
-<dl class="last docutils">
-<dt>Examples: 1&lt;tabulation&gt;sit_n_go selects all sit&amp;go tournaments</dt>
-<dd><p class="first">using currency 1.</p>
-<p class="last">2&lt;tabulation&gt;regular selects all regular tournaments
-using currency 2</p>
+<td><p class="first">a string that describes how the tourneys should be filtered</p>
+<ol class="last arabic">
+<li><dl class="first docutils">
+<dt>If the string is empty, all tourneys are returned that are not completed</dt>
+<dd><p class="first last">or finished less than one hour agoi.</p>
 </dd>
 </dl>
+</li>
+<li><dl class="first docutils">
+<dt>If the string starts with filter, the string is splited at white space and</dt>
+<dd><dl class="first last docutils">
+<dt>are interpreted as arguments as follows:</dt>
+<dd><p class="first">&#8220;-no-sng&#8221; will just show regular tourneys
+&#8220;-sng&#8221; will just show sit and gos (ignoring strip poker games and challenges)
+&#8220;-p&lt;MINIMUM MINUTES&gt;&#8221; e.g. -p5 sets the lower time limit to 5 minutes ago (defaul 0)
+&#8220;-n&lt;MAXIMUM MINUTES&gt;&#8221; e.g. -n60 sets the upper time limit to one hour (default to 1440 =24h)</p>
+<p class="last">the time limit is used to find tournes that start between those minutes or start to
+register between those values.
+&#8220;-limit&lt;MAX TOURNEYS&gt;&#8221; limit the returned packets to this value</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+<li><p class="first">Otherwise the tourneys with the name of the query_string are returned</p>
+</li>
+</ol>
 </td>
 </tr>
 </tbody>
@@ -3564,10 +3577,26 @@ been folded in the game &#8220;game_id&#8221;.</td>
 <dl class="class">
 <dt id="pokerpackets.networkpackets.PacketSetOption">
 <em class="property">class </em><tt class="descclassname">pokerpackets.networkpackets.</tt><tt class="descname">PacketSetOption</tt><big>(</big><em>**kw</em><big>)</big><a class="reference internal" href="_modules/pokerpackets/networkpackets.html#PacketSetOption"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pokerpackets.networkpackets.PacketSetOption" title="Permalink to this definition">¶</a></dt>
-<dd><p>serial:     the user_serial that wants to set an option.
-game_id:    the game that should be affetcted by this option.
-name:       the option name.
-value:      the option value as a string.</p>
+<dd><table border="1" class="docutils">
+<colgroup>
+<col width="14%" />
+<col width="86%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>serial:</td>
+<td>the user_serial that wants to set an option.</td>
+</tr>
+<tr class="row-even"><td>game_id:</td>
+<td>the game that should be affetcted by this option.</td>
+</tr>
+<tr class="row-odd"><td>name:</td>
+<td>the option name.</td>
+</tr>
+<tr class="row-even"><td>value:</td>
+<td>the option value as a string.</td>
+</tr>
+</tbody>
+</table>
 <p>If the name is not known, or the value doesn&#8217;t match to the name an PACKET_ERROR is send.
 If everything is Ok, a PACKET_ACK is sent.</p>
 </dd></dl>
@@ -3730,6 +3759,52 @@ database is inconsistent.</td>
 </tr>
 <tr class="row-even"><td>tourney_serial</td>
 <td>integer uniquely identifying a tournament.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="pokerpackets.networkpackets.PacketPokerUpdateMoney">
+<em class="property">class </em><tt class="descclassname">pokerpackets.networkpackets.</tt><tt class="descname">PacketPokerUpdateMoney</tt><big>(</big><em>**kw</em><big>)</big><a class="headerlink" href="#pokerpackets.networkpackets.PacketPokerUpdateMoney" title="Permalink to this definition">¶</a></dt>
+<dd><table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="79%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Semantics</td>
+<td><p class="first">Warning! This package will kill the current hand, if it is running
+right now. Every person will fold. If some players are allready
+all-in, or broke, they will get some money so they will not get kicked
+out of the game. Afterwards the players money is added.</p>
+<p>In case of an Error, PacketError will be returned. It is possible that
+some players have money updated.</p>
+<p class="last">If everything was ok, PacketAck will be returned.</p>
+</td>
+</tr>
+<tr class="row-even"><td>game_id</td>
+<td>the id of the game where the player money should be updated</td>
+</tr>
+<tr class="row-odd"><td>serials</td>
+<td>a list of serials where that should be updated (you can reduce the
+the probability of errors when you use all player serials that are
+sitting on the table)</td>
+</tr>
+<tr class="row-even"><td>chips</td>
+<td><p class="first">a list of chips. Each entry will be the new money value of the
+corresponding player serial from the <cite>serials</cite>. The first entry will
+define the money of the first serial from the serials list.</p>
+<p class="last">It is important that absolute amounts must be positive or 0. And
+relative amounts must not result in a negative value. Otherwise an
+Error will be returned and the money of this player will not be
+changed.</p>
+</td>
+</tr>
+<tr class="row-odd"><td>absolute</td>
+<td>will define if the chips value is an absolute or an relative value.
+Absolute vaules are less likely to produce errors. The default value
+is True, for an absolute interpretation.</td>
 </tr>
 </tbody>
 </table>
@@ -4564,7 +4639,7 @@ Informative messages</p>
     </div>
     <div class="footer">
         &copy; Copyright 2012, Pokermania.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

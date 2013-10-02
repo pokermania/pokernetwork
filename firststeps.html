@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
@@ -13,7 +15,7 @@
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    './',
+        URL_ROOT:    '',
         VERSION:     '2.2.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
@@ -297,7 +299,10 @@ more than 10 sec, you must send a <tt class="xref py py-class docutils literal">
 </div>
 <div class="section" id="what-is-sent-to-the-player-when-the-tournament-starts">
 <h4>What is sent to the player when the tournament starts ?<a class="headerlink" href="#what-is-sent-to-the-player-when-the-tournament-starts" title="Permalink to this headline">¶</a></h4>
-<p>#TODO</p>
+<div class="line-block">
+<div class="line"><a class="reference internal" href="packets.html#pokerpackets.networkpackets.PacketPokerTourneyStart" title="pokerpackets.networkpackets.PacketPokerTourneyStart"><tt class="xref py py-class docutils literal"><span class="pre">PACKET_POKER_TOURNEY_START</span></tt></a></div>
+</div>
+<p>This packet contains the table_serial, so use it to sit down, check the FAQ section <a class="reference internal" href="#sit"><em>How to sit at a cash game table?</em></a> for more information.</p>
 </div>
 <div class="section" id="what-should-the-client-expect-when-moved-to-another-table-during-a-tournament">
 <h4>What should the client expect when moved to another table during a tournament ?<a class="headerlink" href="#what-should-the-client-expect-when-moved-to-another-table-during-a-tournament" title="Permalink to this headline">¶</a></h4>
@@ -511,7 +516,7 @@ the player.)</td>
     </div>
     <div class="footer">
         &copy; Copyright 2012, Pokermania.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2b1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>
