@@ -251,7 +251,10 @@ What is sent to the tournament player that was busted out of a tournament (or is
 What is sent to the player when the tournament starts ? 
 -------------------------------------------------------
 
-#TODO
+| :class:`PACKET_POKER_TOURNEY_START <pokerpackets.networkpackets.PacketPokerTourneyStart>`
+
+This packet contains the table_serial, so use it to sit down, check the FAQ section :ref:`How to sit at a cash game table? <sit>` for more information.
+
 
 What should the client expect when moved to another table during a tournament ?
 -------------------------------------------------------------------------------
