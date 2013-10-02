@@ -2132,7 +2132,7 @@ class PokerService(service.Service):
                             ON t.serial = u2t.table_serial
                         INNER JOIN tourneys AS tourn
                             ON tourn.serial = t.tourney_serial
-                        WHERE u2t.user_serial = %s
+                        WHERE u2t.user_serial = %s AND tourn.state in ('registering', 'running')
                     """ + query_suffix,
                     serial
                 )
