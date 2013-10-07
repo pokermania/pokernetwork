@@ -71,6 +71,7 @@ from twisted.python import components
 from pokernetwork.util.sql import lex
 
 from pokerengine.pokertournament import *
+from pokerengine.pokergame import GAME_STATE_NULL
 from pokerengine.pokercards import PokerCards
 from pokerengine import pokerprizes
 
@@ -1854,6 +1855,8 @@ class PokerService(service.Service):
             avatars = self.avatar_collection.get(serial)
             if force:
                 table = self.getTourneyTable(tourney, serial)
+                # since the game will be destroyed shortly we can mess with the internal state
+                table.game.state = GAME_STATE_NULL
                 self.tourneyRemovePlayer(tourney, serial, now=True)
                 for avatar in avatars:
                     table.quitPlayer(avatar)
