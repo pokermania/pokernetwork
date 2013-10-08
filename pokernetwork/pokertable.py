@@ -346,6 +346,10 @@ class PokerTable:
                         if player in broke_players: player.money = 0
                         continue
                 player.money = new_chips
+                # just note, after an table move, the information is vanished.
+                # If we need to keep that info, we need change the palyer object and add this attribute
+                # or we reuse the old player object after an rebuy.
+                player.money_modified = True
 
                 sql = "UPDATE user2table SET money = %s WHERE user_serial = %s AND table_serial = %s"
                 params = (player.money, player.serial, game.id)
