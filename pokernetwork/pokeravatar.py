@@ -712,12 +712,13 @@ class PokerAvatar:
         elif packet.type == PACKET_POKER_TABLE_PICKER:
             self.performPacketPokerTablePicker(packet)
             return
+
         elif packet.type == PACKET_POKER_UPDATE_MONEY:
             if not self.user.hasPrivilege(User.ADMIN) and tourney.bailor_serial != serial:
                 self.log.error("User %d has no admin privileges to update money", (self.user.serial))
                 self.sendPacketVerbose(PacketError(
                     other_type = PACKET_POKER_UPDATE_MONEY,
-                    code = PacketPokerTourneyStart.NO_ADMIN,
+                    code = PacketPokerUpdateMoney.NO_ADMIN,
                     message = "User %d has no admin privileges to update money" % (self.user.serial)
                 ))
                 return
@@ -728,7 +729,7 @@ class PokerAvatar:
                 self.log.error("PACKET_POKER_UPDATE_MONEY: table %r does not exist", packet.game_id)
                 self.sendPacketVerbose(PacketError(
                     other_type = PACKET_POKER_UPDATE_MONEY,
-                    code = PacketPokerTourneyStart.NO_TABLE,
+                    code = PacketPokerUpdateMoney.NO_TABLE,
                     message = "table %r does not exist" % (packet.game_id)
                 ))
                 return
@@ -736,7 +737,7 @@ class PokerAvatar:
             if len(packet.serials) != len(packet.chips):
                 self.sendPacketVerbose(PacketError(
                     other_type = PACKET_POKER_UPDATE_MONEY,
-                    code = PacketPokerTourneyStart.SERIALS_MONEY_MISMATCH,
+                    code = PacketPokerUpdateMoney.SERIALS_MONEY_MISMATCH,
                     message = "unequal amount of serials and money"
                 ))
                 return
@@ -746,7 +747,7 @@ class PokerAvatar:
                 self.log.error("something went wrong while updating player money for game %d, %r", packet.game_id, player_money)
                 self.sendPacketVerbose(PacketError(
                     other_type = PACKET_POKER_UPDATE_MONEY,
-                    code = PacketPokerTourneyStart.OTHER_ERROR,
+                    code = PacketPokerUpdateMoney.OTHER_ERROR,
                     message = "table %r does not exist" % (packet.game_id)
                 ))
             self.sendPacketVerbose(PacketAck())
