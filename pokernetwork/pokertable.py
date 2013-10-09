@@ -311,10 +311,12 @@ class PokerTable:
             loop_counter = 0
             while not game.isEndOrNull():
                 loop_counter += 1
-                if loop_counter > len(game.serial2player): 
+                if loop_counter > len(game.serial2player):
                     self.log.error("updatePlayersMoney: Infinity Loop, game could not be ended")
                     return False
                 game.fold(game.getSerialInPosition())
+            # update table so history wont mess with things after this
+            self.update()
 
         cursor = self.factory.db.cursor()
         try:
