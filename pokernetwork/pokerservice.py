@@ -1951,6 +1951,10 @@ class PokerService(service.Service):
             if tourney.state == TOURNAMENT_STATE_RUNNING and now > tourney._kickme_after:
                 self.log.inform("cancelInactiveTourneys: force cancel tourney %s", tourney.serial)
                 tourney.changeState(TOURNAMENT_STATE_CANCELED, force=True)
+                # destroy tourney tables
+                for table in self.tables.values():
+                    if table.tourney is tourney:
+                        table.destroy()
 
         self.timer['cancel_inactive_tourneys'] = reactor.callLater(INACTIVE_TOURNEY_CANCEL_POLL_DEALAY, self.cancelInactiveTourneys)
 
