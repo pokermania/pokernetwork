@@ -204,6 +204,9 @@ class MockService(PokerService):
     @wrap_with_db
     def tourneyNewState(self, tourney, old_state, new_state):
         return PokerService.tourneyNewState(self, tourney, old_state, new_state)
+
+    def tourneyLogRemoveInactive(self, tourney, serials):
+        pass
     
     def tourneyRegister(self, packet, via_satellite=False):
         serial = packet.serial
