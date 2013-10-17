@@ -1,0 +1,1 @@
+ALTER TABLE `pokernetwork`.`tourneys` ADD COLUMN `removed_inactive_count` INT(11) NOT NULL DEFAULT '0'  AFTER `rebuy_count` ;

@@ -893,6 +893,7 @@ class PokerService(service.Service):
         tourney.callback_rebuy_payment = self.tourneyRebuyPayment
         tourney.callback_rebuy = self.tourneyRebuy
         tourney.callback_user_action = self.tourneyIndicateUserAction
+        tourney.callback_log_remove_inactive = self.tourneyLogRemoveInactive
         if schedule_serial not in self.schedule2tourneys:
             self.schedule2tourneys[schedule_serial] = []
         self.schedule2tourneys[schedule_serial].append(tourney)
@@ -1939,6 +1940,11 @@ class PokerService(service.Service):
                 
         else:
             table.update()
+
+    def tourneyLogRemoveInactive(self, tournament, serials):
+        with closing(self.db.cursor()) as c:
+            c.execute("UPDATE tourneys SET removed_inactive_count = removed_inactive_count + %(num_serials)s WHERE serial = %(tourney_serial)s",
+                { "tourney_serial": tournament.serial, "num_serials": len(serials)})
     
     def tourneyIndicateUserAction(self, tournament, serial):
         if not self.isTemporaryUser(serial):
