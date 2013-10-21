@@ -2099,13 +2099,16 @@ class PokerService(service.Service):
                1. If query_string is 'my', then all tables that player identified
                   by the argument, 'serial', has joined are returned.
 
-               2. If the query_string starts with "filter" there are a few possible parameters
+               2. If query_string is 'mytourneys', then all tables that are spawned by tourneys
+                  and the player identified by the 'serial' has joined are returned.
+
+               3. If the query_string starts with "filter" there are a few possible parameters
                     "-f" show full tables (default, hide full tables)
                     "-m{min buy-in}" e.g. "-m100", it is important that no space is added between
                         the m and the value
                     "-M{max buy-in}" e.g. "-M1000", the capital M is used for the max buy-in
 
-               3. Otherwise it is assumed to be a specific table name, and only table(s)
+               4. Otherwise it is assumed to be a specific table name, and only table(s)
                   with the specific name exactly equal to the string are returned.
         """
         default_query =\
