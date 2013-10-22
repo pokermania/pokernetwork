@@ -29,6 +29,7 @@ Depends:
     python-simplejson,
     python-memcache,
     libjson-perl,
+    msgpack-python,
     dbconfig-common,
     mysql-client,
     apg,
