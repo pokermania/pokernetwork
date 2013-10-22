@@ -50,6 +50,7 @@ from twisted.python import log as twisted_log
 
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerservice import PokerRestTree, PokerService, IPokerFactory
+from pokernetwork.pokerpub import PubService
 from pokernetwork.pokersite import PokerSite
 from pokernetwork.pokermanhole import makeService as makeManholeService
 
@@ -150,6 +151,15 @@ def makeService(configuration):
         })
         manhole_service.name = 'manhole'
         manhole_service.setServiceParent(serviceCollection)
+
+    #
+    # Pub/Sub
+    #
+    pub_port = settings.headerGetInt("/server/listen/@pub")
+    if pub_port:
+        pub_service = internet.TCPServer(pub_port, PubService(poker_service))
+        pub_service.name = 'pub'
+        pub_service.setServiceParent(serviceCollection)
 
     return serviceCollection
 

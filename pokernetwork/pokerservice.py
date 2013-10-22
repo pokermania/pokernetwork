@@ -220,6 +220,9 @@ class PokerService(service.Service):
 
         self.timer_remove_player = {}
 
+        # pubsub
+        self.pub = None
+
     def setupLadder(self):
         with closing(self.db.cursor()) as c:
             c.execute("SHOW TABLES LIKE 'rank'")
@@ -1360,6 +1363,9 @@ class PokerService(service.Service):
             register_packet.serial = serial
             if not self.tourneyRegister(register_packet):
                 serial_failed.append(serial)
+            elif self.pub:
+                self.pub.publish('user.%d.create_tourney' % (serial,), {'name': tourney.name})
+
         if len(serial_failed) > 0:
             self.tourneyCancel(tourney)
             return PacketPokerError(
@@ -2140,7 +2146,7 @@ class PokerService(service.Service):
             elif query_string == 'mytourneys':
                 c.execute(
                     """ SELECT
-                            t.serial, t.resthost_serial, tourn.seats_per_game as seats, t.average_pot, t.hands_per_hour, t.percent_flop,
+                            t.serial, t.resthost_serial, tourn.seats_per_game as seats, tourn.name as name, t.average_pot, t.hands_per_hour, t.percent_flop,
                             t.players, t.observers, t.waiting, tourn.player_timeout, 0 AS muck_timeout, tourn.currency_serial,
                             tourn.name, tourn.variant, tourn.betting_structure, tourn.skin, t.tourney_serial
                         FROM tables AS t
