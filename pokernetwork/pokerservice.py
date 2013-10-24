@@ -1963,6 +1963,8 @@ class PokerService(service.Service):
             if tourney.state == TOURNAMENT_STATE_RUNNING and now > tourney._kickme_after:
                 self.log.inform("cancelInactiveTourneys: force cancel tourney %s", tourney.serial)
                 tourney.changeState(TOURNAMENT_STATE_CANCELED, force=True)
+                with closing(self.db.cursor()) as c:
+                    c.execute("UPDATE tourneys SET state = 'canceled' WHERE serial = %s", (tourney.serial,))
                 # destroy tourney tables
                 for table in self.tables.values():
                     if table.tourney is tourney:
