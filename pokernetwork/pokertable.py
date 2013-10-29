@@ -69,7 +69,7 @@ class PokerAvatarCollection:
     def remove(self, avatar):
         """remove an avatar from the collection"""
         serial = avatar.getSerial()
-        self.log.debug("remove %d %s", serial, avatar)
+        self.log.debug("remove %d %s", serial, avatar, refs=[('User', serial, int)])
         assert avatar in self.serial2avatars[serial], "expected %d avatar in %s" % (
             serial,
             str(self.serial2avatars[serial])
@@ -326,12 +326,12 @@ class PokerTable:
                 player = game.getPlayer(serial)
                 if not player:
                     error = True
-                    self.log.error("updatePlayersMoney: player %d does not exist", serial)
+                    self.log.error("updatePlayersMoney: player %d does not exist", serial, refs=[('User', serial, int)])
                     continue
                 if absolute_values or player in broke_players:
                     if chips < 0:
                         error = True
-                        self.log.error("updatePlayersMoney: player %d cannot get a negative amount of chips (%d)", serial, chips)
+                        self.log.error("updatePlayersMoney: player %d cannot get a negative amount of chips (%d)", serial, chips, refs=[('User', serial, int)])
                         # eleminate the discrepance of player.money and the database value again
                         if player in broke_players: player.money = 0
                         continue
@@ -342,7 +342,7 @@ class PokerTable:
                         error = True
                         self.log.error(
                             "updatePlayersMoney: player %d cannot get a negative amount of new_chips (%d), old_chips (%d), relative (%d)",
-                            serial, new_chips, player.money, chips
+                            serial, new_chips, player.money, chips, refs=[('User', serial, int)]
                         )
                         # eleminate the discrepance of player.money and the database value again
                         if player in broke_players: player.money = 0
@@ -389,7 +389,7 @@ class PokerTable:
 
         self.rebuy_stack = []
         for player in self.game.playersAll():
-            self.log.debug("player %r, auto_refill %r, auto_rebuy %r" % (player.serial, player.auto_refill, player.auto_rebuy))
+            self.log.debug("player %r, auto_refill %r, auto_rebuy %r", player.serial, player.auto_refill, player.auto_rebuy, refs=[('User', player, lambda p: p.serial)])
             if self.game.isBroke(player.serial) and player.auto_rebuy != PacketSetOption.OFF:
                 self.rebuyPlayerRequestNow(player.serial, self._getPrefferedRebuyAmount(player.auto_rebuy))
             if player.auto_refill != PacketSetOption.OFF:
@@ -645,11 +645,6 @@ class PokerTable:
                 }
             elif event_type in ('round', 'position', 'showdown', 'finish'):
                 self.game_delay["delay"] += float(self.delays[event_type])
-                self.log.debug("delayedActions: game estimated duration is now %s "
-                    "and is running since %.02f seconds",
-                    self.game_delay["delay"],
-                    seconds() - self.game_delay["start"],
-                )
             elif event_type == "leave":
                 quitters = event[1]
                 for serial, _seat in quitters:
@@ -698,10 +693,7 @@ class PokerTable:
             for player in self.game.playersAll():
                 if player.getUserData()['ready'] == False:
                     for avatar in self.avatar_collection.get(player.serial):
-                        self.log.inform(
-                            "Player %d missed timeframe for PokerReadyToPlay",
-                            player.serial
-                        )
+                        self.log.inform("Player %d missed timeframe for PokerReadyToPlay", player.serial, refs=[('User', player, lambda p: p.serial)])
         
         if self.shouldAutoDeal():
             self.beginTurn()
@@ -994,7 +986,8 @@ class PokerTable:
         if not self.game.removePlayer(serial):
             self.log.warn("kickPlayer did not succeed in removing player %d from game %d",
                 serial,
-                self.game.id
+                self.game.id,
+                refs=[('User', serial, int)]
             )
             return
 
@@ -1051,7 +1044,7 @@ class PokerTable:
                 else:
                     self.update()
             else:
-                self.log.warn("cannot leave a closed table")
+                self.log.warn("cannot leave a closed table", refs=[('User', serial, int)])
                 avatar.sendPacketVerbose(PacketPokerError(
                     game_id = self.game.id,
                     serial = serial,
@@ -1089,7 +1082,7 @@ class PokerTable:
 
         money_check = self.factory.movePlayer(serial, self.game.id, to_game_id)
         if money_check != old_player.money:
-            self.log.warn("movePlayer: player %d money %d in database, %d in memory", serial, money_check, old_player.money)
+            self.log.warn("movePlayer: player %d money %d in database, %d in memory", serial, money_check, old_player.money, refs=[('User', serial, int)])
 
         for avatar in avatars:
             avatar.join(other_table, reason=reason)
@@ -1097,7 +1090,7 @@ class PokerTable:
         other_table.sendNewPlayerInformation(serial)
         if not other_table.update_recursion:
             other_table.scheduleAutoDeal()
-        self.log.debug("player %d moved from table %d to table %d", serial, self.game.id, to_game_id)
+        self.log.debug("player %d moved from table %d to table %d", serial, self.game.id, to_game_id, refs=[('User', serial, int)])
 
     def sendNewPlayerInformation(self, serial):
         packets = self.newPlayerInformation(serial)
@@ -1204,7 +1197,7 @@ class PokerTable:
         # Next, test to see if we have reached the server-wide maximum for
         # seated/observing players.
         if not self.game.isSeated(avatar.getSerial()) and self.factory.joinedCountReachedMax():
-            self.log.warn("joinPlayer: %d cannot join game %d because the server is full", serial, self.game.id)
+            self.log.warn("joinPlayer: %d cannot join game %d because the server is full", serial, self.game.id, refs=[('User', serial, int)])
             avatar.sendPacketVerbose(PacketPokerError(
                 game_id = self.game.id,
                 serial = serial,
@@ -1217,7 +1210,7 @@ class PokerTable:
         # Next, test to see if joining this table will cause the avatar to
         # exceed the maximum permitted by the server.
         if len(avatar.tables) >= self.factory.simultaneous:
-            self.log.inform("joinPlayer: %d seated at %d tables (max %d)" % (serial, len(avatar.tables), self.factory.simultaneous))
+            self.log.inform("joinPlayer: %d seated at %d tables (max %d)", serial, len(avatar.tables), self.factory.simultaneous, refs=[('User', serial, int)])
             return False
 
         #
@@ -1385,20 +1378,20 @@ class PokerTable:
 
     def buyInPlayer(self, avatar, amount):
         if not self.isSeated(avatar):
-            self.log.warn("player %d can't bring money to a table before getting a seat", avatar.getSerial())
+            self.log.warn("player %d can't bring money to a table before getting a seat", avatar.getSerial(), refs=[('User', avatar, lambda a: a.getSerial())])
             return False
 
         if avatar.getSerial() in self.game.serialsPlaying():
-            self.log.warn("player %d can't bring money while participating in a hand", avatar.getSerial())
+            self.log.warn("player %d can't bring money while participating in a hand", avatar.getSerial(), refs=[('User', avatar, lambda a: a.getSerial())])
             return False
 
         if self.transient:
-            self.log.warn("player %d can't bring money to a transient table", avatar.getSerial())
+            self.log.warn("player %d can't bring money to a transient table", avatar.getSerial(), refs=[('User', avatar, lambda a: a.getSerial())])
             return False
 
         player = self.game.getPlayer(avatar.getSerial())
         if player and player.isBuyInPayed():
-            self.log.warn("player %d already payed the buy-in", avatar.getSerial())
+            self.log.warn("player %d already payed the buy-in", avatar.getSerial(), refs=[('User', avatar, lambda a: a.getSerial())])
             return False
 
         amount = self.factory.buyInPlayer(avatar.getSerial(), self.game.id, self.currency_serial, max(amount, self.game.buyIn()))
@@ -1435,12 +1428,12 @@ class PokerTable:
 
     def _rebuyPlayerRequestNow(self, serial, amount):
         if serial not in self.game.serial2player:
-            self.log.warn("player %d can't rebuy to a table before getting a seat", serial)
+            self.log.warn("player %d can't rebuy to a table before getting a seat", serial, refs=[('User', serial, int)])
             return False
 
         player = self.game.getPlayer(serial)
         if not player.isBuyInPayed():
-            self.log.warn("player %d can't rebuy before paying the buy in", serial)
+            self.log.warn("player %d can't rebuy before paying the buy in", serial, refs=[('User', serial, int)])
             return False
 
         # after a rebuy, the money the user has has to be between buyIn and maxBuyIn
@@ -1455,11 +1448,11 @@ class PokerTable:
         amount = self.factory.buyInPlayer(serial, self.game.id, self.currency_serial, amount)
 
         if amount == 0:
-            self.log.warn("player %d is broke and cannot rebuy", serial)
+            self.log.warn("player %d is broke and cannot rebuy", serial, refs=[('User', serial, int)])
             return None
 
         if self.tourney:
-            self.log.error("player %d cannot use PacketPokerRebuy to rebuy during tourney", serial)
+            self.log.error("player %d cannot use PacketPokerRebuy to rebuy during tourney", serial, refs=[('User', serial, int)])
             return False
 
         if not self.game.rebuy(serial, amount):
@@ -1487,7 +1480,7 @@ class PokerTable:
             self.updatePlayerTimers()
 
     def playerTimeoutTimer(self, serial):
-        self.log.debug("player %d times out" % serial)
+        self.log.debug("player %d times out", serial, refs=[('User', serial, int)])
         if self.game.isRunning() and serial == self.game.getSerialInPosition():
             if self.isOpen():
                 self.game.sitOutNextTurn(serial)
