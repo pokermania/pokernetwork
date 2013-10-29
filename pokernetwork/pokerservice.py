@@ -2164,6 +2164,7 @@ class PokerService(service.Service):
                 params = query_string.split()
                 min_buy_in = max_buy_in = None
                 hide_full_tables = True
+                skin = "pm"
                 try:
                     for param in params[1:]:
                         if param.startswith("-m"):
@@ -2172,13 +2173,15 @@ class PokerService(service.Service):
                             max_buy_in = int(param[2:])
                         if param == "-f":
                             hide_full_tables = False
+                        if param.startswith("-s"):
+                            skin = param[2:]
                 except ValueError:
                     self.log.inform("Following listTables() query_string is malformed %r", query_string)
                     return []
 
                 sql_select = default_query
 
-                where_clauses = []
+                where_clauses = [' c.skin in (%(skin)s,"intl") ']
                 if hide_full_tables == True:
                     where_clauses.append(" t.players < c.seats")
 
@@ -2189,7 +2192,7 @@ class PokerService(service.Service):
 
                 sql_select += " WHERE %s" % " AND ".join(where_clauses)
                 sql_select += "\nGROUP BY c.name, t.players * RAND()"
-                c.execute(sql_select + query_suffix)
+                c.execute(sql_select + query_suffix, {"skin":skin})
 
             else:
                 c.execute( default_query + "WHERE name =  %s " + query_suffix, query_string )
