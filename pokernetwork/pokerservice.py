@@ -1609,7 +1609,7 @@ class PokerService(service.Service):
                         schedule["start_time"] += time_delta
                         schedule["register_time"] += time_delta
 
-                    if (schedule.register_time is not None and schedule.register_time >= parameters["min_time"] and schedule.register_time <= parameters["max_time"]):
+                    if (schedule["register_time"] is not None and schedule["register_time"] >= parameters["min_time"] and schedule["register_time"] <= parameters["max_time"]):
                         ret.append(schedule)
 
             # getTourneys (that are in registering/running/break/breakt wait, or ended x min ago)
@@ -1636,7 +1636,7 @@ class PokerService(service.Service):
                 'sng': sng_y,
                 'tourneys': sng_n,
                 'both': sng_both
-            }[job]
+            }[job] + " GROUP BY t.serial"
 
 
             self.log.warn(tourney_sql + sql%parameters)
