@@ -38,6 +38,7 @@ install:
     http://pypi.python.org/packages/source/S/SOAPpy/SOAPpy-0.12.5.tar.gz
     http://pypi.python.org/packages/source/p/python-cjson/python-cjson-1.0.5.tar.gz
     http://pypi.python.org/packages/source/p/pyOpenSSL/pyOpenSSL-0.13.tar.gz
+    https://pypi.python.org/packages/source/m/msgpack-python/msgpack-python-0.4.0.tar.gz
     git+git://github.com/pokermania/pokerdistutils.git#egg=poker-distutils
     git+git://github.com/pokermania/reflogging.git#egg=reflogging
     git+git://github.com/pokermania/pokerengine.git#egg=poker-engine
