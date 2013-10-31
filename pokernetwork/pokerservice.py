@@ -1364,7 +1364,14 @@ class PokerService(service.Service):
             if not self.tourneyRegister(register_packet):
                 serial_failed.append(serial)
             elif self.pub:
-                self.pub.publish('user.%d.create_tourney' % (serial,), {'name': tourney.name})
+                # ugly, i know22
+                def pub_create_tourney(serial, tourney):
+                    for game in tourney.games:
+                        if serial in game.serial2player:
+                            self.pub.publish('user.%d.create_tourney' % (serial,), {'name': tourney.name, 'table_id': game.id})
+                            break
+                            
+                reactor.callLater(1, pub_create_tourney, serial, tourney)
 
         if len(serial_failed) > 0:
             self.tourneyCancel(tourney)
