@@ -752,13 +752,12 @@ class PokerClientProtocol(UGAMEClientProtocol):
                 game.sitRequested(packet.serial)
             self.schedulePacket(PacketPokerSitRequest(game_id = packet.game_id, serial = packet.serial))
         elif packet.type == PACKET_QUIT:
-            self.ignoreIncomingData()
             self.abortAllTables()
 
         UGAMEClientProtocol.sendPacket(self, packet)
 
     def protocolEstablished(self):
-        self.setPingDelay(self.factory.ping_delay)
+        self.keepalive_set_interval(self.factory.ping_delay)
         poll_frequency = self.factory.settings.headerGet("/settings/@poll_frequency")
         if poll_frequency:
             self._poll_frequency = float(poll_frequency)

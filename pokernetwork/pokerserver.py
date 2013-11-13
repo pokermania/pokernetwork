@@ -51,6 +51,7 @@ from twisted.python import log as twisted_log
 from pokernetwork.pokernetworkconfig import Config
 from pokernetwork.pokerservice import PokerRestTree, PokerService, IPokerFactory
 from pokernetwork.pokerpub import PubService
+from pokernetwork.protocol import ServerMsgpackProtocol
 from pokernetwork.pokersite import PokerSite
 from pokernetwork.pokermanhole import makeService as makeManholeService
 
@@ -127,6 +128,15 @@ def makeService(configuration):
     tcp_ssl_port = settings.headerGetInt("/server/listen/@tcp_ssl")
     if HAS_OPENSSL and tcp_ssl_port:
         internet.SSLServer(tcp_ssl_port, poker_factory, SSLContextFactory(settings)).setServiceParent(serviceCollection)
+
+    #
+    # msgpack protocol
+    #
+    msgpack_port = settings.headerGetInt("/server/listen/@msgpack")
+    if msgpack_port:
+        msgpack_factory = IPokerFactory(poker_service)
+        msgpack_factory.setProtocol(ServerMsgpackProtocol)
+        internet.TCPServer(msgpack_port, msgpack_factory).setServiceParent(serviceCollection)
 
     #
     # HTTP (with or without SLL) that implements REST

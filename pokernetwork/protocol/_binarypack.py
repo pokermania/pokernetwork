@@ -1,59 +1,32 @@
 
-from twisted.internet import protocol, reactor, defer
+from pokernetwork.protocol import log as protocol_log
+log = protocol_log.get_child('binarypack')
 
-import struct
-from struct import Struct
-
-import simplejson
+from pokernetwork.protocol._base import BaseProtocol
 
 from pokerpackets import binarypack
 from pokerpackets.binarypack import _s_packet_head as s_packet_head
-from pokerpackets.packets import PacketPing
-
-from pokernetwork import log as network_log
-log = network_log.get_child('protocol')
 
 from pokernetwork import protocol_number
 from pokernetwork.version import Version
 protocol_version = Version(protocol_number)
 protocol_handshake = 'CGI %03d.%d%02d\n' % protocol_version.version
-from twisted.internet.error import ConnectionDone
 
-from reflogging import deprecated
-
-class UGAMEProtocol(protocol.Protocol):
+class UGAMEProtocol(BaseProtocol):
 
     log = log.get_child('UGAMEProtocol')
 
     def __init__(self):
-        self._data = b""
-        self.established = False
+        BaseProtocol.__init__(self)
 
+        self._data = b""
         self._out_buffer = [] # as long as not established outgoing packets are buffered
 
         self._cur_packet_length = None # None: not currently on any packet
-
         self._ignore_incoming = False
-
-        self._keepalive_timer = None
-        self._keepalive_delay = 25
-
-        self.d_established = defer.Deferred()
-        self.d_connection_lost = defer.Deferred()
-
-    def setPingDelay(self, delay):
-        self._keepalive_delay = delay
 
     def connectionMade(self):
         self._sendVersion()
-
-    def connectionLost(self, reason):
-        if not reason.check(ConnectionDone):
-            self.log.inform("connection was closed uncleanly. failure: %s", reason.getErrorMessage())
-        self.established = False
-        self._keepalive_uninit()
-        deferred, self.d_connection_lost = self.d_connection_lost, defer.Deferred()
-        deferred.callback(self)
 
     def dataReceived(self, data):
         if self._ignore_incoming:
@@ -91,12 +64,13 @@ class UGAMEProtocol(protocol.Protocol):
             # not enough data for handshake
             else: break
 
-    def dataWrite(self, data):
-        self._keepalive_reset()
+    def dataWrite(self, data, reset_keepalive=True):
+        if reset_keepalive:
+            self._keepalive_reset()
         self.transport.write(data)
 
     def _sendVersion(self):
-        self.transport.write(protocol_handshake)
+        self.dataWrite(protocol_handshake)
 
     def _checkVersion(self, string):
         if string == protocol_handshake:
@@ -105,8 +79,7 @@ class UGAMEProtocol(protocol.Protocol):
             self._protocolInvalid(protocol_handshake, string)
 
     def _protocolEstablished(self):
-        self.established = True
-        self._keepalive_init()
+        BaseProtocol.connectionMade(self)
         out_buffer, self._out_buffer = self._out_buffer, []
         self.sendPackets(out_buffer)
         self.protocolEstablished()
@@ -121,42 +94,17 @@ class UGAMEProtocol(protocol.Protocol):
     def protocolInvalid(self, local, remote):
         pass
 
-    def sendPackets(self, packets):
+    def sendPackets(self, packets, reset_keepalive=True):
         if self.established:
             self.dataWrite(''.join([binarypack.pack(packet) for packet in packets]))
         else:
             self._out_buffer.extend(packets)
 
-    def sendPacket(self, packet):
+    def sendPacket(self, packet, reset_keepalive=True):
         if self.established:
-            self.dataWrite(binarypack.pack(packet))
+            self.dataWrite(binarypack.pack(packet), reset_keepalive)
         else:
             self._out_buffer.append(packet)
 
     def packetReceived(self, packet):
         raise NotImplementedError('packetReceived has to be implemented by sub protocol (eg. client or server)')
-
-    def ignoreIncomingData(self):
-        self._ignore_incoming = True
-        self._data = b""
-
-    def _keepalive_init(self):
-        self._keepalive_timer = reactor.callLater(self._keepalive_delay, self._keepalive)
-
-    def _keepalive_uninit(self):
-        if self._keepalive_timer:
-            if self._keepalive_timer.active():
-                self._keepalive_timer.cancel()
-            self._keepalive_timer = None
-
-    def _keepalive_reset(self):
-        if self._keepalive_timer:
-            if self._keepalive_timer.active():
-                self._keepalive_timer.reset(self._keepalive_delay)
-            else:
-                self._keepalive_init()
-
-    def _keepalive(self):
-        self.sendPacket(PacketPing())
-
-

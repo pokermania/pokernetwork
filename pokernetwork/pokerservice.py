@@ -141,6 +141,9 @@ class PokerFactoryFromPokerService(protocol.ServerFactory):
         """ """
         return self.service.destroyAvatar(avatar)
 
+    def setProtocol(self, protocol):
+        self.protocol = protocol
+
 components.registerAdapter(PokerFactoryFromPokerService, IPokerService, IPokerFactory)
 
 class PokerService(service.Service):

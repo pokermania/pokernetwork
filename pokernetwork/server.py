@@ -42,7 +42,6 @@ class PokerServerProtocol(UGAMEProtocol):
     def __init__(self):
         self.avatar = None
         UGAMEProtocol.__init__(self)
-        self._keepalive_delay = 10
 
     def packetReceived(self, packet):
         try:
@@ -53,13 +52,11 @@ class PokerServerProtocol(UGAMEProtocol):
             self.transport.loseConnection()
 
     def protocolEstablished(self):
-        self.transport.setTcpKeepAlive(True)
-        self._keepalive_delay = self.factory.service._keepalive_delay
         self.avatar = self.factory.createAvatar()
         self.avatar.setProtocol(self)
 
     def connectionLost(self, reason):
         if self.avatar:
             self.factory.destroyAvatar(self.avatar)
-        self.avatar = None
+            self.avatar = None
         UGAMEProtocol.connectionLost(self, reason)
