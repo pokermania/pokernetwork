@@ -155,10 +155,9 @@ class PokerService(service.Service):
     log = log.get_child('PokerService')
     
     def __init__(self, settings):
-        if type(settings) is StringType:
+        if isinstance(settings, basestring):
             settings_object = pokernetworkconfig.Config(['.'])
-            settings_object.doc = libxml2.parseMemory(settings, len(settings))
-            settings_object.header = settings_object.doc.xpathNewContext()
+            settings_object.loadFromString(settings)
             settings = settings_object
         self.settings = settings
         
