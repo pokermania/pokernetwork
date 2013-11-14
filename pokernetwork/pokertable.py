@@ -1442,13 +1442,13 @@ class PokerTable:
         amount = min(max(amount, minimum), maximum)
         
         if maximum <= 0:
-            self.log.warn("player %d can't bring more money to the table", serial, refs=[('User', serial, int)])
+            self.log.inform("player %d can't bring more money to the table", serial, refs=[('User', serial, int)])
             return False
         
         amount = self.factory.buyInPlayer(serial, self.game.id, self.currency_serial, amount)
 
         if amount == 0:
-            self.log.warn("player %d is broke and cannot rebuy", serial, refs=[('User', serial, int)])
+            self.log.inform("player %d is broke and cannot rebuy", serial, refs=[('User', serial, int)])
             return None
 
         if self.tourney:
