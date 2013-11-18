@@ -169,11 +169,12 @@ class PokerDatabase:
                 self.log.inform("apply '%s'", f)
                 if not dry_run:
                     fd = open(f)
-                    proc = subprocess.Popen(self.mysql_command.split() + [
-                        '-h', parameters['host'],
-                        '-u', parameters['user'],
-                        '-p'+parameters['password']
-                    ], stdin=fd, stderr=subprocess.PIPE)
+                    cmd = self.mysql_command.split()
+                    cmd += ['-h', parameters['host']]
+                    cmd += ['-u', parameters['user']]
+                    if parameters.get('password'):
+                        cmd += ['-p' + parameters['password']]
+                    proc = subprocess.Popen(cmd, stdin=fd, stderr=subprocess.PIPE)
                     if proc.wait():
                         raise ExceptionUpgradeFailed, "upgrade failed"
             self.log.inform("upgraded database to version %s", version)
