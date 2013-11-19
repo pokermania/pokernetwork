@@ -27,7 +27,8 @@ setup(
     version='2.3.0',
     packages=[
         'pokernetwork',
-        'pokernetwork.util'
+        'pokernetwork.util',
+        'pokernetwork.protocol',
     ],
     package_data={'pokernetwork': ['../twisted/plugins/*.py']},
     data_files=[
