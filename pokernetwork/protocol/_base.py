@@ -36,8 +36,7 @@ class BaseProtocol(Protocol):
             self._keepalive_start()
 
     def _keepalive_start(self):
-        self._keepalive_stop()
-        self.__lc_keepalive.start(self.__keepalive_interval, False)
+        self._keepalive_reset()
 
     def _keepalive_stop(self):
         if self.__lc_keepalive.running:
@@ -45,7 +44,8 @@ class BaseProtocol(Protocol):
 
     def _keepalive_reset(self):
         if self.__lc_keepalive.running:
-            self.__lc_keepalive.reset()
+            self.__lc_keepalive.stop()
+            self.__lc_keepalive.start(self.__keepalive_interval, False)
 
     def _keepalive(self):
         self.sendPacket(PacketPing(), False)
