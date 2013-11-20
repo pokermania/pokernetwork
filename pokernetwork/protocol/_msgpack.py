@@ -20,7 +20,7 @@ class MsgpackProtocol(BaseProtocol):
 
         self._numeric_type = True
         self._unpacker = _msgpack.Unpacker()
-        self._packer = _msgpack.Packer(autoreset=False)
+        self._packer = _msgpack.Packer()
 
     def dataReceived(self, data):
         self._unpacker.feed(data)
@@ -38,20 +38,19 @@ class MsgpackProtocol(BaseProtocol):
             self._keepalive_reset()
         self.transport.write(data)
 
-    def sendPackets(self, packets):
+    def _pack_packets(self, packets):
         for packet in packets:
             p_dict = packet2dict(packet, self._numeric_type)
             p_type = p_dict.pop('type')
-            self._packer.pack([p_type, p_dict])
-        self.dataWrite(self._packer.bytes())
-        self._packer.reset()
+            yield self._packer.pack([p_type, p_dict])
+
+    def sendPackets(self, packets):
+        self.dataWrite("".join(self._pack_packets(packets)))
 
     def sendPacket(self, packet, reset_keepalive=True):
         p_dict = packet2dict(packet, self._numeric_type)
         p_type = p_dict.pop('type')
-        self._packer.pack([p_type, p_dict])
-        self.dataWrite(self._packer.bytes(), reset_keepalive)
-        self._packer.reset()
+        self.dataWrite(self._packer.pack([p_type, p_dict]), reset_keepalive)
 
 
 class ServerMsgpackProtocol(MsgpackProtocol):
