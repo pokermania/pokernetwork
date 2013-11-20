@@ -40,12 +40,11 @@ try:
     from OpenSSL import SSL ; del SSL # just imported to check for SSL
     from pokernetwork.pokerservice import SSLContextFactory
     HAS_OPENSSL=True
-except Exception:
+except ImportError:
     log.inform("OpenSSL not available.")
     HAS_OPENSSL=False
 
 from twisted.application import internet, service, app
-from twisted.web import server
 from twisted.python import log as twisted_log
 
 from pokernetwork.pokernetworkconfig import Config

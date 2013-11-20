@@ -23,16 +23,12 @@
 #  Henry Precheur <henry@precheur.org> (2004)
 #
 #
-from twisted.internet import reactor, protocol, defer
 
 from pokernetwork import log as network_log
 log = network_log.get_child('server')
 
 from pokernetwork.protocol import UGAMEProtocol
-from pokerpackets.packets import PacketError
 from pokernetwork.util.trace import format_exc
-
-from reflogging import deprecated
 
 class PokerServerProtocol(UGAMEProtocol):
     """UGAMEServerProtocol"""

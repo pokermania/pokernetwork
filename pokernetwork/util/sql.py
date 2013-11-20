@@ -31,9 +31,8 @@ class TimingDictCursor(DictCursor):
 def lex(a, __cache={}):
     try:
         return __cache[a]
-    except:
+    except KeyError:
         i = 0
-        escaped = False
         quoted = None # should be None, single or double
         x = a
         try:

@@ -32,7 +32,6 @@ from os.path import exists
 import re
 import locale
 import gettext
-import libxml2
 
 from contextlib import closing
 
@@ -47,7 +46,7 @@ log = network_log.get_child('pokerservice')
 
 from twisted.application import service
 from twisted.internet import protocol, reactor, defer
-from lockcheck import LockChecks
+from pokernetwork.lockcheck import LockChecks
 from twisted.python.runtime import seconds
 from twisted.web import client
 
@@ -55,9 +54,9 @@ from twisted.web import client
 client.HTTPClientFactory.noisy = False
 
 try:
-    from OpenSSL import SSL
+    from OpenSSL import SSL ; del SSL
     HAS_OPENSSL=True
-except :
+except ImportError:
     log.inform("OpenSSL not available.")
     HAS_OPENSSL=False
 
@@ -75,7 +74,6 @@ from pokerengine.pokergame import GAME_STATE_NULL
 from pokerengine.pokercards import PokerCards
 from pokerengine import pokerprizes
 
-from pokernetwork.protocol import UGAMEProtocol
 from pokernetwork.server import PokerServerProtocol
 from pokernetwork.user import checkName, checkPassword
 from pokernetwork.pokerdatabase import PokerDatabase

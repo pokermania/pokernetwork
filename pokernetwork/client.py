@@ -21,7 +21,7 @@
 #  Loic Dachary <loic@dachary.org>
 #
 # 
-from twisted.internet import reactor, protocol, error, defer
+from twisted.internet import protocol, defer
 
 from pokerpackets.packets import *
 from pokernetwork.protocol import UGAMEProtocol

@@ -33,7 +33,6 @@ from twisted.python.runtime import seconds
 
 from pokerengine.pokergame import PokerGameServer
 from pokerengine import pokergame, pokertournament
-from pokerengine.pokercards import PokerCards
 
 from pokerpackets.packets import *
 from pokerpackets.networkpackets import *
