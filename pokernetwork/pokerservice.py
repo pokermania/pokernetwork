@@ -866,7 +866,7 @@ class PokerService(service.Service):
             if schedule['respawn'] == 'n':
                 c.execute("UPDATE tourneys_schedule SET active = 'n' WHERE serial = %s", (int(schedule['serial']),))
             c.execute("REPLACE INTO route VALUES (0,%s,%s,%s)", ( tourney_serial, int(seconds()), self.resthost_serial))
-            self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'], currency_serial, prize_currency)
+            return self.spawnTourneyInCore(schedule, tourney_serial, schedule['serial'], currency_serial, prize_currency)
 
     def spawnTourneyInCore(self, tourney_map, tourney_serial, schedule_serial, currency_serial, prize_currency):
         tourney_map['start_time'] = int(tourney_map['start_time'])
@@ -1328,40 +1328,46 @@ class PokerService(service.Service):
         return True
 
     def tourneyCreate(self, packet):
-        with closing(self.db.cursor()) as c:
-            sql = \
-                "INSERT INTO tourneys_schedule " \
-                "(resthost_serial, name, description_short, description_long, players_quota, variant, betting_structure, skin, seats_per_game, player_timeout, currency_serial, prize_currency, prize_min, bailor_serial, buy_in, rake, sit_n_go, start_time,breaks_duration, breaks_first, breaks_interval)" \
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            params = (
-                self.resthost_serial,
-                packet.name,
-                packet.description_short,
-                packet.description_long,
-                packet.players_quota if packet.players_quota > len(packet.players) else len(packet.players),
-                packet.variant,
-                packet.betting_structure,
-                packet.skin,
-                packet.seats_per_game,
-                packet.player_timeout,
-                packet.currency_serial,
-                packet.prize_currency,
-                packet.prize_min,
-                packet.bailor_serial,
-                packet.buy_in,
-                packet.rake,
-                packet.sit_n_go,
-                packet.start_time,
-                packet.breaks_duration,
-                packet.breaks_first,
-                packet.breaks_interval,
-            )
-            c.execute(sql,params)
-            schedule_serial = c.lastrowid
-        self.updateTourneysSchedule()
         #
-        # There can be only one tourney for this tourney_schedule because they are not respawning 
-        tourney = self.schedule2tourneys[schedule_serial][0]
+        # I am using 'schedule' for the variable name of the tourney description to make it easier
+        # to find and update this place when the structure of a tourney_schedule is changed in the
+        # future.
+        schedule = {
+            'resthost_serial': self.resthost_serial,
+            'serial': packet.schedule_serial, # this is infact the schedule serial
+            'name': packet.name,
+            'description_short': packet.description_short,
+            'description_long': packet.description_long,
+            'players_quota': packet.players_quota if packet.players_quota > len(packet.players) else len(packet.players),
+            'players_min': 2,
+            'variant': packet.variant,
+            'betting_structure': packet.betting_structure,
+            'skin': packet.skin,
+            'seats_per_game': packet.seats_per_game,
+            'player_timeout': packet.player_timeout,
+            'currency_serial': packet.currency_serial,
+            'prize_currency': packet.prize_currency,
+            'prize_min': packet.prize_min,
+            'bailor_serial': packet.bailor_serial,
+            'buy_in': packet.buy_in,
+            'rake': packet.rake,
+            'sit_n_go': packet.sit_n_go,
+            'breaks_first': packet.breaks_first,
+            'breaks_interval': packet.breaks_interval,
+            'breaks_duration': packet.breaks_duration,
+            'rebuy_delay': 0,
+            'add_on': 0,
+            'add_on_delay': 0,
+            'inactive_delay': 0,
+            'start_time': seconds(),
+            'via_satellite': 0,
+            'satellite_of': 0,
+            'satellite_player_count': 0,
+            'currency_serial_from_date_format': "",
+            'prize_currency_from_date_format': "",
+            'respawn': "", # the tourney schedule row should not be updated, it might be possible that it doesn't even exist 
+        }
+        tourney = self.spawnTourney(schedule)
         register_packet = PacketPokerTourneyRegister(tourney_serial = tourney.serial)
         serial_failed = []
         for serial in packet.players:
@@ -1381,7 +1387,7 @@ class PokerService(service.Service):
         if len(serial_failed) > 0:
             self.tourneyCancel(tourney)
             return PacketPokerError(
-                game_id = schedule_serial,
+                game_id = packet.schedule_serial,
                 serial = tourney.serial,
                 other_type = PACKET_POKER_CREATE_TOURNEY,
                 code = PacketPokerCreateTourney.REGISTRATION_FAILED,
