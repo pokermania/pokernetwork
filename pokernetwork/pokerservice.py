@@ -1357,7 +1357,7 @@ class PokerService(service.Service):
             'add_on': 0,
             'add_on_delay': 0,
             'inactive_delay': 0,
-            'start_time': seconds(),
+            'start_time': int(seconds()),
             'via_satellite': 0,
             'satellite_of': 0,
             'satellite_player_count': 0,
@@ -1366,6 +1366,7 @@ class PokerService(service.Service):
             'respawn': "", # the tourney schedule row should not be updated, it might be possible that it doesn't even exist 
         }
         tourney = self.spawnTourney(schedule)
+        tourney.updateRunning()
         register_packet = PacketPokerTourneyRegister(tourney_serial = tourney.serial)
         serial_failed = []
         for serial in packet.players:
