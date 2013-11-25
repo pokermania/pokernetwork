@@ -212,7 +212,6 @@ class PokerAuthTestCase(unittest.TestCase):
         settings = pokernetworkconfig.Config([])
         settings.loadFromString(settings_alternate_xml)
         auth = pokerauth.get_auth_instance(db, None, settings)
-        self.assertTrue(auth.gotcha)
 
     def checkIfUserExistsInDB(self, name, selectString = "SELECT serial from users where name = '%s'"):
         cursor = self.db.cursor()
