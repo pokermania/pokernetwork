@@ -2861,7 +2861,7 @@ class SetAccountTestCase(PokerServiceTestCaseBase):
         ))
         self.assertEquals(PACKET_POKER_PERSONAL_INFO, info.type)
         self.assertEquals(affiliate, info.affiliate)
-        other_info = binarypack.unpack(binarypack.pack(info))[1]
+        other_info = binarypack.unpack(binarypack.pack(info))
         self.assertEquals('1980-01-01', other_info.birthdate)
 
     def test_update_ok(self):
