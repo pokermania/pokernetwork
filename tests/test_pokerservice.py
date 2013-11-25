@@ -1885,7 +1885,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
         self.failUnless(log_history.search('tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = %d AND currency_serial = 1 AND amount >= 300000' % self.user1_serial), "UPDATE user2money notice not found in verbose output")
         self.failUnless(log_history.search('tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (%d, 1, 1)' % self.user1_serial), "INSERT INTO user2tourney notice not found in verbose output")
         log_history.reset()
-        self.assertEquals(len(client1.packets), 1)
+        self.assertEquals(len(client1.packets), 2)
         self.assertEquals(client1.packets[0].type, PACKET_POKER_TOURNEY_REGISTER)
         self.assertEquals(client1.packets[0].serial, self.user1_serial)
         self.assertEquals(client1.packets[0].tourney_serial, heads_up.serial)
@@ -2440,7 +2440,7 @@ class TourneyManagerTestCase(PokerServiceTestCaseBase):
         self.service.tourneyRegister(PacketPokerTourneyRegister(serial = self.user1_serial, tourney_serial = tourney_serial))
         self.failUnless(log_history.search('tourneyRegister: UPDATE user2money SET amount = amount - 300000 WHERE user_serial = 4 AND currency_serial = 1 AND amount >= 300000'), "UPDATE user2money expected verbose output not found")
         self.failUnless(log_history.search('tourneyRegister: INSERT INTO user2tourney (user_serial, currency_serial, tourney_serial) VALUES (4, 1, 1)'), "INSERT INTO user2tourney")
-        self.assertEquals(len(client1.packets), 1)
+        self.assertEquals(len(client1.packets), 2)
         self.assertEquals(client1.packets[0].type, PACKET_POKER_TOURNEY_REGISTER)
         self.assertEquals(client1.packets[0].serial, self.user1_serial)
         self.assertEquals(client1.packets[0].tourney_serial, tourney_serial)
@@ -3224,7 +3224,7 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
         # The user is registered to satellite_of
         #
         self.assertEqual(True, self.service.tourneySatelliteSelectPlayer(tournament, self.user1_serial, rank), 'tourneySatelliteSelectPlayer')
-        self.assertEqual(1, len(client1.packets))
+        self.assertEqual(2, len(client1.packets))
         self.assertEqual(PACKET_POKER_TOURNEY_REGISTER, client1.packets[0].type)
         self.assertEqual([ self.user1_serial ], tournament.satellite_registrations, 'registrations')
 
