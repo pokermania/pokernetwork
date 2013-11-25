@@ -5,7 +5,7 @@ log = protocol_log.get_child('binarypack')
 from pokernetwork.protocol._base import BaseProtocol
 
 from pokerpackets import binarypack
-from pokerpackets.binarypack import _s_packet_head as s_packet_head
+from pokerpackets.binarypack import _S_PACKET_HEAD as s_packet_head
 
 from pokernetwork import protocol_number
 from pokernetwork.version import Version
