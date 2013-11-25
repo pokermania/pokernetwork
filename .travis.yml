@@ -43,6 +43,8 @@ install:
     git+git://github.com/pokermania/reflogging.git#egg=reflogging
     git+git://github.com/pokermania/pokerengine.git#egg=poker-engine
     git+git://github.com/pokermania/pokerpackets.git#egg=poker-packets
+    nose rednose
+    .
 
 # command to run tests, e.g. python setup.py test
 before_script:
@@ -56,4 +58,4 @@ before_script:
  - python setup.py configure -s pokerengine.paths.data=$(readlink -f ${VIRTUAL_ENV}/share/poker-engine)
  - python setup.py configure -s test.engine_path=$(readlink -f ${VIRTUAL_ENV}/share/poker-engine)
  - python setup.py build
-script: PYTHON_PATH=$(readlink -f .) python setup.py test
+script: for test in $(find tests -executable -name "test_*.py") ; do nosetests $test ; done
