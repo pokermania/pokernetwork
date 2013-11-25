@@ -5,7 +5,7 @@ log = protocol_log.get_child('binarypack')
 from pokernetwork.protocol._base import BaseProtocol
 
 from pokerpackets import binarypack
-from pokerpackets.binarypack import _S_PACKET_HEAD as s_packet_head
+from pokerpackets.binarypack._binarypack import S_PACKET_HEAD as s_packet_head
 
 from pokernetwork import protocol_number
 from pokernetwork.version import Version
@@ -49,7 +49,7 @@ class UGAMEProtocol(BaseProtocol):
 
                 # packet data
                 elif len(self._data) >= self._cur_packet_length:
-                    self.packetReceived(binarypack.unpack(self._data)[1])
+                    self.packetReceived(binarypack.unpack(self._data))
                     self._data = self._data[self._cur_packet_length:]
                     self._cur_packet_length = None
 
