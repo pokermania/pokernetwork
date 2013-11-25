@@ -3235,9 +3235,9 @@ class TourneySatelliteTestCase(PokerServiceTestCaseBase):
         # Another attempt to register the same user returns an error packet
         #
         self.assertEqual(True, self.service.tourneySatelliteSelectPlayer(tournament, self.user1_serial, rank), 'tourneySatelliteSelectPlayer')
-        self.assertEqual(2, len(client1.packets))
-        self.assertEqual(PACKET_ERROR, client1.packets[1].type)
-        self.assertEqual(PacketPokerTourneyRegister.ALREADY_REGISTERED, client1.packets[1].code)
+        self.assertEqual(3, len(client1.packets))
+        self.assertEqual(PACKET_ERROR, client1.packets[2].type)
+        self.assertEqual(PacketPokerTourneyRegister.ALREADY_REGISTERED, client1.packets[2].code)
 
         cursor.execute("SELECT * FROM user2tourney WHERE user_serial = %d and tourney_serial = %d" % ( self.user1_serial, tourney_serial ))
         self.assertEqual(1, cursor.rowcount, 'user %d registered' % self.user1_serial)
