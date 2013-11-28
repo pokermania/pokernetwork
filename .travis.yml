@@ -58,4 +58,4 @@ before_script:
  - python setup.py configure -s pokerengine.paths.data=$(readlink -f ${VIRTUAL_ENV}/share/poker-engine)
  - python setup.py configure -s test.engine_path=$(readlink -f ${VIRTUAL_ENV}/share/poker-engine)
  - python setup.py build
-script: for test in $(find tests -executable -name "test_*.py") ; do nosetests $test ; done
+script: for test in $(find tests -executable -name "test_*.py") ; do nosetests --rednose $test ; done
