@@ -4,7 +4,7 @@ log = protocol_log.get_child('msgpack')
 
 import pokerpackets.networkpackets
 from pokerpackets.packets import type_id2type, name2type
-from pokerpackets.dictpack import packet2dict
+from pokerpackets.dictpack import pack
 from pokernetwork.util.trace import format_exc
 
 import msgpack as _msgpack
@@ -40,7 +40,7 @@ class MsgpackProtocol(BaseProtocol):
 
     def _pack_packets(self, packets):
         for packet in packets:
-            p_dict = packet2dict(packet, self._numeric_type)
+            p_dict = pack(packet, self._numeric_type)
             p_type = p_dict.pop('type')
             yield self._packer.pack([p_type, p_dict])
 
@@ -48,7 +48,7 @@ class MsgpackProtocol(BaseProtocol):
         self.dataWrite("".join(self._pack_packets(packets)))
 
     def sendPacket(self, packet, reset_keepalive=True):
-        p_dict = packet2dict(packet, self._numeric_type)
+        p_dict = pack(packet, self._numeric_type)
         p_type = p_dict.pop('type')
         self.dataWrite(self._packer.pack([p_type, p_dict]), reset_keepalive)
 
