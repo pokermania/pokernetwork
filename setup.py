@@ -42,6 +42,7 @@ setup(
         ]),
         ('share/man/man5', ['database/pokerdatabase.5'])
     ],
-    cmdclass={'build': ExtendedBuild}
+    cmdclass={'build': ExtendedBuild},
+    requires=['simple-db-migrate']
 )
 
