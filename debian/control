@@ -35,7 +35,8 @@ Depends:
     apg,
     rsync,
     python-crypto,
-    python-reflogging
+    python-reflogging,
+    python-simple-db-migrate
 Conflicts:
     python-poker-additions (<= 2.2.3-7)
 Description: multiplayer poker server and client library
