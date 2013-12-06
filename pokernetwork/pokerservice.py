@@ -54,11 +54,10 @@ from twisted.web import client
 client.HTTPClientFactory.noisy = False
 
 try:
-    from OpenSSL import SSL ; del SSL
-    HAS_OPENSSL=True
+    __import__('OpenSSL.SSL')
+    HAS_OPENSSL = True
 except ImportError:
-    log.inform("OpenSSL not available.")
-    HAS_OPENSSL=False
+    HAS_OPENSSL = False
 
 from zope.interface import Interface
 from zope.interface import implements
