@@ -28,6 +28,18 @@ class TimingDictCursor(DictCursor):
 
         return ret
 
+def profile_enable(cursor):
+    cursor.execute("SET profiling=1")
+
+def profile_disable(cursor):
+    cursor.execute("SET profiling=1")
+
+def profile_log(log, cursor):
+    cursor.execute("SHOW PROFILE")
+    log.warn("slow query profile\n\t%s", "\n\t".join(
+        ["%-20s %.3fms" % (k+':', v*1000) for k, v in cursor.fetchall()]
+    ))
+
 def lex(a, __cache={}):
     try:
         return __cache[a]
