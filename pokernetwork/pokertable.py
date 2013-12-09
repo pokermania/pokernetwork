@@ -1455,7 +1455,7 @@ class PokerTable:
             return False
 
         if not self.game.rebuy(serial, amount):
-            self.log.warn("player %d rebuy denied", serial)
+            self.log.warn("player %d rebuy denied", serial, refs=[('User', serial, int)])
             return False
 
         return True
