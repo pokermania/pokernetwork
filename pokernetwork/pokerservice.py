@@ -1602,7 +1602,7 @@ class PokerService(service.Service):
                     t.register_time BETWEEN %(min_time)s AND %(max_time)s
                     GROUP BY t.serial ORDER BY register_time
                 """)
-                self.log.warn(schedule_sql + where_clause % parameters)
+                self.log.inform("tourneySelect: %s", schedule_sql + where_clause % parameters)
                 cursor.execute(schedule_sql + where_clause, parameters)
                 ret.extend(cursor.fetchall())
 
@@ -1615,7 +1615,7 @@ class PokerService(service.Service):
                     GROUP BY t.serial ORDER BY register_time 
                 """)
 
-                self.log.warn(schedule_sql + where_clause % parameters)
+                self.log.inform("tourneySelect: %s", schedule_sql + where_clause % parameters)
                 cursor.execute(schedule_sql + where_clause, parameters)
                 tourneys_schedules_respawn = cursor.fetchall()
 
@@ -1655,7 +1655,7 @@ class PokerService(service.Service):
             }[job] + " GROUP BY t.serial"
 
 
-            self.log.warn(tourney_sql + sql%parameters)
+            self.log.inform("tourneySelect: %s", tourney_sql + sql%parameters)
             cursor.execute(tourney_sql + sql, parameters)
             ret.extend(cursor.fetchall())
             ret = [e for e in ret if e['serial'] is not None]
