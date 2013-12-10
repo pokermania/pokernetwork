@@ -1322,12 +1322,18 @@ class PokerTable:
         return avatar.autoBlindAnte(self, avatar.getSerial(), auto)
 
     def autoRefill(self, serial, auto):
+        if serial not in self.game.serial2player:
+            self.log.warn("player %d can't set auto refill before getting a seat", serial, refs=[('User', serial, int)])
+            return False
         if auto not in (PacketSetOption.OFF, PacketSetOption.AUTO_REFILL_MIN, PacketSetOption.AUTO_REFILL_MAX, PacketSetOption.AUTO_REFILL_BEST):
             return False
         self.game.serial2player[serial].auto_refill = auto
         return True
 
     def autoRebuy(self, serial, auto):
+        if serial not in self.game.serial2player:
+            self.log.warn("player %d can't set auto rebuy before getting a seat", serial, refs=[('User', serial, int)])
+            return False
         if auto not in (PacketSetOption.OFF, PacketSetOption.AUTO_REBUY_MIN, PacketSetOption.AUTO_REBUY_MAX, PacketSetOption.AUTO_REBUY_BEST):
             return False
         self.game.serial2player[serial].auto_rebuy = auto
