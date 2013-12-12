@@ -821,8 +821,12 @@ class PokerTable:
         return status
 
     def readyToPlay(self, serial):
-        self.updatePlayerUserData(serial, 'ready', True)
-        return PacketAck()
+        # since we cannot change the readyToPlay packet to contain the hand serial
+        # we have guess if a ready to play is sent out of order. When the game is not 
+        # finished yet, could assume that this packet was send for the previous hand.
+        if self.game.isEndOrMuck():
+            self.updatePlayerUserData(serial, 'ready', True)
+            return PacketAck()
 
     def processingHand(self, serial):
         self.updatePlayerUserData(serial, 'ready', False)
