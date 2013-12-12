@@ -769,7 +769,9 @@ class PokerAvatar:
 
             if packet.type == PACKET_POKER_READY_TO_PLAY:
                 if self.getSerial() == packet.serial:
-                    self.sendPacketVerbose(table.readyToPlay(packet.serial))
+                    ack = table.readyToPlay(packet.serial)
+                    if ack:
+                        self.sendPacketVerbose(ack)
                 else:
                     self.log.inform("attempt to set ready to play for player %d by player %d",
                         packet.serial,

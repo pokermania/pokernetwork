@@ -458,10 +458,7 @@ class PokerAvatarTestCaseBaseClass(unittest.TestCase):
         avatar.queuePackets()
         avatar.handlePacketLogic(PacketPokerReadyToPlay(serial = client.getSerial(), game_id = gameId))
         found = False
-        for packet in avatar.resetPacketsQueue():
-            if packet.type == PACKET_ACK:
-                found = True
-        self.assertEquals(found, True)
+        queue = avatar.resetPacketsQueue()
         return (client, packet)
     # ------------------------------------------------------------------------
     def sitOut(self, (client, packet), id, gameId ):
