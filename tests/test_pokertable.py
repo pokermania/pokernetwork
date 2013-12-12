@@ -2426,6 +2426,7 @@ class PokerTableExplainedTestCase(PokerTableTestCaseBase):
 
     def test54_serial2delta(self):
         class MockLockCheck(object):
+            _timeout = 5*60*60
             def start(self):
                 pass
             def stop(self):

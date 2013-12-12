@@ -3620,6 +3620,7 @@ class BreakTestCase(PokerServiceTestCaseBase):
             self.sit_n_go = 'n'
             self.id2game = {}
             self.stats = BreakTestCase.MockStats()
+            self.player_timeout = 20
     class MockTable:
         def __init__(self):
             self.avatar_collection = PokerAvatarCollection()

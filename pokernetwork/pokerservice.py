@@ -923,7 +923,8 @@ class PokerService(service.Service):
     def tourneySetUpLockCheck(self, tourney, old_state, new_state):
         if self._lock_check_running:
             if new_state == TOURNAMENT_STATE_RUNNING:
-                self._lock_check_running.start(tourney.serial)
+                if tourney.player_timeout < self._lock_check_running._timeout:
+                    self._lock_check_running.start(tourney.serial)
             elif new_state == TOURNAMENT_STATE_COMPLETE:
                 self._lock_check_running.stop(tourney.serial)
         if self._lock_check_break:

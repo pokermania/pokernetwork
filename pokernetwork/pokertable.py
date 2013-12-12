@@ -1584,7 +1584,7 @@ class PokerTable:
         self._lock_check_locked = False
 
     def _startLockCheck(self):
-        if self._lock_check:
+        if self._lock_check and self.playerTimeout < self._lock_check._timeout:
             self._lock_check.start()
 
     def _stopLockCheck(self):
