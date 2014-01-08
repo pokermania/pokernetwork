@@ -110,20 +110,19 @@ def makeService(configuration):
             _handler = GELFHandler(_host, _port)
         if _name == 'syslog':
             f = node.xpathEval('@facility')
-            if f:
-                facility = {
-                    'user': syslog.LOG_USER,
-                    'daemon': syslog.LOG_DAEMON,
-                    'cron': syslog.LOG_CRON,
-                    'local0': syslog.LOG_LOCAL0,
-                    'local1': syslog.LOG_LOCAL1,
-                    'local2': syslog.LOG_LOCAL2,
-                    'local3': syslog.LOG_LOCAL3,
-                    'local4': syslog.LOG_LOCAL4,
-                    'local5': syslog.LOG_LOCAL5,
-                    'local6': syslog.LOG_LOCAL6,
-                    'local7': syslog.LOG_LOCAL7,
-                }.get(f[0].content, syslog.LOG_USER)
+            facility = {
+                'user': syslog.LOG_USER,
+                'daemon': syslog.LOG_DAEMON,
+                'cron': syslog.LOG_CRON,
+                'local0': syslog.LOG_LOCAL0,
+                'local1': syslog.LOG_LOCAL1,
+                'local2': syslog.LOG_LOCAL2,
+                'local3': syslog.LOG_LOCAL3,
+                'local4': syslog.LOG_LOCAL4,
+                'local5': syslog.LOG_LOCAL5,
+                'local6': syslog.LOG_LOCAL6,
+                'local7': syslog.LOG_LOCAL7,
+            }.get(f[0].content if f else 'user')
             _handler = SyslogHandler('pokernetwork', 0, facility=facility)
         _handler.set_level(_log_level)
         root_logger.add_handler(_handler)
