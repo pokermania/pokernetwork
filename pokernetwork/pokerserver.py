@@ -122,7 +122,7 @@ def makeService(configuration):
                 'local5': syslog.LOG_LOCAL5,
                 'local6': syslog.LOG_LOCAL6,
                 'local7': syslog.LOG_LOCAL7,
-            }.get(f[0].content if f else 'user')
+            }[f[0].content if f else 'user']
             _handler = SyslogHandler('pokernetwork', 0, facility=facility)
         _handler.set_level(_log_level)
         root_logger.add_handler(_handler)
