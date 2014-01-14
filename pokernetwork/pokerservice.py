@@ -1660,7 +1660,10 @@ class PokerService(service.Service):
             cursor.execute(tourney_sql + sql, parameters)
             ret.extend(cursor.fetchall())
             ret = [e for e in ret if e['serial'] is not None]
-            tourneys_schedules = sorted(ret, key=lambda x:(x.get("register_time"),x["start_time"]))
+            sortfn = lambda x:(x.get("register_time"), x["start_time"])
+            if job == "sng":
+                sortfn = lambda x:(x['buy_in'], x['rake'], x['players_quota'])
+            tourneys_schedules = sorted(ret, key=sortfn)
             return tourneys_schedules[:parameters["limit"]]
         finally:
             cursor.close()
