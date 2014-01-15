@@ -89,6 +89,9 @@ from pokernetwork import pokerpacketizer
 from pokerauth import get_auth_instance
 from datetime import date
 
+from twisted.enterprise import adbapi
+import operator
+
 CANCEL_INACTIVE_TOURNEY_TIMEOUT = 60 * 60 * 3
 INACTIVE_TOURNEY_CANCEL_POLL_DEALAY = 60 * 5
 UPDATE_TOURNEYS_SCHEDULE_DELAY = 2 * 60
@@ -179,6 +182,7 @@ class PokerService(service.Service):
         refill = settings.headerGetProperties("/server/refill")
         self.refill = refill[0] if len(refill) > 0 else None
         self.db = None
+        self.adb = None
         self.memcache = None
         self.cashier = None
         self.poker_auth = None
@@ -280,6 +284,17 @@ class PokerService(service.Service):
     def startService(self):
         self.monitors = []
         self.db = PokerDatabase(self.settings)
+
+        # async database
+        db_settings = self.settings.headerGetProperties("/server/database")[0]
+        self.adb = adbapi.ConnectionPool("MySQLdb",
+            db=db_settings['name'],
+            host=db_settings.get('host', 'localhost'),
+            port=int(db_settings.get('port', 3306)),
+            user=db_settings['user'],
+            passwd=db_settings['password']
+        )
+
         memcache_address = self.settings.headerGet("/server/@memcached")
         if memcache_address:
             self.memcache = pokermemcache.memcache.Client([memcache_address])
@@ -2071,25 +2086,29 @@ class PokerService(service.Service):
             self.log.error("loadHand(%d) eval failed for %s", hand_serial, description, exc_info=1)
         return history
 
-    def saveHand(self, description, hand_serial, save_to_cache=True):
-        hand_type, level, hand_serial, hands_count, time, variant, betting_structure, player_list, dealer, serial2chips = description[0] #@UnusedVariable
+    def saveHand(self, description, hand_id, save_to_cache=True):
+        player_list = description[0][7]
         #
         # save the value to the hand_cache if needed
         if save_to_cache:
-            for obsolete_hand_serial in self.hand_cache.keys()[:-3]:
-                del self.hand_cache[obsolete_hand_serial]
-            self.hand_cache[hand_serial] = description
-        
-        with closing(self.db.cursor()) as c:
-            c.execute("UPDATE hands SET description = %s WHERE serial = %s", (str(description), hand_serial))
-            self.log.debug("saveHand: %s" , c._executed)
-            if c.rowcount not in (1, 0):
-                self.log.error("modified %d rows (expected 1 or 0): %s", c.rowcount, c._executed)
-                
-            c.execute("INSERT INTO user2hand (user_serial, hand_serial) VALUES " + ", ".join(["(%d, %d)" % (user_serial, hand_serial) for user_serial in player_list]))
-            self.log.debug("saveHand: %s", c._executed)
-            if c.rowcount != len(player_list):
-                self.log.error("inserted %d rows (expected exactly %d): %s", c.rowcount, len(player_list), c._executed)
+            map(self.hand_cache.pop, self.hand_cache.keys()[:-3])
+            self.hand_cache[hand_id] = description
+
+        hand_query = "UPDATE hands SET description = %s WHERE serial = %s"
+        hand_arg = (str(description), hand_id)
+        d_hand = self.adb.runOperation(hand_query, hand_arg)
+        def hand_error(fail):
+            self.log.crit('failed to save hand description: %r', fail)
+        d_hand.addErrback(hand_error)
+
+        u2h_query = "INSERT INTO user2hand (user_serial, hand_serial) VALUES " + ", ".join(["(%s, %s)" for _ in player_list])
+        u2h_arg = reduce(operator.add, [(hand_id, p) for p in player_list])
+        d_u2h = self.adb.runOperation(u2h_query, u2h_arg)
+        def u2h_error(fail):
+            self.log.crit('failed to save user2hand entries: %r', fail)
+        d_u2h.addErrback(u2h_error)
+
+        return defer.DeferredList([d_hand, d_u2h])
 
     def listHands(self, sql_list, sql_total):
         with closing(self.db.cursor()) as c:
