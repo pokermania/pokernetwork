@@ -1120,6 +1120,12 @@ class PokerTable:
             seat = player.seat,
             buy_in_payed = player.buy_in_payed
         ))
+
+        if player.isAuto():
+            packets.append(PacketPokerAutoFold(
+                serial = player.serial,
+                game_id = self.game.id,
+            ))
         if self.factory.has_ladder:
             packet = self.factory.getLadder(self.game.id, self.currency_serial, player.serial)
             if packet.type == PACKET_POKER_PLAYER_STATS:
