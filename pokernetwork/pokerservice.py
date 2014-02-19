@@ -446,6 +446,8 @@ class PokerService(service.Service):
             if self.resthost_serial: self.cleanupResthost()
             self.db.close()
             self.db = None
+        if self.adb:
+            self.adb.finalClose()
         if self.poker_auth: self.poker_auth.db = None
         service.Service.stopService(self)
 
