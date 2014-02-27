@@ -77,7 +77,7 @@ class PokerCashier:
             if user_create not in ('yes', 'on'):
                 raise PacketError(
                     other_type = PACKET_POKER_CASH_IN,
-                    code = PacketPokerCashIn.REFUSED, #FIXME asdasd
+                    code = PacketPokerCashIn.REFUSED, #TODO better error code
                     message = "Invalid currency %s and user_create = %s in settings." % (url,user_create)
                 )
             sql = "INSERT INTO currencies (url) VALUES (%s)"
