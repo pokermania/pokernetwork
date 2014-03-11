@@ -527,6 +527,8 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         self.assertEqual(tables[0]['serial'], TABLE1)
 
     def test02_filter(self):
+        tables = self.service.listTables('filter', 0)
+        self.assertEqual(3, len(tables))
         tables = self.service.listTables('filter -m50', 0)
         self.assertEqual(3, len(tables))
         tables = self.service.listTables('filter -m250', 0)
@@ -541,6 +543,15 @@ class ListTablesSearchTablesTestCases(PokerServiceTestCaseBase):
         self.assertEqual(3, len(tables))
         tables = self.service.listTables('filter -m10 -M20', 0)
         self.assertEqual(2, len(tables))
+    def test02_filter02(self):
+        bak = self.service.resthost_serial
+        self.service.resthost_serial = 2
+        tables = self.service.listTables('filter', 0)
+        self.assertEqual(0, len(tables))
+        tables = self.service.listTables('filter -st1', 0)
+        self.assertEqual(1, len(tables))
+        self.service.resthost_serial = bak
+
 
     def test05_all(self):
         tables = self.service.listTables('', 0)

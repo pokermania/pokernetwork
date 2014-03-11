@@ -2226,18 +2226,18 @@ class PokerService(service.Service):
 
                 sql_select = default_query
 
-                where_clauses = [' c.skin in (%(skin)s,"intl") ']
+                where_clauses = [' c.skin in (%(skin)s,"intl") ', " t.resthost_serial = %d " % self.resthost_serial]
                 if hide_full_tables == True:
-                    where_clauses.append(" t.players < c.seats")
+                    where_clauses.append(" t.players < c.seats ")
 
                 if min_buy_in:
-                    where_clauses.append("SUBSTRING_INDEX(SUBSTRING_INDEX(c.betting_structure, '_', 2), '-', -1)+0 >= %d" % min_buy_in) # max
+                    where_clauses.append(" SUBSTRING_INDEX(SUBSTRING_INDEX(c.betting_structure, '_', 2), '-', -1)+0 >= %d " % min_buy_in) # max
                 if max_buy_in:
-                    where_clauses.append("SUBSTRING_INDEX(SUBSTRING_INDEX(c.betting_structure, '-', 2), '_', -1)+0 <= %d" % max_buy_in)
+                    where_clauses.append(" SUBSTRING_INDEX(SUBSTRING_INDEX(c.betting_structure, '-', 2), '_', -1)+0 <= %d " % max_buy_in)
 
                 sql_select += " WHERE %s" % " AND ".join(where_clauses)
                 sql_select += "\nGROUP BY c.name, t.players * RAND()"
-                c.execute(sql_select + query_suffix, {"skin":skin})
+                c.execute(sql_select + " ORDER BY t.players desc, t.serial", {"skin":skin})
 
             else:
                 c.execute( default_query + "WHERE name =  %s " + query_suffix, query_string )
