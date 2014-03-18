@@ -1545,6 +1545,7 @@ class PokerService(service.Service):
         stats = tourney.stats(user_serial)
         return PacketPokerTourneyPlayerStats(**stats)
     
+    #could be also listTourneys
     def tourneySelect(self, query_string):
         """ tourneySelect() takes one argument:
                 query_string: a string that describes how the tourneys should be filtered
@@ -1579,7 +1580,8 @@ class PokerService(service.Service):
                 "currency_serial": 1,
                 "min_time": now,
                 "max_time": now+24*3600,
-                "limit": None
+                "limit": None,
+                "skin":"pm",
             }
             if criterion[0] == "filter":
                 pass
@@ -1604,6 +1606,8 @@ class PokerService(service.Service):
                         parameters["max_time"] = now + _seconds
                     elif option.startswith("-limit"):
                         parameters["limit"] = int(option[6:])
+                    elif option.startswith("-s"):
+                        parameters["skin"]=option[2:]
             except Exception as e:
                 self.log.error("tourneySelect: can't handle query_string:%r")
                 return []
@@ -1617,7 +1621,8 @@ class PokerService(service.Service):
                     t.respawn = 'n' AND
                     t.currency_serial = %(currency_serial)s AND
                     t.sit_n_go = 'n' AND
-                    t.register_time BETWEEN %(min_time)s AND %(max_time)s
+                    t.register_time BETWEEN %(min_time)s AND %(max_time)s AND
+                    t.skin IN (%(skin)s, "default", "intl")
                     GROUP BY t.serial ORDER BY register_time
                 """)
                 self.log.inform("tourneySelect: %s", schedule_sql + where_clause % parameters)
@@ -1629,7 +1634,8 @@ class PokerService(service.Service):
                     t.respawn = 'y' AND
                     t.currency_serial = %(currency_serial)s AND
                     t.sit_n_go = 'n' AND
-                    t.respawn_interval > 0
+                    t.respawn_interval > 0 AND
+                    t.skin IN (%(skin)s, "default", "intl")
                     GROUP BY t.serial ORDER BY register_time 
                 """)
 
@@ -1652,7 +1658,8 @@ class PokerService(service.Service):
                 t.sit_n_go="y" AND
                 t.bailor_serial=0 AND
                 t.state NOT IN ("complete","canceled","aborted","moved") AND
-                t.name NOT LIKE "Strippoker%%"
+                t.name NOT LIKE "Strippoker%%" AND
+                t.skin IN (%(skin)s, "default", "intl")
             """)
             # $crit->addBetweenCondition('t.start_time', strtotime('-3 hours'), $tsInterval['max']);
             sng_n =  lex("""
@@ -1661,7 +1668,8 @@ class PokerService(service.Service):
                     (t.state = "complete" AND t.finish_time > UNIX_TIMESTAMP(NOW() - INTERVAL 12 HOUR))
                 ) AND 
                 t.currency_serial = 1 AND
-                t.start_time BETWEEN %(min_time)s AND %(max_time)s
+                t.start_time BETWEEN %(min_time)s AND %(max_time)s AND
+                t.skin IN (%(skin)s, "default", "intl")
             """)
             # even if we want to select all tourneys and sngs, we still don't want to select challenges or Strippoker games
             sng_both = " (%s) OR (%s) " % (sng_y, sng_n)
