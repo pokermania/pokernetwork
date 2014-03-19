@@ -1622,7 +1622,7 @@ class PokerService(service.Service):
                     t.currency_serial = %(currency_serial)s AND
                     t.sit_n_go = 'n' AND
                     t.register_time BETWEEN %(min_time)s AND %(max_time)s AND
-                    t.skin IN (%(skin)s, "default", "intl")
+                    t.skin IN (%(skin)s, "intl")
                     GROUP BY t.serial ORDER BY register_time
                 """)
                 self.log.inform("tourneySelect: %s", schedule_sql + where_clause % parameters)
@@ -1635,7 +1635,7 @@ class PokerService(service.Service):
                     t.currency_serial = %(currency_serial)s AND
                     t.sit_n_go = 'n' AND
                     t.respawn_interval > 0 AND
-                    t.skin IN (%(skin)s, "default", "intl")
+                    t.skin IN (%(skin)s, "intl")
                     GROUP BY t.serial ORDER BY register_time 
                 """)
 
@@ -1659,7 +1659,7 @@ class PokerService(service.Service):
                 t.bailor_serial=0 AND
                 t.state NOT IN ("complete","canceled","aborted","moved") AND
                 t.name NOT LIKE "Strippoker%%" AND
-                t.skin IN (%(skin)s, "default", "intl")
+                t.skin IN (%(skin)s, "intl")
             """)
             # $crit->addBetweenCondition('t.start_time', strtotime('-3 hours'), $tsInterval['max']);
             sng_n =  lex("""
@@ -1669,7 +1669,7 @@ class PokerService(service.Service):
                 ) AND 
                 t.currency_serial = 1 AND
                 t.start_time BETWEEN %(min_time)s AND %(max_time)s AND
-                t.skin IN (%(skin)s, "default", "intl")
+                t.skin IN (%(skin)s, "intl")
             """)
             # even if we want to select all tourneys and sngs, we still don't want to select challenges or Strippoker games
             sng_both = " (%s) OR (%s) " % (sng_y, sng_n)
