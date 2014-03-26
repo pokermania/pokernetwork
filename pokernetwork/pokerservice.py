@@ -1573,7 +1573,7 @@ class PokerService(service.Service):
                 "SELECT t.*,COUNT(user2tourney.user_serial) AS registered FROM tourneys AS t " \
                 "LEFT JOIN user2tourney ON (t.serial = user2tourney.tourney_serial) WHERE " 
             schedule_sql = "SELECT * FROM tourneys_schedule AS t WHERE "
-            job = 'both'
+            job = "tourneys"
 
             now = seconds()
             parameters = {
@@ -1583,6 +1583,7 @@ class PokerService(service.Service):
                 "limit": None,
                 "skin":"pm",
             }
+            include_announced = False
             if criterion[0] == "filter":
                 pass
             elif criterion[0] == "__all__":
@@ -1608,6 +1609,8 @@ class PokerService(service.Service):
                         parameters["limit"] = int(option[6:])
                     elif option.startswith("-s"):
                         parameters["skin"]=option[2:]
+                    elif option.startswith("-a"):
+                        include_announced = True
             except Exception as e:
                 self.log.error("tourneySelect: can't handle query_string:%r")
                 return []
@@ -1615,7 +1618,8 @@ class PokerService(service.Service):
             # getSchedules (Tourneys that will start registerin in ... minutes)
             # TODO: We need to catch all tourneys that are available to register now
             ret = []
-            if job in ("both", "tourneys"):
+            if job in ("tourneys", "both") and include_announced:
+                # looking for announced tourneys, you could not register right now
                 where_clause = lex("""
                     t.active = 'y' AND
                     t.respawn = 'n' AND
@@ -1672,12 +1676,12 @@ class PokerService(service.Service):
                 t.skin IN (%(skin)s, "intl")
             """)
             # even if we want to select all tourneys and sngs, we still don't want to select challenges or Strippoker games
-            sng_both = " (%s) OR (%s) " % (sng_y, sng_n)
+            # sng_both = " (%s) OR (%s) " % (sng_y, sng_n)
 
             sql = {
                 'sng': sng_y,
                 'tourneys': sng_n,
-                'both': sng_both
+                # 'both': sng_both
             }[job] + " GROUP BY t.serial"
 
 
@@ -1685,7 +1689,7 @@ class PokerService(service.Service):
             cursor.execute(tourney_sql + sql, parameters)
             ret.extend(cursor.fetchall())
             ret = [e for e in ret if e['serial'] is not None]
-            sortfn = lambda x:(x.get("register_time"), x["start_time"])
+            sortfn = lambda x:(x["start_time"])
             if job == "sng":
                 sortfn = lambda x:(x['buy_in'], x['rake'], x['players_quota'])
             tourneys_schedules = sorted(ret, key=sortfn)
