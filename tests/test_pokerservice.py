@@ -1519,6 +1519,7 @@ class PokerServiceTestCase(PokerServiceTestCaseBase):
             self.players = [0, 2, 4]
             self.prize = [10,20,30]
             self.prize_currency = 0
+            self.currency_serial = 2
             self.rank = 10
             self.stats = PokerServiceTestCase.MockStats()
         def isRebuying(self, serial):

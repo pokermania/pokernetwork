@@ -1259,7 +1259,7 @@ class PokerService(service.Service):
                     players = players,
                     rank = rank,
                     money = money,
-                    currency_serial = tourney.prize_currency
+                    currency_serial = tourney.prize_currency if tourney.prize_currency != 0 else tourney.currency_serial
                 )
                 for avatar in avatars:
                     avatar.sendPacketVerbose(packet)
