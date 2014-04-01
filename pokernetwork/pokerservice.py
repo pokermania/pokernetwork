@@ -1258,7 +1258,8 @@ class PokerService(service.Service):
                     game_id = table.game.id,
                     players = players,
                     rank = rank,
-                    money = money
+                    money = money,
+                    currency_serial = tourney.prize_currency
                 )
                 for avatar in avatars:
                     avatar.sendPacketVerbose(packet)
