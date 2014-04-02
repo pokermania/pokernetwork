@@ -2117,7 +2117,7 @@ class PokerService(service.Service):
         d_hand.addErrback(hand_error)
 
         u2h_query = "INSERT INTO user2hand (user_serial, hand_serial) VALUES " + ", ".join(["(%s, %s)" for _ in player_list])
-        u2h_arg = reduce(operator.add, [(hand_id, p) for p in player_list])
+        u2h_arg = reduce(operator.add, [(user_id, hand_id) for user_id in player_list])
         d_u2h = self.adb.runOperation(u2h_query, u2h_arg)
         def u2h_error(fail):
             self.log.crit('failed to save user2hand entries: %r', fail)
