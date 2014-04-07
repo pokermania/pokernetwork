@@ -730,9 +730,11 @@ class PokerTable:
         return True
 
     def serialsWillingToPlay(self):
+        # it is not enought to count people if auto_rebuy is on, but we mus
+        # erase those who are sitout and still have money (a regular sitout)
         serials = \
             set(serial for (serial, _amount) in self.rebuy_stack) | \
-            set(p.serial for p in self.game.playersAll() if p.auto_refill or p.auto_rebuy) | \
+            set(p.serial for p in self.game.playersAll() if ((p.auto_refill or p.auto_rebuy) and p.money <= 0)) | \
             set(self.game.serialsSit())
             
         return serials

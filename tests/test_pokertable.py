@@ -1596,6 +1596,7 @@ class PokerTableTestCase(PokerTableTestCaseBase):
 
         self.createPlayer(1)
         self.createPlayer(2)
+
         self.table.beginTurn()
 
         self.table.game.state = GAME_STATE_MUCK
@@ -1603,7 +1604,37 @@ class PokerTableTestCase(PokerTableTestCaseBase):
         self.table.syncDatabase = lambda history: None
         self.table.muckTimeoutTimer()
         self.assertEquals([], self.table.game.muckable_serials)
-    
+
+    def test49_playersWillingToPlay(self):
+        from pokerengine.pokergame import GAME_STATE_MUCK, GAME_STATE_BLIND_ANTE
+
+        self.table.timer_info["muckTimeout"] = None
+        log_history.reset()
+
+        p1 = self.createPlayer(1)
+        p2 = self.createPlayer(2)
+        
+        self.table.autoRebuy(p1.serial, 2)
+        self.table.game.sitOut(p1.serial)
+        self.table.autodeal = True
+
+        self.assertFalse(self.table.shouldAutoDeal())
+
+        # print "serialsWillingToPlay", self.table.serialsWillingToPlay()
+        # print "shouldAutoDeal      ", self.table.shouldAutoDeal()
+        # print "rebuyPlayersOnes    ", self.table.rebuyPlayersOnes()
+        # print "players all         ", [p.serial for p in self.table.game.playersAll() if (p.auto_refill or p.auto_rebuy)]
+        # print "game serials sit    ", self.table.game.serialsSit()
+        # self.table.beginTurn()
+        # self.assertEquals(self.table.game.state, GAME_STATE_BLIND_ANTE)
+        # assert False
+
+
+        # self.table.game.state = GAME_STATE_MUCK
+        # self.table.game.muckable_serials = [1,2]
+        # self.table.syncDatabase = lambda history: None
+        # self.table.muckTimeoutTimer()
+        # self.assertEquals([], self.table.game.muckable_serials)
 # -------------------------------------------------------------------
 
 # I seriously considered not having *all* the same tests run with
